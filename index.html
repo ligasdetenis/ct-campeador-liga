@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
 <meta name="theme-color" content="#b40012" />
-<title>CT Campeador · Reservas V2.5 ONLINE</title>
+<title>CT Campeador · Reservas V2.6 ONLINE</title>
 <style>
 :root{
   --bg:#100708; --bg2:#25090d; --card:#1b0d10; --card2:#261015;
@@ -216,8 +216,12 @@ select,input,textarea{min-width:0;max-width:100%}
 <div class="modal" id="reserveModal"><div class="sheet"><div class="sheetHead"><div><div class="tiny" id="modalMode">RESERVAR PARTIDO</div><h3 id="modalMatch"></h3></div><button class="close" id="closeModal">✕</button></div><div class="sheetBody"><div class="tiny" id="modalCat"></div><div id="reserveCurrent" class="reserveCurrent hidden"></div><div id="reserveNoSlots" class="noSlots hidden">No quedan huecos disponibles para esta semana.</div><div id="reserveForm" class="reserveForm"><div class="reserveField"><label>Día</label><select id="reserveDay"></select></div><div class="reserveField"><label>Franja horaria</label><select id="reserveTime"></select></div><div class="reserveField"><label>Pista</label><select id="reserveCourt"></select></div><div class="reserveActions"><button class="btn gold" id="confirmReserve">✅ Confirmar reserva</button><button class="btn dangerBtn hidden" id="cancelReserveModal">Cancelar reserva actual</button></div></div></div></div></div>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-import { getFirestore, doc, getDoc, setDoc, onSnapshot, runTransaction } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+// V2.6: arranque observable y carga dinámica del SDK para que cualquier fallo quede visible.
+const cloudBadge = document.querySelector('#cloudState');
+if (cloudBadge) cloudBadge.textContent = '☁️ JS iniciado…';
+
+let initializeApp, initializeFirestore, doc, getDoc, setDoc, onSnapshot, runTransaction;
+let firebaseApp, db, PUBLIC_REF, BOOKINGS_REF, ACCESS_REF;
 
 const firebaseConfig = {
   apiKey: "AIzaSyCY5bFpOc_Z8SM3rA5zeXVS1sAI3b94ol8",
@@ -227,11 +231,26 @@ const firebaseConfig = {
   messagingSenderId: "673130684390",
   appId: "1:673130684390:web:b23951ef93d0ada2eac027"
 };
-const firebaseApp = initializeApp(firebaseConfig);
-const db = getFirestore(firebaseApp, "ct-campeador-liga");
-const PUBLIC_REF = doc(db,"ctCampeador","public");
-const BOOKINGS_REF = doc(db,"ctCampeador","bookings");
-const ACCESS_REF = doc(db,"ctCampeador","access");
+
+async function loadFirebaseSdk(){
+  if (cloudBadge) cloudBadge.textContent = '☁️ Cargando Firebase…';
+  const timeout = new Promise((_,reject)=>setTimeout(()=>reject(new Error('No se ha podido cargar el SDK de Firebase en 12 s')),12000));
+  const loader = (async()=>{
+    const appMod = await import('https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js');
+    const fsMod  = await import('https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js');
+    initializeApp = appMod.initializeApp;
+    initializeFirestore = fsMod.initializeFirestore;
+    doc = fsMod.doc; getDoc = fsMod.getDoc; setDoc = fsMod.setDoc; onSnapshot = fsMod.onSnapshot; runTransaction = fsMod.runTransaction;
+  })();
+  await Promise.race([loader,timeout]);
+  if (cloudBadge) cloudBadge.textContent = '☁️ SDK cargado…';
+  firebaseApp = initializeApp(firebaseConfig);
+  // Base de datos con ID creado en Firebase.
+  db = initializeFirestore(firebaseApp, {}, 'ct-campeador-liga');
+  PUBLIC_REF = doc(db,'ctCampeador','public');
+  BOOKINGS_REF = doc(db,'ctCampeador','bookings');
+  ACCESS_REF = doc(db,'ctCampeador','access');
+}
 let onlineReady=false;
 let onlineInitializing=true;
 let lastSynced={public:"",bookings:"",access:""};
@@ -579,6 +598,16 @@ async function startOnline(){
  }
 }
 renderAll();
-startOnline();
+(async()=>{
+  try{
+    await loadFirebaseSdk();
+    await startOnline();
+  }catch(err){
+    console.error(err);
+    onlineInitializing=false;
+    setCloudState('⚠️ Firebase no arranca');
+    alert('Firebase no ha podido arrancar.\n\nDetalle: '+(err?.message||err));
+  }
+})();
 </script>
 </body></html>
