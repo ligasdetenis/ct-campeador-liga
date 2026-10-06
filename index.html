@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
 <meta name="theme-color" content="#b40012" />
-<title>CT Campeador · Reservas V2.8 ONLINE</title>
+<title>CT Campeador · Reservas V2.9 ONLINE</title>
 <style>
 :root{
   --bg:#100708; --bg2:#25090d; --card:#1b0d10; --card2:#261015;
@@ -216,7 +216,7 @@ select,input,textarea{min-width:0;max-width:100%}
 <div class="modal" id="reserveModal"><div class="sheet"><div class="sheetHead"><div><div class="tiny" id="modalMode">RESERVAR PARTIDO</div><h3 id="modalMatch"></h3></div><button class="close" id="closeModal">✕</button></div><div class="sheetBody"><div class="tiny" id="modalCat"></div><div id="reserveCurrent" class="reserveCurrent hidden"></div><div id="reserveNoSlots" class="noSlots hidden">No quedan huecos disponibles para esta semana.</div><div id="reserveForm" class="reserveForm"><div class="reserveField"><label>Día</label><select id="reserveDay"></select></div><div class="reserveField"><label>Franja horaria</label><select id="reserveTime"></select></div><div class="reserveField"><label>Pista</label><select id="reserveCourt"></select></div><div class="reserveActions"><button class="btn gold" id="confirmReserve">✅ Confirmar reserva</button><button class="btn dangerBtn hidden" id="cancelReserveModal">Cancelar reserva actual</button></div></div></div></div></div>
 
 <script type="module">
-// V2.6: arranque observable y carga dinámica del SDK para que cualquier fallo quede visible.
+// V2.9: Firestore con transporte robusto (long-polling) para evitar AbortError del navegador/red.
 const cloudBadge = document.querySelector('#cloudState');
 if (cloudBadge) cloudBadge.textContent = '☁️ JS iniciado…';
 
@@ -228,8 +228,15 @@ window.addEventListener('error', (ev)=>{
   setTimeout(()=>alert('Error JavaScript antes de conectar con Firebase\n\n'+msg),0);
 });
 window.addEventListener('unhandledrejection', (ev)=>{
-  if (cloudBadge) cloudBadge.textContent = '⚠️ Error JS';
   const msg = ev?.reason?.message || String(ev?.reason || 'Promesa rechazada');
+  // Chrome/Firestore puede cancelar internamente un transporte durante el cambio a long-polling.
+  // No lo tratamos como un fallo fatal de la app.
+  if (/aborted|aborterror/i.test(msg)) {
+    console.warn('Cancelación de transporte ignorada:', ev?.reason);
+    ev.preventDefault?.();
+    return;
+  }
+  if (cloudBadge) cloudBadge.textContent = '⚠️ Error JS';
   console.error('Promesa rechazada:', ev?.reason);
   setTimeout(()=>alert('Error antes de completar la conexión\n\n'+msg),0);
 });
@@ -267,7 +274,11 @@ async function loadFirebaseSdk(){
   if (cloudBadge) cloudBadge.textContent = '☁️ SDK cargado…';
   firebaseApp = initializeApp(firebaseConfig);
   // Base de datos con ID creado en Firebase.
-  db = initializeFirestore(firebaseApp, {}, 'ct-campeador-liga');
+  db = initializeFirestore(firebaseApp, {
+    experimentalForceLongPolling: true,
+    experimentalAutoDetectLongPolling: false,
+    useFetchStreams: false
+  }, 'ct-campeador-liga');
   PUBLIC_REF = doc(db,'ctCampeador','public');
   BOOKINGS_REF = doc(db,'ctCampeador','bookings');
   ACCESS_REF = doc(db,'ctCampeador','access');
@@ -314,9 +325,9 @@ function save(){
      setCloudState('☁️ Guardando…');
      const p=publicPayload(), b=bookingsPayload(), a=accessPayload();
      const jobs=[];
-     if(stable(p)!==lastSynced.public) jobs.push(setDoc(PUBLIC_REF,p));
-     if(stable(b)!==lastSynced.bookings) jobs.push(setDoc(BOOKINGS_REF,b));
-     if(stable(a)!==lastSynced.access) jobs.push(setDoc(ACCESS_REF,a));
+     if(stable(p)!==lastSynced.public) jobs.push(retryAbort(()=>setDoc(PUBLIC_REF,p)));
+     if(stable(b)!==lastSynced.bookings) jobs.push(retryAbort(()=>setDoc(BOOKINGS_REF,b)));
+     if(stable(a)!==lastSynced.access) jobs.push(retryAbort(()=>setDoc(ACCESS_REF,a)));
      if(jobs.length) await Promise.all(jobs);
      setCloudState('☁️ Online',true);
    }catch(err){console.error(err);setCloudState('⚠️ Sin sincronizar');}
@@ -614,8 +625,10 @@ $('#refreshBtn').onclick=()=>renderAll();
 function mergePublic(v){data.fixtures=v.fixtures||{};data.slots=v.slots||{};data.drafts=v.drafts||{};data.published=v.published||{}}
 function mergeBookings(v){data.bookings=v.bookings||{}}
 function mergeAccess(v){data.pins=v.pins||{};data.roles=v.roles||{};data.staff=v.staff||{};if(!data.staff["Adrián Prádanos"])data.staff["Adrián Prádanos"]={name:"Adrián Prádanos"};if(!data.pins["Adrián Prádanos"])data.pins["Adrián Prádanos"]="2020";if(!data.roles["Adrián Prádanos"])data.roles["Adrián Prádanos"]="admin"}
-function withTimeout(promise,ms=12000){return Promise.race([promise,new Promise((_,reject)=>setTimeout(()=>reject(new Error("Tiempo de espera agotado conectando con Firestore")),ms))])}
-async function ensureOnlineDoc(ref,payload){const s=await withTimeout(getDoc(ref));if(!s.exists()){await withTimeout(setDoc(ref,payload));return payload}return s.data()}
+function withTimeout(promise,ms=18000){return Promise.race([promise,new Promise((_,reject)=>setTimeout(()=>reject(new Error("Tiempo de espera agotado conectando con Firestore")),ms))])}
+function isAbortLike(err){const m=String(err?.message||err||"");return /aborted|aborterror/i.test(m)}
+async function retryAbort(fn,tries=3){let last;for(let i=0;i<tries;i++){try{return await withTimeout(fn())}catch(e){last=e;if(!isAbortLike(e)||i===tries-1)throw e;console.warn(`AbortError de transporte; reintento ${i+2}/${tries}`,e);await new Promise(r=>setTimeout(r,700*(i+1)));}}throw last}
+async function ensureOnlineDoc(ref,payload){const snap=await retryAbort(()=>getDoc(ref));if(!snap.exists()){await retryAbort(()=>setDoc(ref,payload));return payload}return snap.data()}
 async function startOnline(){
  try{
    setCloudState('☁️ Conectando…');
@@ -634,7 +647,7 @@ async function startOnline(){
    onSnapshot(ACCESS_REF,s=>{if(!s.exists())return;mergeAccess(s.data());lastSynced.access=stable(accessPayload());LS.setItem(STORAGE_KEY,JSON.stringify(data));renderAll();setCloudState('☁️ Online',true)});
  }catch(err){
    console.error(err);onlineInitializing=false;setCloudState('⚠️ Sin conexión Firebase');renderAll();
-   alert('No se ha podido conectar con Firestore. Esta versión apunta a la base de datos ct-campeador-liga. Revisa también que las reglas estén publicadas. La app seguirá mostrando la copia local.\n\nDetalle: '+(err?.message||err));
+   alert('No se ha podido conectar con Firestore incluso usando el modo de compatibilidad de red. Revisa que las reglas estén publicadas y que la base ct-campeador-liga exista. La app seguirá mostrando la copia local.\n\nDetalle: '+(err?.message||err));
  }
 }
 (async()=>{
