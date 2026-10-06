@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
 <meta name="theme-color" content="#b40012" />
-<title>CT Campeador · Reservas V2.6 ONLINE</title>
+<title>CT Campeador · Reservas V2.7 ONLINE</title>
 <style>
 :root{
   --bg:#100708; --bg2:#25090d; --card:#1b0d10; --card2:#261015;
@@ -220,6 +220,27 @@ select,input,textarea{min-width:0;max-width:100%}
 const cloudBadge = document.querySelector('#cloudState');
 if (cloudBadge) cloudBadge.textContent = '☁️ JS iniciado…';
 
+// Diagnóstico visible de cualquier fallo JavaScript antes de llegar a Firebase.
+window.addEventListener('error', (ev)=>{
+  if (cloudBadge) cloudBadge.textContent = '⚠️ Error JS';
+  const msg = ev?.error?.message || ev?.message || 'Error JavaScript desconocido';
+  console.error('Error global:', ev?.error || ev);
+  setTimeout(()=>alert('Error JavaScript antes de conectar con Firebase\n\n'+msg),0);
+});
+window.addEventListener('unhandledrejection', (ev)=>{
+  if (cloudBadge) cloudBadge.textContent = '⚠️ Error JS';
+  const msg = ev?.reason?.message || String(ev?.reason || 'Promesa rechazada');
+  console.error('Promesa rechazada:', ev?.reason);
+  setTimeout(()=>alert('Error antes de completar la conexión\n\n'+msg),0);
+});
+
+// localStorage puede estar bloqueado en algunos navegadores/contextos. Evitamos que eso detenga la app.
+const LS = {
+  getItem(k){ try { return window.localStorage.getItem(k); } catch(e){ console.warn('localStorage get bloqueado',e); return null; } },
+  setItem(k,v){ try { window.localStorage.setItem(k,v); } catch(e){ console.warn('localStorage set bloqueado',e); } },
+  removeItem(k){ try { window.localStorage.removeItem(k); } catch(e){ console.warn('localStorage remove bloqueado',e); } }
+};
+
 let initializeApp, initializeFirestore, doc, getDoc, setDoc, onSnapshot, runTransaction;
 let firebaseApp, db, PUBLIC_REF, BOOKINGS_REF, ACCESS_REF;
 
@@ -269,14 +290,15 @@ const weeks=[
  {id:"W9",label:"Semana 9 · 14–20 diciembre",start:"2026-12-14",end:"2026-12-20"}
 ];
 function fresh(){return {fixtures:{},slots:{},drafts:{},published:{},bookings:{},pins:{},roles:{},staff:{}}}
-let data=JSON.parse(localStorage.getItem(STORAGE_KEY)||"null")||fresh();
+let data; try { data=JSON.parse(LS.getItem(STORAGE_KEY)||"null")||fresh(); } catch(e) { console.warn("Datos locales dañados; se reinicia copia local",e); data=fresh(); LS.removeItem(STORAGE_KEY); }
 if(!data.pins)data.pins={};
 if(!data.roles)data.roles={};
 if(!data.staff)data.staff={};
 if(!data.staff["Adrián Prádanos"])data.staff["Adrián Prádanos"]={name:"Adrián Prádanos"};
 if(!data.pins["Adrián Prádanos"])data.pins["Adrián Prádanos"]="2020";
 if(!data.roles["Adrián Prádanos"])data.roles["Adrián Prádanos"]="admin";
-let state={category:"Infantil",gender:"Masculino",week:"W1",reserveMatchId:null,player:localStorage.getItem("ctcampeador_auth_player")||"",authenticated:!!localStorage.getItem("ctcampeador_auth_player"),showPins:false};
+let state={category:"Infantil",gender:"Masculino",week:"W1",reserveMatchId:null,player:LS.getItem("ctcampeador_auth_player")||"",authenticated:!!LS.getItem("ctcampeador_auth_player"),showPins:false};
+if (cloudBadge) cloudBadge.textContent = '☁️ Datos preparados…';
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 function publicPayload(){return {fixtures:data.fixtures||{},slots:data.slots||{},drafts:data.drafts||{},published:data.published||{}}}
 function bookingsPayload(){return {bookings:data.bookings||{}}}
@@ -284,7 +306,7 @@ function accessPayload(){return {pins:data.pins||{},roles:data.roles||{},staff:d
 function stable(x){return JSON.stringify(x)}
 function setCloudState(txt,ok=false){const e=$('#cloudState');if(!e)return;e.textContent=txt;e.style.color=ok?'var(--green)':'var(--gold)'}
 function save(){
- localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+ LS.setItem(STORAGE_KEY,JSON.stringify(data));
  if(!onlineReady||onlineInitializing)return;
  clearTimeout(saveTimer);
  saveTimer=setTimeout(async()=>{
@@ -318,7 +340,7 @@ function canPlayerReserve(m){return !!state.authenticated&&!!state.player&&(m.a=
 function validPin(player,pin){return /^\d{4}$/.test(pin||"") && String(data.pins[player]||"")===String(pin)}
 function randomPin(){return String(Math.floor(1000+Math.random()*9000))}
 function ensurePins(){for(const p of allIdentities()){if(!/^\d{4}$/.test(String(data.pins[p]||"")))data.pins[p]=randomPin();if(!data.roles[p])data.roles[p]="jugador"}save()}
-function renderIdentity(){const sel=$('#playerIdentity');const ps=allIdentities();sel.innerHTML='<option value="">Selecciona tu nombre</option>'+ps.map(p=>`<option value="${p.replace(/"/g,'&quot;')}">${p}</option>`).join('');if(state.player&&!ps.includes(state.player)){state.player='';state.authenticated=false;localStorage.removeItem('ctcampeador_auth_player')}sel.value=state.player;sel.disabled=state.authenticated;$('#playerPin').disabled=state.authenticated;$('#loginBtn').disabled=state.authenticated;const info=$('#identityInfo');if(!state.authenticated){info.innerHTML='<span class="identityWarn">Sin identificar.</span> Selecciona tu nombre e introduce tu PIN.'}else{const own=allWeekFixtures().filter(m=>m.a===state.player||m.b===state.player);info.innerHTML=`<span class="identityOk">✓ ${state.player}</span> · ${isAdmin()?'ADMIN':'jugador'} · sesión iniciada · ${own.length} partido${own.length===1?'':'s'} esta semana`}}
+function renderIdentity(){const sel=$('#playerIdentity');const ps=allIdentities();sel.innerHTML='<option value="">Selecciona tu nombre</option>'+ps.map(p=>`<option value="${p.replace(/"/g,'&quot;')}">${p}</option>`).join('');if(state.player&&!ps.includes(state.player)){state.player='';state.authenticated=false;LS.removeItem('ctcampeador_auth_player')}sel.value=state.player;sel.disabled=state.authenticated;$('#playerPin').disabled=state.authenticated;$('#loginBtn').disabled=state.authenticated;const info=$('#identityInfo');if(!state.authenticated){info.innerHTML='<span class="identityWarn">Sin identificar.</span> Selecciona tu nombre e introduce tu PIN.'}else{const own=allWeekFixtures().filter(m=>m.a===state.player||m.b===state.player);info.innerHTML=`<span class="identityOk">✓ ${state.player}</span> · ${isAdmin()?'ADMIN':'jugador'} · sesión iniciada · ${own.length} partido${own.length===1?'':'s'} esta semana`}}
 function initDemo(){
  if(Object.keys(data.fixtures).length) return;
  data.fixtures["W1|Infantil|Masculino"]=[
@@ -543,9 +565,9 @@ function setDefaultQuickDate(){}
 function renderWhats(){const w=weeks.find(x=>x.id===state.week);const ss=slots().slice().sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));let txt=`🎾 RESERVA DE PISTAS - LIGA CT CAMPEADOR 🎾\n\n📅 ${w.label.toUpperCase()}\n\n`;if(!ss.length)txt+='🔒 Disponibilidad todavía no publicada.';else{const days=[...new Set(ss.map(s=>s.date))];days.forEach(date=>{txt+=`━━━━━━━━━━━━━━━\n📅 ${dayDateES(date).toUpperCase()}\n\n`;ss.filter(s=>s.date===date).forEach(s=>{const bk=slotBooking(s.id);txt+=`${s.time} → ${s.court}: ${bk?`${bk.a} vs ${bk.b} (${bk.category})`:'LIBRE'}\n`});txt+='\n'})}txt+='❗ Los enfrentamientos son los fijados oficialmente para esa semana.';$('#whatsPreview').value=txt}
 function renderAll(){renderTabs();renderWeeks();renderIdentity();renderState();renderMatches();renderSchedule();renderKpis();renderAdmin()}
 $('#playerIdentity').onchange=e=>{if(!state.authenticated)state.player=e.target.value;$('#playerPin').value='';renderIdentity()};
-$('#loginBtn').onclick=()=>{const player=$('#playerIdentity').value,pin=$('#playerPin').value.trim();if(!player){alert('Selecciona tu nombre.');return}if(!validPin(player,pin)){alert('PIN incorrecto.');$('#playerPin').select();return}state.player=player;state.authenticated=true;localStorage.setItem('ctcampeador_auth_player',player);$('#playerPin').value='';renderAll()};
+$('#loginBtn').onclick=()=>{const player=$('#playerIdentity').value,pin=$('#playerPin').value.trim();if(!player){alert('Selecciona tu nombre.');return}if(!validPin(player,pin)){alert('PIN incorrecto.');$('#playerPin').select();return}state.player=player;state.authenticated=true;LS.setItem('ctcampeador_auth_player',player);$('#playerPin').value='';renderAll()};
 $('#playerPin').addEventListener('keydown',e=>{if(e.key==='Enter')$('#loginBtn').click()});
-$('#clearIdentity').onclick=()=>{state.player='';state.authenticated=false;localStorage.removeItem('ctcampeador_auth_player');$('#playerPin').value='';renderAll()};
+$('#clearIdentity').onclick=()=>{state.player='';state.authenticated=false;LS.removeItem('ctcampeador_auth_player');$('#playerPin').value='';renderAll()};
 $$('.gender').forEach(b=>b.onclick=()=>{state.gender=b.dataset.gender;renderAll()});
 $('#weekSelect').onchange=e=>{state.week=e.target.value;renderAll()};
 $('#prevWeek').onclick=()=>{let i=weeks.findIndex(w=>w.id===state.week);if(i>0){state.week=weeks[i-1].id;renderAll()}};
@@ -561,7 +583,7 @@ $('#publishSlots').onclick=()=>{if(!requireAdmin())return;const ss=collectSlots(
 $('#closeSlots').onclick=()=>{if(!requireAdmin())return;data.published[weekKey()]=false;save();renderAll()};
 $('#generatePins').onclick=()=>{if(!requireAdmin())return;ensurePins();renderAll();alert('🔐 PIN generados para todos los jugadores que no tenían uno.')}
 $('#showPins').onclick=()=>{if(!requireAdmin())return;state.showPins=!state.showPins;renderPins()};
-$('#resetPins').onclick=()=>{if(!requireAdmin())return;if(!confirm('¿Regenerar TODOS los PIN? Los PIN anteriores dejarán de funcionar.'))return;const admins=Object.entries(data.roles||{}).filter(([,r])=>r==='admin').map(([p])=>p);data.pins={};ensurePins();admins.forEach(p=>{if(!data.pins[p])data.pins[p]=randomPin()});save();state.player='';state.authenticated=false;localStorage.removeItem('ctcampeador_auth_player');renderAll();alert('♻ PIN regenerados. Revisa los nuevos PIN de administradores antes de cerrar la sesión.')};
+$('#resetPins').onclick=()=>{if(!requireAdmin())return;if(!confirm('¿Regenerar TODOS los PIN? Los PIN anteriores dejarán de funcionar.'))return;const admins=Object.entries(data.roles||{}).filter(([,r])=>r==='admin').map(([p])=>p);data.pins={};ensurePins();admins.forEach(p=>{if(!data.pins[p])data.pins[p]=randomPin()});save();state.player='';state.authenticated=false;LS.removeItem('ctcampeador_auth_player');renderAll();alert('♻ PIN regenerados. Revisa los nuevos PIN de administradores antes de cerrar la sesión.')};
 $('#copyWhats').onclick=async()=>{if(!requireAdmin())return;renderWhats();const text=$('#whatsPreview').value;const ok=await copyTextRobust(text);if(ok){alert('📋 Mensaje copiado.');return}$('#whatsPreview').focus();$('#whatsPreview').select();alert('No se ha podido copiar automáticamente. El texto queda seleccionado para copiarlo manualmente.');};
 $('#reserveDay').onchange=()=>fillReserveTimes(state.reserveMatchId,'');
 $('#reserveTime').onchange=()=>fillReserveCourts(state.reserveMatchId,'');
@@ -588,24 +610,26 @@ async function startOnline(){
    ]);
    mergePublic(p);mergeBookings(b);mergeAccess(a);
    lastSynced.public=stable(publicPayload());lastSynced.bookings=stable(bookingsPayload());lastSynced.access=stable(accessPayload());
-   onlineReady=true;onlineInitializing=false;localStorage.setItem(STORAGE_KEY,JSON.stringify(data));renderAll();setCloudState('☁️ Online',true);
-   onSnapshot(PUBLIC_REF,s=>{if(!s.exists())return;mergePublic(s.data());lastSynced.public=stable(publicPayload());localStorage.setItem(STORAGE_KEY,JSON.stringify(data));renderAll();setCloudState('☁️ Online',true)});
-   onSnapshot(BOOKINGS_REF,s=>{if(!s.exists())return;mergeBookings(s.data());lastSynced.bookings=stable(bookingsPayload());localStorage.setItem(STORAGE_KEY,JSON.stringify(data));renderAll();setCloudState('☁️ Online',true)});
-   onSnapshot(ACCESS_REF,s=>{if(!s.exists())return;mergeAccess(s.data());lastSynced.access=stable(accessPayload());localStorage.setItem(STORAGE_KEY,JSON.stringify(data));renderAll();setCloudState('☁️ Online',true)});
+   onlineReady=true;onlineInitializing=false;LS.setItem(STORAGE_KEY,JSON.stringify(data));renderAll();setCloudState('☁️ Online',true);
+   onSnapshot(PUBLIC_REF,s=>{if(!s.exists())return;mergePublic(s.data());lastSynced.public=stable(publicPayload());LS.setItem(STORAGE_KEY,JSON.stringify(data));renderAll();setCloudState('☁️ Online',true)});
+   onSnapshot(BOOKINGS_REF,s=>{if(!s.exists())return;mergeBookings(s.data());lastSynced.bookings=stable(bookingsPayload());LS.setItem(STORAGE_KEY,JSON.stringify(data));renderAll();setCloudState('☁️ Online',true)});
+   onSnapshot(ACCESS_REF,s=>{if(!s.exists())return;mergeAccess(s.data());lastSynced.access=stable(accessPayload());LS.setItem(STORAGE_KEY,JSON.stringify(data));renderAll();setCloudState('☁️ Online',true)});
  }catch(err){
    console.error(err);onlineInitializing=false;setCloudState('⚠️ Sin conexión Firebase');renderAll();
    alert('No se ha podido conectar con Firestore. Esta versión apunta a la base de datos ct-campeador-liga. Revisa también que las reglas estén publicadas. La app seguirá mostrando la copia local.\n\nDetalle: '+(err?.message||err));
  }
 }
-renderAll();
 (async()=>{
   try{
+    if (cloudBadge) cloudBadge.textContent = '☁️ Preparando Firebase…';
     await loadFirebaseSdk();
+    renderAll();
     await startOnline();
   }catch(err){
     console.error(err);
     onlineInitializing=false;
     setCloudState('⚠️ Firebase no arranca');
+    try { renderAll(); } catch(e) { console.error('Además falló renderAll',e); }
     alert('Firebase no ha podido arrancar.\n\nDetalle: '+(err?.message||err));
   }
 })();
