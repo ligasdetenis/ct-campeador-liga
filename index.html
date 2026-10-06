@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
 <meta name="theme-color" content="#b40012" />
-<title>CT Campeador · Reservas V2.7 ONLINE</title>
+<title>CT Campeador · Reservas V2.8 ONLINE</title>
 <style>
 :root{
   --bg:#100708; --bg2:#25090d; --card:#1b0d10; --card2:#261015;
@@ -150,7 +150,7 @@ select,input,textarea{min-width:0;max-width:100%}
 
 <section class="card" id="matchesView">
   <div class="head"><h2>📋 Enfrentamientos oficiales</h2><small id="matchMeta"></small></div>
-  <div class="tiny" style="padding:0 14px 10px;color:var(--gold);font-weight:900">V2.0 · Reserva rápida por Día → Hora → Pista. Acceso por PIN y roles.</div>
+  <div class="tiny" style="padding:0 14px 10px;color:var(--gold);font-weight:900">V2.8 · Firebase online · reserva por Día → Hora → Pista · PIN y roles.</div>
   <div class="pad">
     <div id="reserveState" class="stateBanner closed"></div>
     <div class="matches" id="matches"></div>
@@ -377,6 +377,24 @@ async function cancelBooking(mid){
    });
    setCloudState('☁️ Online',true);alert('✅ Reserva cancelada. La pista vuelve a estar disponible.');
  }catch(err){console.error(err);setCloudState('⚠️ Error de conexión');alert('No se ha podido cancelar online. Revisa la conexión.');}
+}
+function renderKpis(){
+ const all=allWeekFixtures();
+ const booked=all.filter(m=>bookingFor(m.id)).length;
+ const free=slots().filter(s=>!slotBooking(s.id)).length;
+ $('#kMatches').textContent=all.length;
+ $('#kBooked').textContent=booked;
+ $('#kPending').textContent=Math.max(0,all.length-booked);
+ $('#kFree').textContent=free;
+}
+function renderSchedule(){
+ const ss=slots().slice().sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time)||a.court.localeCompare(b.court));
+ const box=$('#schedule');
+ if(!ss.length){
+   box.innerHTML='<div class="empty">El club todavía no ha publicado franjas para esta semana.</div>';
+   return;
+ }
+ box.innerHTML=`<table><thead><tr><th>Día</th><th>Hora</th><th>Pista</th><th>Estado</th><th>Partido</th></tr></thead><tbody>${ss.map(s=>{const bk=slotBooking(s.id);return `<tr><td><b>${dayDateES(s.date)}</b></td><td>${s.time}</td><td>${s.court}</td><td class="${bk?'slotBusy':'slotFree'}">${bk?'OCUPADA':'LIBRE'}</td><td>${bk?`${bk.a} vs ${bk.b}`:'—'}</td></tr>`}).join('')}</tbody></table>`;
 }
 function fillReserveDays(mid,preferredDate=''){
  const ss=reservableSlotsFor(mid),sel=$('#reserveDay');
