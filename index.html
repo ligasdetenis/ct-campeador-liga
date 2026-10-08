@@ -164,7 +164,7 @@ select,input,textarea{min-width:0;max-width:100%}
 </section>
 
 <section class="card hidden" id="adminView">
-  <div class="head"><h2>⚙️ Gestión semanal <span class="adminBadge">ADMIN</span></h2><small>V3.2 · jugadores + roles + Cloudflare</small></div>
+  <div class="head"><h2>⚙️ Gestión semanal <span class="adminBadge">ADMIN</span></h2><small>V3.4 · acceso filtrado por categoría</small></div>
   <div class="pad adminGrid">
     <div class="adminBlock">
       <h3>1 · Jugadores de la categoría</h3>
@@ -302,7 +302,8 @@ function canPlayerReserve(m){return !!state.authenticated&&!!state.player&&(m.a=
 function validPin(player,pin){return /^\d{4}$/.test(pin||"") && String(data.pins[player]||"")===String(pin)}
 function randomPin(){return String(Math.floor(1000+Math.random()*9000))}
 function ensurePins(){for(const p of allIdentities()){if(!/^\d{4}$/.test(String(data.pins[p]||"")))data.pins[p]=randomPin();if(!data.roles[p])data.roles[p]="jugador"}save()}
-function renderIdentity(){const sel=$('#playerIdentity');const ps=allIdentities();sel.innerHTML='<option value="">Selecciona tu nombre</option>'+ps.map(p=>`<option value="${p.replace(/"/g,'&quot;')}">${p}</option>`).join('');if(state.player&&!ps.includes(state.player)){state.player='';state.authenticated=false;localStorage.removeItem('ctcampeador_auth_player')}sel.value=state.player;sel.disabled=state.authenticated;$('#playerPin').disabled=state.authenticated;$('#loginBtn').disabled=state.authenticated;const info=$('#identityInfo');if(!state.authenticated){info.innerHTML='<span class="identityWarn">Sin identificar.</span> Selecciona tu nombre e introduce tu PIN.'}else{const own=allWeekFixtures().filter(m=>m.a===state.player||m.b===state.player);info.innerHTML=`<span class="identityOk">✓ ${state.player}</span> · ${isAdmin()?'ADMIN':'jugador'} · sesión iniciada · ${own.length} partido${own.length===1?'':'s'} esta semana`}}
+function visibleIdentitiesForCategory(){const admins=allIdentities().filter(p=>roleOf(p)==='admin');const category=categoryPlayers();const visible=[...new Set([...category,...admins])].sort((a,b)=>a.localeCompare(b,'es'));if(state.authenticated&&state.player&&!visible.includes(state.player))visible.push(state.player);return visible}
+function renderIdentity(){const sel=$('#playerIdentity');const ps=visibleIdentitiesForCategory();sel.innerHTML='<option value="">Selecciona tu nombre</option>'+ps.map(p=>`<option value="${p.replace(/"/g,'&quot;')}">${p}${roleOf(p)==='admin'?' · ADMIN':''}</option>`).join('');if(state.player&&!allIdentities().includes(state.player)){state.player='';state.authenticated=false;localStorage.removeItem('ctcampeador_auth_player')}sel.value=state.player;sel.disabled=state.authenticated;$('#playerPin').disabled=state.authenticated;$('#loginBtn').disabled=state.authenticated;const info=$('#identityInfo');if(!state.authenticated){info.innerHTML='<span class="identityWarn">Sin identificar.</span> Solo aparecen jugadores de '+state.category+' '+state.gender+' y administradores.'}else{const own=allWeekFixtures().filter(m=>m.a===state.player||m.b===state.player);info.innerHTML=`<span class="identityOk">✓ ${state.player}</span> · ${isAdmin()?'ADMIN':'jugador'} · sesión iniciada · ${own.length} partido${own.length===1?'':'s'} esta semana`}}
 function initDemo(){ /* Sin datos ficticios en la versión online */ }
 function renderTabs(){
  $('#catTabs').innerHTML=CATEGORIES.map(c=>`<button class="tab ${c===state.category?'active':''}" data-cat="${c}">${c}</button>`).join("");
