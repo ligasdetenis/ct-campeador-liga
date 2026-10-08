@@ -151,7 +151,7 @@ select,input,textarea{min-width:0;max-width:100%}
 
 <section class="card" id="matchesView">
   <div class="head"><h2>📋 Enfrentamientos oficiales</h2><small id="matchMeta"></small></div>
-  <div class="tiny" style="padding:0 14px 10px;color:var(--gold);font-weight:900">V3.2 · Cloudflare online · listas de jugadores por categoría · reserva Día → Hora → Pista.</div>
+  <div class="tiny" style="padding:0 14px 10px;color:var(--gold);font-weight:900">V3.3 · Cloudflare online · listas de jugadores sincronizadas con el acceso · reserva Día → Hora → Pista.</div>
   <div class="pad">
     <div id="reserveState" class="stateBanner closed"></div>
     <div class="matches" id="matches"></div>
@@ -265,7 +265,25 @@ function categoryPlayers(){return data.playerLists[playerListKey()]||[]}
 function parsePlayerLines(){
   const raw=$('#playerPaste').value||'';
   const seen=new Set();
-  return raw.split(/\r?\n/).map(x=>x.trim()).filter(Boolean).filter(name=>{const k=name.toLocaleLowerCase('es');if(seen.has(k))return false;seen.add(k);return true});
+  const names=[];
+  for(const line0 of raw.split(/\r?\n/)){
+    let line=line0.trim();
+    if(!line) continue;
+    // Admite pegado simple (un nombre por línea) y también filas copiadas desde Excel/iSquad.
+    const cols=line.split(/\t|\s{2,}/).map(x=>x.trim()).filter(Boolean);
+    if(cols.length>=2){
+      // Descarta nº inicial y teléfono final si existen.
+      if(/^\d{1,3}$/.test(cols[0])) cols.shift();
+      if(cols.length>1 && /^\d{9}$/.test(cols[cols.length-1].replace(/\s/g,''))) cols.pop();
+      line=cols.join(' ').trim();
+    }
+    line=line.replace(/^\d+[.)-]?\s*/,'').trim();
+    if(!line) continue;
+    const k=line.toLocaleLowerCase('es');
+    if(seen.has(k)) continue;
+    seen.add(k); names.push(line);
+  }
+  return names;
 }
 function weekKey(){return state.week}
 function slug(s){return s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-zA-Z0-9]+/g,"-").replace(/^-|-$/g,"").toLowerCase()}
@@ -501,8 +519,34 @@ $$('.gender').forEach(b=>b.onclick=()=>{state.gender=b.dataset.gender;renderAll(
 $('#weekSelect').onchange=e=>{state.week=e.target.value;renderAll()};
 $('#prevWeek').onclick=()=>{let i=weeks.findIndex(w=>w.id===state.week);if(i>0){state.week=weeks[i-1].id;renderAll()}};
 $('#nextWeek').onclick=()=>{let i=weeks.findIndex(w=>w.id===state.week);if(i<weeks.length-1){state.week=weeks[i+1].id;renderAll()}};
-$('#savePlayers').onclick=()=>{if(!requireAdmin())return;const list=parsePlayerLines();data.playerLists[playerListKey()]=list;ensurePins();save();saveUsersOnline().catch(e=>alert(e.message));renderAll();alert(`✅ ${list.length} jugador${list.length===1?'':'es'} guardado${list.length===1?'':'s'} en ${state.category} ${state.gender}.`)};
-$('#clearPlayers').onclick=()=>{if(!requireAdmin())return;if(confirm(`¿Vaciar la lista de jugadores de ${state.category} ${state.gender}?\n\nLos enfrentamientos ya cargados no se borrarán.`)){delete data.playerLists[playerListKey()];save();renderAll()}};
+$('#savePlayers').onclick=async()=>{
+  if(!requireAdmin())return;
+  const btn=$('#savePlayers');
+  const list=parsePlayerLines();
+  if(!list.length){alert('No hay jugadores válidos para guardar.');return}
+  const key=playerListKey();
+  btn.disabled=true;
+  const oldText=btn.textContent; btn.textContent='Guardando…';
+  try{
+    data.playerLists[key]=list;
+    // Crear PIN/rol en memoria sin esperar a la sincronización automática.
+    for(const p of list){
+      if(!/^\d{4}$/.test(String(data.pins[p]||''))) data.pins[p]=randomPin();
+      if(!data.roles[p]) data.roles[p]='jugador';
+    }
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+    renderIdentity(); renderAdmin();
+    // Guardado online explícito y secuencial para evitar que el refresco de 10 s pise la lista recién cargada.
+    await saveStateOnline();
+    await saveUsersOnline();
+    await refreshOnline({silent:true});
+    renderAll();
+    alert(`✅ ${list.length} jugador${list.length===1?'':'es'} guardado${list.length===1?'':'s'} en ${state.category} ${state.gender}.\n\nYa aparecen en el desplegable de acceso.`);
+  }catch(e){
+    alert('No se ha podido guardar la lista online.\n\n'+e.message);
+  }finally{btn.disabled=false;btn.textContent=oldText}
+};
+$('#clearPlayers').onclick=async()=>{if(!requireAdmin())return;if(confirm(`¿Vaciar la lista de jugadores de ${state.category} ${state.gender}?\n\nLos enfrentamientos ya cargados no se borrarán.`)){delete data.playerLists[playerListKey()];localStorage.setItem(STORAGE_KEY,JSON.stringify(data));renderAll();try{await saveStateOnline();await refreshOnline({silent:true})}catch(e){alert(e.message)}}};
 $('#saveFixtures').onclick=()=>{if(!requireAdmin())return;data.fixtures[fixtureKey()]=parseFixtureLines();ensurePins();save();saveUsersOnline().catch(e=>alert(e.message));renderAll();alert('✅ Enfrentamientos guardados para esta categoría.')};
 $('#clearFixtures').onclick=()=>{if(!requireAdmin())return;if(confirm('¿Vaciar los enfrentamientos de esta categoría y semana?')){delete data.fixtures[fixtureKey()];save();renderAll()}};
 $('#draftHabitual').onclick=()=>{if(!requireAdmin())return;draftSlots=buildDefaultWeekSlots();persistDraft();renderDraftBoard()};
@@ -529,9 +573,9 @@ try{
   refreshOnline({silent:true});
   setInterval(()=>refreshOnline({silent:true}),10000);
 }catch(e){
-  console.error('Error de arranque V3.1:',e);
-  setOnline(false,'⚠️ Error V3.1');
-  alert('Error de arranque del index V3.1.\n\n'+(e?.message||String(e)));
+  console.error('Error de arranque V3.3:',e);
+  setOnline(false,'⚠️ Error V3.3');
+  alert('Error de arranque del index V3.3.\n\n'+(e?.message||String(e)));
 }
 </script>
 </body></html>
