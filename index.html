@@ -270,6 +270,7 @@ let apiToken=localStorage.getItem(TOKEN_KEY)||"";
 let state={category:"Infantil",gender:"Masculino",week:"W1",reserveMatchId:null,player:"",authenticated:false,showPins:false};
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 let saveTimer=null;
+let reservationPending=false;
 function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(data));if(isAdmin()&&apiToken){clearTimeout(saveTimer);saveTimer=setTimeout(()=>saveStateOnline().catch(console.warn),350)}}
 function publicState(){return {playerLists:data.playerLists,fixtures:data.fixtures,slots:data.slots,drafts:data.drafts,published:data.published,bookings:data.bookings,reservations:data.bookings,staff:data.staff,adminRoles:Object.fromEntries(Object.entries(data.roles||{}).filter(([,r])=>r==='admin')),weeks:Object.fromEntries(weeks.map(w=>[w.id,w])),updatedAt:new Date().toISOString()}}
 async function apiRequest(payload,{auth=true}={}){const headers={'Content-Type':'application/json'};if(auth&&apiToken)headers.Authorization='Bearer '+apiToken;const r=await fetch(API_URL,{method:'POST',headers,body:JSON.stringify(payload)});let j={};try{j=await r.json()}catch(e){}if(!r.ok||j.ok===false)throw new Error(j.error||('HTTP '+r.status));return j}
@@ -400,9 +401,30 @@ function openReserve(mid){
  $('#reserveModal').classList.add('show');
 }
 async function book(mid,sid){
+ if(reservationPending)return;
  const m=fixtures().find(x=>x.id===mid),s=slots().find(x=>x.id===sid);if(!m||!s)return;
  if(!canPlayerReserve(m)){alert("No puedes reservar un partido en el que no participas.");return;}
- try{const reservation={week:state.week,slotId:sid,a:m.a,b:m.b,day:s.day,date:s.date,time:s.time,court:s.court,category:state.category,gender:state.gender};const j=await apiRequest({action:'reserve',matchId:mid,slotId:sid,reservation});data.bookings[mid]={...reservation,...j.reservation};localStorage.setItem(STORAGE_KEY,JSON.stringify(data));$('#reserveModal').classList.remove('show');renderAll();setOnline(true,'☁️ Online')}catch(e){alert(e.message);await refreshOnline({silent:true});openReserve(mid)}
+ const btn=$('#confirmReserve');
+ const oldText=btn.textContent;
+ reservationPending=true;btn.disabled=true;btn.textContent='⏳ Reservando…';
+ try{
+   const reservation={week:state.week,slotId:sid,a:m.a,b:m.b,day:s.day,date:s.date,time:s.time,court:s.court,category:state.category,gender:state.gender};
+   const j=await apiRequest({action:'reserve',matchId:mid,slotId:sid,reservation});
+   data.bookings[mid]={...reservation,...j.reservation};
+   localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+   $('#reserveModal').classList.remove('show');
+   renderAll();
+   setOnline(true,'☁️ Online');
+   alert('✅ Reserva confirmada.');
+ }catch(e){
+   alert(e.message);
+   await refreshOnline({silent:true});
+   openReserve(mid);
+ }finally{
+   reservationPending=false;
+   btn.textContent=oldText;
+   btn.disabled=!$('#reserveCourt').value;
+ }
 }
 function renderAdmin(){
   const admin=isAdmin();
@@ -604,7 +626,7 @@ $('#resetPins').onclick=async()=>{if(!requireAdmin())return;if(!confirm('¿Regen
 $('#copyWhats').onclick=async()=>{if(!requireAdmin())return;renderWhats();const text=$('#whatsPreview').value;const ok=await copyTextRobust(text);if(ok){alert('📋 Mensaje copiado.');return}$('#whatsPreview').focus();$('#whatsPreview').select();alert('No se ha podido copiar automáticamente. El texto queda seleccionado para copiarlo manualmente.');};
 $('#reserveDay').onchange=()=>fillReserveTimes(state.reserveMatchId,'');
 $('#reserveTime').onchange=()=>fillReserveCourts(state.reserveMatchId,'');
-$('#confirmReserve').onclick=()=>{const sid=$('#reserveCourt').value;if(!sid){alert('Selecciona una pista disponible.');return}book(state.reserveMatchId,sid)};
+$('#confirmReserve').onclick=()=>{if(reservationPending)return;const sid=$('#reserveCourt').value;if(!sid){alert('Selecciona una pista disponible.');return}book(state.reserveMatchId,sid)};
 $('#cancelReserveModal').onclick=()=>{const mid=state.reserveMatchId;$('#reserveModal').classList.remove('show');cancelBooking(mid)};
 $('#closeModal').onclick=()=>$('#reserveModal').classList.remove('show');$('#reserveModal').onclick=e=>{if(e.target===$('#reserveModal'))$('#reserveModal').classList.remove('show')};
 $$('.navBtn[data-go]').forEach(b=>b.onclick=()=>{const go=b.dataset.go;$$('.navBtn').forEach(x=>x.classList.remove('active'));b.classList.add('active');if(go==='home')$('#homeView').scrollIntoView({behavior:'smooth',block:'start'});if(go==='courts')$('#courtsView').scrollIntoView({behavior:'smooth',block:'start'});if(go==='admin'){if(!isAdmin()){alert('Acceso restringido a administradores.');return;}$('#adminView').classList.remove('hidden');$('#adminView').scrollIntoView({behavior:'smooth',block:'start'})}});
@@ -620,4 +642,5 @@ try{
   alert('Error de arranque del index V3.6.\n\n'+(e?.message||String(e)));
 }
 </script>
+<div style="position:fixed;right:8px;bottom:78px;z-index:45;font-size:9px;opacity:.55;background:#180b0e;border:1px solid rgba(255,255,255,.12);padding:4px 7px;border-radius:999px">V3.7 · RESERVAS SEGURAS</div>
 </body></html>
