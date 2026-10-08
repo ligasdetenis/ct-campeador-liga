@@ -164,7 +164,7 @@ select,input,textarea{min-width:0;max-width:100%}
 </section>
 
 <section class="card hidden" id="adminView">
-  <div class="head"><h2>⚙️ Gestión semanal <span class="adminBadge">ADMIN</span></h2><small>V3.4 · acceso filtrado por categoría</small></div>
+  <div class="head"><h2>⚙️ Gestión semanal <span class="adminBadge">ADMIN</span></h2><small>V3.5 · acceso filtrado por categoría</small></div>
   <div class="pad adminGrid">
     <div class="adminBlock">
       <h3>1 · Jugadores de la categoría</h3>
@@ -243,18 +243,20 @@ const weeks=[
  {id:"W9",label:"Semana 9 · 14–20 diciembre",start:"2026-12-14",end:"2026-12-20"}
 ];
 function fresh(){return {playerLists:{},fixtures:{},slots:{},drafts:{},published:{},bookings:{},pins:{},roles:{},staff:{}}}
-function normalizeData(x){const d=x&&typeof x==='object'?x:{};return {playerLists:d.playerLists||{},fixtures:d.fixtures||{},slots:d.slots||{},drafts:d.drafts||{},published:d.published||{},bookings:d.reservations||d.bookings||{},pins:d.pins||{},roles:d.roles||{},staff:d.staff||{}}}
+function normalizeData(x){const d=x&&typeof x==='object'?x:{};return {playerLists:d.playerLists||{},fixtures:d.fixtures||{},slots:d.slots||{},drafts:d.drafts||{},published:d.published||{},bookings:d.reservations||d.bookings||{},pins:d.pins||{},roles:{...(d.roles||{}),...(d.adminRoles||{})},staff:d.staff||{}}}
 let data=normalizeData(JSON.parse(localStorage.getItem(STORAGE_KEY)||"null")||fresh());
 if(!data.staff["Adrián Prádanos"])data.staff["Adrián Prádanos"]={name:"Adrián Prádanos"};
+// Administrador inicial: debe estar visible en TODAS las categorías incluso antes del primer login.
+data.roles["Adrián Prádanos"]="admin";
 let apiToken=localStorage.getItem(TOKEN_KEY)||"";
 let state={category:"Infantil",gender:"Masculino",week:"W1",reserveMatchId:null,player:"",authenticated:false,showPins:false};
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 let saveTimer=null;
 function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(data));if(isAdmin()&&apiToken){clearTimeout(saveTimer);saveTimer=setTimeout(()=>saveStateOnline().catch(console.warn),350)}}
-function publicState(){return {playerLists:data.playerLists,fixtures:data.fixtures,slots:data.slots,drafts:data.drafts,published:data.published,bookings:data.bookings,reservations:data.bookings,weeks:Object.fromEntries(weeks.map(w=>[w.id,w])),updatedAt:new Date().toISOString()}}
+function publicState(){return {playerLists:data.playerLists,fixtures:data.fixtures,slots:data.slots,drafts:data.drafts,published:data.published,bookings:data.bookings,reservations:data.bookings,staff:data.staff,adminRoles:Object.fromEntries(Object.entries(data.roles||{}).filter(([,r])=>r==='admin')),weeks:Object.fromEntries(weeks.map(w=>[w.id,w])),updatedAt:new Date().toISOString()}}
 async function apiRequest(payload,{auth=true}={}){const headers={'Content-Type':'application/json'};if(auth&&apiToken)headers.Authorization='Bearer '+apiToken;const r=await fetch(API_URL,{method:'POST',headers,body:JSON.stringify(payload)});let j={};try{j=await r.json()}catch(e){}if(!r.ok||j.ok===false)throw new Error(j.error||('HTTP '+r.status));return j}
 function setOnline(ok,text){const el=$('#onlineState');if(!el)return;el.classList.toggle('off',!ok);el.textContent=text||(ok?'☁️ Online':'⚠️ Sin conexión')}
-async function refreshOnline({silent=false}={}){try{const j=await apiRequest({action:'read'},{auth:false});const remote=normalizeData(j.state);data.playerLists=remote.playerLists;data.fixtures=remote.fixtures;data.slots=remote.slots;data.drafts=remote.drafts;data.published=remote.published;data.bookings=remote.bookings;localStorage.setItem(STORAGE_KEY,JSON.stringify(data));setOnline(true,'☁️ Online');renderAll();return true}catch(e){setOnline(false,'⚠️ Offline');if(!silent)alert('No se ha podido actualizar desde Cloudflare.\n\n'+e.message);return false}}
+async function refreshOnline({silent=false}={}){try{const j=await apiRequest({action:'read'},{auth:false});const remote=normalizeData(j.state);data.playerLists=remote.playerLists;data.fixtures=remote.fixtures;data.slots=remote.slots;data.drafts=remote.drafts;data.published=remote.published;data.bookings=remote.bookings;data.staff={...(data.staff||{}),...(remote.staff||{})};data.roles={...(data.roles||{}),...(remote.roles||{})};data.roles["Adrián Prádanos"]="admin";localStorage.setItem(STORAGE_KEY,JSON.stringify(data));setOnline(true,'☁️ Online');renderAll();return true}catch(e){setOnline(false,'⚠️ Offline');if(!silent)alert('No se ha podido actualizar desde Cloudflare.\n\n'+e.message);return false}}
 async function saveStateOnline(){if(!apiToken||!isAdmin())return;await apiRequest({action:'saveState',state:publicState()});setOnline(true,'☁️ Guardado')}
 async function saveUsersOnline(){if(!apiToken||!isAdmin())return;const users=allIdentities().map(name=>({name,pin:String(data.pins[name]||''),role:roleOf(name)==='admin'?'admin':'player',active:true})).filter(u=>/^\d{4}$/.test(u.pin));await apiRequest({action:'saveUsers',users});}
 async function loadAdminUsers(){if(!apiToken||!isAdmin())return;const j=await apiRequest({action:'listUsers'});for(const u of j.users||[]){data.pins[u.name]=String(u.pin||'');data.roles[u.name]=u.role==='admin'?'admin':'jugador';if(!allPlayers().includes(u.name))data.staff[u.name]={name:u.name}}localStorage.setItem(STORAGE_KEY,JSON.stringify(data));}
