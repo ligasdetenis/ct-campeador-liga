@@ -174,6 +174,17 @@ linear-gradient(180deg,rgba(15,5,8,.995),rgba(30,10,14,.995))}
 body.pinLocked{overflow:hidden}
 @media(max-width:520px){.pinWelcomeCard{padding:21px;border-radius:22px}.pinWelcomeLogo{width:96px;height:96px}.pinWelcomeTitle{font-size:21px}}
 
+
+/* V3.12 · Web Push nativo */
+.pushBox{margin-top:12px;padding:12px;border:1px solid var(--line);border-radius:15px;background:rgba(255,255,255,.025);display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.pushBox.hidden{display:none!important}
+.pushInfo{min-width:220px;flex:1}
+.pushTitle{font-size:12px;font-weight:800;margin-bottom:3px}
+.pushText{font-size:11px;color:var(--muted);line-height:1.4}
+.pushOk{color:#86e9a5;font-weight:800}
+.pushWarn{color:var(--orange);font-weight:800}
+#pushActivateBtn{min-width:155px}
+
 </style>
 </head>
 <body>
@@ -221,6 +232,14 @@ body.pinLocked{overflow:hidden}
 <div class="who" id="identityInfo">Selecciona tu nombre e introduce tu PIN para poder reservar.</div>
 </div>
 <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn gold" id="loginBtn">Entrar</button><button class="btn secondary" id="clearIdentity">Salir / cambiar</button></div>
+
+</div>
+<div class="pushBox hidden" id="pushBox">
+  <div class="pushInfo">
+    <div class="pushTitle">🔔 Avisos de disponibilidad</div>
+    <div class="pushText" id="pushText">Activa los avisos para recibir una notificación cuando el club publique pistas.</div>
+  </div>
+  <button class="btn gold" id="pushActivateBtn" type="button">🔔 Activar avisos</button>
 </div>
 </div>
 </section>
@@ -299,8 +318,9 @@ Pablo Ruiz"></textarea>
 <div class="draftBoard" id="draftBoard"></div>
 <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
 <button class="btn green" id="publishSlots">✅ Publicar disponibilidad y abrir reservas</button>
+<button class="btn secondary" id="resendPushNotice">🔔 Reenviar aviso</button>
 <button class="btn danger" id="closeSlots">📴 Despublicar disponibilidad y cerrar reservas</button>
-<span class="tiny" id="publishActionStatus" style="width:100%;margin-top:4px">El borrador se conserva aunque despubliques la disponibilidad.</span>
+<span class="tiny" id="publishActionStatus" style="width:100%;margin-top:4px">Al publicar por primera vez —o volver a publicar tras despublicar— se envía un aviso Push a los dispositivos suscritos.</span>
 </div>
 </div></details>
 <details class="adminBlock adminAccordion" data-admin-section="pins"><summary class="adminSummary"><span class="adminSummaryTitle">4 · PIN de jugadores</span><span class="adminSummaryMeta" id="adminMeta_pins">Abrir</span></summary><div class="adminAccordionBody">
@@ -362,6 +382,9 @@ const CATEGORIES=["Benjamín","Alevín","Infantil","Cadete","Junior","Absoluto"]
 const STORAGE_KEY="ctcampeador_reservas_v3_cloudflare_cache";
 const TOKEN_KEY="ctcampeador_api_token";
 const API_URL="https://ct-campeador-api.ligasdetenis.workers.dev/";
+const PUSH_URL="https://ct-campeador-push-test.ligasdetenis.workers.dev";
+const PUSH_VAPID_PUBLIC_KEY="BDbOo56Aem6MIO1ypKIlgpolkqB2HmcvjAIPiGe1YgbT7cVUs23XWJVvBj8yt7Snqea8mL_w7sTaRL1e1lm4Kls";
+const PUSH_SW_URL="/ct-campeador-liga/push-sw.js";
 const weeks=[
  {id:"W1",label:"Semana 1 · 17–25 octubre",start:"2026-10-17",end:"2026-10-25"},
  {id:"W2",label:"Semana 2 · 26 octubre–1 noviembre",start:"2026-10-26",end:"2026-11-01"},
@@ -577,6 +600,99 @@ async function loginWithPinOnly(){
   }finally{
     if(btn){btn.disabled=false;btn.textContent=old}
   }
+}
+
+
+function base64UrlToUint8Array(base64String){
+  const padding='='.repeat((4-base64String.length%4)%4);
+  const base64=(base64String+padding).replace(/-/g,'+').replace(/_/g,'/');
+  const raw=atob(base64);
+  const out=new Uint8Array(raw.length);
+  for(let i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);
+  return out;
+}
+async function pushRegistration(){
+  if(!('serviceWorker' in navigator))throw new Error('Este navegador no soporta Service Worker.');
+  await navigator.serviceWorker.register(PUSH_SW_URL,{scope:'/ct-campeador-liga/'});
+  return navigator.serviceWorker.ready;
+}
+async function currentPushSubscription(){
+  try{
+    const reg=await pushRegistration();
+    return await reg.pushManager.getSubscription();
+  }catch(e){return null}
+}
+async function syncPushSubscription(sub){
+  if(!sub||!state.authenticated||!state.player)return false;
+  const r=await fetch(PUSH_URL+'/subscribe',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({subscription:sub.toJSON?sub.toJSON():sub,userName:state.player})
+  });
+  let j={};try{j=await r.json()}catch(e){}
+  if(!r.ok||j.ok===false)throw new Error(j.error||('HTTP '+r.status));
+  return true;
+}
+async function renderPushUI(){
+  const box=$('#pushBox'),txt=$('#pushText'),btn=$('#pushActivateBtn');
+  if(!box||!txt||!btn)return;
+  if(!state.authenticated){
+    box.classList.add('hidden');
+    return;
+  }
+  box.classList.remove('hidden');
+  if(!('Notification' in window)||!('serviceWorker' in navigator)||!('PushManager' in window)){
+    txt.innerHTML='<span class="pushWarn">Este navegador no admite Web Push.</span>';
+    btn.disabled=true;btn.textContent='No compatible';
+    return;
+  }
+  if(Notification.permission==='denied'){
+    txt.innerHTML='<span class="pushWarn">Las notificaciones están bloqueadas en este navegador.</span> Debes permitirlas en los ajustes del sitio.';
+    btn.disabled=true;btn.textContent='Avisos bloqueados';
+    return;
+  }
+  const sub=await currentPushSubscription();
+  if(sub){
+    try{await syncPushSubscription(sub)}catch(e){console.warn('Sincronización push',e)}
+    txt.innerHTML='<span class="pushOk">✅ Avisos activados en este dispositivo.</span> Recibirás un aviso cuando se publiquen pistas.';
+    btn.disabled=true;btn.textContent='Avisos activados';
+  }else{
+    txt.textContent='Activa los avisos para recibir una notificación cuando el club publique pistas.';
+    btn.disabled=false;btn.textContent='🔔 Activar avisos';
+  }
+}
+async function activateNativePush(){
+  const btn=$('#pushActivateBtn');
+  if(!state.authenticated){alert('Entra primero con tu PIN.');return}
+  const old=btn.textContent;
+  try{
+    btn.disabled=true;btn.textContent='⏳ Activando…';
+    const permission=await Notification.requestPermission();
+    if(permission!=='granted')throw new Error('Permiso de notificaciones no concedido: '+permission);
+    const reg=await pushRegistration();
+    let sub=await reg.pushManager.getSubscription();
+    if(!sub){
+      sub=await reg.pushManager.subscribe({
+        userVisibleOnly:true,
+        applicationServerKey:base64UrlToUint8Array(PUSH_VAPID_PUBLIC_KEY)
+      });
+    }
+    await syncPushSubscription(sub);
+    await renderPushUI();
+  }catch(e){
+    alert('No se han podido activar los avisos.\n\n'+(e.message||e));
+    btn.disabled=false;btn.textContent=old;
+  }
+}
+async function sendAvailabilityPush(force=false){
+  const w=weeks.find(x=>x.id===weekKey());
+  return apiRequest({
+    action:'sendAvailabilityPush',
+    weekId:weekKey(),
+    weekLabel:w?.label||weekKey(),
+    url:'https://ligasdetenis.github.io/ct-campeador-liga/',
+    force:!!force
+  });
 }
 
 function renderIdentity(){const sel=$('#playerIdentity');const ps=visibleIdentitiesForCategory();sel.innerHTML='<option value="">Selecciona tu nombre</option>'+ps.map(p=>`<option value="${p.replace(/"/g,'&quot;')}">${p}${roleOf(p)==='admin'?' · ADMIN':''}</option>`).join('');if(state.player&&!allIdentities().includes(state.player)){state.player='';state.authenticated=false;localStorage.removeItem('ctcampeador_auth_player')}sel.value=state.player;sel.disabled=state.authenticated;$('#playerPin').disabled=state.authenticated;$('#loginBtn').disabled=state.authenticated;const info=$('#identityInfo');if(!state.authenticated){info.innerHTML='<span class="identityWarn">Sin identificar.</span> Solo aparecen jugadores de '+state.category+' '+state.gender+' y administradores.'}else{const own=allWeekFixtures().filter(m=>m.a===state.player||m.b===state.player);info.innerHTML=`<span class="identityOk">✓ ${state.player}</span> · ${isAdmin()?'ADMIN':'jugador'} · sesión iniciada · ${own.length} partido${own.length===1?'':'s'} esta semana`}}
@@ -947,9 +1063,10 @@ function wireAdminCompact(){
   });
   const top=document.getElementById('adminBackTop'); if(top&&!top.dataset.compactWired){top.dataset.compactWired='1';top.addEventListener('click',()=>document.getElementById('adminView')?.scrollIntoView({behavior:'smooth',block:'start'}));}
 }
-function renderAll(){renderTabs();renderWeeks();renderIdentity();renderState();renderMatches();renderSchedule();renderKpis();renderAdmin();updateAdminSummaries();wireAdminCompact()}
+function renderAll(){renderTabs();renderWeeks();renderIdentity();renderState();renderMatches();renderSchedule();renderKpis();renderAdmin();updateAdminSummaries();wireAdminCompact();renderPushUI()}
 
 $('#welcomePinBtn').onclick=loginWithPinOnly;
+$('#pushActivateBtn').onclick=activateNativePush;
 $('#welcomePin').addEventListener('input',e=>{
   e.target.value=e.target.value.replace(/\D/g,'').slice(0,4);
   const m=$('#welcomePinMsg');
@@ -1039,8 +1156,17 @@ $('#publishSlots').onclick=async()=>{
     renderAll();
     await saveStateOnline();
     setOnline(true,'☁️ Publicado');
-    if(status)status.textContent='✅ Disponibilidad publicada. Reservas abiertas.';
-    alert('✅ Disponibilidad publicada online. Reservas abiertas.');
+    let pushMsg='';
+    if(prevPublished!==true){
+      try{
+        const p=await sendAvailabilityPush(true);
+        pushMsg=p.sent>0?`\n\n🔔 Aviso enviado a ${p.sent} dispositivo${p.sent===1?'':'s'}.`:'\n\n🔔 No hay dispositivos suscritos todavía.';
+      }catch(pushErr){
+        pushMsg='\n\n⚠️ La disponibilidad se ha publicado, pero el aviso Push no se pudo enviar: '+pushErr.message;
+      }
+    }
+    if(status)status.textContent='✅ Disponibilidad publicada. Reservas abiertas.'+(pushMsg?' Aviso procesado.':'');
+    alert('✅ Disponibilidad publicada online. Reservas abiertas.'+pushMsg);
   }catch(e){
     if(prevSlots===undefined)delete data.slots[weekKey()];else data.slots[weekKey()]=prevSlots;
     if(!data.drafts)data.drafts={};
@@ -1053,6 +1179,25 @@ $('#publishSlots').onclick=async()=>{
     alert('No se ha podido publicar la disponibilidad online.\n\n'+e.message);
   }finally{btn.disabled=false;btn.textContent=old}
 };
+
+$('#resendPushNotice').onclick=async()=>{
+  if(!requireAdmin())return;
+  if(!isOpen()){alert('Primero debes publicar la disponibilidad de esta semana.');return}
+  const btn=$('#resendPushNotice'),old=btn.textContent,status=$('#publishActionStatus');
+  btn.disabled=true;btn.textContent='⏳ Enviando…';
+  if(status)status.textContent='Enviando aviso Push…';
+  try{
+    const p=await sendAvailabilityPush(true);
+    if(status)status.textContent=`🔔 Aviso reenviado a ${p.sent||0} dispositivo${p.sent===1?'':'s'}.`;
+    alert(p.sent>0?`🔔 Aviso reenviado correctamente a ${p.sent} dispositivo${p.sent===1?'':'s'}.`:'No hay dispositivos suscritos todavía.');
+  }catch(e){
+    if(status)status.textContent='⚠️ No se pudo reenviar el aviso.';
+    alert('No se ha podido reenviar el aviso.\n\n'+e.message);
+  }finally{
+    btn.disabled=false;btn.textContent=old;
+  }
+};
+
 $('#closeSlots').onclick=async()=>{
   if(!requireAdmin())return;
   if(!isOpen()){alert('Las reservas de esta semana ya están cerradas.');return}
@@ -1109,14 +1254,14 @@ async function bootstrapApp(){
     setInterval(()=>refreshOnline({silent:true}),10000);
     window.addEventListener('beforeunload',e=>{if(fixtureEditorDirty){e.preventDefault();e.returnValue='';}});
   }catch(e){
-    console.error('Error de arranque V3.11.11:',e);
+    console.error('Error de arranque V3.12:',e);
     setOnline(false,'⚠️ Error V3.11.3');
-    alert('Error de arranque del index V3.11.11.\n\n'+(e?.message||String(e)));
+    alert('Error de arranque del index V3.12.\n\n'+(e?.message||String(e)));
   }
 }
 bootstrapApp();
 
 window.addEventListener('scroll',()=>{const a=document.getElementById('adminView');if(a)a.classList.toggle('adminScrolled',window.scrollY>(a.offsetTop+280));},{passive:true});
 </script>
-<div style="position:fixed;right:8px;bottom:78px;z-index:45;font-size:9px;opacity:.55;background:#180b0e;border:1px solid rgba(255,255,255,.12);padding:4px 7px;border-radius:999px">V3.11.11 · ENTRADA POR PIN</div>
+<div style="position:fixed;right:8px;bottom:78px;z-index:45;font-size:9px;opacity:.55;background:#180b0e;border:1px solid rgba(255,255,255,.12);padding:4px 7px;border-radius:999px">V3.12 · PIN + PUSH NATIVO</div>
 </body></html>
