@@ -462,15 +462,23 @@ async function deleteResult(mid){if(!isAdmin())return;const m=fixtures().find(x=
 function renderKpis(){
  const all=allWeekFixtures();
  const booked=all.filter(m=>bookingFor(m.id)).length;
- const free=slots().filter(s=>!slotBooking(s.id)).length;
+ const free=isOpen()?slots().filter(s=>!slotBooking(s.id)).length:0;
  $('#kMatches').textContent=all.length;
  $('#kBooked').textContent=booked;
  $('#kPending').textContent=Math.max(0,all.length-booked);
  $('#kFree').textContent=free;
 }
 function renderSchedule(){
- const ss=slots().slice().sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time)||a.court.localeCompare(b.court));
  const box=$('#schedule');
+ // Si el admin ha despublicado la disponibilidad, las franjas siguen guardadas
+ // internamente para poder corregirlas y volver a publicarlas, pero NO deben
+ // mostrarse en la vista pública de ocupación.
+ if(!isOpen()) {
+   const hadSlots=!!(data.slots&&data.slots[weekKey()]&&data.slots[weekKey()].length);
+   box.innerHTML=`<div class="empty">${hadSlots?'📴 La disponibilidad de esta semana está despublicada. Las pistas no son visibles para los jugadores hasta que el administrador vuelva a publicarlas.':'🔒 El club todavía no ha publicado la disponibilidad de pistas para esta semana.'}</div>`;
+   return;
+ }
+ const ss=slots().slice().sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time)||a.court.localeCompare(b.court));
  if(!ss.length){
    box.innerHTML='<div class="empty">El club todavía no ha publicado franjas para esta semana.</div>';
    return;
@@ -478,6 +486,7 @@ function renderSchedule(){
  box.innerHTML=`<table><thead><tr><th>Día</th><th>Hora</th><th>Pista</th><th>Estado</th><th>Partido</th></tr></thead><tbody>${ss.map(s=>{const bk=slotBooking(s.id);return `<tr><td><b>${dayDateES(s.date)}</b></td><td>${s.time}</td><td>${s.court}</td><td class="${bk?'slotBusy':'slotFree'}">${bk?'OCUPADA':'LIBRE'}</td><td>${bk?`${bk.a} vs ${bk.b}`:'—'}</td></tr>`}).join('')}</tbody></table>`;
 }
 function reservableSlotsFor(mid){
+ if(!isOpen()) return [];
  const current=bookingFor(mid);
  return slots().filter(s=>{
    const occ=slotBooking(s.id);
@@ -823,5 +832,5 @@ window.addEventListener('beforeunload',e=>{if(fixtureEditorDirty){e.preventDefau
   alert('Error de arranque del index V3.10.\n\n'+(e?.message||String(e)));
 }
 </script>
-<div style="position:fixed;right:8px;bottom:78px;z-index:45;font-size:9px;opacity:.55;background:#180b0e;border:1px solid rgba(255,255,255,.12);padding:4px 7px;border-radius:999px">V3.11 · JORNADA PROTEGIDA</div>
+<div style="position:fixed;right:8px;bottom:78px;z-index:45;font-size:9px;opacity:.55;background:#180b0e;border:1px solid rgba(255,255,255,.12);padding:4px 7px;border-radius:999px">V3.11.2 · DESPUBLICACIÓN REAL</div>
 </body></html>
