@@ -52,6 +52,8 @@ main{max-width:1180px;margin:auto;padding:14px;display:grid;gap:14px}.card{borde
 @media(max-width:520px){.resultGrid.three{grid-template-columns:1fr}.scorePair input{padding:11px 8px}}
 .modal{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.72);display:none;align-items:flex-end;justify-content:center;padding:12px}.modal.show{display:flex}.sheet{width:min(560px,100%);max-height:88vh;overflow:auto;background:#211014;border:1px solid var(--line);border-radius:22px 22px 16px 16px;box-shadow:0 30px 80px rgba(0,0,0,.65)}.sheetHead{padding:15px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:10px}.sheetHead h3{margin:0;font-size:15px}.close{background:rgba(255,255,255,.06);border:1px solid var(--line);color:white;width:34px;height:34px;border-radius:10px}.sheetBody{padding:15px;display:grid;gap:11px}.choice{border:1px solid var(--line);border-radius:12px;padding:10px;background:rgba(255,255,255,.03);display:flex;justify-content:space-between;gap:10px;align-items:center}.choice.busy{opacity:.4}.choice b{font-size:12px}.choice span{font-size:10px;color:var(--muted)}.reserveForm{display:grid;gap:11px}.reserveField label{display:block;font-size:10px;font-weight:950;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}.reserveField select{width:100%;padding:12px 13px;border-radius:12px;border:1px solid var(--line);background:#190d10;color:var(--text);font-weight:850}.reserveCurrent{padding:10px 11px;border-radius:12px;border:1px solid rgba(62,215,139,.28);background:rgba(62,215,139,.07);font-size:11px;color:#cdeedc}.reserveActions{display:grid;grid-template-columns:1fr;gap:8px;margin-top:2px}.reserveActions .btn{width:100%;padding:12px}.noSlots{padding:12px;border:1px dashed var(--line);border-radius:12px;color:var(--muted);font-size:11px;text-align:center}
 .hidden{display:none!important}.empty{padding:25px 12px;text-align:center;color:var(--muted);font-size:12px}.adminBadge{font-size:10px;color:var(--gold);font-weight:1000}
+
+.fixtureQuick{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:end;margin:10px 0}.fixtureList{display:grid;gap:7px;margin-top:10px}.fixtureItem{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:9px 10px;border:1px solid var(--line);border-radius:11px;background:rgba(255,255,255,.035);font-size:12px}.fixtureItem b{overflow-wrap:anywhere}.roundBox{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end;margin-bottom:10px}.fixtureDivider{height:1px;background:var(--line);margin:12px 0}.fixtureImportStatus{font-size:10px;color:var(--muted);margin-top:7px;line-height:1.4}@media(max-width:620px){.fixtureQuick{grid-template-columns:1fr}.fixtureQuick button{width:100%}.roundBox{grid-template-columns:1fr}}
 @media(max-width:820px){.hero{grid-template-columns:1fr}.toolbar{grid-template-columns:1fr}.matches{grid-template-columns:1fr}.adminGrid{grid-template-columns:1fr}.filters{grid-template-columns:1fr 1fr}.filters .field:first-child{grid-column:1/-1}}
 @media(max-width:520px){main{padding:10px}.top{padding:10px}.brandLogo{width:58px;height:58px}.brand p{display:none}.pill{font-size:9px;padding:7px 8px}.heroBox{padding:15px}.heroTitle{font-size:31px}.kpi .v{font-size:20px}.match{grid-template-columns:1fr}.match .btn{width:100%}.slotRow{grid-template-columns:1fr 1fr}.slotRow select:nth-child(3){grid-column:1/2}.slotRow button{grid-column:2/3}.filters{grid-template-columns:1fr}.filters .field:first-child{grid-column:auto}}
 
@@ -177,7 +179,7 @@ select,input,textarea{min-width:0;max-width:100%}
 </section>
 
 <section class="card hidden" id="adminView">
-  <div class="head"><h2>⚙️ Gestión semanal <span class="adminBadge">ADMIN</span></h2><small>V3.8 · reservas + resultados</small></div>
+  <div class="head"><h2>⚙️ Gestión semanal <span class="adminBadge">ADMIN</span></h2><small>V3.9 · jornadas externas</small></div>
   <div class="pad adminGrid">
     <div class="adminBlock">
       <h3>1 · Jugadores de la categoría</h3>
@@ -190,10 +192,25 @@ Pablo Ruiz"></textarea>
       <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"><button class="btn gold" id="savePlayers">Guardar jugadores</button><button class="btn danger" id="clearPlayers">Vaciar lista</button><span class="countBadge" id="playerCount">0 jugadores</span></div>
     </div>
     <div class="adminBlock">
-      <h3>2 · Cargar enfrentamientos de la categoría</h3><div class="authNote">Los enfrentamientos son semanales. Puedes usar únicamente jugadores de la lista anterior o añadir un nombre nuevo si fuera necesario.</div>
-      <div class="tiny" style="margin-bottom:8px">Una línea por partido. Formatos admitidos: <b>Jugador A vs Jugador B</b> o <b>Jugador A;Jugador B</b>.</div>
-      <textarea id="fixturePaste" placeholder="Carlos Pérez vs Hugo Martín\nMario López vs Pablo Ruiz"></textarea>
-      <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"><button class="btn gold" id="saveFixtures">Guardar enfrentamientos</button><button class="btn danger" id="clearFixtures">Vaciar categoría</button></div>
+      <h3>2 · Enfrentamientos de la jornada</h3>
+      <div class="authNote">La jornada viene marcada desde iSquad u otra fuente externa. Selecciona la semana de arriba, escribe la <b>jornada oficial</b> y carga exactamente los enfrentamientos que correspondan.</div>
+      <div class="roundBox">
+        <div class="field"><label>Jornada oficial</label><input id="externalRound" type="text" placeholder="Ej. Jornada 4"></div>
+        <button class="btn secondary" id="copyPrevFixtures" type="button">⧉ Copiar anterior</button>
+      </div>
+      <div class="fixtureDivider"></div>
+      <div class="tiny"><b>Añadir partido rápido</b> · Solo aparecen jugadores de esta categoría.</div>
+      <div class="fixtureQuick">
+        <div class="field"><label>Jugador A</label><select id="fixturePlayerA"></select></div>
+        <div class="field"><label>Jugador B</label><select id="fixturePlayerB"></select></div>
+        <button class="btn gold" id="addFixture" type="button">＋ Añadir</button>
+      </div>
+      <div class="fixtureList" id="fixtureList"></div>
+      <div class="fixtureDivider"></div>
+      <div class="tiny" style="margin-bottom:8px"><b>Pegar jornada completa</b> · Una línea por partido. Admite <b>Jugador A vs Jugador B</b>, <b>Jugador A - Jugador B</b> o <b>Jugador A;Jugador B</b>.</div>
+      <textarea id="fixturePaste" placeholder="Carlos Pérez vs Hugo Martín\nMario López - Pablo Ruiz"></textarea>
+      <div class="fixtureImportStatus" id="fixtureImportStatus">La lista pegada se añadirá a los partidos que ya hayas introducido arriba, evitando duplicados.</div>
+      <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"><button class="btn secondary" id="importFixtures" type="button">⬇ Importar lista</button><button class="btn gold" id="saveFixtures">💾 Guardar jornada</button><button class="btn danger" id="clearFixtures">Vaciar jornada</button></div>
     </div>
     <div class="adminBlock">
       <h3>3 · Borrador de disponibilidad de pistas</h3>
@@ -286,8 +303,8 @@ const weeks=[
  {id:"W8",label:"Semana 8 · 7–13 diciembre",start:"2026-12-07",end:"2026-12-13"},
  {id:"W9",label:"Semana 9 · 14–20 diciembre",start:"2026-12-14",end:"2026-12-20"}
 ];
-function fresh(){return {playerLists:{},fixtures:{},slots:{},drafts:{},published:{},bookings:{},results:{},pins:{},roles:{},staff:{}}}
-function normalizeData(x){const d=x&&typeof x==='object'?x:{};return {playerLists:d.playerLists||{},fixtures:d.fixtures||{},slots:d.slots||{},drafts:d.drafts||{},published:d.published||{},bookings:d.reservations||d.bookings||{},results:d.results||{},pins:d.pins||{},roles:{...(d.roles||{}),...(d.adminRoles||{})},staff:d.staff||{}}}
+function fresh(){return {playerLists:{},fixtures:{},fixtureRounds:{},slots:{},drafts:{},published:{},bookings:{},results:{},pins:{},roles:{},staff:{}}}
+function normalizeData(x){const d=x&&typeof x==='object'?x:{};return {playerLists:d.playerLists||{},fixtures:d.fixtures||{},fixtureRounds:d.fixtureRounds||{},slots:d.slots||{},drafts:d.drafts||{},published:d.published||{},bookings:d.reservations||d.bookings||{},results:d.results||{},pins:d.pins||{},roles:{...(d.roles||{}),...(d.adminRoles||{})},staff:d.staff||{}}}
 let data=normalizeData(JSON.parse(localStorage.getItem(STORAGE_KEY)||"null")||fresh());
 if(!data.staff["Adrián Prádanos"])data.staff["Adrián Prádanos"]={name:"Adrián Prádanos"};
 // Administrador inicial: debe estar visible en TODAS las categorías incluso antes del primer login.
@@ -298,10 +315,10 @@ const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 let saveTimer=null;
 let reservationPending=false;
 function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(data));if(isAdmin()&&apiToken){clearTimeout(saveTimer);saveTimer=setTimeout(()=>saveStateOnline().catch(console.warn),350)}}
-function publicState(){return {playerLists:data.playerLists,fixtures:data.fixtures,slots:data.slots,drafts:data.drafts,published:data.published,bookings:data.bookings,reservations:data.bookings,results:data.results,staff:data.staff,adminRoles:Object.fromEntries(Object.entries(data.roles||{}).filter(([,r])=>r==='admin')),weeks:Object.fromEntries(weeks.map(w=>[w.id,w])),updatedAt:new Date().toISOString()}}
+function publicState(){return {playerLists:data.playerLists,fixtures:data.fixtures,fixtureRounds:data.fixtureRounds,slots:data.slots,drafts:data.drafts,published:data.published,bookings:data.bookings,reservations:data.bookings,results:data.results,staff:data.staff,adminRoles:Object.fromEntries(Object.entries(data.roles||{}).filter(([,r])=>r==='admin')),weeks:Object.fromEntries(weeks.map(w=>[w.id,w])),updatedAt:new Date().toISOString()}}
 async function apiRequest(payload,{auth=true}={}){const headers={'Content-Type':'application/json'};if(auth&&apiToken)headers.Authorization='Bearer '+apiToken;const r=await fetch(API_URL,{method:'POST',headers,body:JSON.stringify(payload)});let j={};try{j=await r.json()}catch(e){}if(!r.ok||j.ok===false)throw new Error(j.error||('HTTP '+r.status));return j}
 function setOnline(ok,text){const el=$('#onlineState');if(!el)return;el.classList.toggle('off',!ok);el.textContent=text||(ok?'☁️ Online':'⚠️ Sin conexión')}
-async function refreshOnline({silent=false}={}){try{const j=await apiRequest({action:'read'},{auth:false});const remote=normalizeData(j.state);data.playerLists=remote.playerLists;data.fixtures=remote.fixtures;data.slots=remote.slots;data.drafts=remote.drafts;data.published=remote.published;data.bookings=remote.bookings;data.results=remote.results;data.staff={...(data.staff||{}),...(remote.staff||{})};data.roles={...(data.roles||{}),...(remote.roles||{})};data.roles["Adrián Prádanos"]="admin";localStorage.setItem(STORAGE_KEY,JSON.stringify(data));setOnline(true,'☁️ Online');renderAll();return true}catch(e){setOnline(false,'⚠️ Offline');if(!silent)alert('No se ha podido actualizar desde Cloudflare.\n\n'+e.message);return false}}
+async function refreshOnline({silent=false}={}){try{const j=await apiRequest({action:'read'},{auth:false});const remote=normalizeData(j.state);data.playerLists=remote.playerLists;data.fixtures=remote.fixtures;data.fixtureRounds=remote.fixtureRounds;data.slots=remote.slots;data.drafts=remote.drafts;data.published=remote.published;data.bookings=remote.bookings;data.results=remote.results;data.staff={...(data.staff||{}),...(remote.staff||{})};data.roles={...(data.roles||{}),...(remote.roles||{})};data.roles["Adrián Prádanos"]="admin";localStorage.setItem(STORAGE_KEY,JSON.stringify(data));setOnline(true,'☁️ Online');renderAll();return true}catch(e){setOnline(false,'⚠️ Offline');if(!silent)alert('No se ha podido actualizar desde Cloudflare.\n\n'+e.message);return false}}
 async function saveStateOnline(){if(!apiToken||!isAdmin())return;await apiRequest({action:'saveState',state:publicState()});setOnline(true,'☁️ Guardado')}
 async function saveUsersOnline(){if(!apiToken||!isAdmin())return;const users=allIdentities().map(name=>({name,pin:String(data.pins[name]||''),role:roleOf(name)==='admin'?'admin':'player',active:true})).filter(u=>/^\d{4}$/.test(u.pin));await apiRequest({action:'saveUsers',users});}
 async function loadAdminUsers(){if(!apiToken||!isAdmin())return;const j=await apiRequest({action:'listUsers'});for(const u of j.users||[]){data.pins[u.name]=String(u.pin||'');data.roles[u.name]=u.role==='admin'?'admin':'jugador';if(!allPlayers().includes(u.name))data.staff[u.name]={name:u.name}}localStorage.setItem(STORAGE_KEY,JSON.stringify(data));}
@@ -309,6 +326,47 @@ async function loadAdminUsers(){if(!apiToken||!isAdmin())return;const j=await ap
 function fixtureKey(){return `${state.week}|${state.category}|${state.gender}`}
 function playerListKey(){return `${state.category}|${state.gender}`}
 function categoryPlayers(){return data.playerLists[playerListKey()]||[]}
+function fixtureRound(){return data.fixtureRounds?.[fixtureKey()]||''}
+function normalizeName(s){return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('es').replace(/\s+/g,' ').trim()}
+function canonicalPlayer(name){const n=normalizeName(name);return categoryPlayers().find(p=>normalizeName(p)===n)||String(name||'').trim()}
+function fixtureId(a,b){return `${fixtureKey()}|${slug(a)}|${slug(b)}`}
+function makeFixture(a,b){a=canonicalPlayer(a);b=canonicalPlayer(b);return {id:fixtureId(a,b),a,b}}
+function fixturePairKey(a,b){return [normalizeName(a),normalizeName(b)].sort().join('|')}
+function addFixturePair(a,b,{silent=false}={}){
+  a=canonicalPlayer(a); b=canonicalPlayer(b);
+  if(!a||!b){if(!silent)alert('Selecciona los dos jugadores.');return false}
+  if(normalizeName(a)===normalizeName(b)){if(!silent)alert('Un jugador no puede enfrentarse a sí mismo.');return false}
+  const arr=fixtures().slice(); const k=fixturePairKey(a,b);
+  if(arr.some(m=>fixturePairKey(m.a,m.b)===k)){if(!silent)alert('Ese enfrentamiento ya está añadido.');return false}
+  arr.push(makeFixture(a,b)); data.fixtures[fixtureKey()]=arr; localStorage.setItem(STORAGE_KEY,JSON.stringify(data)); return true
+}
+function parseFixtureText(raw){
+  const pairs=[]; const unknown=[]; const players=categoryPlayers(); const known=new Set(players.map(normalizeName));
+  for(const line0 of String(raw||'').split(/\r?\n/)){
+    const line=line0.trim(); if(!line)continue;
+    let parts=null;
+    if(/\s+vs\.?\s+/i.test(line)) parts=line.split(/\s+vs\.?\s+/i);
+    else if(line.includes(';')) parts=line.split(';');
+    else if(/\s+[–—-]\s+/.test(line)) parts=line.split(/\s+[–—-]\s+/);
+    if(!parts||parts.length<2)continue;
+    const a=parts[0].replace(/^\d+[.)-]?\s*/,'').trim(); const b=parts.slice(1).join(' ').trim();
+    if(!a||!b)continue;
+    const ca=canonicalPlayer(a), cb=canonicalPlayer(b);
+    if(players.length){if(!known.has(normalizeName(a)))unknown.push(a);if(!known.has(normalizeName(b)))unknown.push(b)}
+    pairs.push([ca,cb]);
+  }
+  return {pairs,unknown:[...new Set(unknown)]};
+}
+function renderFixtureEditor(){
+  if(!isAdmin())return;
+  const ps=categoryPlayers();
+  const opts='<option value="">Selecciona…</option>'+ps.map(p=>`<option value="${p.replace(/"/g,'&quot;')}">${p}</option>`).join('');
+  const a=$('#fixturePlayerA'),b=$('#fixturePlayerB'); if(a)a.innerHTML=opts;if(b)b.innerHTML=opts;
+  if($('#externalRound'))$('#externalRound').value=fixtureRound();
+  const box=$('#fixtureList'); if(!box)return;
+  const fs=fixtures(); box.innerHTML=fs.length?fs.map(m=>`<div class="fixtureItem"><b>${m.a} <span style="color:var(--muted);font-weight:700">vs</span> ${m.b}</b><button class="btn dangerBtn" type="button" data-remove-fixture="${m.id}">Quitar</button></div>`).join(''):'<div class="tiny">Todavía no hay partidos cargados para esta jornada.</div>';
+  box.querySelectorAll('[data-remove-fixture]').forEach(btn=>btn.onclick=()=>{const mid=btn.dataset.removeFixture;data.fixtures[fixtureKey()]=fixtures().filter(m=>m.id!==mid);localStorage.setItem(STORAGE_KEY,JSON.stringify(data));renderFixtureEditor();renderMatches()});
+}
 function parsePlayerLines(){
   const raw=$('#playerPaste').value||'';
   const seen=new Set();
@@ -367,7 +425,7 @@ function resultLabel(r){
  if(r.type==='not_played')return 'Partido no disputado';
  return (r.sets||[]).map(x=>`${x.a}-${x.b}`).join(' / ');
 }
-function renderMatches(){const fs=fixtures(), box=$('#matches');$('#matchMeta').textContent=`${fs.length} partido${fs.length===1?'':'s'}`;if(!fs.length){box.innerHTML='<div class="empty">No hay enfrentamientos cargados para esta categoría y semana.</div>';return}
+function renderMatches(){const fs=fixtures(), box=$('#matches');$('#matchMeta').textContent=`${fixtureRound()?fixtureRound()+' · ':''}${fs.length} partido${fs.length===1?'':'s'}`;if(!fs.length){box.innerHTML='<div class="empty">No hay enfrentamientos cargados para esta categoría y semana.</div>';return}
  box.innerHTML=fs.map(m=>{
    const bk=bookingFor(m.id), r=resultFor(m.id), mine=canPlayerReserve(m), admin=isAdmin();
    const st=bk?'booked':(isOpen()?'pending':'locked');
@@ -488,7 +546,7 @@ function renderAdmin(){
   const admin=isAdmin();
   $('#adminNavBtn').classList.toggle('hidden',!admin);
   if(!admin){$('#adminView').classList.add('hidden');return}
-  const cps=categoryPlayers();$('#playerPaste').value=cps.join('\n');$('#playerCount').textContent=`${cps.length} jugador${cps.length===1?'':'es'}`;const fs=fixtures();$('#fixturePaste').value=fs.map(m=>`${m.a} vs ${m.b}`).join('\n');renderSlotRows();setDefaultQuickDate();renderPins();renderRoles();renderWhats();
+  const cps=categoryPlayers();$('#playerPaste').value=cps.join('\n');$('#playerCount').textContent=`${cps.length} jugador${cps.length===1?'':'es'}`;$('#fixturePaste').value='';renderFixtureEditor();renderSlotRows();setDefaultQuickDate();renderPins();renderRoles();renderWhats();
 }
 function renderRoles(){const tb=$('#roleTable');const ps=allIdentities();tb.innerHTML=ps.map(p=>`<tr><td><b>${p}</b></td><td><select data-role-person="${p.replace(/"/g,'&quot;')}"><option value="jugador" ${roleOf(p)==='jugador'?'selected':''}>Jugador</option><option value="admin" ${roleOf(p)==='admin'?'selected':''}>ADMIN</option></select></td></tr>`).join('');tb.querySelectorAll('[data-role-person]').forEach(s=>s.onchange=()=>{if(!requireAdmin())return;s.disabled=true;data.roles[s.dataset.rolePerson]=s.value;save();saveUsersOnline().catch(e=>alert(e.message));renderAll();alert(`Permiso actualizado: ${s.dataset.rolePerson} → ${s.value.toUpperCase()}`)})}
 function renderPins(){const tb=$('#pinTable');const ps=allIdentities();if(!ps.length){tb.innerHTML='<tr><td colspan="3">No hay jugadores cargados.</td></tr>';return}tb.innerHTML=ps.map(p=>{const pin=data.pins[p]||'—';const shown=state.showPins?pin:'••••';return `<tr><td><b>${p}</b></td><td><span class="mono">${shown}</span></td><td><button class="btn secondary" data-copy-pin="${p.replace(/"/g,'&quot;')}">📋 Copiar mensaje</button></td></tr>`}).join('');tb.querySelectorAll('[data-copy-pin]').forEach(b=>b.onclick=()=>copyPinMessage(b.dataset.copyPin))}
@@ -668,8 +726,11 @@ $('#savePlayers').onclick=async()=>{
   }finally{btn.disabled=false;btn.textContent=oldText}
 };
 $('#clearPlayers').onclick=async()=>{if(!requireAdmin())return;if(confirm(`¿Vaciar la lista de jugadores de ${state.category} ${state.gender}?\n\nLos enfrentamientos ya cargados no se borrarán.`)){delete data.playerLists[playerListKey()];localStorage.setItem(STORAGE_KEY,JSON.stringify(data));renderAll();try{await saveStateOnline();await refreshOnline({silent:true})}catch(e){alert(e.message)}}};
-$('#saveFixtures').onclick=()=>{if(!requireAdmin())return;data.fixtures[fixtureKey()]=parseFixtureLines();ensurePins();save();saveUsersOnline().catch(e=>alert(e.message));renderAll();alert('✅ Enfrentamientos guardados para esta categoría.')};
-$('#clearFixtures').onclick=()=>{if(!requireAdmin())return;if(confirm('¿Vaciar los enfrentamientos de esta categoría y semana?')){delete data.fixtures[fixtureKey()];save();renderAll()}};
+$('#addFixture').onclick=()=>{if(!requireAdmin())return;const a=$('#fixturePlayerA').value,b=$('#fixturePlayerB').value;if(addFixturePair(a,b)){renderFixtureEditor();renderMatches();$('#fixturePlayerA').value='';$('#fixturePlayerB').value=''}};
+$('#importFixtures').onclick=()=>{if(!requireAdmin())return;const {pairs,unknown}=parseFixtureText($('#fixturePaste').value);if(!pairs.length){alert('No he encontrado enfrentamientos válidos en el texto.');return}let added=0;for(const [a,b] of pairs)if(addFixturePair(a,b,{silent:true}))added++;renderFixtureEditor();renderMatches();$('#fixtureImportStatus').textContent=`${added} partido${added===1?'':'s'} añadido${added===1?'':'s'}.`+(unknown.length?` ⚠ Nombres no encontrados exactamente en la lista: ${unknown.join(', ')}`:' Todos los nombres coinciden con la categoría.');};
+$('#saveFixtures').onclick=async()=>{if(!requireAdmin())return;const round=$('#externalRound').value.trim();if(round)data.fixtureRounds[fixtureKey()]=round;else delete data.fixtureRounds[fixtureKey()];ensurePins();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));try{await saveStateOnline();await saveUsersOnline();renderAll();alert(`✅ Jornada guardada online.\n\n${round||weeks.find(w=>w.id===state.week).label}\n${fixtures().length} partido${fixtures().length===1?'':'s'}.`)}catch(e){alert('No se ha podido guardar la jornada online.\n\n'+e.message)}};
+$('#clearFixtures').onclick=async()=>{if(!requireAdmin())return;if(confirm('¿Vaciar todos los enfrentamientos de esta categoría y jornada?')){delete data.fixtures[fixtureKey()];delete data.fixtureRounds[fixtureKey()];localStorage.setItem(STORAGE_KEY,JSON.stringify(data));renderAll();try{await saveStateOnline()}catch(e){alert(e.message)}}};
+$('#copyPrevFixtures').onclick=()=>{if(!requireAdmin())return;const i=weeks.findIndex(w=>w.id===state.week);if(i<=0){alert('No hay una semana anterior para copiar.');return}const prevKey=`${weeks[i-1].id}|${state.category}|${state.gender}`;const prev=data.fixtures[prevKey]||[];if(!prev.length){alert('La semana anterior no tiene enfrentamientos en esta categoría.');return}if(fixtures().length&&!confirm('Ya hay enfrentamientos en esta jornada. ¿Sustituirlos por los de la semana anterior?'))return;data.fixtures[fixtureKey()]=prev.map(m=>makeFixture(m.a,m.b));data.fixtureRounds[fixtureKey()]=data.fixtureRounds?.[prevKey]||'';localStorage.setItem(STORAGE_KEY,JSON.stringify(data));renderFixtureEditor();renderMatches()};
 $('#draftHabitual').onclick=()=>{if(!requireAdmin())return;draftSlots=buildDefaultWeekSlots();persistDraft();renderDraftBoard()};
 $('#draftAllMorning').onclick=()=>{if(!requireAdmin())return;draftSlots=buildAllPart('morning');persistDraft();renderDraftBoard()};
 $('#draftAllAfternoon').onclick=()=>{if(!requireAdmin())return;draftSlots=buildAllPart('afternoon');persistDraft();renderDraftBoard()};
@@ -696,9 +757,9 @@ try{
   refreshOnline({silent:true});
   setInterval(()=>refreshOnline({silent:true}),10000);
 }catch(e){
-  console.error('Error de arranque V3.6:',e);
-  setOnline(false,'⚠️ Error V3.3');
-  alert('Error de arranque del index V3.6.\n\n'+(e?.message||String(e)));
+  console.error('Error de arranque V3.9:',e);
+  setOnline(false,'⚠️ Error V3.9');
+  alert('Error de arranque del index V3.9.\n\n'+(e?.message||String(e)));
 }
 </script>
 <div style="position:fixed;right:8px;bottom:78px;z-index:45;font-size:9px;opacity:.55;background:#180b0e;border:1px solid rgba(255,255,255,.12);padding:4px 7px;border-radius:999px">V3.7 · RESERVAS SEGURAS</div>
