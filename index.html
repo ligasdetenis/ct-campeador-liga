@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,maximum-scale=1" name="viewport"/>
 <meta content="#b40012" name="theme-color"/>
-<title>CT Campeador · Reservas V3.11.9 · Inter</title>
+<title>CT Campeador · Reservas V3.11.10 · Inter</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -150,6 +150,12 @@ select,input,textarea{min-width:0;max-width:100%}
 @media(max-width:600px){.adminQuickNav{top:70px}.adminSummaryMeta{max-width:45%}.adminAccordionBody{padding:0 10px 10px}}
 
 .postponedBadge{display:inline-flex;align-items:center;gap:5px;padding:4px 7px;border-radius:999px;font-size:10px;font-weight:800;border:1px solid rgba(255,157,49,.3);color:var(--orange);background:rgba(255,157,49,.08);margin-top:7px}.reprogrammedBadge{border-color:rgba(124,92,255,.36);color:#c7baff;background:rgba(124,92,255,.09)}.matchSectionTitle{grid-column:1/-1;margin:8px 0 0;padding:8px 2px 2px;font-size:11px;font-weight:800;color:var(--gold);text-transform:uppercase;letter-spacing:.08em}.postponedMatch{border-color:rgba(255,157,49,.28)}
+
+.datePickerWrap{display:grid;grid-template-columns:minmax(0,1fr) 46px;gap:6px;align-items:center}
+.datePickerWrap input[type="date"]{min-width:0}
+.calendarBtn{height:44px;border:1px solid rgba(255,201,40,.28);background:rgba(255,201,40,.08);color:var(--gold);border-radius:11px;font-size:18px;font-weight:900;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.calendarBtn:hover{background:rgba(255,201,40,.14)}
+@media(max-width:430px){.datePickerWrap{grid-template-columns:minmax(0,1fr) 44px}}
 </style>
 </head>
 <body>
@@ -217,8 +223,8 @@ Pablo Ruiz"></textarea>
 <div class="authNote">La jornada viene marcada desde iSquad u otra fuente externa. Selecciona la semana de arriba, escribe la <b>jornada oficial</b> y carga exactamente los enfrentamientos que correspondan.</div>
 <div class="roundBox">
 <div class="field"><label>Jornada oficial</label><input id="externalRound" placeholder="Ej. Jornada 4" type="text"/></div>
-<div class="field"><label>Inicio de la semana</label><input id="weekStartDate" type="date"/></div>
-<div class="field"><label>Fin de la semana</label><input id="weekEndDate" type="date"/></div>
+<div class="field"><label>Inicio de la semana</label><div class="datePickerWrap"><input id="weekStartDate" type="date"/><button class="calendarBtn" id="openWeekStartCal" type="button" aria-label="Abrir calendario para la fecha de inicio" title="Abrir calendario">📅</button></div></div>
+<div class="field"><label>Fin de la semana</label><div class="datePickerWrap"><input id="weekEndDate" type="date"/><button class="calendarBtn" id="openWeekEndCal" type="button" aria-label="Abrir calendario para la fecha final" title="Abrir calendario">📅</button></div></div>
 <button class="btn secondary" id="copyPrevFixtures" type="button">⧉ Copiar anterior</button>
 </div>
 <div class="tiny" id="weekRangeHint" style="margin-top:7px">Estas fechas definen qué días pertenecen a la semana seleccionada y qué fechas podrán usarse en el borrador de pistas.</div>
@@ -851,6 +857,20 @@ $('#playerPin').addEventListener('keydown',e=>{if(e.key==='Enter')$('#loginBtn')
 $('#clearIdentity').onclick=async()=>{try{if(apiToken)await apiRequest({action:'logout'})}catch(e){}apiToken='';localStorage.removeItem(TOKEN_KEY);state.player='';state.authenticated=false;$('#playerPin').value='';renderAll()};
 $$('.gender').forEach(b=>b.onclick=()=>{state.gender=b.dataset.gender;renderAll()});
 $('#weekSelect').onchange=e=>{state.week=e.target.value;renderAll()};
+function openNativeDatePicker(inputId){
+  const input=$(inputId);
+  if(!input)return;
+  try{
+    if(typeof input.showPicker==='function'){input.showPicker();return;}
+  }catch(e){}
+  input.focus();
+  input.click();
+}
+$('#openWeekStartCal').onclick=()=>openNativeDatePicker('#weekStartDate');
+$('#openWeekEndCal').onclick=()=>openNativeDatePicker('#weekEndDate');
+$('#weekStartDate').addEventListener('click',()=>{try{if(typeof $('#weekStartDate').showPicker==='function')$('#weekStartDate').showPicker()}catch(e){}});
+$('#weekEndDate').addEventListener('click',()=>{try{if(typeof $('#weekEndDate').showPicker==='function')$('#weekEndDate').showPicker()}catch(e){}});
+
 $('#externalRound').addEventListener('input',e=>{if(!requireAdmin())return;const round=e.target.value;data.fixtureRounds=data.fixtureRounds||{};if(round.trim())data.fixtureRounds[fixtureKey()]=round;else delete data.fixtureRounds[fixtureKey()];localStorage.setItem(STORAGE_KEY,JSON.stringify(data));markFixtureDirty();});
 ['#weekStartDate','#weekEndDate'].forEach(id=>$(id).addEventListener('change',()=>{if(!requireAdmin())return;const start=$('#weekStartDate').value,end=$('#weekEndDate').value;if(start&&end&&start<=end){setWeekRangeLocal(start,end);const h=$('#weekRangeHint');if(h)h.textContent=`Rango sin guardar: ${dayDateES(start)} → ${dayDateES(end)}. Pulsa “Guardar jornada” para publicarlo.`}else if(start&&end){alert('La fecha de inicio no puede ser posterior a la fecha final.')}}));
 $('#prevWeek').onclick=()=>{let i=weeks.findIndex(w=>w.id===state.week);if(i>0){state.week=weeks[i-1].id;renderAll()}};
