@@ -44,6 +44,12 @@ main{max-width:1180px;margin:auto;padding:14px;display:grid;gap:14px}.card{borde
 @media(max-width:760px){.customBlockGrid{grid-template-columns:1fr 1fr}.customBlockGrid .dateField{grid-column:1/-1}.customBlockGrid button{grid-column:1/-1;width:100%}}
 @media(max-width:430px){.customBlockGrid{grid-template-columns:1fr}.customBlockGrid .dateField,.customBlockGrid button{grid-column:auto}}
 .bottomNav{position:fixed;left:50%;transform:translateX(-50%);bottom:10px;z-index:40;width:min(620px,calc(100% - 20px));background:rgba(24,10,13,.94);backdrop-filter:blur(16px);border:1px solid var(--line);border-radius:18px;box-shadow:0 15px 40px rgba(0,0,0,.5);display:grid;grid-template-columns:repeat(4,1fr);padding:6px}.navBtn{border:0;background:transparent;color:var(--muted);padding:8px 4px;border-radius:12px;font-size:10px;font-weight:900}.navBtn span{display:block;font-size:18px;margin-bottom:2px}.navBtn.active{background:rgba(255,201,40,.1);color:var(--gold)}
+
+.resultLine{margin-top:8px;padding:8px 9px;border-radius:11px;border:1px solid var(--line);background:rgba(255,255,255,.035);font-size:11px;line-height:1.35}
+.resultLine b{color:#fff}.resultPending{border-color:rgba(255,157,49,.32);background:rgba(255,157,49,.07)}.resultConfirmed{border-color:rgba(62,215,139,.32);background:rgba(62,215,139,.07)}
+.resultBadge{display:inline-flex;margin-left:5px;padding:2px 6px;border-radius:999px;font-size:9px;font-weight:950;border:1px solid var(--line)}.resultBadge.pending{color:var(--orange)}.resultBadge.confirmed{color:var(--green)}
+.resultGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.resultGrid.three{grid-template-columns:repeat(3,1fr)}.scorePair{display:grid;grid-template-columns:1fr 1fr;gap:6px}.scorePair input{width:100%;text-align:center;padding:10px 6px;border-radius:10px;border:1px solid var(--line);background:#190d10;color:var(--text);font-weight:950}.resultHint{font-size:10px;color:var(--muted);line-height:1.4}.resultActions{display:grid;gap:8px}.resultActions .btn{width:100%;padding:12px}
+@media(max-width:520px){.resultGrid.three{grid-template-columns:1fr}.scorePair input{padding:11px 8px}}
 .modal{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.72);display:none;align-items:flex-end;justify-content:center;padding:12px}.modal.show{display:flex}.sheet{width:min(560px,100%);max-height:88vh;overflow:auto;background:#211014;border:1px solid var(--line);border-radius:22px 22px 16px 16px;box-shadow:0 30px 80px rgba(0,0,0,.65)}.sheetHead{padding:15px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:10px}.sheetHead h3{margin:0;font-size:15px}.close{background:rgba(255,255,255,.06);border:1px solid var(--line);color:white;width:34px;height:34px;border-radius:10px}.sheetBody{padding:15px;display:grid;gap:11px}.choice{border:1px solid var(--line);border-radius:12px;padding:10px;background:rgba(255,255,255,.03);display:flex;justify-content:space-between;gap:10px;align-items:center}.choice.busy{opacity:.4}.choice b{font-size:12px}.choice span{font-size:10px;color:var(--muted)}.reserveForm{display:grid;gap:11px}.reserveField label{display:block;font-size:10px;font-weight:950;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px}.reserveField select{width:100%;padding:12px 13px;border-radius:12px;border:1px solid var(--line);background:#190d10;color:var(--text);font-weight:850}.reserveCurrent{padding:10px 11px;border-radius:12px;border:1px solid rgba(62,215,139,.28);background:rgba(62,215,139,.07);font-size:11px;color:#cdeedc}.reserveActions{display:grid;grid-template-columns:1fr;gap:8px;margin-top:2px}.reserveActions .btn{width:100%;padding:12px}.noSlots{padding:12px;border:1px dashed var(--line);border-radius:12px;color:var(--muted);font-size:11px;text-align:center}
 .hidden{display:none!important}.empty{padding:25px 12px;text-align:center;color:var(--muted);font-size:12px}.adminBadge{font-size:10px;color:var(--gold);font-weight:1000}
 @media(max-width:820px){.hero{grid-template-columns:1fr}.toolbar{grid-template-columns:1fr}.matches{grid-template-columns:1fr}.adminGrid{grid-template-columns:1fr}.filters{grid-template-columns:1fr 1fr}.filters .field:first-child{grid-column:1/-1}}
@@ -158,7 +164,7 @@ select,input,textarea{min-width:0;max-width:100%}
 
 <section class="card" id="matchesView">
   <div class="head"><h2>📋 Enfrentamientos oficiales</h2><small id="matchMeta"></small></div>
-  <div class="tiny" style="padding:0 14px 10px;color:var(--gold);font-weight:900">V3.3 · Cloudflare online · listas de jugadores sincronizadas con el acceso · reserva Día → Hora → Pista.</div>
+  <div class="tiny" style="padding:0 14px 10px;color:var(--gold);font-weight:900">V3.8 · Cloudflare online · reservas seguras · resultados con confirmación del rival.</div>
   <div class="pad">
     <div id="reserveState" class="stateBanner closed"></div>
     <div class="matches" id="matches"></div>
@@ -171,7 +177,7 @@ select,input,textarea{min-width:0;max-width:100%}
 </section>
 
 <section class="card hidden" id="adminView">
-  <div class="head"><h2>⚙️ Gestión semanal <span class="adminBadge">ADMIN</span></h2><small>V3.5 · acceso filtrado por categoría</small></div>
+  <div class="head"><h2>⚙️ Gestión semanal <span class="adminBadge">ADMIN</span></h2><small>V3.8 · reservas + resultados</small></div>
   <div class="pad adminGrid">
     <div class="adminBlock">
       <h3>1 · Jugadores de la categoría</h3>
@@ -243,6 +249,26 @@ Pablo Ruiz"></textarea>
 <nav class="bottomNav"><button class="navBtn active" data-go="home"><span>🎾</span>Partidos</button><button class="navBtn" data-go="courts"><span>🏟️</span>Pistas</button><button class="navBtn hidden" data-go="admin" id="adminNavBtn"><span>⚙️</span>Configuración</button><button class="navBtn" id="refreshBtn"><span>🔄</span>Actualizar</button></nav>
 
 <div class="modal" id="reserveModal"><div class="sheet"><div class="sheetHead"><div><div class="tiny" id="modalMode">RESERVAR PARTIDO</div><h3 id="modalMatch"></h3></div><button class="close" id="closeModal">✕</button></div><div class="sheetBody"><div class="tiny" id="modalCat"></div><div id="reserveCurrent" class="reserveCurrent hidden"></div><div id="reserveNoSlots" class="noSlots hidden">No quedan huecos disponibles para esta semana.</div><div id="reserveForm" class="reserveForm"><div class="reserveField"><label>Día</label><select id="reserveDay"></select></div><div class="reserveField"><label>Franja horaria</label><select id="reserveTime"></select></div><div class="reserveField"><label>Pista</label><select id="reserveCourt"></select></div><div class="reserveActions"><button class="btn gold" id="confirmReserve">✅ Confirmar reserva</button><button class="btn dangerBtn hidden" id="cancelReserveModal">Cancelar reserva actual</button></div></div></div></div></div>
+<div class="modal" id="resultModal"><div class="sheet"><div class="sheetHead"><div><div class="tiny" id="resultModalMode">RESULTADO DEL PARTIDO</div><h3 id="resultModalMatch"></h3></div><button class="close" id="closeResultModal">✕</button></div><div class="sheetBody">
+  <div class="tiny" id="resultModalCat"></div>
+  <div class="reserveField"><label>Tipo de resultado</label><select id="resultType"><option value="normal">Partido completado</option><option value="retirement">Retirada</option><option value="wo">WO / No presentado</option><option value="not_played">Partido no disputado</option></select></div>
+  <div id="scoreFields">
+    <div class="resultHint" style="margin-bottom:7px">Introduce el tanteo desde el punto de vista del jugador que aparece a la izquierda. El tercer set / supertiebreak es opcional.</div>
+    <div class="resultGrid three">
+      <div><div class="tiny" style="margin-bottom:5px">SET 1</div><div class="scorePair"><input id="rS1A" type="number" min="0" max="99" inputmode="numeric" placeholder="A"><input id="rS1B" type="number" min="0" max="99" inputmode="numeric" placeholder="B"></div></div>
+      <div><div class="tiny" style="margin-bottom:5px">SET 2</div><div class="scorePair"><input id="rS2A" type="number" min="0" max="99" inputmode="numeric" placeholder="A"><input id="rS2B" type="number" min="0" max="99" inputmode="numeric" placeholder="B"></div></div>
+      <div><div class="tiny" style="margin-bottom:5px">SET 3 / STB</div><div class="scorePair"><input id="rS3A" type="number" min="0" max="99" inputmode="numeric" placeholder="A"><input id="rS3B" type="number" min="0" max="99" inputmode="numeric" placeholder="B"></div></div>
+    </div>
+  </div>
+  <div class="reserveField hidden" id="winnerField"><label>Ganador</label><select id="resultWinner"></select></div>
+  <div id="resultExisting" class="reserveCurrent hidden"></div>
+  <div class="resultActions">
+    <button class="btn gold" id="saveResultBtn">📤 Enviar resultado</button>
+    <button class="btn green hidden" id="confirmResultBtn">✅ Confirmar resultado del rival</button>
+    <button class="btn dangerBtn hidden" id="deleteResultBtn">🗑️ Borrar resultado (ADMIN)</button>
+  </div>
+  <div class="resultHint">Los jugadores pueden enviar el resultado. Queda pendiente hasta que lo confirme el rival. Un ADMIN puede introducir o corregir un resultado y queda confirmado directamente.</div>
+</div></div></div>
 
 <script>
 const CATEGORIES=["Benjamín","Alevín","Infantil","Cadete","Junior","Absoluto"];
@@ -260,22 +286,22 @@ const weeks=[
  {id:"W8",label:"Semana 8 · 7–13 diciembre",start:"2026-12-07",end:"2026-12-13"},
  {id:"W9",label:"Semana 9 · 14–20 diciembre",start:"2026-12-14",end:"2026-12-20"}
 ];
-function fresh(){return {playerLists:{},fixtures:{},slots:{},drafts:{},published:{},bookings:{},pins:{},roles:{},staff:{}}}
-function normalizeData(x){const d=x&&typeof x==='object'?x:{};return {playerLists:d.playerLists||{},fixtures:d.fixtures||{},slots:d.slots||{},drafts:d.drafts||{},published:d.published||{},bookings:d.reservations||d.bookings||{},pins:d.pins||{},roles:{...(d.roles||{}),...(d.adminRoles||{})},staff:d.staff||{}}}
+function fresh(){return {playerLists:{},fixtures:{},slots:{},drafts:{},published:{},bookings:{},results:{},pins:{},roles:{},staff:{}}}
+function normalizeData(x){const d=x&&typeof x==='object'?x:{};return {playerLists:d.playerLists||{},fixtures:d.fixtures||{},slots:d.slots||{},drafts:d.drafts||{},published:d.published||{},bookings:d.reservations||d.bookings||{},results:d.results||{},pins:d.pins||{},roles:{...(d.roles||{}),...(d.adminRoles||{})},staff:d.staff||{}}}
 let data=normalizeData(JSON.parse(localStorage.getItem(STORAGE_KEY)||"null")||fresh());
 if(!data.staff["Adrián Prádanos"])data.staff["Adrián Prádanos"]={name:"Adrián Prádanos"};
 // Administrador inicial: debe estar visible en TODAS las categorías incluso antes del primer login.
 data.roles["Adrián Prádanos"]="admin";
 let apiToken=localStorage.getItem(TOKEN_KEY)||"";
-let state={category:"Infantil",gender:"Masculino",week:"W1",reserveMatchId:null,player:"",authenticated:false,showPins:false};
+let state={category:"Infantil",gender:"Masculino",week:"W1",reserveMatchId:null,resultMatchId:null,player:"",authenticated:false,showPins:false};
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 let saveTimer=null;
 let reservationPending=false;
 function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(data));if(isAdmin()&&apiToken){clearTimeout(saveTimer);saveTimer=setTimeout(()=>saveStateOnline().catch(console.warn),350)}}
-function publicState(){return {playerLists:data.playerLists,fixtures:data.fixtures,slots:data.slots,drafts:data.drafts,published:data.published,bookings:data.bookings,reservations:data.bookings,staff:data.staff,adminRoles:Object.fromEntries(Object.entries(data.roles||{}).filter(([,r])=>r==='admin')),weeks:Object.fromEntries(weeks.map(w=>[w.id,w])),updatedAt:new Date().toISOString()}}
+function publicState(){return {playerLists:data.playerLists,fixtures:data.fixtures,slots:data.slots,drafts:data.drafts,published:data.published,bookings:data.bookings,reservations:data.bookings,results:data.results,staff:data.staff,adminRoles:Object.fromEntries(Object.entries(data.roles||{}).filter(([,r])=>r==='admin')),weeks:Object.fromEntries(weeks.map(w=>[w.id,w])),updatedAt:new Date().toISOString()}}
 async function apiRequest(payload,{auth=true}={}){const headers={'Content-Type':'application/json'};if(auth&&apiToken)headers.Authorization='Bearer '+apiToken;const r=await fetch(API_URL,{method:'POST',headers,body:JSON.stringify(payload)});let j={};try{j=await r.json()}catch(e){}if(!r.ok||j.ok===false)throw new Error(j.error||('HTTP '+r.status));return j}
 function setOnline(ok,text){const el=$('#onlineState');if(!el)return;el.classList.toggle('off',!ok);el.textContent=text||(ok?'☁️ Online':'⚠️ Sin conexión')}
-async function refreshOnline({silent=false}={}){try{const j=await apiRequest({action:'read'},{auth:false});const remote=normalizeData(j.state);data.playerLists=remote.playerLists;data.fixtures=remote.fixtures;data.slots=remote.slots;data.drafts=remote.drafts;data.published=remote.published;data.bookings=remote.bookings;data.staff={...(data.staff||{}),...(remote.staff||{})};data.roles={...(data.roles||{}),...(remote.roles||{})};data.roles["Adrián Prádanos"]="admin";localStorage.setItem(STORAGE_KEY,JSON.stringify(data));setOnline(true,'☁️ Online');renderAll();return true}catch(e){setOnline(false,'⚠️ Offline');if(!silent)alert('No se ha podido actualizar desde Cloudflare.\n\n'+e.message);return false}}
+async function refreshOnline({silent=false}={}){try{const j=await apiRequest({action:'read'},{auth:false});const remote=normalizeData(j.state);data.playerLists=remote.playerLists;data.fixtures=remote.fixtures;data.slots=remote.slots;data.drafts=remote.drafts;data.published=remote.published;data.bookings=remote.bookings;data.results=remote.results;data.staff={...(data.staff||{}),...(remote.staff||{})};data.roles={...(data.roles||{}),...(remote.roles||{})};data.roles["Adrián Prádanos"]="admin";localStorage.setItem(STORAGE_KEY,JSON.stringify(data));setOnline(true,'☁️ Online');renderAll();return true}catch(e){setOnline(false,'⚠️ Offline');if(!silent)alert('No se ha podido actualizar desde Cloudflare.\n\n'+e.message);return false}}
 async function saveStateOnline(){if(!apiToken||!isAdmin())return;await apiRequest({action:'saveState',state:publicState()});setOnline(true,'☁️ Guardado')}
 async function saveUsersOnline(){if(!apiToken||!isAdmin())return;const users=allIdentities().map(name=>({name,pin:String(data.pins[name]||''),role:roleOf(name)==='admin'?'admin':'player',active:true})).filter(u=>/^\d{4}$/.test(u.pin));await apiRequest({action:'saveUsers',users});}
 async function loadAdminUsers(){if(!apiToken||!isAdmin())return;const j=await apiRequest({action:'listUsers'});for(const u of j.users||[]){data.pins[u.name]=String(u.pin||'');data.roles[u.name]=u.role==='admin'?'admin':'jugador';if(!allPlayers().includes(u.name))data.staff[u.name]={name:u.name}}localStorage.setItem(STORAGE_KEY,JSON.stringify(data));}
@@ -312,6 +338,7 @@ function fixtures(){return data.fixtures[fixtureKey()]||[]}
 function slots(){return data.slots[weekKey()]||[]}
 function isOpen(){return !!data.published[weekKey()]}
 function bookingFor(mid){return data.bookings[mid]||null}
+function resultFor(mid){return data.results[mid]||null}
 function slotBooking(slotId){return Object.entries(data.bookings).find(([,b])=>b.week===state.week&&b.slotId===slotId)?.[1]||null}
 function allWeekFixtures(){const prefix=state.week+"|"; return Object.entries(data.fixtures).filter(([k])=>k.startsWith(prefix)).flatMap(([k,arr])=>arr.map(x=>({...x,key:k})))}
 function allPlayers(){return [...new Set([...[].concat(...Object.values(data.playerLists||{})),...Object.values(data.fixtures).flat().flatMap(m=>[m.a,m.b])])].filter(Boolean).sort((a,b)=>a.localeCompare(b,'es'))}
@@ -333,13 +360,44 @@ function renderTabs(){
 }
 function renderWeeks(){const s=$('#weekSelect'); s.innerHTML=weeks.map(w=>`<option value="${w.id}">${w.label}</option>`).join('');s.value=state.week;$('#weekLabel').textContent=weeks.find(w=>w.id===state.week).label}
 function renderState(){const open=isOpen(), b=$('#reserveState');b.className='stateBanner '+(open?'open':'closed');b.innerHTML=open?`<div class="stateIcon">🟢</div><div><b>Reservas abiertas</b><span>El club ya ha publicado la disponibilidad de pistas de esta semana.</span></div>`:`<div class="stateIcon">🔒</div><div><b>Reservas todavía cerradas</b><span>Los enfrentamientos ya son visibles, pero no se podrá reservar hasta que el club publique las pistas disponibles.</span></div>`;$('#headerState').textContent=open?'🟢 Reservas abiertas':'🔒 Reservas cerradas'}
+function resultLabel(r){
+ if(!r)return '';
+ if(r.type==='wo')return `WO · ${r.winner}`;
+ if(r.type==='retirement')return `${(r.sets||[]).map(x=>`${x.a}-${x.b}`).join(' / ')}${r.sets?.length?' · ':''}Retirada · gana ${r.winner}`;
+ if(r.type==='not_played')return 'Partido no disputado';
+ return (r.sets||[]).map(x=>`${x.a}-${x.b}`).join(' / ');
+}
 function renderMatches(){const fs=fixtures(), box=$('#matches');$('#matchMeta').textContent=`${fs.length} partido${fs.length===1?'':'s'}`;if(!fs.length){box.innerHTML='<div class="empty">No hay enfrentamientos cargados para esta categoría y semana.</div>';return}
- box.innerHTML=fs.map(m=>{const bk=bookingFor(m.id);const mine=canPlayerReserve(m);const st=bk?'booked':(isOpen()?'pending':'locked');const label=bk?'✅ Reservado':(isOpen()?'⏳ Pendiente de reservar':'🔒 Esperando pistas');const detail=bk?`${dayDateES(bk.date)} · ${bk.time} · ${bk.court}`:'Enfrentamiento oficial iSquad';let actions='';if(bk&&mine){actions=`<div class="matchActions"><button class="btn secondary" data-mid="${m.id}">Cambiar</button><button class="btn dangerBtn" data-cancel-mid="${m.id}">Cancelar</button></div>`}else{let btnLabel='Reservar',disabled='';if(bk)btnLabel='Reservado';else if(!state.player){btnLabel='Identifícate';disabled='disabled'}else if(!mine){btnLabel='Solo jugadores';disabled='disabled'}else if(!isOpen()){btnLabel='Esperando pistas';disabled='disabled'};actions=`<button class="btn ${bk?'secondary':''}" data-mid="${m.id}" ${disabled}>${btnLabel}</button>`}
- return `<div class="match ${mine?'mineMatch':'notMine'}"><div><div class="cat">${state.category} · ${state.gender}${mine?' · TU PARTIDO':''}</div><div class="players">${m.a} <span style="color:var(--muted);font-weight:700">vs</span> ${m.b}</div><div class="booking">${detail}</div><div style="margin-top:7px"><span class="status ${st}">${label}</span></div></div>${actions}</div>`}).join('');
- box.querySelectorAll('[data-mid]').forEach(b=>b.onclick=()=>openReserve(b.dataset.mid));
+ box.innerHTML=fs.map(m=>{
+   const bk=bookingFor(m.id), r=resultFor(m.id), mine=canPlayerReserve(m), admin=isAdmin();
+   const st=bk?'booked':(isOpen()?'pending':'locked');
+   const label=bk?'✅ Reservado':(isOpen()?'⏳ Pendiente de reservar':'🔒 Esperando pistas');
+   const detail=bk?`${dayDateES(bk.date)} · ${bk.time} · ${bk.court}`:'Enfrentamiento oficial iSquad';
+   let reserveActions='';
+   if(bk&&(mine||admin)) reserveActions=`<button class="btn secondary" data-reserve-mid="${m.id}">Cambiar</button><button class="btn dangerBtn" data-cancel-mid="${m.id}">Cancelar</button>`;
+   else {let btnLabel='Reservar',disabled='';if(bk){btnLabel='Reservado';disabled='disabled'}else if(!state.player){btnLabel='Identifícate';disabled='disabled'}else if(!mine&&!admin){btnLabel='Solo jugadores';disabled='disabled'}else if(!isOpen()){btnLabel='Esperando pistas';disabled='disabled'};reserveActions=`<button class="btn ${bk?'secondary':''}" data-reserve-mid="${m.id}" ${disabled}>${btnLabel}</button>`}
+   let resultActions='';
+   if(state.authenticated&&(mine||admin)){
+     if(!r) resultActions=`<button class="btn gold" data-result-mid="${m.id}">Subir resultado</button>`;
+     else if(r.status==='pending' && !admin && r.submittedBy!==state.player) resultActions=`<button class="btn green" data-confirm-result="${m.id}">Confirmar resultado</button>`;
+     else if(r.status==='pending') resultActions=`<button class="btn gold" data-result-mid="${m.id}">Editar resultado</button>`;
+     else if(admin) resultActions=`<button class="btn gold" data-result-mid="${m.id}">Corregir resultado</button>`;
+   }
+   const resultHtml=r?`<div class="resultLine ${r.status==='confirmed'?'resultConfirmed':'resultPending'}"><b>Resultado:</b> ${resultLabel(r)} <span class="resultBadge ${r.status==='confirmed'?'confirmed':'pending'}">${r.status==='confirmed'?'CONFIRMADO':'PENDIENTE DE CONFIRMAR'}</span>${r.status==='pending'?`<div class="tiny" style="margin-top:4px">Enviado por ${r.submittedBy}</div>`:''}</div>`:'';
+   return `<div class="match ${mine?'mineMatch':'notMine'}"><div><div class="cat">${state.category} · ${state.gender}${mine?' · TU PARTIDO':''}</div><div class="players">${m.a} <span style="color:var(--muted);font-weight:700">vs</span> ${m.b}</div><div class="booking">${detail}</div><div style="margin-top:7px"><span class="status ${st}">${label}</span></div>${resultHtml}</div><div class="matchActions">${reserveActions}${resultActions}</div></div>`
+ }).join('');
+ box.querySelectorAll('[data-reserve-mid]').forEach(b=>b.onclick=()=>openReserve(b.dataset.reserveMid));
  box.querySelectorAll('[data-cancel-mid]').forEach(b=>b.onclick=()=>cancelBooking(b.dataset.cancelMid));
+ box.querySelectorAll('[data-result-mid]').forEach(b=>b.onclick=()=>openResultModal(b.dataset.resultMid));
+ box.querySelectorAll('[data-confirm-result]').forEach(b=>b.onclick=()=>confirmResult(b.dataset.confirmResult));
 }
 async function cancelBooking(mid){const m=fixtures().find(x=>x.id===mid);const bk=bookingFor(mid);if(!m||!bk)return;if(!canPlayerReserve(m)&&!isAdmin()){alert('Solo uno de los dos jugadores o un administrador puede cancelar la reserva.');return;}const ok=confirm(`¿Cancelar esta reserva?\n\n${m.a} vs ${m.b}\n${dayDateES(bk.date)} · ${bk.time} · ${bk.court}\n\nLa pista volverá a quedar libre.`);if(!ok)return;try{await apiRequest({action:'cancelReservation',matchId:mid});delete data.bookings[mid];localStorage.setItem(STORAGE_KEY,JSON.stringify(data));renderAll();alert('✅ Reserva cancelada. La pista vuelve a estar disponible.')}catch(e){alert(e.message);await refreshOnline({silent:true})}}
+function readSet(aId,bId){const av=$(aId).value,bv=$(bId).value;if(av===''&&bv==='')return null;if(av===''||bv==='')throw new Error('Completa los dos tanteos del set.');const a=Number(av),b=Number(bv);if(!Number.isInteger(a)||!Number.isInteger(b)||a<0||b<0||a>99||b>99||a===b)throw new Error('Revisa el tanteo de los sets.');return {a,b}}
+function syncResultType(){const type=$('#resultType').value;$('#scoreFields').classList.toggle('hidden',type==='wo'||type==='not_played');$('#winnerField').classList.toggle('hidden',!(type==='wo'||type==='retirement'))}
+function openResultModal(mid){state.resultMatchId=mid;const m=fixtures().find(x=>x.id===mid);if(!m)return;if(!isAdmin()&&!canPlayerReserve(m)){alert('Solo los jugadores del partido o un administrador pueden gestionar el resultado.');return}const r=resultFor(mid);$('#resultModalMatch').textContent=`${m.a} vs ${m.b}`;$('#resultModalCat').textContent=`${state.category} · ${state.gender} · ${weeks.find(w=>w.id===state.week).label}`;$('#resultWinner').innerHTML=`<option value="">Selecciona ganador</option><option value="${m.a.replace(/"/g,'&quot;')}">${m.a}</option><option value="${m.b.replace(/"/g,'&quot;')}">${m.b}</option>`;$('#resultType').value=r?.type||'normal';const sets=r?.sets||[];[['#rS1A','#rS1B'],['#rS2A','#rS2B'],['#rS3A','#rS3B']].forEach((ids,i)=>{$(ids[0]).value=sets[i]?.a??'';$(ids[1]).value=sets[i]?.b??''});$('#resultWinner').value=r?.winner||'';$('#resultModalMode').textContent=r?'EDITAR RESULTADO':'SUBIR RESULTADO';$('#resultExisting').classList.toggle('hidden',!r);if(r)$('#resultExisting').innerHTML=`<b>Estado actual:</b> ${resultLabel(r)} · ${r.status==='confirmed'?'Confirmado':'Pendiente de confirmar'}`;const canConfirm=!!r&&r.status==='pending'&&!isAdmin()&&r.submittedBy!==state.player&&canPlayerReserve(m);$('#confirmResultBtn').classList.toggle('hidden',!canConfirm);$('#saveResultBtn').classList.toggle('hidden',canConfirm||(!isAdmin()&&r?.status==='confirmed'));$('#saveResultBtn').textContent=isAdmin()?(r?'💾 Guardar corrección':'✅ Guardar resultado'):(r?'📤 Actualizar resultado':'📤 Enviar resultado');$('#deleteResultBtn').classList.toggle('hidden',!(isAdmin()&&r));syncResultType();$('#resultModal').classList.add('show')}
+async function saveResult(){const mid=state.resultMatchId,m=fixtures().find(x=>x.id===mid);if(!m)return;try{const type=$('#resultType').value;let sets=[];if(type!=='wo'&&type!=='not_played'){for(const [a,b] of [['#rS1A','#rS1B'],['#rS2A','#rS2B'],['#rS3A','#rS3B']]){const set=readSet(a,b);if(set)sets.push(set)}if(type==='normal'&&sets.length<2)throw new Error('Introduce al menos los dos primeros sets.')}const winner=(type==='wo'||type==='retirement')?$('#resultWinner').value:'';if((type==='wo'||type==='retirement')&&!winner)throw new Error('Selecciona el ganador.');const btn=$('#saveResultBtn'),old=btn.textContent;btn.disabled=true;btn.textContent='⏳ Guardando…';try{const j=await apiRequest({action:'submitResult',matchId:mid,result:{type,sets,winner}});data.results[mid]=j.result;localStorage.setItem(STORAGE_KEY,JSON.stringify(data));$('#resultModal').classList.remove('show');renderAll();alert(j.result.status==='confirmed'?'✅ Resultado guardado y confirmado.':'✅ Resultado enviado. Queda pendiente de confirmación del rival.')}finally{btn.disabled=false;btn.textContent=old}}catch(e){alert(e.message)}}
+async function confirmResult(mid){const m=fixtures().find(x=>x.id===mid),r=resultFor(mid);if(!m||!r)return;const ok=confirm(`¿Confirmas este resultado?\n\n${m.a} vs ${m.b}\n${resultLabel(r)}\n\nUna vez confirmado, solo un administrador podrá corregirlo.`);if(!ok)return;try{const j=await apiRequest({action:'confirmResult',matchId:mid});data.results[mid]=j.result;localStorage.setItem(STORAGE_KEY,JSON.stringify(data));renderAll();alert('✅ Resultado confirmado.')}catch(e){alert(e.message);await refreshOnline({silent:true})}}
+async function deleteResult(mid){if(!isAdmin())return;const m=fixtures().find(x=>x.id===mid);if(!m)return;if(!confirm(`¿Borrar el resultado de ${m.a} vs ${m.b}?`))return;try{await apiRequest({action:'deleteResult',matchId:mid});delete data.results[mid];localStorage.setItem(STORAGE_KEY,JSON.stringify(data));$('#resultModal').classList.remove('show');renderAll();alert('🗑️ Resultado borrado.')}catch(e){alert(e.message)}}
 function renderKpis(){
  const all=allWeekFixtures();
  const booked=all.filter(m=>bookingFor(m.id)).length;
@@ -629,6 +687,7 @@ $('#reserveTime').onchange=()=>fillReserveCourts(state.reserveMatchId,'');
 $('#confirmReserve').onclick=()=>{if(reservationPending)return;const sid=$('#reserveCourt').value;if(!sid){alert('Selecciona una pista disponible.');return}book(state.reserveMatchId,sid)};
 $('#cancelReserveModal').onclick=()=>{const mid=state.reserveMatchId;$('#reserveModal').classList.remove('show');cancelBooking(mid)};
 $('#closeModal').onclick=()=>$('#reserveModal').classList.remove('show');$('#reserveModal').onclick=e=>{if(e.target===$('#reserveModal'))$('#reserveModal').classList.remove('show')};
+$('#resultType').onchange=syncResultType;$('#saveResultBtn').onclick=saveResult;$('#confirmResultBtn').onclick=()=>confirmResult(state.resultMatchId);$('#deleteResultBtn').onclick=()=>deleteResult(state.resultMatchId);$('#closeResultModal').onclick=()=>$('#resultModal').classList.remove('show');$('#resultModal').onclick=e=>{if(e.target===$('#resultModal'))$('#resultModal').classList.remove('show')};
 $$('.navBtn[data-go]').forEach(b=>b.onclick=()=>{const go=b.dataset.go;$$('.navBtn').forEach(x=>x.classList.remove('active'));b.classList.add('active');if(go==='home')$('#homeView').scrollIntoView({behavior:'smooth',block:'start'});if(go==='courts')$('#courtsView').scrollIntoView({behavior:'smooth',block:'start'});if(go==='admin'){if(!isAdmin()){alert('Acceso restringido a administradores.');return;}$('#adminView').classList.remove('hidden');$('#adminView').scrollIntoView({behavior:'smooth',block:'start'})}});
 $('#refreshBtn').onclick=()=>refreshOnline();
 try{
