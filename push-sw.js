@@ -2,7 +2,6 @@ self.addEventListener('push', event => {
   let data = {};
   try { data = event.data ? event.data.json() : {}; }
   catch (_) { data = { body: event.data ? event.data.text() : '' }; }
-
   const title = data.title || '🎾 CT Campeador';
   const options = {
     body: data.body || 'Hay novedades en la liga.',
@@ -14,7 +13,6 @@ self.addEventListener('push', event => {
   };
   event.waitUntil(self.registration.showNotification(title, options));
 });
-
 self.addEventListener('notificationclick', event => {
   event.notification.close();
   const url = event.notification?.data?.url || 'https://ligasdetenis.github.io/ct-campeador-liga/';

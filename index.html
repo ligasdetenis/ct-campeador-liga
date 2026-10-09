@@ -175,7 +175,7 @@ body.pinLocked{overflow:hidden}
 @media(max-width:520px){.pinWelcomeCard{padding:21px;border-radius:22px}.pinWelcomeLogo{width:96px;height:96px}.pinWelcomeTitle{font-size:21px}}
 
 
-/* V3.12.2 · Web Push nativo */
+/* V3.12.3 · Web Push nativo */
 .pushBox{margin-top:12px;padding:12px;border:1px solid var(--line);border-radius:15px;background:rgba(255,255,255,.025);display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
 .pushBox.hidden{display:none!important}
 .pushInfo{min-width:220px;flex:1}
@@ -185,7 +185,16 @@ body.pinLocked{overflow:hidden}
 .pushWarn{color:var(--orange);font-weight:800}
 #pushActivateBtn{min-width:155px}
 
+
+.iosPushHelp{margin-top:8px;padding:10px 11px;border-radius:13px;background:rgba(255,201,40,.06);border:1px solid rgba(255,201,40,.18);font-size:11px;color:#f2d7cf;line-height:1.45;width:100%}
+.iosPushHelp.hidden{display:none!important}
 </style>
+
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="CT Campeador">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 </head>
 <body>
 
@@ -240,6 +249,9 @@ body.pinLocked{overflow:hidden}
     <div class="pushText" id="pushText">Activa los avisos para recibir una notificación cuando el club publique pistas.</div>
   </div>
   <button class="btn gold" id="pushActivateBtn" type="button">🔔 Activar avisos</button>
+  <div class="iosPushHelp hidden" id="iosPushHelp">
+    <b>iPhone/iPad:</b> Safari no permite Web Push desde una pestaña normal. Pulsa <b>Compartir</b> → <b>Añadir a pantalla de inicio</b>. Después abre <b>CT Campeador</b> desde el icono creado y activa los avisos allí.
+  </div>
 </div>
 </div>
 </section>
@@ -639,6 +651,15 @@ async function syncPushSubscription(sub){
   if(!r.ok||j.ok===false)throw new Error(j.error||('HTTP '+r.status));
   return true;
 }
+
+function isIOSPushDevice(){
+  return /iphone|ipad|ipod/i.test(navigator.userAgent) ||
+         (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
+}
+function isStandalonePWA(){
+  return window.matchMedia?.('(display-mode: standalone)').matches ||
+         navigator.standalone===true;
+}
 async function renderPushUI(){
   const box=$('#pushBox'),txt=$('#pushText'),btn=$('#pushActivateBtn');
   if(!box||!txt||!btn)return;
@@ -647,6 +668,15 @@ async function renderPushUI(){
     return;
   }
   box.classList.remove('hidden');
+  const iosHelp=$('#iosPushHelp');
+  if(iosHelp)iosHelp.classList.add('hidden');
+  if(isIOSPushDevice()&&!isStandalonePWA()){
+    txt.innerHTML='<span class="pushWarn">📲 En iPhone/iPad debes instalar CT Campeador en la pantalla de inicio para activar los avisos.</span>';
+    btn.disabled=false;
+    btn.textContent='📲 Cómo instalar';
+    if(iosHelp)iosHelp.classList.remove('hidden');
+    return;
+  }
   if(!('Notification' in window)||!('serviceWorker' in navigator)||!('PushManager' in window)){
     txt.innerHTML='<span class="pushWarn">Este navegador no admite Web Push.</span>';
     btn.disabled=true;btn.textContent='No compatible';
@@ -670,6 +700,11 @@ async function renderPushUI(){
 async function activateNativePush(){
   const btn=$('#pushActivateBtn');
   if(!state.authenticated){alert('Entra primero con tu PIN.');return}
+  if(isIOSPushDevice()&&!isStandalonePWA()){
+    const h=$('#iosPushHelp'); if(h)h.classList.remove('hidden');
+    alert('En iPhone/iPad debes abrir CT Campeador como app instalada.\n\nSafari → Compartir → Añadir a pantalla de inicio.\n\nDespués abre CT Campeador desde el icono y vuelve a pulsar Activar avisos.');
+    return;
+  }
   const old=btn.textContent;
   try{
     btn.disabled=true;btn.textContent='⏳ Activando…';
@@ -1337,5 +1372,5 @@ bootstrapApp();
 
 window.addEventListener('scroll',()=>{const a=document.getElementById('adminView');if(a)a.classList.toggle('adminScrolled',window.scrollY>(a.offsetTop+280));},{passive:true});
 </script>
-<div style="position:fixed;right:8px;bottom:78px;z-index:45;font-size:9px;opacity:.55;background:#180b0e;border:1px solid rgba(255,255,255,.12);padding:4px 7px;border-radius:999px">V3.12.2 · PIN + PUSH NATIVO</div>
+<div style="position:fixed;right:8px;bottom:78px;z-index:45;font-size:9px;opacity:.55;background:#180b0e;border:1px solid rgba(255,255,255,.12);padding:4px 7px;border-radius:999px">V3.12.3 · PIN + PUSH NATIVO iPHONE</div>
 </body></html>
