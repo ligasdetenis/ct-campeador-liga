@@ -175,7 +175,7 @@ body.pinLocked{overflow:hidden}
 @media(max-width:520px){.pinWelcomeCard{padding:21px;border-radius:22px}.pinWelcomeLogo{width:96px;height:96px}.pinWelcomeTitle{font-size:21px}}
 
 
-/* V3.12 · Web Push nativo */
+/* V3.12.2 · Web Push nativo */
 .pushBox{margin-top:12px;padding:12px;border:1px solid var(--line);border-radius:15px;background:rgba(255,255,255,.025);display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
 .pushBox.hidden{display:none!important}
 .pushInfo{min-width:220px;flex:1}
@@ -257,7 +257,7 @@ body.pinLocked{overflow:hidden}
 </section>
 <section class="card hidden" id="adminView">
 <div class="head"><h2>⚙️ Gestión semanal <span class="adminBadge">ADMIN</span></h2><small>V3.11.6 · semanas configurables</small></div>
-<div class="pad adminGrid"><div class="adminQuickNav" id="adminQuickNav"><button class="adminQuickBtn" data-admin-target="players" type="button">👥 Jugadores</button><button class="adminQuickBtn" data-admin-target="fixtures" type="button">🎾 Jornada</button><button class="adminQuickBtn" data-admin-target="slots" type="button">🏟️ Pistas</button><button class="adminQuickBtn" data-admin-target="pins" type="button">🔐 PIN</button><button class="adminQuickBtn" data-admin-target="admins" type="button">🛡️ Admins</button><button class="adminQuickBtn" data-admin-target="roles" type="button">👤 Permisos</button><button class="adminQuickBtn" data-admin-target="whats" type="button">📣 WhatsApp</button></div>
+<div class="pad adminGrid"><div class="adminQuickNav" id="adminQuickNav"><button class="adminQuickBtn" data-admin-target="players" type="button">👥 Jugadores</button><button class="adminQuickBtn" data-admin-target="fixtures" type="button">🎾 Jornada</button><button class="adminQuickBtn" data-admin-target="slots" type="button">🏟️ Pistas</button><button class="adminQuickBtn" data-admin-target="pins" type="button">🔐 PIN</button><button class="adminQuickBtn" data-admin-target="devices" type="button">🔔 Dispositivos</button><button class="adminQuickBtn" data-admin-target="admins" type="button">🛡️ Admins</button><button class="adminQuickBtn" data-admin-target="roles" type="button">👤 Permisos</button><button class="adminQuickBtn" data-admin-target="whats" type="button">📣 WhatsApp</button></div>
 <details class="adminBlock adminAccordion" data-admin-section="players" open=""><summary class="adminSummary"><span class="adminSummaryTitle">1 · Jugadores de la categoría</span><span class="adminSummaryMeta" id="adminMeta_players">Abrir</span></summary><div class="adminAccordionBody">
 
 <div class="authNote">Carga aquí la lista completa de jugadores de <b>la categoría y sexo seleccionados</b>. No depende de la semana. Una línea por jugador.</div>
@@ -327,9 +327,15 @@ Pablo Ruiz"></textarea>
 
 <div class="tiny">Genera PIN de 4 cifras automáticamente para todos los jugadores cargados. Puedes regenerar uno concreto si fuera necesario. Los PIN se guardan online en Cloudflare junto con los usuarios.</div>
 <div class="quickActions"><button class="btn gold" id="generatePins">🔐 Generar PIN que falten</button><button class="btn secondary" id="showPins">👁 Mostrar / ocultar PIN</button><button class="btn danger" id="resetPins">♻ Regenerar todos</button></div>
-<div class="schedule" style="margin-top:10px"><table><thead><tr><th>Jugador</th><th>PIN</th><th>Mensaje</th></tr></thead><tbody id="pinTable"></tbody></table></div>
+<div class="schedule" style="margin-top:10px"><table><thead><tr><th>Jugador</th><th>PIN</th><th>Mensaje</th><th>Acción</th></tr></thead><tbody id="pinTable"></tbody></table></div>
 </div></details>
-<details class="adminBlock adminAccordion" data-admin-section="admins"><summary class="adminSummary"><span class="adminSummaryTitle">5 · Administradores externos</span><span class="adminSummaryMeta" id="adminMeta_admins">Abrir</span></summary><div class="adminAccordionBody">
+
+<details class="adminBlock adminAccordion" data-admin-section="devices"><summary class="adminSummary"><span class="adminSummaryTitle">5 · Dispositivos y avisos</span><span class="adminSummaryMeta" id="adminMeta_devices">Abrir</span></summary><div class="adminAccordionBody">
+<div class="tiny">Consulta qué jugadores tienen dispositivos suscritos a los avisos. Puedes dar de baja todos los dispositivos de un jugador si cambia de móvil, pierde el dispositivo o deja de querer recibir notificaciones.</div>
+<div class="quickActions"><button class="btn secondary" id="refreshPushDevices" type="button">🔄 Actualizar dispositivos</button></div>
+<div class="schedule" style="margin-top:10px"><table><thead><tr><th>Jugador</th><th>Dispositivos</th><th>Última alta</th><th>Acción</th></tr></thead><tbody id="pushDevicesTable"><tr><td colspan="4">Pulsa “Actualizar dispositivos”.</td></tr></tbody></table></div>
+</div></details>
+<details class="adminBlock adminAccordion" data-admin-section="admins"><summary class="adminSummary"><span class="adminSummaryTitle">6 · Administradores externos</span><span class="adminSummaryMeta" id="adminMeta_admins">Abrir</span></summary><div class="adminAccordionBody">
 
 <div class="tiny">Crea administradores que <b>no tienen que pertenecer a ninguna categoría ni ser jugadores</b>. Aparecerán siempre en el desplegable de acceso y verán ⚙️ Configuración al iniciar sesión.</div>
 <div class="generator" style="margin-top:10px">
@@ -340,13 +346,13 @@ Pablo Ruiz"></textarea>
 <div class="schedule" style="margin-top:10px"><table><thead><tr><th>Administrador</th><th>PIN</th><th>Acciones</th></tr></thead><tbody id="externalAdminTable"></tbody></table></div>
 <div class="authNote">Si dejas el PIN vacío, se genera automáticamente. No se añade a ninguna lista de jugadores.</div>
 </div></details>
-<details class="adminBlock adminAccordion" data-admin-section="roles"><summary class="adminSummary"><span class="adminSummaryTitle">6 · Permisos de acceso</span><span class="adminSummaryMeta" id="adminMeta_roles">Abrir</span></summary><div class="adminAccordionBody">
+<details class="adminBlock adminAccordion" data-admin-section="roles"><summary class="adminSummary"><span class="adminSummaryTitle">7 · Permisos de acceso</span><span class="adminSummaryMeta" id="adminMeta_roles">Abrir</span></summary><div class="adminAccordionBody">
 
 <div class="tiny">Solo las personas marcadas como <b>ADMIN</b> verán la opción ⚙️ Configuración y podrán modificar enfrentamientos, horarios, PIN o abrir/cerrar reservas.</div>
 <div class="schedule" style="margin-top:10px"><table><thead><tr><th>Persona</th><th>Rol</th></tr></thead><tbody id="roleTable"></tbody></table></div>
 <div class="authNote">Administrador inicial de prueba: <b>Adrián Prádanos</b> · PIN <b>2020</b>. Puedes dar permiso ADMIN a otros usuarios desde esta tabla.</div>
 </div></details>
-<details class="adminBlock adminAccordion" data-admin-section="whats"><summary class="adminSummary"><span class="adminSummaryTitle">7 · Resumen para WhatsApp</span><span class="adminSummaryMeta" id="adminMeta_whats">Abrir</span></summary><div class="adminAccordionBody">
+<details class="adminBlock adminAccordion" data-admin-section="whats"><summary class="adminSummary"><span class="adminSummaryTitle">8 · Resumen para WhatsApp</span><span class="adminSummaryMeta" id="adminMeta_whats">Abrir</span></summary><div class="adminAccordionBody">
 
 <textarea id="whatsPreview" readonly=""></textarea>
 <button class="btn gold" id="copyWhats" style="margin-top:8px">📋 Copiar mensaje</button>
@@ -847,7 +853,18 @@ function renderAdmin(){
   const cps=categoryPlayers();$('#playerPaste').value=cps.join('\n');$('#playerCount').textContent=`${cps.length} jugador${cps.length===1?'':'es'}`;$('#fixturePaste').value='';renderFixtureEditor();const cw=weeks.find(w=>w.id===state.week);if(cw){$('#weekStartDate').value=cw.start;$('#weekEndDate').value=cw.end;$('#weekRangeHint').textContent=`Rango actual: ${dayDateES(cw.start)} → ${dayDateES(cw.end)}. Las pistas del borrador se limitarán a estas fechas.`}renderSlotRows();setDefaultQuickDate();renderPins();renderRoles();renderExternalAdmins();renderWhats();
 }
 function renderRoles(){const tb=$('#roleTable');const ps=allIdentities();tb.innerHTML=ps.map(p=>`<tr><td><b>${p}</b></td><td><select data-role-person="${p.replace(/"/g,'&quot;')}"><option value="jugador" ${roleOf(p)==='jugador'?'selected':''}>Jugador</option><option value="admin" ${roleOf(p)==='admin'?'selected':''}>ADMIN</option></select></td></tr>`).join('');tb.querySelectorAll('[data-role-person]').forEach(s=>s.onchange=()=>{if(!requireAdmin())return;s.disabled=true;data.roles[s.dataset.rolePerson]=s.value;save();saveUsersOnline().catch(e=>alert(e.message));renderAll();alert(`Permiso actualizado: ${s.dataset.rolePerson} → ${s.value.toUpperCase()}`)})}
-function renderPins(){const tb=$('#pinTable');const ps=allIdentities();if(!ps.length){tb.innerHTML='<tr><td colspan="3">No hay jugadores cargados.</td></tr>';return}tb.innerHTML=ps.map(p=>{const pin=data.pins[p]||'—';const shown=state.showPins?pin:'••••';return `<tr><td><b>${p}</b></td><td><span class="mono">${shown}</span></td><td><button class="btn secondary" data-copy-pin="${p.replace(/"/g,'&quot;')}">📋 Copiar mensaje</button></td></tr>`}).join('');tb.querySelectorAll('[data-copy-pin]').forEach(b=>b.onclick=()=>copyPinMessage(b.dataset.copyPin))}
+function renderPins(){
+  const tb=$('#pinTable');const ps=allIdentities();
+  if(!ps.length){tb.innerHTML='<tr><td colspan="4">No hay jugadores cargados.</td></tr>';return}
+  tb.innerHTML=ps.map(p=>{
+    const pin=data.pins[p]||'—';
+    const shown=state.showPins?pin:'••••';
+    const safe=p.replace(/"/g,'&quot;');
+    return `<tr><td><b>${p}</b></td><td><span class="mono">${shown}</span></td><td><button class="btn secondary" data-copy-pin="${safe}">📋 Copiar mensaje</button></td><td><button class="btn danger" data-regenerate-pin="${safe}">♻ Nuevo PIN</button></td></tr>`;
+  }).join('');
+  tb.querySelectorAll('[data-copy-pin]').forEach(b=>b.onclick=()=>copyPinMessage(b.dataset.copyPin));
+  tb.querySelectorAll('[data-regenerate-pin]').forEach(b=>b.onclick=()=>regeneratePinFor(b.dataset.regeneratePin));
+}
 function externalAdmins(){
   return Object.keys(data.staff||{}).filter(p=>roleOf(p)==='admin').sort((a,b)=>a.localeCompare(b,'es'));
 }
@@ -918,7 +935,61 @@ async function copyPinMessage(player){
   const msg=`Hola ${player}. Tu PIN para reservar pistas en la Liga CT Campeador es ${pin}.`;
   const ok=await copyTextRobust(msg);
   if(ok){alert('📋 Mensaje copiado. Ya puedes pegarlo en WhatsApp.');return}
+
   const manual=prompt('No se ha podido acceder al portapapeles automáticamente. Mantén pulsado y copia este mensaje:',msg);
+}
+async function regeneratePinFor(player){
+  if(!requireAdmin())return;
+  if(!confirm(`¿Generar un PIN nuevo para ${player}?\n\nEl PIN anterior dejará de funcionar inmediatamente.`))return;
+  try{
+    const r=await apiRequest({action:'regeneratePin',name:player});
+    data.pins[player]=String(r.pin||'');
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+    renderPins();
+    const msg=`Hola ${player}. Tu nuevo PIN para reservar pistas en la Liga CT Campeador es ${r.pin}.`;
+    const copied=await copyTextRobust(msg);
+    alert(`✅ PIN regenerado.\n\n${player}\nNuevo PIN: ${r.pin}`+(copied?'\n\n📋 Mensaje copiado al portapapeles.':''));
+  }catch(e){
+    alert('No se ha podido regenerar el PIN.\n\n'+e.message);
+  }
+}
+
+async function loadPushDevices(){
+  if(!requireAdmin())return;
+  const tb=$('#pushDevicesTable');
+  if(tb)tb.innerHTML='<tr><td colspan="4">⏳ Cargando dispositivos…</td></tr>';
+  try{
+    const r=await apiRequest({action:'listPushDevices'});
+    const groups=Array.isArray(r.users)?r.users:[];
+    if(!groups.length){
+      if(tb)tb.innerHTML='<tr><td colspan="4">No hay dispositivos suscritos.</td></tr>';
+      updateAdminSummaries();
+      return;
+    }
+    if(tb){
+      tb.innerHTML=groups.map(g=>{
+        const safe=String(g.userName||'').replace(/"/g,'&quot;');
+        const last=g.lastUpdated?new Date(g.lastUpdated).toLocaleString('es-ES'):'—';
+        return `<tr><td><b>${g.userName||'Sin identificar'}</b></td><td>${g.count||0}</td><td>${last}</td><td>${g.userName?`<button class="btn danger" data-remove-devices="${safe}">🗑️ Dar de baja</button>`:'—'}</td></tr>`;
+      }).join('');
+      tb.querySelectorAll('[data-remove-devices]').forEach(b=>b.onclick=()=>removePushDevicesFor(b.dataset.removeDevices));
+    }
+    window.__pushDeviceCount=Number(r.total||0);
+    updateAdminSummaries();
+  }catch(e){
+    if(tb)tb.innerHTML=`<tr><td colspan="4">⚠️ ${e.message}</td></tr>`;
+  }
+}
+async function removePushDevicesFor(player){
+  if(!requireAdmin())return;
+  if(!confirm(`¿Dar de baja TODOS los dispositivos de ${player}?\n\nEse jugador dejará de recibir avisos hasta que vuelva a activar las notificaciones.`))return;
+  try{
+    const r=await apiRequest({action:'removePushDevices',userName:player});
+    alert(`✅ Dispositivos dados de baja: ${r.removed||0}.`);
+    await loadPushDevices();
+  }catch(e){
+    alert('No se han podido dar de baja los dispositivos.\n\n'+e.message);
+  }
 }
 let draftSlots=[];
 function persistDraft(){if(!data.drafts)data.drafts={};data.drafts[weekKey()]=draftSlots.map(x=>({...x}));save()}
@@ -1039,6 +1110,7 @@ function updateAdminSummaries(){
   set('adminMeta_fixtures',`${fixtureRound()||'Sin nombre'} · ${fc} partido${fc===1?'':'s'}`);
   set('adminMeta_slots',`${sc} franjas · ${pub?'PUBLICADO':'borrador'}`);
   set('adminMeta_pins',`${allPlayers().length} jugadores`);
+  set('adminMeta_devices',`${Number(window.__pushDeviceCount||0)} dispositivo${Number(window.__pushDeviceCount||0)===1?'':'s'}`);
   set('adminMeta_admins',`${ac} externo${ac===1?'':'s'}`);
   set('adminMeta_roles',`${allIdentities().length} usuarios`);
   set('adminMeta_whats','Mensaje semanal');
@@ -1051,6 +1123,7 @@ function wireAdminCompact(){
       if(d.open){
         details.forEach(o=>{if(o!==d)o.open=false});
         document.querySelectorAll('.adminQuickBtn').forEach(b=>b.classList.toggle('active',b.dataset.adminTarget===d.dataset.adminSection));
+        if(d.dataset.adminSection==='devices')loadPushDevices();
       }
     });
   });
@@ -1223,6 +1296,7 @@ $('#closeSlots').onclick=async()=>{
     alert('No se ha podido despublicar la disponibilidad.\n\n'+e.message);
   }finally{btn.disabled=false;btn.textContent=old}
 };
+$('#refreshPushDevices').onclick=loadPushDevices;
 $('#generatePins').onclick=()=>{if(!requireAdmin())return;ensurePins();saveUsersOnline().catch(e=>alert(e.message));renderAll();alert('🔐 PIN generados para todos los jugadores que no tenían uno.')}
 $('#showPins').onclick=()=>{if(!requireAdmin())return;state.showPins=!state.showPins;renderPins()};
 $('#resetPins').onclick=async()=>{if(!requireAdmin())return;if(!confirm('¿Regenerar TODOS los PIN? Los PIN anteriores dejarán de funcionar.'))return;const admins=Object.entries(data.roles||{}).filter(([,r])=>r==='admin').map(([p])=>p);data.pins={};ensurePins();admins.forEach(p=>{if(!data.pins[p])data.pins[p]=randomPin()});save();try{await saveUsersOnline();alert('♻ PIN regenerados y guardados online. Revisa los nuevos PIN de administradores.')}catch(e){alert(e.message)}renderAll()};
@@ -1263,5 +1337,5 @@ bootstrapApp();
 
 window.addEventListener('scroll',()=>{const a=document.getElementById('adminView');if(a)a.classList.toggle('adminScrolled',window.scrollY>(a.offsetTop+280));},{passive:true});
 </script>
-<div style="position:fixed;right:8px;bottom:78px;z-index:45;font-size:9px;opacity:.55;background:#180b0e;border:1px solid rgba(255,255,255,.12);padding:4px 7px;border-radius:999px">V3.12 · PIN + PUSH NATIVO</div>
+<div style="position:fixed;right:8px;bottom:78px;z-index:45;font-size:9px;opacity:.55;background:#180b0e;border:1px solid rgba(255,255,255,.12);padding:4px 7px;border-radius:999px">V3.12.2 · PIN + PUSH NATIVO</div>
 </body></html>
