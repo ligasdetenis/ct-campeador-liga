@@ -179,7 +179,7 @@ select,input,textarea{min-width:0;max-width:100%}
 </section>
 
 <section class="card hidden" id="adminView">
-  <div class="head"><h2>⚙️ Gestión semanal <span class="adminBadge">ADMIN</span></h2><small>V3.10 · jornadas externas FIX</small></div>
+  <div class="head"><h2>⚙️ Gestión semanal <span class="adminBadge">ADMIN</span></h2><small>V3.11.4 · admins externos</small></div>
   <div class="pad adminGrid">
     <div class="adminBlock">
       <h3>1 · Jugadores de la categoría</h3>
@@ -250,13 +250,24 @@ Pablo Ruiz"></textarea>
       <div class="schedule" style="margin-top:10px"><table><thead><tr><th>Jugador</th><th>PIN</th><th>Mensaje</th></tr></thead><tbody id="pinTable"></tbody></table></div>
     </div>
     <div class="adminBlock" style="grid-column:1/-1">
-      <h3>5 · Permisos de acceso</h3>
+      <h3>5 · Administradores externos</h3>
+      <div class="tiny">Crea administradores que <b>no tienen que pertenecer a ninguna categoría ni ser jugadores</b>. Aparecerán siempre en el desplegable de acceso y verán ⚙️ Configuración al iniciar sesión.</div>
+      <div class="generator" style="margin-top:10px">
+        <div class="wide"><label>Nombre del administrador</label><input id="newAdminName" type="text" placeholder="Ej. Responsable del club"></div>
+        <div><label>PIN (opcional)</label><input id="newAdminPin" type="text" inputmode="numeric" maxlength="4" placeholder="Auto"></div>
+        <button class="btn gold" id="addExternalAdmin">＋ Crear ADMIN</button>
+      </div>
+      <div class="schedule" style="margin-top:10px"><table><thead><tr><th>Administrador</th><th>PIN</th><th>Acciones</th></tr></thead><tbody id="externalAdminTable"></tbody></table></div>
+      <div class="authNote">Si dejas el PIN vacío, se genera automáticamente. No se añade a ninguna lista de jugadores.</div>
+    </div>
+    <div class="adminBlock" style="grid-column:1/-1">
+      <h3>6 · Permisos de acceso</h3>
       <div class="tiny">Solo las personas marcadas como <b>ADMIN</b> verán la opción ⚙️ Configuración y podrán modificar enfrentamientos, horarios, PIN o abrir/cerrar reservas.</div>
       <div class="schedule" style="margin-top:10px"><table><thead><tr><th>Persona</th><th>Rol</th></tr></thead><tbody id="roleTable"></tbody></table></div>
       <div class="authNote">Administrador inicial de prueba: <b>Adrián Prádanos</b> · PIN <b>2020</b>. Puedes dar permiso ADMIN a otros usuarios desde esta tabla.</div>
     </div>
     <div class="adminBlock" style="grid-column:1/-1">
-      <h3>6 · Resumen para WhatsApp</h3>
+      <h3>7 · Resumen para WhatsApp</h3>
       <textarea id="whatsPreview" readonly></textarea>
       <button class="btn gold" id="copyWhats" style="margin-top:8px">📋 Copiar mensaje</button>
     </div>
@@ -319,6 +330,25 @@ let reservationPending=false;
 function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(data));if(isAdmin()&&apiToken){clearTimeout(saveTimer);saveTimer=setTimeout(()=>saveStateOnline().catch(console.warn),350)}}
 function publicState(){return {playerLists:data.playerLists,fixtures:data.fixtures,fixtureRounds:data.fixtureRounds,slots:data.slots,drafts:data.drafts,published:data.published,bookings:data.bookings,reservations:data.bookings,results:data.results,staff:data.staff,adminRoles:Object.fromEntries(Object.entries(data.roles||{}).filter(([,r])=>r==='admin')),weeks:Object.fromEntries(weeks.map(w=>[w.id,w])),updatedAt:new Date().toISOString()}}
 async function apiRequest(payload,{auth=true}={}){const headers={'Content-Type':'application/json'};if(auth&&apiToken)headers.Authorization='Bearer '+apiToken;const r=await fetch(API_URL,{method:'POST',headers,body:JSON.stringify(payload)});let j={};try{j=await r.json()}catch(e){}if(!r.ok||j.ok===false)throw new Error(j.error||('HTTP '+r.status));return j}
+async function restoreSession(){
+  if(!apiToken)return false;
+  try{
+    const j=await apiRequest({action:'read'});
+    if(!j.user||!j.user.name){throw new Error('Sesión no válida');}
+    state.player=j.user.name;
+    state.authenticated=true;
+    data.roles[state.player]=j.user.role==='admin'?'admin':'jugador';
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+    if(isAdmin())await loadAdminUsers();
+    return true;
+  }catch(e){
+    apiToken='';
+    localStorage.removeItem(TOKEN_KEY);
+    state.player='';
+    state.authenticated=false;
+    return false;
+  }
+}
 function setOnline(ok,text){const el=$('#onlineState');if(!el)return;el.classList.toggle('off',!ok);el.textContent=text||(ok?'☁️ Online':'⚠️ Sin conexión')}
 async function refreshOnline({silent=false,force=false}={}){if(fixtureEditorDirty&&!force){setOnline(true,'✏️ Cambios sin guardar');return false}try{const j=await apiRequest({action:'read'},{auth:false});const remote=normalizeData(j.state);data.playerLists=remote.playerLists;data.fixtures=remote.fixtures;data.fixtureRounds=remote.fixtureRounds;data.slots=remote.slots;data.drafts=remote.drafts;data.published=remote.published;data.bookings=remote.bookings;data.results=remote.results;data.staff={...(data.staff||{}),...(remote.staff||{})};data.roles={...(data.roles||{}),...(remote.roles||{})};data.roles["Adrián Prádanos"]="admin";localStorage.setItem(STORAGE_KEY,JSON.stringify(data));setOnline(true,'☁️ Online');renderAll();return true}catch(e){setOnline(false,'⚠️ Offline');if(!silent)alert('No se ha podido actualizar desde Cloudflare.\n\n'+e.message);return false}}
 async function saveStateOnline(){if(!apiToken||!isAdmin())return;await apiRequest({action:'saveState',state:publicState()});setOnline(true,'☁️ Guardado')}
@@ -558,10 +588,50 @@ function renderAdmin(){
   const admin=isAdmin();
   $('#adminNavBtn').classList.toggle('hidden',!admin);
   if(!admin){$('#adminView').classList.add('hidden');return}
-  const cps=categoryPlayers();$('#playerPaste').value=cps.join('\n');$('#playerCount').textContent=`${cps.length} jugador${cps.length===1?'':'es'}`;$('#fixturePaste').value='';renderFixtureEditor();renderSlotRows();setDefaultQuickDate();renderPins();renderRoles();renderWhats();
+  const cps=categoryPlayers();$('#playerPaste').value=cps.join('\n');$('#playerCount').textContent=`${cps.length} jugador${cps.length===1?'':'es'}`;$('#fixturePaste').value='';renderFixtureEditor();renderSlotRows();setDefaultQuickDate();renderPins();renderRoles();renderExternalAdmins();renderWhats();
 }
 function renderRoles(){const tb=$('#roleTable');const ps=allIdentities();tb.innerHTML=ps.map(p=>`<tr><td><b>${p}</b></td><td><select data-role-person="${p.replace(/"/g,'&quot;')}"><option value="jugador" ${roleOf(p)==='jugador'?'selected':''}>Jugador</option><option value="admin" ${roleOf(p)==='admin'?'selected':''}>ADMIN</option></select></td></tr>`).join('');tb.querySelectorAll('[data-role-person]').forEach(s=>s.onchange=()=>{if(!requireAdmin())return;s.disabled=true;data.roles[s.dataset.rolePerson]=s.value;save();saveUsersOnline().catch(e=>alert(e.message));renderAll();alert(`Permiso actualizado: ${s.dataset.rolePerson} → ${s.value.toUpperCase()}`)})}
 function renderPins(){const tb=$('#pinTable');const ps=allIdentities();if(!ps.length){tb.innerHTML='<tr><td colspan="3">No hay jugadores cargados.</td></tr>';return}tb.innerHTML=ps.map(p=>{const pin=data.pins[p]||'—';const shown=state.showPins?pin:'••••';return `<tr><td><b>${p}</b></td><td><span class="mono">${shown}</span></td><td><button class="btn secondary" data-copy-pin="${p.replace(/"/g,'&quot;')}">📋 Copiar mensaje</button></td></tr>`}).join('');tb.querySelectorAll('[data-copy-pin]').forEach(b=>b.onclick=()=>copyPinMessage(b.dataset.copyPin))}
+function externalAdmins(){
+  return Object.keys(data.staff||{}).filter(p=>roleOf(p)==='admin').sort((a,b)=>a.localeCompare(b,'es'));
+}
+function renderExternalAdmins(){
+  const tb=$('#externalAdminTable'); if(!tb)return;
+  const admins=externalAdmins();
+  if(!admins.length){tb.innerHTML='<tr><td colspan="3">No hay administradores externos.</td></tr>';return;}
+  tb.innerHTML=admins.map(p=>{
+    const shown=state.showPins?(data.pins[p]||'—'):'••••';
+    const locked=(p===state.player);
+    return `<tr><td><b>${p}</b>${p==='Adrián Prádanos'?' <span class="adminBadge">INICIAL</span>':''}</td><td><span class="mono">${shown}</span></td><td><div class="matchActions"><button class="btn secondary" data-copy-admin="${p.replace(/"/g,'&quot;')}">📋 Copiar</button><button class="btn dangerBtn" data-delete-admin="${p.replace(/"/g,'&quot;')}" ${locked?'disabled':''}>Eliminar</button></div></td></tr>`;
+  }).join('');
+  tb.querySelectorAll('[data-copy-admin]').forEach(b=>b.onclick=()=>copyPinMessage(b.dataset.copyAdmin));
+  tb.querySelectorAll('[data-delete-admin]').forEach(b=>b.onclick=async()=>{
+    if(!requireAdmin())return; const name=b.dataset.deleteAdmin;
+    if(name===state.player){alert('No puedes eliminar el administrador con el que tienes iniciada la sesión.');return;}
+    const remaining=allIdentities().filter(p=>roleOf(p)==='admin'&&p!==name);
+    if(!remaining.length){alert('Debe quedar al menos un administrador.');return;}
+    if(!confirm(`¿Eliminar el acceso ADMIN de ${name}?\n\nNo se borrará ningún jugador ni partido.`))return;
+    delete data.staff[name]; delete data.roles[name]; delete data.pins[name];
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+    try{await saveUsersOnline();await saveStateOnline();renderAll();alert('✅ Administrador eliminado.');}
+    catch(e){alert('No se ha podido guardar el cambio.\n\n'+e.message);await refreshOnline({silent:true,force:true});}
+  });
+}
+async function createExternalAdmin(){
+  if(!requireAdmin())return;
+  const name=$('#newAdminName').value.trim();
+  let pin=$('#newAdminPin').value.trim();
+  if(!name){alert('Escribe el nombre del administrador.');return;}
+  if(allPlayers().some(p=>normalizeName(p)===normalizeName(name))){alert('Ese nombre ya pertenece a un jugador. Para hacerlo ADMIN usa la tabla de permisos.');return;}
+  const existing=allIdentities().find(p=>normalizeName(p)===normalizeName(name));
+  if(existing&&existing!==name){alert(`Ya existe una persona con un nombre equivalente: ${existing}`);return;}
+  if(!pin)pin=randomPin();
+  if(!/^\d{4}$/.test(pin)){alert('El PIN debe tener 4 cifras o dejarse vacío para generarlo automáticamente.');return;}
+  data.staff[name]={name}; data.roles[name]='admin'; data.pins[name]=pin;
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+  try{await saveUsersOnline();await saveStateOnline();$('#newAdminName').value='';$('#newAdminPin').value='';renderAll();alert(`✅ Administrador creado.\n\n${name}\nPIN: ${pin}`);}
+  catch(e){delete data.staff[name];delete data.roles[name];delete data.pins[name];localStorage.setItem(STORAGE_KEY,JSON.stringify(data));renderAll();alert('No se ha podido crear el administrador.\n\n'+e.message);}
+}
 async function copyTextRobust(text){
   try{
     if(navigator.clipboard && window.isSecureContext){
@@ -811,6 +881,8 @@ $('#closeSlots').onclick=async()=>{
 $('#generatePins').onclick=()=>{if(!requireAdmin())return;ensurePins();saveUsersOnline().catch(e=>alert(e.message));renderAll();alert('🔐 PIN generados para todos los jugadores que no tenían uno.')}
 $('#showPins').onclick=()=>{if(!requireAdmin())return;state.showPins=!state.showPins;renderPins()};
 $('#resetPins').onclick=async()=>{if(!requireAdmin())return;if(!confirm('¿Regenerar TODOS los PIN? Los PIN anteriores dejarán de funcionar.'))return;const admins=Object.entries(data.roles||{}).filter(([,r])=>r==='admin').map(([p])=>p);data.pins={};ensurePins();admins.forEach(p=>{if(!data.pins[p])data.pins[p]=randomPin()});save();try{await saveUsersOnline();alert('♻ PIN regenerados y guardados online. Revisa los nuevos PIN de administradores.')}catch(e){alert(e.message)}renderAll()};
+$('#addExternalAdmin').onclick=createExternalAdmin;
+$('#newAdminPin').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();createExternalAdmin();}});
 $('#copyWhats').onclick=async()=>{if(!requireAdmin())return;renderWhats();const text=$('#whatsPreview').value;const ok=await copyTextRobust(text);if(ok){alert('📋 Mensaje copiado.');return}$('#whatsPreview').focus();$('#whatsPreview').select();alert('No se ha podido copiar automáticamente. El texto queda seleccionado para copiarlo manualmente.');};
 $('#reserveDay').onchange=()=>fillReserveTimes(state.reserveMatchId,'');
 $('#reserveTime').onchange=()=>fillReserveCourts(state.reserveMatchId,'');
@@ -820,17 +892,22 @@ $('#closeModal').onclick=()=>$('#reserveModal').classList.remove('show');$('#res
 $('#resultType').onchange=syncResultType;$('#saveResultBtn').onclick=saveResult;$('#confirmResultBtn').onclick=()=>confirmResult(state.resultMatchId);$('#deleteResultBtn').onclick=()=>deleteResult(state.resultMatchId);$('#closeResultModal').onclick=()=>$('#resultModal').classList.remove('show');$('#resultModal').onclick=e=>{if(e.target===$('#resultModal'))$('#resultModal').classList.remove('show')};
 $$('.navBtn[data-go]').forEach(b=>b.onclick=()=>{const go=b.dataset.go;$$('.navBtn').forEach(x=>x.classList.remove('active'));b.classList.add('active');if(go==='home')$('#homeView').scrollIntoView({behavior:'smooth',block:'start'});if(go==='courts')$('#courtsView').scrollIntoView({behavior:'smooth',block:'start'});if(go==='admin'){if(!isAdmin()){alert('Acceso restringido a administradores.');return;}$('#adminView').classList.remove('hidden');$('#adminView').scrollIntoView({behavior:'smooth',block:'start'})}});
 $('#refreshBtn').onclick=()=>refreshOnline();
-try{
-  renderAll();
-  setOnline(false,'☁️ Conectando…');
-  refreshOnline({silent:true});
-  setInterval(()=>refreshOnline({silent:true}),10000);
-window.addEventListener('beforeunload',e=>{if(fixtureEditorDirty){e.preventDefault();e.returnValue='';}});
-}catch(e){
-  console.error('Error de arranque V3.10:',e);
-  setOnline(false,'⚠️ Error V3.10');
-  alert('Error de arranque del index V3.10.\n\n'+(e?.message||String(e)));
+async function bootstrapApp(){
+  try{
+    renderAll();
+    setOnline(false,'☁️ Conectando…');
+    await restoreSession();
+    await refreshOnline({silent:true});
+    renderAll();
+    setInterval(()=>refreshOnline({silent:true}),10000);
+    window.addEventListener('beforeunload',e=>{if(fixtureEditorDirty){e.preventDefault();e.returnValue='';}});
+  }catch(e){
+    console.error('Error de arranque V3.11.3:',e);
+    setOnline(false,'⚠️ Error V3.11.3');
+    alert('Error de arranque del index V3.11.3.\n\n'+(e?.message||String(e)));
+  }
 }
+bootstrapApp();
 </script>
-<div style="position:fixed;right:8px;bottom:78px;z-index:45;font-size:9px;opacity:.55;background:#180b0e;border:1px solid rgba(255,255,255,.12);padding:4px 7px;border-radius:999px">V3.11.2 · DESPUBLICACIÓN REAL</div>
+<div style="position:fixed;right:8px;bottom:78px;z-index:45;font-size:9px;opacity:.55;background:#180b0e;border:1px solid rgba(255,255,255,.12);padding:4px 7px;border-radius:999px">V3.11.3 · SESIÓN PERSISTENTE</div>
 </body></html>
