@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,maximum-scale=1" name="viewport"/>
 <meta content="#b40012" name="theme-color"/>
-<title>CT Campeador · Reservas V3.14.2.1 · PWA + PIN + Avisos</title>
+<title>CT Campeador · Reservas V3.15.1 · PWA + PIN + Avisos</title>
 <link rel="manifest" href="manifest.webmanifest" />
 <link rel="apple-touch-icon" href="apple-touch-icon.png" />
 <script>
@@ -269,7 +269,7 @@ linear-gradient(180deg,rgba(12,5,7,.99),rgba(28,9,13,.995));display:flex;align-i
 </section>
 <section class="card" id="matchesView">
 <div class="head"><h2>📋 Enfrentamientos oficiales</h2><small id="matchMeta"></small></div>
-<div class="tiny" style="padding:0 14px 10px;color:var(--gold);font-weight:700">V3.14.2.1 · PWA instalada + PIN + avisos</div>
+<div class="tiny" style="padding:0 14px 10px;color:var(--gold);font-weight:700">V3.15.1 · PWA instalada + PIN + avisos</div>
 <div class="pad">
 <div class="stateBanner closed" id="reserveState"></div>
 <div class="matches" id="matches"></div>
@@ -280,7 +280,7 @@ linear-gradient(180deg,rgba(12,5,7,.99),rgba(28,9,13,.995));display:flex;align-i
 <div class="schedule" id="schedule"></div>
 </section>
 <section class="card hidden" id="adminView">
-<div class="head"><h2>⚙️ Gestión semanal <span class="adminBadge">ADMIN</span></h2><small>V3.14.2.1 · PWA instalada + PIN + avisos</small></div>
+<div class="head"><h2>⚙️ Gestión semanal <span class="adminBadge">ADMIN</span></h2><small>V3.15.1 · PWA instalada + PIN + avisos</small></div>
 <div class="pad adminGrid"><div class="adminQuickNav" id="adminQuickNav"><button class="adminQuickBtn" data-admin-target="players" type="button">👥 Jugadores</button><button class="adminQuickBtn" data-admin-target="fixtures" type="button">🎾 Jornada</button><button class="adminQuickBtn" data-admin-target="slots" type="button">🏟️ Pistas</button><button class="adminQuickBtn" data-admin-target="pins" type="button">🔐 PIN</button><button class="adminQuickBtn" data-admin-target="admins" type="button">🛡️ Admins</button><button class="adminQuickBtn" data-admin-target="roles" type="button">👤 Permisos</button><button class="adminQuickBtn" data-admin-target="whats" type="button">📣 WhatsApp</button></div>
 <details class="adminBlock adminAccordion" data-admin-section="players" open=""><summary class="adminSummary"><span class="adminSummaryTitle">1 · Jugadores de la categoría</span><span class="adminSummaryMeta" id="adminMeta_players">Abrir</span></summary><div class="adminAccordionBody">
 
@@ -610,6 +610,20 @@ async function ensureOneSignal(){
   return window.__ctOneSignalPromise;
 }
 function oneSignalExternalId(name){return 'ctc-'+normalizeName(name).replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,90)}
+async function registerPushWithServer(subscriptionId){
+  const id=String(subscriptionId||'').trim();
+  if(!id||!state.authenticated||!apiToken)return false;
+  try{
+    await apiRequest({action:'registerPushSubscription',subscriptionId:id});
+    localStorage.setItem('ctc_push_server_registered',id);
+    return true;
+  }catch(e){
+    console.warn('Registro push en servidor',e);
+    window.__ctPushRegisterError=e?.message||String(e);
+    return false;
+  }
+}
+
 async function syncOneSignalIdentity(){
   const os=oneSignal();
   if(!os||!state.authenticated||!state.player)return false;
@@ -620,7 +634,8 @@ async function syncOneSignalIdentity(){
     if(permission!=='granted'||!optedIn||!subscriptionId)return false;
     if(typeof os.login==='function')await os.login(oneSignalExternalId(state.player));
     localStorage.setItem('ctc_push_subscription_id',subscriptionId);
-    return true;
+    const serverOk=await registerPushWithServer(subscriptionId);
+    return serverOk;
   }catch(e){
     console.warn('OneSignal login',e);
     return false;
@@ -662,8 +677,13 @@ async function renderNotificationUI(){
   }
   const st=await notificationStatus();
   if(st.optedIn&&st.permission==='granted'&&st.subscriptionId){
-    txt.innerHTML='<span class="notifyOk">✅ Suscripción push activa en este dispositivo.</span> Recibirás un aviso cuando el club publique las pistas.';
-    btn.disabled=true;btn.textContent='Avisos activados';return
+    const serverOk=await registerPushWithServer(st.subscriptionId);
+    if(serverOk){
+      txt.innerHTML='<span class="notifyOk">✅ Suscripción push activa y dispositivo registrado.</span> Recibirás un aviso cuando el club publique las pistas.';
+      btn.disabled=true;btn.textContent='Avisos activados';return
+    }
+    txt.innerHTML='<span class="notifyWarn">La suscripción existe, pero falta registrar este dispositivo en el servidor.</span>';
+    btn.disabled=false;btn.textContent='🔔 Completar activación';return
   }
   if(st.permission==='granted'&&st.optedIn&&!st.subscriptionId){
     txt.innerHTML='<span class="notifyWarn">Permiso concedido, pero OneSignal todavía no ha terminado de registrar este dispositivo.</span>';
@@ -718,6 +738,10 @@ async function activateNotifications(){
     const finalStatus=await notificationStatus();
     if(finalStatus.subscriptionId){
       localStorage.setItem('ctc_push_subscription_id',finalStatus.subscriptionId);
+      const serverOk=await registerPushWithServer(finalStatus.subscriptionId);
+      if(!serverOk){
+        alert('La suscripción existe en OneSignal, pero no se ha podido registrar este dispositivo en CT Campeador.\n\n'+(window.__ctPushRegisterError||''));
+      }
     }
     await renderNotificationUI();
   }catch(e){console.warn(e);window.__ctOneSignalError=e?.message||String(e);alert('No se han podido activar los avisos.\n\n'+window.__ctOneSignalError);await renderNotificationUI()}
@@ -1383,5 +1407,5 @@ bootstrapApp();
 
 window.addEventListener('scroll',()=>{const a=document.getElementById('adminView');if(a)a.classList.toggle('adminScrolled',window.scrollY>(a.offsetTop+280));},{passive:true});
 </script>
-<div style="position:fixed;right:8px;bottom:78px;z-index:45;font-size:9px;opacity:.55;background:#180b0e;border:1px solid rgba(255,255,255,.12);padding:4px 7px;border-radius:999px">V3.14.2.1 · PWA instalada + PIN + avisos</div>
+<div style="position:fixed;right:8px;bottom:78px;z-index:45;font-size:9px;opacity:.55;background:#180b0e;border:1px solid rgba(255,255,255,.12);padding:4px 7px;border-radius:999px">V3.15.1 · PWA instalada + PIN + avisos</div>
 </body></html>
