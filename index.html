@@ -5,9 +5,30 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,maximum-scale=1" name="viewport"/>
 <meta content="#b40012" name="theme-color"/>
-<title>CT Campeador · Reservas V3.16.1.1 · PWA + PIN + Avisos</title>
+<title>CT Campeador · Reservas V3.16.2 · OneSignal directo estable</title>
 <link rel="manifest" href="manifest.webmanifest" />
 <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script>
+window.OneSignalDeferred = window.OneSignalDeferred || [];
+OneSignalDeferred.push(async function(OneSignal) {
+  try {
+    await OneSignal.init({
+      appId: "83564990-f07b-4dd2-ad16-940c1f8f067e",
+      safari_web_id: "web.onesignal.auto.5f83a190-684a-4c4c-a875-2ee8aa7bf929",
+      serviceWorkerPath: "/ct-campeador-liga/onesignal/OneSignalSDKWorker.js",
+      serviceWorkerParam: { scope: "/ct-campeador-liga/onesignal/" },
+      notifyButton: { enable: true }
+    });
+    window.__ctOfficialOneSignalReady = true;
+  } catch (e) {
+    console.error("OneSignal init:", e);
+    window.__ctOfficialOneSignalError = e?.message || String(e);
+  }
+});
+</script>
+
 <script>
 window.__ctOneSignal = null;
 window.__ctOneSignalReady = false;
@@ -190,29 +211,22 @@ linear-gradient(180deg,rgba(12,5,7,.99),rgba(28,9,13,.995));display:flex;align-i
 @media(max-width:520px){.installCard{padding:19px;border-radius:21px}.installLogo{width:96px;height:96px}.installTitle{font-size:21px}}
 
 
-/* OneSignal official bell: force it above CT Campeador fixed UI */
+/* OneSignal oficial: mantener la campana por encima del menú inferior */
 .onesignal-bell-container,
-#onesignal-bell-container,
-[class*="onesignal-bell"]{
-  z-index:2147483000 !important;
+#onesignal-bell-container {
+  z-index: 2147483000 !important;
 }
-@media (max-width:700px){
+@media (max-width: 700px) {
   .onesignal-bell-container,
-  #onesignal-bell-container{
-    bottom:84px !important;
-    left:14px !important;
-    right:auto !important;
+  #onesignal-bell-container {
+    bottom: 88px !important;
   }
 }
-
-
-#oneSignalInitError{display:none;position:fixed;left:12px;bottom:140px;z-index:2147483001;
-max-width:min(360px,calc(100vw - 24px));padding:9px 11px;border-radius:12px;
-background:#3b1418;border:1px solid rgba(255,255,255,.16);color:#fff;font:600 11px/1.35 Inter,system-ui,sans-serif}
+/* En esta versión se usa exclusivamente la campana oficial de OneSignal */
+#notifyBox { display:none !important; }
 
 </style>
 </head>
-<div id="oneSignalInitError"></div>
 <body class="welcomeLocked">
 
 <div class="installOverlay hidden" id="installOverlay">
@@ -279,7 +293,11 @@ background:#3b1418;border:1px solid rgba(255,255,255,.16);color:#fff;font:600 11
 </div>
 <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn gold" id="loginBtn">Entrar</button><button class="btn secondary" id="clearIdentity">Salir / cambiar</button></div>
 </div>
-
+<div class="notifyBox" id="notifyBox">
+  <div>
+    <div class="notifyTitle">🔔 Avisos de pistas disponibles</div>
+    <div class="notifyText" id="notifyText">Cargando sistema de avisos…</div>
+    <div class="notifyIos hidden" id="notifyIosHelp"><b>En iPhone/iPad:</b> abre esta web en Safari → Compartir → <b>Añadir a pantalla de inicio</b>. Después abre CT Campeador desde el icono y activa los avisos.</div>
   </div>
   <button class="btn gold" id="notifyBtn" type="button" disabled>Activar avisos</button>
 </div>
@@ -287,7 +305,7 @@ background:#3b1418;border:1px solid rgba(255,255,255,.16);color:#fff;font:600 11
 </section>
 <section class="card" id="matchesView">
 <div class="head"><h2>📋 Enfrentamientos oficiales</h2><small id="matchMeta"></small></div>
-<div class="tiny" style="padding:0 14px 10px;color:var(--gold);font-weight:700">V3.16.1.1 · PWA instalada + PIN + avisos</div>
+<div class="tiny" style="padding:0 14px 10px;color:var(--gold);font-weight:700">V3.16.2.1 · PWA instalada + PIN + avisos</div>
 <div class="pad">
 <div class="stateBanner closed" id="reserveState"></div>
 <div class="matches" id="matches"></div>
@@ -298,7 +316,7 @@ background:#3b1418;border:1px solid rgba(255,255,255,.16);color:#fff;font:600 11
 <div class="schedule" id="schedule"></div>
 </section>
 <section class="card hidden" id="adminView">
-<div class="head"><h2>⚙️ Gestión semanal <span class="adminBadge">ADMIN</span></h2><small>V3.16.1.1 · PWA instalada + PIN + avisos</small></div>
+<div class="head"><h2>⚙️ Gestión semanal <span class="adminBadge">ADMIN</span></h2><small>V3.16.2.1 · PWA instalada + PIN + avisos</small></div>
 <div class="pad adminGrid"><div class="adminQuickNav" id="adminQuickNav"><button class="adminQuickBtn" data-admin-target="players" type="button">👥 Jugadores</button><button class="adminQuickBtn" data-admin-target="fixtures" type="button">🎾 Jornada</button><button class="adminQuickBtn" data-admin-target="slots" type="button">🏟️ Pistas</button><button class="adminQuickBtn" data-admin-target="pins" type="button">🔐 PIN</button><button class="adminQuickBtn" data-admin-target="admins" type="button">🛡️ Admins</button><button class="adminQuickBtn" data-admin-target="roles" type="button">👤 Permisos</button><button class="adminQuickBtn" data-admin-target="whats" type="button">📣 WhatsApp</button></div>
 <details class="adminBlock adminAccordion" data-admin-section="players" open=""><summary class="adminSummary"><span class="adminSummaryTitle">1 · Jugadores de la categoría</span><span class="adminSummaryMeta" id="adminMeta_players">Abrir</span></summary><div class="adminAccordionBody">
 
@@ -360,8 +378,9 @@ Pablo Ruiz"></textarea>
 <div class="draftBoard" id="draftBoard"></div>
 <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
 <button class="btn green" id="publishSlots">✅ Publicar disponibilidad y abrir reservas</button>
+<button class="btn secondary" id="resendAvailabilityNotice">🔔 Reenviar aviso</button>
 <button class="btn danger" id="closeSlots">📴 Despublicar disponibilidad y cerrar reservas</button>
-<span class="tiny" id="publishActionStatus" style="width:100%;margin-top:4px">El borrador se conserva aunque despubliques la disponibilidad.</span>
+<span class="tiny" id="publishActionStatus" style="width:100%;margin-top:4px">El borrador se conserva aunque despubliques la disponibilidad. Usa <b>Reenviar aviso</b> para pruebas o incidencias sin modificar las pistas.</span>
 </div>
 </div></details>
 <details class="adminBlock adminAccordion" data-admin-section="pins"><summary class="adminSummary"><span class="adminSummaryTitle">4 · PIN de jugadores</span><span class="adminSummaryMeta" id="adminMeta_pins">Abrir</span></summary><div class="adminAccordionBody">
@@ -617,7 +636,7 @@ async function ensureOneSignal(){
           safari_web_id:'web.onesignal.auto.5f83a190-684a-4c4c-a875-2ee8aa7bf929',
           serviceWorkerPath:'/ct-campeador-liga/onesignal/OneSignalSDKWorker.js',
           serviceWorkerParam:{scope:'/ct-campeador-liga/onesignal/'},
-          notifyButton:{enable:true,position:'bottom-left',size:'medium',theme:'default',showCredit:false}
+          notifyButton:{enable:false}
         });
         if(settled)return;clearTimeout(timer);settled=true;window.__ctOneSignal=OneSignal;window.__ctOneSignalReady=true;window.__ctOneSignalError=null;resolve(OneSignal);
       }catch(e){clearTimeout(timer);fail(e)}
@@ -629,7 +648,17 @@ async function ensureOneSignal(){
 }
 function oneSignalExternalId(name){return 'ctc-'+normalizeName(name).replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,90)}
 async function syncOneSignalIdentity(){ return true; }
-async function renderNotificationUI(){ return; }
+async function clearOneSignalIdentity(){ return true; }
+async function notificationStatus(){
+  const os=oneSignal();
+  if(!os)return {ready:false,permission:(typeof Notification!=='undefined'?Notification.permission:'default'),optedIn:false,subscriptionId:null};
+  let permission='default',optedIn=false,subscriptionId=null;
+  try{permission=os.Notifications?.permission?'granted':(typeof Notification!=='undefined'?Notification.permission:'default')}catch(e){}
+  try{optedIn=!!os.User?.PushSubscription?.optedIn}catch(e){}
+  try{subscriptionId=os.User?.PushSubscription?.id||null}catch(e){}
+  return {ready:true,permission,optedIn,subscriptionId};
+}
+async function renderNotificationUI(){ const b=document.getElementById('notifyBox'); if(b)b.style.display='none'; return; }
 async function activateNotifications(){ return; }
 async function loginWithPinOnly(){
   const pin=$('#welcomePin').value.trim(),btn=$('#welcomeEnter'),msg=$('#welcomeMsg');
@@ -1196,8 +1225,18 @@ $('#publishSlots').onclick=async()=>{
     let noticeMsg='';
     try{
       const w=weeks.find(x=>x.id===weekKey());
-      const n=await apiRequest({action:'notifyAvailability',weekId:weekKey(),weekLabel:w?.label||weekKey(),url:APP_URL});
-      noticeMsg=n.alreadySent?'\n\n🔔 El aviso de esta semana ya se había enviado anteriormente.':'\n\n🔔 Aviso enviado a los dispositivos suscritos.';
+      const n=await apiRequest({
+        action:'notifyAvailability',
+        weekId:weekKey(),
+        weekLabel:w?.label||weekKey(),
+        url:APP_URL,
+        // Si la disponibilidad estaba despublicada/cerrada y se vuelve a publicar,
+        // forzamos un nuevo aviso aunque esta jornada ya hubiera sido notificada.
+        force: prevPublished===false
+      });
+      noticeMsg=n.alreadySent
+        ?'\n\n🔔 El aviso de esta semana ya se había enviado anteriormente.'
+        :'\n\n🔔 Aviso enviado a los dispositivos suscritos.';
     }catch(ne){noticeMsg='\n\n⚠️ Las pistas están publicadas, pero no se pudo enviar el aviso: '+ne.message;}
     setOnline(true,'☁️ Publicado');
     if(status)status.textContent='✅ Disponibilidad publicada. Reservas abiertas.';
@@ -1214,6 +1253,40 @@ $('#publishSlots').onclick=async()=>{
     alert('No se ha podido publicar la disponibilidad online.\n\n'+e.message);
   }finally{btn.disabled=false;btn.textContent=old}
 };
+
+$('#resendAvailabilityNotice').onclick=async()=>{
+  if(!requireAdmin())return;
+  if(!isOpen()){
+    alert('Primero debes publicar la disponibilidad y abrir las reservas para poder reenviar el aviso.');
+    return;
+  }
+  const btn=$('#resendAvailabilityNotice');
+  const old=btn.textContent;
+  const status=$('#publishActionStatus');
+  btn.disabled=true;
+  btn.textContent='⏳ Enviando aviso…';
+  if(status)status.textContent='Enviando un nuevo aviso a los dispositivos suscritos…';
+  try{
+    const w=weeks.find(x=>x.id===weekKey());
+    const n=await apiRequest({
+      action:'notifyAvailability',
+      weekId:weekKey(),
+      weekLabel:w?.label||weekKey(),
+      url:APP_URL,
+      force:true
+    });
+    const extra = n?.recipients!=null ? `\n\nDestinatarios: ${n.recipients}` : '';
+    if(status)status.textContent='🔔 Aviso reenviado correctamente.';
+    alert('🔔 Aviso reenviado correctamente.'+extra);
+  }catch(e){
+    if(status)status.textContent='⚠️ No se pudo reenviar el aviso.';
+    alert('No se ha podido reenviar el aviso.\n\n'+e.message);
+  }finally{
+    btn.disabled=false;
+    btn.textContent=old;
+  }
+};
+
 $('#closeSlots').onclick=async()=>{
   if(!requireAdmin())return;
   if(!isOpen()){alert('Las reservas de esta semana ya están cerradas.');return}
@@ -1245,7 +1318,10 @@ $('#resetPins').onclick=async()=>{if(!requireAdmin())return;if(!confirm('¿Regen
 $('#addExternalAdmin').onclick=createExternalAdmin;
 $('#newAdminPin').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();createExternalAdmin();}});
 $('#copyWhats').onclick=async()=>{if(!requireAdmin())return;renderWhats();const text=$('#whatsPreview').value;const ok=await copyTextRobust(text);if(ok){alert('📋 Mensaje copiado.');return}$('#whatsPreview').focus();$('#whatsPreview').select();alert('No se ha podido copiar automáticamente. El texto queda seleccionado para copiarlo manualmente.');};
-if($('#notifyBtn')) $('#notifyBtn').style.display='none';
+$('#notifyBtn').onclick=()=>{
+  if(!isStandaloneApp()){ installScreenSkipped=false; showInstallScreen(); return; }
+  activateNotifications();
+};
 $('#installAppBtn')?.addEventListener('click',requestAppInstall);
 $('#continueBrowserBtn')?.addEventListener('click',()=>{
   installScreenSkipped=true;
@@ -1289,5 +1365,5 @@ bootstrapApp();
 
 window.addEventListener('scroll',()=>{const a=document.getElementById('adminView');if(a)a.classList.toggle('adminScrolled',window.scrollY>(a.offsetTop+280));},{passive:true});
 </script>
-<div style="position:fixed;right:8px;bottom:78px;z-index:45;font-size:9px;opacity:.55;background:#180b0e;border:1px solid rgba(255,255,255,.12);padding:4px 7px;border-radius:999px">V3.16.1.1 · PWA instalada + PIN + avisos</div>
+<div style="position:fixed;right:8px;bottom:78px;z-index:45;font-size:9px;opacity:.55;background:#180b0e;border:1px solid rgba(255,255,255,.12);padding:4px 7px;border-radius:999px">V3.16.2.1 · PWA instalada + PIN + avisos</div>
 </body></html>
