@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,maximum-scale=1" name="viewport"/>
 <meta content="#b40012" name="theme-color"/>
-<title>CT Campeador · Reservas V3.13.2 · PIN + Avisos</title>
+<title>CT Campeador · Reservas V3.13.3 · PIN + Avisos</title>
 <link rel="manifest" href="manifest.webmanifest" />
 <link rel="apple-touch-icon" href="apple-touch-icon.png" />
 <script>
@@ -229,7 +229,7 @@ select,input,textarea{min-width:0;max-width:100%}
 </section>
 <section class="card" id="matchesView">
 <div class="head"><h2>📋 Enfrentamientos oficiales</h2><small id="matchMeta"></small></div>
-<div class="tiny" style="padding:0 14px 10px;color:var(--gold);font-weight:700">V3.13.2 · PIN + avisos · activación directa</div>
+<div class="tiny" style="padding:0 14px 10px;color:var(--gold);font-weight:700">V3.13.3 · PIN + avisos · activación directa</div>
 <div class="pad">
 <div class="stateBanner closed" id="reserveState"></div>
 <div class="matches" id="matches"></div>
@@ -240,7 +240,7 @@ select,input,textarea{min-width:0;max-width:100%}
 <div class="schedule" id="schedule"></div>
 </section>
 <section class="card hidden" id="adminView">
-<div class="head"><h2>⚙️ Gestión semanal <span class="adminBadge">ADMIN</span></h2><small>V3.13.2 · PIN + avisos · activación directa</small></div>
+<div class="head"><h2>⚙️ Gestión semanal <span class="adminBadge">ADMIN</span></h2><small>V3.13.3 · PIN + avisos · activación directa</small></div>
 <div class="pad adminGrid"><div class="adminQuickNav" id="adminQuickNav"><button class="adminQuickBtn" data-admin-target="players" type="button">👥 Jugadores</button><button class="adminQuickBtn" data-admin-target="fixtures" type="button">🎾 Jornada</button><button class="adminQuickBtn" data-admin-target="slots" type="button">🏟️ Pistas</button><button class="adminQuickBtn" data-admin-target="pins" type="button">🔐 PIN</button><button class="adminQuickBtn" data-admin-target="admins" type="button">🛡️ Admins</button><button class="adminQuickBtn" data-admin-target="roles" type="button">👤 Permisos</button><button class="adminQuickBtn" data-admin-target="whats" type="button">📣 WhatsApp</button></div>
 <details class="adminBlock adminAccordion" data-admin-section="players" open=""><summary class="adminSummary"><span class="adminSummaryTitle">1 · Jugadores de la categoría</span><span class="adminSummaryMeta" id="adminMeta_players">Abrir</span></summary><div class="adminAccordionBody">
 
@@ -468,6 +468,7 @@ async function ensureOneSignal(){
       try{
         await OneSignal.init({
           appId:'83564990-f07b-4dd2-ad16-940c1f8f067e',
+          safari_web_id:'web.onesignal.auto.5f83a190-684a-4c4c-a875-2ee8aa7bf929',
           serviceWorkerPath:'/ct-campeador-liga/OneSignalSDKWorker.js',
           serviceWorkerParam:{scope:'/ct-campeador-liga/'},
           notifyButton:{enable:false}
@@ -1165,5 +1166,5 @@ bootstrapApp();
 
 window.addEventListener('scroll',()=>{const a=document.getElementById('adminView');if(a)a.classList.toggle('adminScrolled',window.scrollY>(a.offsetTop+280));},{passive:true});
 </script>
-<div style="position:fixed;right:8px;bottom:78px;z-index:45;font-size:9px;opacity:.55;background:#180b0e;border:1px solid rgba(255,255,255,.12);padding:4px 7px;border-radius:999px">V3.13.2 · PIN + avisos · activación directa</div>
+<div style="position:fixed;right:8px;bottom:78px;z-index:45;font-size:9px;opacity:.55;background:#180b0e;border:1px solid rgba(255,255,255,.12);padding:4px 7px;border-radius:999px">V3.13.3 · PIN + avisos · activación directa</div>
 </body></html>
