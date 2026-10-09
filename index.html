@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,maximum-scale=1" name="viewport"/>
 <meta content="#b40012" name="theme-color"/>
-<title>CT Campeador · Reservas V3.13 · PIN + Avisos</title>
+<title>CT Campeador · Reservas V3.13.1 · PIN + Avisos</title>
 <link rel="manifest" href="manifest.webmanifest" />
 <link rel="apple-touch-icon" href="apple-touch-icon.png" />
 <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
@@ -13,21 +13,25 @@
 window.OneSignalDeferred = window.OneSignalDeferred || [];
 window.__ctOneSignal = null;
 window.__ctOneSignalReady = false;
+window.__ctOneSignalError = null;
+window.__ctOneSignalStartedAt = Date.now();
 OneSignalDeferred.push(async function(OneSignal) {
   try {
     await OneSignal.init({
       appId: "83564990-f07b-4dd2-ad16-940c1f8f067e",
-      serviceWorkerPath: "/ct-campeador-liga/OneSignalSDKWorker.js",
+      serviceWorkerPath: "OneSignalSDKWorker.js",
       serviceWorkerParam: { scope: "/ct-campeador-liga/" },
       notifyButton: { enable: false },
       allowLocalhostAsSecureOrigin: true
     });
     window.__ctOneSignal = OneSignal;
     window.__ctOneSignalReady = true;
+    window.__ctOneSignalError = null;
     window.dispatchEvent(new Event("ct-onesignal-ready"));
   } catch (e) {
     console.warn("OneSignal init:", e);
-    window.dispatchEvent(new CustomEvent("ct-onesignal-error", { detail: e?.message || String(e) }));
+    window.__ctOneSignalError = e?.message || String(e);
+    window.dispatchEvent(new CustomEvent("ct-onesignal-error", { detail: window.__ctOneSignalError }));
   }
 });
 </script>
@@ -482,7 +486,20 @@ async function renderNotificationUI(){
   const iosDevice=isIosDevice(),standalone=isStandaloneApp();if(ios)ios.classList.toggle('hidden',!(iosDevice&&!standalone));
   if(!('Notification' in window)||!('serviceWorker' in navigator)){txt.innerHTML='<span class="notifyWarn">Este navegador no admite avisos web.</span>';btn.disabled=true;return}
   if(iosDevice&&!standalone){txt.innerHTML='<span class="notifyWarn">Instala primero la web en la pantalla de inicio.</span>';btn.disabled=true;btn.textContent='Instalar en inicio';return}
-  if(!window.__ctOneSignalReady){txt.textContent='Preparando avisos…';btn.disabled=true;return}
+  if(!window.__ctOneSignalReady){
+    if(window.__ctOneSignalError){
+      txt.innerHTML='<span class="notifyWarn">No se ha podido iniciar OneSignal.</span><br><small>'+escapeHtml(window.__ctOneSignalError)+'</small>';
+      btn.disabled=true;btn.textContent='Avisos no disponibles';return;
+    }
+    const elapsed=Date.now()-(window.__ctOneSignalStartedAt||Date.now());
+    if(elapsed>10000){
+      txt.innerHTML='<span class="notifyWarn">OneSignal no termina de arrancar.</span><br><small>Recarga la página. Si continúa, copia este mensaje para revisar la configuración.</small>';
+      btn.disabled=true;btn.textContent='Avisos no disponibles';return;
+    }
+    txt.textContent='Preparando avisos…';btn.disabled=true;
+    setTimeout(()=>renderNotificationUI(),1200);
+    return;
+  }
   const st=await notificationStatus();
   if(st.optedIn&&st.permission==='granted'){txt.innerHTML='<span class="notifyOk">✅ Avisos activados en este dispositivo.</span> Recibirás un aviso cuando el club publique las pistas.';btn.disabled=true;btn.textContent='Avisos activados';return}
   if(st.permission==='denied'){txt.innerHTML='<span class="notifyWarn">Notificaciones bloqueadas.</span> Debes permitirlas desde los ajustes del navegador/dispositivo.';btn.disabled=true;btn.textContent='Bloqueadas';return}
@@ -511,7 +528,8 @@ async function loginWithPinOnly(){
   finally{btn.disabled=false;btn.textContent='Entrar'}
 }
 window.addEventListener('ct-onesignal-ready',()=>{renderNotificationUI();syncOneSignalIdentity()});
-window.addEventListener('ct-onesignal-error',e=>{const txt=$('#notifyText');if(txt)txt.innerHTML='<span class="notifyWarn">No se ha podido iniciar el sistema de avisos.</span>';console.warn(e.detail)});
+window.addEventListener('load',()=>{setTimeout(()=>renderNotificationUI(),500);setTimeout(()=>renderNotificationUI(),2500);setTimeout(()=>renderNotificationUI(),10500)});
+window.addEventListener('ct-onesignal-error',e=>{window.__ctOneSignalError=e.detail||'Error desconocido';console.warn(e.detail);renderNotificationUI()});
 
 function fixtureKey(){return `${state.week}|${state.category}|${state.gender}`}
 function playerListKey(){return `${state.category}|${state.gender}`}
