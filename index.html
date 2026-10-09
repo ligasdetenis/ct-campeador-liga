@@ -179,7 +179,7 @@ select,input,textarea{min-width:0;max-width:100%}
 </section>
 
 <section class="card hidden" id="adminView">
-  <div class="head"><h2>⚙️ Gestión semanal <span class="adminBadge">ADMIN</span></h2><small>V3.9 · jornadas externas</small></div>
+  <div class="head"><h2>⚙️ Gestión semanal <span class="adminBadge">ADMIN</span></h2><small>V3.10 · jornadas externas FIX</small></div>
   <div class="pad adminGrid">
     <div class="adminBlock">
       <h3>1 · Jugadores de la categoría</h3>
@@ -311,6 +311,7 @@ if(!data.staff["Adrián Prádanos"])data.staff["Adrián Prádanos"]={name:"Adri�
 data.roles["Adrián Prádanos"]="admin";
 let apiToken=localStorage.getItem(TOKEN_KEY)||"";
 let state={category:"Infantil",gender:"Masculino",week:"W1",reserveMatchId:null,resultMatchId:null,player:"",authenticated:false,showPins:false};
+let fixtureEditorDirty=false;
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 let saveTimer=null;
 let reservationPending=false;
@@ -318,7 +319,7 @@ function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(data));if(isAdmi
 function publicState(){return {playerLists:data.playerLists,fixtures:data.fixtures,fixtureRounds:data.fixtureRounds,slots:data.slots,drafts:data.drafts,published:data.published,bookings:data.bookings,reservations:data.bookings,results:data.results,staff:data.staff,adminRoles:Object.fromEntries(Object.entries(data.roles||{}).filter(([,r])=>r==='admin')),weeks:Object.fromEntries(weeks.map(w=>[w.id,w])),updatedAt:new Date().toISOString()}}
 async function apiRequest(payload,{auth=true}={}){const headers={'Content-Type':'application/json'};if(auth&&apiToken)headers.Authorization='Bearer '+apiToken;const r=await fetch(API_URL,{method:'POST',headers,body:JSON.stringify(payload)});let j={};try{j=await r.json()}catch(e){}if(!r.ok||j.ok===false)throw new Error(j.error||('HTTP '+r.status));return j}
 function setOnline(ok,text){const el=$('#onlineState');if(!el)return;el.classList.toggle('off',!ok);el.textContent=text||(ok?'☁️ Online':'⚠️ Sin conexión')}
-async function refreshOnline({silent=false}={}){try{const j=await apiRequest({action:'read'},{auth:false});const remote=normalizeData(j.state);data.playerLists=remote.playerLists;data.fixtures=remote.fixtures;data.fixtureRounds=remote.fixtureRounds;data.slots=remote.slots;data.drafts=remote.drafts;data.published=remote.published;data.bookings=remote.bookings;data.results=remote.results;data.staff={...(data.staff||{}),...(remote.staff||{})};data.roles={...(data.roles||{}),...(remote.roles||{})};data.roles["Adrián Prádanos"]="admin";localStorage.setItem(STORAGE_KEY,JSON.stringify(data));setOnline(true,'☁️ Online');renderAll();return true}catch(e){setOnline(false,'⚠️ Offline');if(!silent)alert('No se ha podido actualizar desde Cloudflare.\n\n'+e.message);return false}}
+async function refreshOnline({silent=false,force=false}={}){if(fixtureEditorDirty&&!force){setOnline(true,'✏️ Cambios sin guardar');return false}try{const j=await apiRequest({action:'read'},{auth:false});const remote=normalizeData(j.state);data.playerLists=remote.playerLists;data.fixtures=remote.fixtures;data.fixtureRounds=remote.fixtureRounds;data.slots=remote.slots;data.drafts=remote.drafts;data.published=remote.published;data.bookings=remote.bookings;data.results=remote.results;data.staff={...(data.staff||{}),...(remote.staff||{})};data.roles={...(data.roles||{}),...(remote.roles||{})};data.roles["Adrián Prádanos"]="admin";localStorage.setItem(STORAGE_KEY,JSON.stringify(data));setOnline(true,'☁️ Online');renderAll();return true}catch(e){setOnline(false,'⚠️ Offline');if(!silent)alert('No se ha podido actualizar desde Cloudflare.\n\n'+e.message);return false}}
 async function saveStateOnline(){if(!apiToken||!isAdmin())return;await apiRequest({action:'saveState',state:publicState()});setOnline(true,'☁️ Guardado')}
 async function saveUsersOnline(){if(!apiToken||!isAdmin())return;const users=allIdentities().map(name=>({name,pin:String(data.pins[name]||''),role:roleOf(name)==='admin'?'admin':'player',active:true})).filter(u=>/^\d{4}$/.test(u.pin));await apiRequest({action:'saveUsers',users});}
 async function loadAdminUsers(){if(!apiToken||!isAdmin())return;const j=await apiRequest({action:'listUsers'});for(const u of j.users||[]){data.pins[u.name]=String(u.pin||'');data.roles[u.name]=u.role==='admin'?'admin':'jugador';if(!allPlayers().includes(u.name))data.staff[u.name]={name:u.name}}localStorage.setItem(STORAGE_KEY,JSON.stringify(data));}
@@ -332,13 +333,14 @@ function canonicalPlayer(name){const n=normalizeName(name);return categoryPlayer
 function fixtureId(a,b){return `${fixtureKey()}|${slug(a)}|${slug(b)}`}
 function makeFixture(a,b){a=canonicalPlayer(a);b=canonicalPlayer(b);return {id:fixtureId(a,b),a,b}}
 function fixturePairKey(a,b){return [normalizeName(a),normalizeName(b)].sort().join('|')}
+function markFixtureDirty(){fixtureEditorDirty=true;setOnline(true,'✏️ Jornada sin guardar');const st=$('#fixtureImportStatus');if(st)st.textContent='Hay cambios en la jornada pendientes de guardar. Pulsa “Guardar jornada”.';}
 function addFixturePair(a,b,{silent=false}={}){
   a=canonicalPlayer(a); b=canonicalPlayer(b);
   if(!a||!b){if(!silent)alert('Selecciona los dos jugadores.');return false}
   if(normalizeName(a)===normalizeName(b)){if(!silent)alert('Un jugador no puede enfrentarse a sí mismo.');return false}
   const arr=fixtures().slice(); const k=fixturePairKey(a,b);
   if(arr.some(m=>fixturePairKey(m.a,m.b)===k)){if(!silent)alert('Ese enfrentamiento ya está añadido.');return false}
-  arr.push(makeFixture(a,b)); data.fixtures[fixtureKey()]=arr; localStorage.setItem(STORAGE_KEY,JSON.stringify(data)); return true
+  arr.push(makeFixture(a,b)); data.fixtures[fixtureKey()]=arr; localStorage.setItem(STORAGE_KEY,JSON.stringify(data)); markFixtureDirty(); return true
 }
 function parseFixtureText(raw){
   const pairs=[]; const unknown=[]; const players=categoryPlayers(); const known=new Set(players.map(normalizeName));
@@ -365,7 +367,7 @@ function renderFixtureEditor(){
   if($('#externalRound'))$('#externalRound').value=fixtureRound();
   const box=$('#fixtureList'); if(!box)return;
   const fs=fixtures(); box.innerHTML=fs.length?fs.map(m=>`<div class="fixtureItem"><b>${m.a} <span style="color:var(--muted);font-weight:700">vs</span> ${m.b}</b><button class="btn dangerBtn" type="button" data-remove-fixture="${m.id}">Quitar</button></div>`).join(''):'<div class="tiny">Todavía no hay partidos cargados para esta jornada.</div>';
-  box.querySelectorAll('[data-remove-fixture]').forEach(btn=>btn.onclick=()=>{const mid=btn.dataset.removeFixture;data.fixtures[fixtureKey()]=fixtures().filter(m=>m.id!==mid);localStorage.setItem(STORAGE_KEY,JSON.stringify(data));renderFixtureEditor();renderMatches()});
+  box.querySelectorAll('[data-remove-fixture]').forEach(btn=>btn.onclick=()=>{const mid=btn.dataset.removeFixture;data.fixtures[fixtureKey()]=fixtures().filter(m=>m.id!==mid);localStorage.setItem(STORAGE_KEY,JSON.stringify(data));markFixtureDirty();renderFixtureEditor();renderMatches()});
 }
 function parsePlayerLines(){
   const raw=$('#playerPaste').value||'';
@@ -728,9 +730,9 @@ $('#savePlayers').onclick=async()=>{
 $('#clearPlayers').onclick=async()=>{if(!requireAdmin())return;if(confirm(`¿Vaciar la lista de jugadores de ${state.category} ${state.gender}?\n\nLos enfrentamientos ya cargados no se borrarán.`)){delete data.playerLists[playerListKey()];localStorage.setItem(STORAGE_KEY,JSON.stringify(data));renderAll();try{await saveStateOnline();await refreshOnline({silent:true})}catch(e){alert(e.message)}}};
 $('#addFixture').onclick=()=>{if(!requireAdmin())return;const a=$('#fixturePlayerA').value,b=$('#fixturePlayerB').value;if(addFixturePair(a,b)){renderFixtureEditor();renderMatches();$('#fixturePlayerA').value='';$('#fixturePlayerB').value=''}};
 $('#importFixtures').onclick=()=>{if(!requireAdmin())return;const {pairs,unknown}=parseFixtureText($('#fixturePaste').value);if(!pairs.length){alert('No he encontrado enfrentamientos válidos en el texto.');return}let added=0;for(const [a,b] of pairs)if(addFixturePair(a,b,{silent:true}))added++;renderFixtureEditor();renderMatches();$('#fixtureImportStatus').textContent=`${added} partido${added===1?'':'s'} añadido${added===1?'':'s'}.`+(unknown.length?` ⚠ Nombres no encontrados exactamente en la lista: ${unknown.join(', ')}`:' Todos los nombres coinciden con la categoría.');};
-$('#saveFixtures').onclick=async()=>{if(!requireAdmin())return;const round=$('#externalRound').value.trim();if(round)data.fixtureRounds[fixtureKey()]=round;else delete data.fixtureRounds[fixtureKey()];ensurePins();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));try{await saveStateOnline();await saveUsersOnline();renderAll();alert(`✅ Jornada guardada online.\n\n${round||weeks.find(w=>w.id===state.week).label}\n${fixtures().length} partido${fixtures().length===1?'':'s'}.`)}catch(e){alert('No se ha podido guardar la jornada online.\n\n'+e.message)}};
-$('#clearFixtures').onclick=async()=>{if(!requireAdmin())return;if(confirm('¿Vaciar todos los enfrentamientos de esta categoría y jornada?')){delete data.fixtures[fixtureKey()];delete data.fixtureRounds[fixtureKey()];localStorage.setItem(STORAGE_KEY,JSON.stringify(data));renderAll();try{await saveStateOnline()}catch(e){alert(e.message)}}};
-$('#copyPrevFixtures').onclick=()=>{if(!requireAdmin())return;const i=weeks.findIndex(w=>w.id===state.week);if(i<=0){alert('No hay una semana anterior para copiar.');return}const prevKey=`${weeks[i-1].id}|${state.category}|${state.gender}`;const prev=data.fixtures[prevKey]||[];if(!prev.length){alert('La semana anterior no tiene enfrentamientos en esta categoría.');return}if(fixtures().length&&!confirm('Ya hay enfrentamientos en esta jornada. ¿Sustituirlos por los de la semana anterior?'))return;data.fixtures[fixtureKey()]=prev.map(m=>makeFixture(m.a,m.b));data.fixtureRounds[fixtureKey()]=data.fixtureRounds?.[prevKey]||'';localStorage.setItem(STORAGE_KEY,JSON.stringify(data));renderFixtureEditor();renderMatches()};
+$('#saveFixtures').onclick=async()=>{if(!requireAdmin())return;const round=$('#externalRound').value.trim();if(round)data.fixtureRounds[fixtureKey()]=round;else delete data.fixtureRounds[fixtureKey()];ensurePins();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));const btn=$('#saveFixtures'),oldTxt=btn.textContent;btn.disabled=true;btn.textContent='⏳ Guardando…';try{await saveStateOnline();await saveUsersOnline();fixtureEditorDirty=false;setOnline(true,'☁️ Guardado');await refreshOnline({silent:true,force:true});alert(`✅ Jornada guardada online.\n\n${round||weeks.find(w=>w.id===state.week).label}\n${fixtures().length} partido${fixtures().length===1?'':'s'}.`)}catch(e){fixtureEditorDirty=true;setOnline(true,'✏️ Sin guardar');alert('No se ha podido guardar la jornada online.\n\n'+e.message)}finally{btn.disabled=false;btn.textContent=oldTxt}};
+$('#clearFixtures').onclick=async()=>{if(!requireAdmin())return;if(confirm('¿Vaciar todos los enfrentamientos de esta categoría y jornada?')){delete data.fixtures[fixtureKey()];delete data.fixtureRounds[fixtureKey()];localStorage.setItem(STORAGE_KEY,JSON.stringify(data));markFixtureDirty();renderAll();try{await saveStateOnline();fixtureEditorDirty=false;setOnline(true,'☁️ Guardado')}catch(e){alert(e.message)}}};
+$('#copyPrevFixtures').onclick=()=>{if(!requireAdmin())return;const i=weeks.findIndex(w=>w.id===state.week);if(i<=0){alert('No hay una semana anterior para copiar.');return}const prevKey=`${weeks[i-1].id}|${state.category}|${state.gender}`;const prev=data.fixtures[prevKey]||[];if(!prev.length){alert('La semana anterior no tiene enfrentamientos en esta categoría.');return}if(fixtures().length&&!confirm('Ya hay enfrentamientos en esta jornada. ¿Sustituirlos por los de la semana anterior?'))return;data.fixtures[fixtureKey()]=prev.map(m=>makeFixture(m.a,m.b));data.fixtureRounds[fixtureKey()]=data.fixtureRounds?.[prevKey]||'';localStorage.setItem(STORAGE_KEY,JSON.stringify(data));markFixtureDirty();renderFixtureEditor();renderMatches()};
 $('#draftHabitual').onclick=()=>{if(!requireAdmin())return;draftSlots=buildDefaultWeekSlots();persistDraft();renderDraftBoard()};
 $('#draftAllMorning').onclick=()=>{if(!requireAdmin())return;draftSlots=buildAllPart('morning');persistDraft();renderDraftBoard()};
 $('#draftAllAfternoon').onclick=()=>{if(!requireAdmin())return;draftSlots=buildAllPart('afternoon');persistDraft();renderDraftBoard()};
@@ -757,9 +759,9 @@ try{
   refreshOnline({silent:true});
   setInterval(()=>refreshOnline({silent:true}),10000);
 }catch(e){
-  console.error('Error de arranque V3.9:',e);
-  setOnline(false,'⚠️ Error V3.9');
-  alert('Error de arranque del index V3.9.\n\n'+(e?.message||String(e)));
+  console.error('Error de arranque V3.10:',e);
+  setOnline(false,'⚠️ Error V3.10');
+  alert('Error de arranque del index V3.10.\n\n'+(e?.message||String(e)));
 }
 </script>
 <div style="position:fixed;right:8px;bottom:78px;z-index:45;font-size:9px;opacity:.55;background:#180b0e;border:1px solid rgba(255,255,255,.12);padding:4px 7px;border-radius:999px">V3.7 · RESERVAS SEGURAS</div>
