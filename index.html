@@ -5,35 +5,14 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,maximum-scale=1" name="viewport"/>
 <meta content="#b40012" name="theme-color"/>
-<title>CT Campeador · Reservas V3.13.1 · PIN + Avisos</title>
+<title>CT Campeador · Reservas V3.13.2 · PIN + Avisos</title>
 <link rel="manifest" href="manifest.webmanifest" />
 <link rel="apple-touch-icon" href="apple-touch-icon.png" />
-<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 <script>
-window.OneSignalDeferred = window.OneSignalDeferred || [];
 window.__ctOneSignal = null;
 window.__ctOneSignalReady = false;
 window.__ctOneSignalError = null;
-window.__ctOneSignalStartedAt = Date.now();
-OneSignalDeferred.push(async function(OneSignal) {
-  try {
-    await OneSignal.init({
-      appId: "83564990-f07b-4dd2-ad16-940c1f8f067e",
-      serviceWorkerPath: "OneSignalSDKWorker.js",
-      serviceWorkerParam: { scope: "/ct-campeador-liga/" },
-      notifyButton: { enable: false },
-      allowLocalhostAsSecureOrigin: true
-    });
-    window.__ctOneSignal = OneSignal;
-    window.__ctOneSignalReady = true;
-    window.__ctOneSignalError = null;
-    window.dispatchEvent(new Event("ct-onesignal-ready"));
-  } catch (e) {
-    console.warn("OneSignal init:", e);
-    window.__ctOneSignalError = e?.message || String(e);
-    window.dispatchEvent(new CustomEvent("ct-onesignal-error", { detail: window.__ctOneSignalError }));
-  }
-});
+window.__ctOneSignalPromise = null;
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -250,7 +229,7 @@ select,input,textarea{min-width:0;max-width:100%}
 </section>
 <section class="card" id="matchesView">
 <div class="head"><h2>📋 Enfrentamientos oficiales</h2><small id="matchMeta"></small></div>
-<div class="tiny" style="padding:0 14px 10px;color:var(--gold);font-weight:700">V3.13 · PIN + avisos · Cloudflare online</div>
+<div class="tiny" style="padding:0 14px 10px;color:var(--gold);font-weight:700">V3.13.2 · PIN + avisos · activación directa</div>
 <div class="pad">
 <div class="stateBanner closed" id="reserveState"></div>
 <div class="matches" id="matches"></div>
@@ -261,7 +240,7 @@ select,input,textarea{min-width:0;max-width:100%}
 <div class="schedule" id="schedule"></div>
 </section>
 <section class="card hidden" id="adminView">
-<div class="head"><h2>⚙️ Gestión semanal <span class="adminBadge">ADMIN</span></h2><small>V3.13 · PIN + avisos · Cloudflare online</small></div>
+<div class="head"><h2>⚙️ Gestión semanal <span class="adminBadge">ADMIN</span></h2><small>V3.13.2 · PIN + avisos · activación directa</small></div>
 <div class="pad adminGrid"><div class="adminQuickNav" id="adminQuickNav"><button class="adminQuickBtn" data-admin-target="players" type="button">👥 Jugadores</button><button class="adminQuickBtn" data-admin-target="fixtures" type="button">🎾 Jornada</button><button class="adminQuickBtn" data-admin-target="slots" type="button">🏟️ Pistas</button><button class="adminQuickBtn" data-admin-target="pins" type="button">🔐 PIN</button><button class="adminQuickBtn" data-admin-target="admins" type="button">🛡️ Admins</button><button class="adminQuickBtn" data-admin-target="roles" type="button">👤 Permisos</button><button class="adminQuickBtn" data-admin-target="whats" type="button">📣 WhatsApp</button></div>
 <details class="adminBlock adminAccordion" data-admin-section="players" open=""><summary class="adminSummary"><span class="adminSummaryTitle">1 · Jugadores de la categoría</span><span class="adminSummaryMeta" id="adminMeta_players">Abrir</span></summary><div class="adminAccordionBody">
 
@@ -476,6 +455,31 @@ function hideWelcome(){const ov=$('#welcomeOverlay');if(ov)ov.classList.add('hid
 function isIosDevice(){return /iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1)}
 function isStandaloneApp(){return window.matchMedia?.('(display-mode: standalone)').matches===true||navigator.standalone===true}
 function oneSignal(){return window.__ctOneSignalReady?window.__ctOneSignal:null}
+async function ensureOneSignal(){
+  if(window.__ctOneSignalReady&&window.__ctOneSignal)return window.__ctOneSignal;
+  if(window.__ctOneSignalPromise)return window.__ctOneSignalPromise;
+  window.__ctOneSignalError=null;
+  window.__ctOneSignalPromise=new Promise((resolve,reject)=>{
+    let settled=false;
+    const fail=(err)=>{if(settled)return;settled=true;const msg=err?.message||String(err||'Error al cargar OneSignal');window.__ctOneSignalError=msg;window.__ctOneSignalPromise=null;reject(new Error(msg));};
+    const timer=setTimeout(()=>fail(new Error('OneSignal no ha respondido en 15 segundos.')),15000);
+    window.OneSignalDeferred=window.OneSignalDeferred||[];
+    window.OneSignalDeferred.push(async function(OneSignal){
+      try{
+        await OneSignal.init({
+          appId:'83564990-f07b-4dd2-ad16-940c1f8f067e',
+          serviceWorkerPath:'/ct-campeador-liga/OneSignalSDKWorker.js',
+          serviceWorkerParam:{scope:'/ct-campeador-liga/'},
+          notifyButton:{enable:false}
+        });
+        if(settled)return;clearTimeout(timer);settled=true;window.__ctOneSignal=OneSignal;window.__ctOneSignalReady=true;window.__ctOneSignalError=null;resolve(OneSignal);
+      }catch(e){clearTimeout(timer);fail(e)}
+    });
+    let sc=document.querySelector('script[data-ct-onesignal]');
+    if(!sc){sc=document.createElement('script');sc.src='https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js';sc.defer=true;sc.dataset.ctOnesignal='1';sc.onerror=()=>{clearTimeout(timer);fail(new Error('No se ha podido cargar el SDK de OneSignal.'));};document.head.appendChild(sc);}
+  });
+  return window.__ctOneSignalPromise;
+}
 function oneSignalExternalId(name){return 'ctc-'+normalizeName(name).replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,90)}
 async function syncOneSignalIdentity(){const os=oneSignal();if(!os||!state.authenticated||!state.player)return;try{if(typeof os.login==='function')await os.login(oneSignalExternalId(state.player));}catch(e){console.warn('OneSignal login',e)}}
 async function clearOneSignalIdentity(){const os=oneSignal();if(!os)return;try{if(typeof os.logout==='function')await os.logout();}catch(e){console.warn('OneSignal logout',e)}}
@@ -485,19 +489,10 @@ async function renderNotificationUI(){
   if(!state.authenticated){txt.textContent='Entra con tu PIN para asociar este dispositivo a tu usuario.';btn.disabled=true;btn.textContent='🔔 Activar avisos';if(ios)ios.classList.add('hidden');return}
   const iosDevice=isIosDevice(),standalone=isStandaloneApp();if(ios)ios.classList.toggle('hidden',!(iosDevice&&!standalone));
   if(!('Notification' in window)||!('serviceWorker' in navigator)){txt.innerHTML='<span class="notifyWarn">Este navegador no admite avisos web.</span>';btn.disabled=true;return}
-  if(iosDevice&&!standalone){txt.innerHTML='<span class="notifyWarn">Instala primero la web en la pantalla de inicio.</span>';btn.disabled=true;btn.textContent='Instalar en inicio';return}
+  if(iosDevice&&!standalone){txt.innerHTML='<span class="notifyWarn">En iPhone/iPad debes instalar primero la web en la pantalla de inicio.</span>';btn.disabled=false;btn.textContent='📲 Cómo instalar';return}
   if(!window.__ctOneSignalReady){
-    if(window.__ctOneSignalError){
-      txt.innerHTML='<span class="notifyWarn">No se ha podido iniciar OneSignal.</span><br><small>'+escapeHtml(window.__ctOneSignalError)+'</small>';
-      btn.disabled=true;btn.textContent='Avisos no disponibles';return;
-    }
-    const elapsed=Date.now()-(window.__ctOneSignalStartedAt||Date.now());
-    if(elapsed>10000){
-      txt.innerHTML='<span class="notifyWarn">OneSignal no termina de arrancar.</span><br><small>Recarga la página. Si continúa, copia este mensaje para revisar la configuración.</small>';
-      btn.disabled=true;btn.textContent='Avisos no disponibles';return;
-    }
-    txt.textContent='Preparando avisos…';btn.disabled=true;
-    setTimeout(()=>renderNotificationUI(),1200);
+    txt.textContent='Pulsa para activar los avisos en este dispositivo.';
+    btn.disabled=false;btn.textContent='🔔 Activar avisos';
     return;
   }
   const st=await notificationStatus();
@@ -506,10 +501,21 @@ async function renderNotificationUI(){
   txt.textContent='Actívalos una sola vez y te avisaremos cuando se publiquen las pistas disponibles.';btn.disabled=false;btn.textContent='🔔 Activar avisos';
 }
 async function activateNotifications(){
-  const os=oneSignal();if(!os){alert('El sistema de avisos todavía se está cargando. Inténtalo de nuevo en unos segundos.');return}
   if(!state.authenticated){showWelcome('Entra primero con tu PIN para asociar el dispositivo.',true);return}
+  if(isIosDevice()&&!isStandaloneApp()){alert('Para recibir avisos en iPhone/iPad:\n\n1. Abre esta web en Safari.\n2. Pulsa Compartir.\n3. Pulsa “Añadir a pantalla de inicio”.\n4. Abre CT Campeador desde el nuevo icono.\n5. Pulsa de nuevo “Activar avisos”.');return}
   const btn=$('#notifyBtn');btn.disabled=true;btn.textContent='⏳ Activando…';
-  try{if(os.Notifications?.requestPermission)await os.Notifications.requestPermission();if(os.User?.PushSubscription?.optIn)await os.User.PushSubscription.optIn();await syncOneSignalIdentity();await new Promise(r=>setTimeout(r,350));await renderNotificationUI();const st=await notificationStatus();if(st.optedIn&&st.permission==='granted')alert('✅ Avisos activados. Te avisaremos cuando se publiquen las pistas.');else alert('No se han podido activar todavía. Revisa que hayas permitido las notificaciones.')}catch(e){console.warn(e);alert('No se han podido activar los avisos.\n\n'+(e?.message||String(e)));await renderNotificationUI()}
+  try{
+    const os=await ensureOneSignal();
+    if(typeof os.login==='function'&&state.player)await os.login(oneSignalExternalId(state.player));
+    if(os.Notifications?.requestPermission)await os.Notifications.requestPermission();
+    if(os.User?.PushSubscription?.optIn)await os.User.PushSubscription.optIn();
+    await new Promise(r=>setTimeout(r,500));
+    await renderNotificationUI();
+    const st=await notificationStatus();
+    if(st.optedIn&&st.permission==='granted')alert('✅ Avisos activados. Te avisaremos cuando se publiquen las pistas.');
+    else if(st.permission==='denied')alert('Las notificaciones están bloqueadas en el navegador. Debes permitirlas en los ajustes del sitio.');
+    else alert('El navegador todavía no ha confirmado la suscripción. Pulsa de nuevo Activar avisos.');
+  }catch(e){console.warn(e);window.__ctOneSignalError=e?.message||String(e);alert('No se han podido activar los avisos.\n\n'+window.__ctOneSignalError);await renderNotificationUI()}
 }
 async function loginWithPinOnly(){
   const pin=$('#welcomePin').value.trim(),btn=$('#welcomeEnter'),msg=$('#welcomeMsg');
@@ -527,9 +533,7 @@ async function loginWithPinOnly(){
   }catch(e){msg.textContent=e.message||'PIN incorrecto.';msg.className='welcomeMsg err';$('#welcomePin').select()}
   finally{btn.disabled=false;btn.textContent='Entrar'}
 }
-window.addEventListener('ct-onesignal-ready',()=>{renderNotificationUI();syncOneSignalIdentity()});
-window.addEventListener('load',()=>{setTimeout(()=>renderNotificationUI(),500);setTimeout(()=>renderNotificationUI(),2500);setTimeout(()=>renderNotificationUI(),10500)});
-window.addEventListener('ct-onesignal-error',e=>{window.__ctOneSignalError=e.detail||'Error desconocido';console.warn(e.detail);renderNotificationUI()});
+window.addEventListener('load',()=>{setTimeout(()=>renderNotificationUI(),500)});
 
 function fixtureKey(){return `${state.week}|${state.category}|${state.gender}`}
 function playerListKey(){return `${state.category}|${state.gender}`}
@@ -1161,5 +1165,5 @@ bootstrapApp();
 
 window.addEventListener('scroll',()=>{const a=document.getElementById('adminView');if(a)a.classList.toggle('adminScrolled',window.scrollY>(a.offsetTop+280));},{passive:true});
 </script>
-<div style="position:fixed;right:8px;bottom:78px;z-index:45;font-size:9px;opacity:.55;background:#180b0e;border:1px solid rgba(255,255,255,.12);padding:4px 7px;border-radius:999px">V3.13 · PIN + avisos · Cloudflare online</div>
+<div style="position:fixed;right:8px;bottom:78px;z-index:45;font-size:9px;opacity:.55;background:#180b0e;border:1px solid rgba(255,255,255,.12);padding:4px 7px;border-radius:999px">V3.13.2 · PIN + avisos · activación directa</div>
 </body></html>
