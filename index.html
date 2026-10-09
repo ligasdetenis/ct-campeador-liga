@@ -364,7 +364,7 @@ function renderFixtureEditor(){
   const ps=categoryPlayers();
   const opts='<option value="">Selecciona…</option>'+ps.map(p=>`<option value="${p.replace(/"/g,'&quot;')}">${p}</option>`).join('');
   const a=$('#fixturePlayerA'),b=$('#fixturePlayerB'); if(a)a.innerHTML=opts;if(b)b.innerHTML=opts;
-  if($('#externalRound'))$('#externalRound').value=fixtureRound();
+  if($('#externalRound') && !(fixtureEditorDirty && document.activeElement===$('#externalRound'))) $('#externalRound').value=fixtureRound();
   const box=$('#fixtureList'); if(!box)return;
   const fs=fixtures(); box.innerHTML=fs.length?fs.map(m=>`<div class="fixtureItem"><b>${m.a} <span style="color:var(--muted);font-weight:700">vs</span> ${m.b}</b><button class="btn dangerBtn" type="button" data-remove-fixture="${m.id}">Quitar</button></div>`).join(''):'<div class="tiny">Todavía no hay partidos cargados para esta jornada.</div>';
   box.querySelectorAll('[data-remove-fixture]').forEach(btn=>btn.onclick=()=>{const mid=btn.dataset.removeFixture;data.fixtures[fixtureKey()]=fixtures().filter(m=>m.id!==mid);localStorage.setItem(STORAGE_KEY,JSON.stringify(data));markFixtureDirty();renderFixtureEditor();renderMatches()});
@@ -698,6 +698,7 @@ $('#playerPin').addEventListener('keydown',e=>{if(e.key==='Enter')$('#loginBtn')
 $('#clearIdentity').onclick=async()=>{try{if(apiToken)await apiRequest({action:'logout'})}catch(e){}apiToken='';localStorage.removeItem(TOKEN_KEY);state.player='';state.authenticated=false;$('#playerPin').value='';renderAll()};
 $$('.gender').forEach(b=>b.onclick=()=>{state.gender=b.dataset.gender;renderAll()});
 $('#weekSelect').onchange=e=>{state.week=e.target.value;renderAll()};
+$('#externalRound').addEventListener('input',e=>{if(!requireAdmin())return;const round=e.target.value;data.fixtureRounds=data.fixtureRounds||{};if(round.trim())data.fixtureRounds[fixtureKey()]=round;else delete data.fixtureRounds[fixtureKey()];localStorage.setItem(STORAGE_KEY,JSON.stringify(data));markFixtureDirty();});
 $('#prevWeek').onclick=()=>{let i=weeks.findIndex(w=>w.id===state.week);if(i>0){state.week=weeks[i-1].id;renderAll()}};
 $('#nextWeek').onclick=()=>{let i=weeks.findIndex(w=>w.id===state.week);if(i<weeks.length-1){state.week=weeks[i+1].id;renderAll()}};
 $('#savePlayers').onclick=async()=>{
@@ -758,11 +759,12 @@ try{
   setOnline(false,'☁️ Conectando…');
   refreshOnline({silent:true});
   setInterval(()=>refreshOnline({silent:true}),10000);
+window.addEventListener('beforeunload',e=>{if(fixtureEditorDirty){e.preventDefault();e.returnValue='';}});
 }catch(e){
   console.error('Error de arranque V3.10:',e);
   setOnline(false,'⚠️ Error V3.10');
   alert('Error de arranque del index V3.10.\n\n'+(e?.message||String(e)));
 }
 </script>
-<div style="position:fixed;right:8px;bottom:78px;z-index:45;font-size:9px;opacity:.55;background:#180b0e;border:1px solid rgba(255,255,255,.12);padding:4px 7px;border-radius:999px">V3.7 · RESERVAS SEGURAS</div>
+<div style="position:fixed;right:8px;bottom:78px;z-index:45;font-size:9px;opacity:.55;background:#180b0e;border:1px solid rgba(255,255,255,.12);padding:4px 7px;border-radius:999px">V3.11 · JORNADA PROTEGIDA</div>
 </body></html>
