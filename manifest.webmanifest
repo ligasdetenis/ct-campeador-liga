@@ -1,13 +1,24 @@
 {
+  "id": "/ct-campeador-liga/",
   "name": "CT Campeador · Liga Federada",
   "short_name": "CT Campeador",
-  "description": "Reservas, enfrentamientos y resultados de la Liga CT Campeador",
+  "description": "Reservas, enfrentamientos, resultados y avisos de la Liga CT Campeador",
   "start_url": "/ct-campeador-liga/",
   "scope": "/ct-campeador-liga/",
   "display": "standalone",
+  "display_override": [
+    "standalone",
+    "minimal-ui"
+  ],
   "background_color": "#100708",
   "theme_color": "#b40012",
   "lang": "es",
+  "orientation": "any",
+  "prefer_related_applications": false,
+  "categories": [
+    "sports",
+    "utilities"
+  ],
   "icons": [
     {
       "src": "icon-192.png",
