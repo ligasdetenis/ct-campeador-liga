@@ -175,7 +175,7 @@ body.pinLocked{overflow:hidden}
 @media(max-width:520px){.pinWelcomeCard{padding:21px;border-radius:22px}.pinWelcomeLogo{width:96px;height:96px}.pinWelcomeTitle{font-size:21px}}
 
 
-/* V3.13.5.1 · FIX BARRA GRIS */
+/* V3.13.5.3 · PIN SOLO ADMIN */
 .pushBox{margin-top:12px;padding:12px;border:1px solid var(--line);border-radius:15px;background:rgba(255,255,255,.025);display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
 .pushBox.hidden{display:none!important}
 .pushInfo{min-width:220px;flex:1}
@@ -214,7 +214,7 @@ body.pinLocked{overflow:hidden}
 
 
 /* =========================================================
-   V3.13.5.1 · REDISEÑO VISUAL APP
+   V3.13.5.3 · REDISEÑO VISUAL APP
    La lógica original permanece intacta.
    ========================================================= */
 :root{
@@ -453,7 +453,7 @@ body.modern-admin .bottomNav{display:none!important}
 }
 
 
-/* V3.13.5.1 · header y administración */
+/* V3.13.5.3 · header y administración */
 .mapp-header:before{
   content:"";
   position:absolute;
@@ -575,7 +575,7 @@ body.modern-admin .mapp-admin-back{display:none!important}
 }
 
 
-/* V3.13.5.1 · corrección visual del header */
+/* V3.13.5.3 · corrección visual del header */
 .mapp-header:after{
   background:
     radial-gradient(ellipse at 72% 10%,rgba(255,255,255,.045),transparent 34%),
@@ -585,7 +585,7 @@ body.modern-admin .mapp-admin-back{display:none!important}
 .mapp-logo{max-width:none!important}
 
 
-/* V3.13.5.1 · campana de estado real */
+/* V3.13.5.3 · campana de estado real */
 .mapp-bell{
   transition:background .18s ease,border-color .18s ease,transform .12s ease;
 }
@@ -611,7 +611,7 @@ body.modern-admin .mapp-admin-back{display:none!important}
 .mapp-bell.push-blocked .mapp-bell-dot{display:block}
 
 
-/* V3.13.5.1 · elimina barra gris horizontal en móvil */
+/* V3.13.5.3 · elimina barra gris horizontal en móvil */
 html,body,#modernApp,.mapp-main,.mapp-screen,.mapp-card,.mapp-profile-head,.mapp-menu-row{
   max-width:100%!important;
   box-sizing:border-box!important;
@@ -646,7 +646,7 @@ html,body,#modernApp{
 }
 
 
-/* V3.13.5.1 · cambio de PIN del propio jugador */
+/* V3.13.5.3 · cambio de PIN del propio jugador */
 .mapp-pin-modal{
   position:fixed;inset:0;z-index:7000;display:none;
   align-items:flex-end;justify-content:center;
@@ -679,7 +679,7 @@ html,body,#modernApp{
 }
 
 
-/* V3.13.5.1 · FIX definitivo overflow horizontal en Mi perfil */
+/* V3.13.5.3 · FIX definitivo overflow horizontal en Mi perfil */
 html,body{
   width:100%!important;
   max-width:100%!important;
@@ -711,13 +711,6 @@ html,body{
   padding:7px 9px!important;
   font-size:10px!important;
 }
-.mapp-pin-actions-inline{
-  display:flex!important;
-  gap:5px!important;
-  flex-wrap:wrap!important;
-  justify-content:flex-end!important;
-  max-width:116px!important;
-}
 @media(max-width:430px){
   .mapp-menu-row{
     grid-template-columns:43px minmax(0,1fr) 104px!important;
@@ -725,11 +718,7 @@ html,body{
     padding-left:12px!important;
     padding-right:12px!important;
   }
-  .mapp-pin-actions-inline{
-    width:104px!important;
-    max-width:104px!important;
-  }
-  .mapp-pin-show{
+    .mapp-pin-show{
     padding:7px 7px!important;
     font-size:9px!important;
   }
@@ -1005,38 +994,7 @@ Pablo Ruiz"></textarea>
 </div>
 
 
-<div class="mapp-pin-modal" id="changePinModal">
-  <div class="mapp-pin-panel">
-    <h3>Cambiar mi PIN</h3>
-    <p>Elige un nuevo PIN de 4 cifras. El anterior dejará de funcionar para futuros accesos.</p>
-    <div class="mapp-pin-field">
-      <label>NUEVO PIN</label>
-      <input class="mapp-pin-input" id="newOwnPin" type="password" inputmode="numeric" maxlength="4" autocomplete="new-password" placeholder="••••">
-    </div>
-    <div class="mapp-pin-field">
-      <label>REPETIR PIN</label>
-      <input class="mapp-pin-input" id="repeatOwnPin" type="password" inputmode="numeric" maxlength="4" autocomplete="new-password" placeholder="••••">
-    </div>
-    <div class="mapp-pin-actions">
-      <button class="mapp-pin-cancel" id="cancelOwnPin" type="button">Cancelar</button>
-      <button class="mapp-pin-save" id="saveOwnPin" type="button">Guardar PIN</button>
-    </div>
-  </div>
 </div>
-
-<div class="mapp-selector-sheet" id="modernSelectorSheet">
-  <div class="mapp-selector-panel">
-    <div class="mapp-selector-title">Categoría y semana</div>
-    <div class="mapp-selector-grid">
-      <div><label>Categoría</label><select id="modernCatSelect"></select></div>
-      <div><label>Modalidad</label><select id="modernGenderSelect"><option>Masculino</option><option>Femenino</option></select></div>
-      <div><label>Semana</label><select id="modernWeekSelect"></select></div>
-      <button class="mapp-primary" id="modernSelectorClose" type="button">Aplicar</button>
-    </div>
-  </div>
-</div>
-<nav class="bottomNav"><button class="navBtn active" data-go="home"><span>🎾</span>Partidos</button><button class="navBtn" data-go="courts"><span>🏟️</span>Pistas</button><button class="navBtn hidden" data-go="admin" id="adminNavBtn"><span>⚙️</span>Configuración</button><button class="navBtn" id="refreshBtn"><span>🔄</span>Actualizar</button></nav>
-<div class="modal" id="reserveModal"><div class="sheet"><div class="sheetHead"><div><div class="tiny" id="modalMode">RESERVAR PARTIDO</div><h3 id="modalMatch"></h3></div><button class="close" id="closeModal">✕</button></div><div class="sheetBody"><div class="tiny" id="modalCat"></div><div class="reserveCurrent hidden" id="reserveCurrent"></div><div class="noSlots hidden" id="reserveNoSlots">No quedan huecos disponibles para esta semana.</div><div class="reserveForm" id="reserveForm"><div class="reserveField"><label>Día</label><select id="reserveDay"></select></div><div class="reserveField"><label>Franja horaria</label><select id="reserveTime"></select></div><div class="reserveField"><label>Pista</label><select id="reserveCourt"></select></div><div class="reserveActions"><button class="btn gold" id="confirmReserve">✅ Confirmar reserva</button><button class="btn dangerBtn hidden" id="cancelReserveModal">Cancelar reserva actual</button></div></div></div></div></div>
 <div class="modal" id="delayModal"><div class="sheet"><div class="sheetHead"><div><div class="tiny">GESTIONAR PARTIDO RETRASADO</div><h3 id="delayMatch"></h3></div><button class="close" id="closeDelayModal">✕</button></div><div class="sheetBody"><div class="tiny" id="delayOrigin"></div><div class="reserveField"><label>Nueva semana</label><select id="delayTargetWeek"></select></div><div class="resultHint">El partido seguirá perteneciendo a su jornada oficial. Si eliges una semana posterior, aparecerá también allí como <b>reprogramado</b> y podrá reservar una pista de esa semana.</div><div class="reserveActions"><button class="btn gold" id="saveDelayBtn">💾 Guardar retraso</button><button class="btn dangerBtn" id="restoreDelayBtn">↩️ Devolver a jornada original</button></div></div></div></div>
 <div class="modal" id="resultModal"><div class="sheet"><div class="sheetHead"><div><div class="tiny" id="resultModalMode">RESULTADO DEL PARTIDO</div><h3 id="resultModalMatch"></h3></div><button class="close" id="closeResultModal">✕</button></div><div class="sheetBody">
 <div class="tiny" id="resultModalCat"></div>
@@ -1760,7 +1718,7 @@ async function copyTextRobust(text){
 async function copyPinMessage(player){
   const pin=data.pins[player];
   if(!pin){alert('Ese jugador todavía no tiene PIN.');return}
-  const msg=`Hola ${player}. Tu PIN para reservar pistas en la Liga CT Campeador es ${pin}.`;
+  const msg=`Hola ${player}. Tu PIN para reservar pistas en la Liga CT Campeador es ${pin}.\n\nAcceso: https://ligasdetenis.github.io/ct-campeador-liga/\n\nAcceso: https://ligasdetenis.github.io/ct-campeador-liga/`;
   const ok=await copyTextRobust(msg);
   if(ok){alert('📋 Mensaje copiado. Ya puedes pegarlo en WhatsApp.');return}
 
@@ -1774,7 +1732,7 @@ async function regeneratePinFor(player){
     data.pins[player]=String(r.pin||'');
     localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
     renderPins();
-    const msg=`Hola ${player}. Tu nuevo PIN para reservar pistas en la Liga CT Campeador es ${r.pin}.`;
+    const msg=`Hola ${player}. Tu nuevo PIN para reservar pistas en la Liga CT Campeador es ${r.pin}.\n\nAcceso: https://ligasdetenis.github.io/ct-campeador-liga/`;
     const copied=await copyTextRobust(msg);
     alert(`✅ PIN regenerado.\n\n${player}\nNuevo PIN: ${r.pin}`+(copied?'\n\n📋 Mensaje copiado al portapapeles.':''));
   }catch(e){
@@ -2158,40 +2116,6 @@ function mappInstallText(){
  return['Disponible según navegador',''];
 }
 
-function openOwnPinModal(){
-  if(!state.authenticated||!state.player){alert('Debes iniciar sesión.');return}
-  $('#newOwnPin').value='';
-  $('#repeatOwnPin').value='';
-  $('#changePinModal').classList.add('show');
-  setTimeout(()=>$('#newOwnPin')?.focus(),80);
-}
-function closeOwnPinModal(){
-  $('#changePinModal').classList.remove('show');
-  $('#newOwnPin').value='';
-  $('#repeatOwnPin').value='';
-}
-async function saveOwnPinChange(){
-  const p1=String($('#newOwnPin').value||'').trim();
-  const p2=String($('#repeatOwnPin').value||'').trim();
-  if(!/^\d{4}$/.test(p1)){alert('El nuevo PIN debe tener exactamente 4 cifras.');return}
-  if(p1!==p2){alert('Los dos PIN no coinciden.');return}
-  const btn=$('#saveOwnPin');
-  try{
-    btn.disabled=true;
-    btn.textContent='Guardando…';
-    const r=await apiRequest({action:'changeOwnPin',newPin:p1});
-    if(data.pins) data.pins[state.player]=String(r.pin||p1);
-    try{localStorage.setItem(STORAGE_KEY,JSON.stringify(data))}catch(_){}
-    closeOwnPinModal();
-    await renderModernProfile();
-    alert('✅ PIN cambiado correctamente.\n\nA partir de ahora usa el nuevo PIN para iniciar sesión.');
-  }catch(e){
-    alert('No se ha podido cambiar el PIN.\n\n'+e.message);
-  }finally{
-    btn.disabled=false;
-    btn.textContent='Guardar PIN';
-  }
-}
 
 async function renderModernProfile(){
  const box=$('#modernProfileContent');if(!box)return;
@@ -2205,7 +2129,7 @@ async function renderModernProfile(){
    </div>
    <div class="mapp-menu-row" id="mappPushRow"><div class="mapp-menu-icon">${mappIcon('bell')}</div><div><div class="mapp-menu-title">Avisos</div><div class="mapp-menu-sub ${pushCls}">${mappEsc(pushText)}</div></div><div>${mappIcon('chevron')}</div></div>
    <div class="mapp-menu-row" id="mappInstallRow"><div class="mapp-menu-icon">${mappIcon('phone')}</div><div><div class="mapp-menu-title">Aplicación</div><div class="mapp-menu-sub ${installCls}">${mappEsc(installText)}</div></div><div>${mappIcon('chevron')}</div></div>
-   <div class="mapp-menu-row"><div class="mapp-menu-icon">${mappIcon('lock')}</div><div><div class="mapp-menu-title">Mi PIN</div><div class="mapp-menu-sub" id="mappPinValue">••••</div></div><div class="mapp-pin-actions-inline"><button class="mapp-pin-show" id="mappShowPin" type="button">Mostrar</button><button class="mapp-pin-show" id="mappChangePin" type="button" style="background:#fff0f2;color:#c7001d">Cambiar</button></div></div>
+   <div class="mapp-menu-row"><div class="mapp-menu-icon">${mappIcon('lock')}</div><div><div class="mapp-menu-title">Mi PIN</div><div class="mapp-menu-sub" id="mappPinValue">••••</div></div><button class="mapp-pin-show" id="mappShowPin" type="button">Mostrar</button></div>
    <div class="mapp-menu-row" id="mappLogoutRow"><div class="mapp-menu-icon">${mappIcon('logout')}</div><div><div class="mapp-menu-title">Sesión</div><div class="mapp-menu-sub">Cerrar sesión / Cambiar jugador</div></div><div>${mappIcon('chevron')}</div></div>
  </div>
  ${isAdmin()?`<div class="mapp-card"><div class="mapp-list-header"><div class="mapp-list-title">ADMINISTRACIÓN</div></div>
@@ -2220,7 +2144,6 @@ async function renderModernProfile(){
  $('#mappShowPin')?.addEventListener('click',e=>{
    const v=$('#mappPinValue');const shown=v.textContent!=='••••';v.textContent=shown?'••••':(pin||'No disponible');e.currentTarget.textContent=shown?'Mostrar':'Ocultar'
  });
- $('#mappChangePin')?.addEventListener('click',openOwnPinModal);
  $('#mappLogoutRow')?.addEventListener('click',()=>$('#clearIdentity').click());
  $('#mappAdminRow')?.addEventListener('click',openModernAdmin);
 }
@@ -2296,10 +2219,6 @@ document.querySelectorAll('[data-modern-go]').forEach(b=>b.onclick=()=>mappShow(
 $('#modernContextBtn').onclick=mappOpenSelector;
 $('#modernSelectorClose').onclick=mappApplySelector;
 $('#modernSelectorSheet').onclick=e=>{if(e.target===$('#modernSelectorSheet'))$('#modernSelectorSheet').classList.remove('show')};
-$('#cancelOwnPin').onclick=closeOwnPinModal;
-$('#saveOwnPin').onclick=saveOwnPinChange;
-$('#changePinModal').onclick=e=>{if(e.target===$('#changePinModal'))closeOwnPinModal()};
-['newOwnPin','repeatOwnPin'].forEach(id=>$('#'+id)?.addEventListener('input',e=>{e.target.value=e.target.value.replace(/\D/g,'').slice(0,4)}));
 
 $('#modernBellBtn').onclick=()=>{
   mappShow('profile');
@@ -2512,5 +2431,5 @@ bootstrapApp();
 
 window.addEventListener('scroll',()=>{const a=document.getElementById('adminView');if(a)a.classList.toggle('adminScrolled',window.scrollY>(a.offsetTop+280));},{passive:true});
 </script>
-<div style="position:fixed;right:8px;bottom:78px;z-index:45;font-size:9px;opacity:.55;background:#180b0e;border:1px solid rgba(255,255,255,.12);padding:4px 7px;border-radius:999px">V3.13.5.1 · RESERVA DESDE PISTAS</div>
+<div style="position:fixed;right:8px;bottom:78px;z-index:45;font-size:9px;opacity:.55;background:#180b0e;border:1px solid rgba(255,255,255,.12);padding:4px 7px;border-radius:999px">V3.13.5.3 · RESERVA DESDE PISTAS</div>
 </body></html>
