@@ -175,7 +175,7 @@ body.pinLocked{overflow:hidden}
 @media(max-width:520px){.pinWelcomeCard{padding:21px;border-radius:22px}.pinWelcomeLogo{width:96px;height:96px}.pinWelcomeTitle{font-size:21px}}
 
 
-/* V3.13.5.3 · PIN SOLO ADMIN */
+/* V3.13.4 · SIN SCROLL HORIZONTAL */
 .pushBox{margin-top:12px;padding:12px;border:1px solid var(--line);border-radius:15px;background:rgba(255,255,255,.025);display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
 .pushBox.hidden{display:none!important}
 .pushInfo{min-width:220px;flex:1}
@@ -214,7 +214,7 @@ body.pinLocked{overflow:hidden}
 
 
 /* =========================================================
-   V3.13.5.3 · REDISEÑO VISUAL APP
+   V3.13.4 · REDISEÑO VISUAL APP
    La lógica original permanece intacta.
    ========================================================= */
 :root{
@@ -453,7 +453,7 @@ body.modern-admin .bottomNav{display:none!important}
 }
 
 
-/* V3.13.5.3 · header y administración */
+/* V3.13.4 · header y administración */
 .mapp-header:before{
   content:"";
   position:absolute;
@@ -575,7 +575,7 @@ body.modern-admin .mapp-admin-back{display:none!important}
 }
 
 
-/* V3.13.5.3 · corrección visual del header */
+/* V3.13.4 · corrección visual del header */
 .mapp-header:after{
   background:
     radial-gradient(ellipse at 72% 10%,rgba(255,255,255,.045),transparent 34%),
@@ -585,7 +585,7 @@ body.modern-admin .mapp-admin-back{display:none!important}
 .mapp-logo{max-width:none!important}
 
 
-/* V3.13.5.3 · campana de estado real */
+/* V3.13.4 · campana de estado real */
 .mapp-bell{
   transition:background .18s ease,border-color .18s ease,transform .12s ease;
 }
@@ -611,7 +611,7 @@ body.modern-admin .mapp-admin-back{display:none!important}
 .mapp-bell.push-blocked .mapp-bell-dot{display:block}
 
 
-/* V3.13.5.3 · elimina barra gris horizontal en móvil */
+/* V3.13.4 · elimina barra gris horizontal en móvil */
 html,body,#modernApp,.mapp-main,.mapp-screen,.mapp-card,.mapp-profile-head,.mapp-menu-row{
   max-width:100%!important;
   box-sizing:border-box!important;
@@ -643,85 +643,6 @@ html,body,#modernApp{
 }
 .mapp-nav{
   overflow:hidden!important;
-}
-
-
-/* V3.13.5.3 · cambio de PIN del propio jugador */
-.mapp-pin-modal{
-  position:fixed;inset:0;z-index:7000;display:none;
-  align-items:flex-end;justify-content:center;
-  background:rgba(25,4,8,.5);backdrop-filter:blur(3px)
-}
-.mapp-pin-modal.show{display:flex}
-.mapp-pin-panel{
-  width:min(100%,760px);background:#fff;border-radius:22px 22px 0 0;
-  padding:18px 16px calc(20px + env(safe-area-inset-bottom));
-  box-shadow:0 -18px 48px rgba(0,0,0,.2)
-}
-.mapp-pin-panel h3{margin:0;font-size:20px;font-weight:950;color:#17171a}
-.mapp-pin-panel p{margin:6px 0 16px;color:#777b84;font-size:12px;line-height:1.4}
-.mapp-pin-field{margin-bottom:11px}
-.mapp-pin-field label{display:block;font-size:10px;font-weight:850;color:#73767d;margin:0 0 5px 2px}
-.mapp-pin-input{
-  width:100%;box-sizing:border-box;border:1px solid #dedfe3;border-radius:12px;
-  background:#f7f7f9;color:#17171a;font-size:22px;font-weight:900;letter-spacing:.24em;
-  text-align:center;padding:12px;outline:none
-}
-.mapp-pin-input:focus{border-color:#ca0920;box-shadow:0 0 0 3px rgba(202,9,32,.08)}
-.mapp-pin-actions{display:grid;grid-template-columns:1fr 1.3fr;gap:9px;margin-top:14px}
-.mapp-pin-cancel{
-  border:1px solid #e0e1e4;background:#f5f5f7;color:#33363b;border-radius:11px;
-  padding:13px;font-weight:850
-}
-.mapp-pin-save{
-  border:0;background:linear-gradient(90deg,#d60020,#b90019);color:#fff;border-radius:11px;
-  padding:13px;font-weight:900
-}
-
-
-/* V3.13.5.3 · FIX definitivo overflow horizontal en Mi perfil */
-html,body{
-  width:100%!important;
-  max-width:100%!important;
-  overflow-x:hidden!important;
-}
-#modernApp,.mapp-main,.mapp-screen,.mapp-card,.mapp-profile-head,.mapp-menu-row{
-  width:100%!important;
-  max-width:100%!important;
-  box-sizing:border-box!important;
-  overflow-x:hidden!important;
-}
-.mapp-menu-row{
-  grid-template-columns:46px minmax(0,1fr) auto!important;
-}
-.mapp-menu-row > *{
-  min-width:0!important;
-}
-.mapp-menu-row > div:nth-child(2){
-  min-width:0!important;
-  overflow:hidden!important;
-}
-.mapp-menu-title,.mapp-menu-sub,.mapp-profile-name,.mapp-profile-role{
-  max-width:100%!important;
-  overflow-wrap:anywhere!important;
-  word-break:break-word!important;
-}
-.mapp-pin-show{
-  white-space:nowrap!important;
-  padding:7px 9px!important;
-  font-size:10px!important;
-}
-@media(max-width:430px){
-  .mapp-menu-row{
-    grid-template-columns:43px minmax(0,1fr) 104px!important;
-    gap:8px!important;
-    padding-left:12px!important;
-    padding-right:12px!important;
-  }
-    .mapp-pin-show{
-    padding:7px 7px!important;
-    font-size:9px!important;
-  }
 }
 
 </style>
@@ -993,8 +914,19 @@ Pablo Ruiz"></textarea>
   </nav>
 </div>
 
-
+<div class="mapp-selector-sheet" id="modernSelectorSheet">
+  <div class="mapp-selector-panel">
+    <div class="mapp-selector-title">Categoría y semana</div>
+    <div class="mapp-selector-grid">
+      <div><label>Categoría</label><select id="modernCatSelect"></select></div>
+      <div><label>Modalidad</label><select id="modernGenderSelect"><option>Masculino</option><option>Femenino</option></select></div>
+      <div><label>Semana</label><select id="modernWeekSelect"></select></div>
+      <button class="mapp-primary" id="modernSelectorClose" type="button">Aplicar</button>
+    </div>
+  </div>
 </div>
+<nav class="bottomNav"><button class="navBtn active" data-go="home"><span>🎾</span>Partidos</button><button class="navBtn" data-go="courts"><span>🏟️</span>Pistas</button><button class="navBtn hidden" data-go="admin" id="adminNavBtn"><span>⚙️</span>Configuración</button><button class="navBtn" id="refreshBtn"><span>🔄</span>Actualizar</button></nav>
+<div class="modal" id="reserveModal"><div class="sheet"><div class="sheetHead"><div><div class="tiny" id="modalMode">RESERVAR PARTIDO</div><h3 id="modalMatch"></h3></div><button class="close" id="closeModal">✕</button></div><div class="sheetBody"><div class="tiny" id="modalCat"></div><div class="reserveCurrent hidden" id="reserveCurrent"></div><div class="noSlots hidden" id="reserveNoSlots">No quedan huecos disponibles para esta semana.</div><div class="reserveForm" id="reserveForm"><div class="reserveField"><label>Día</label><select id="reserveDay"></select></div><div class="reserveField"><label>Franja horaria</label><select id="reserveTime"></select></div><div class="reserveField"><label>Pista</label><select id="reserveCourt"></select></div><div class="reserveActions"><button class="btn gold" id="confirmReserve">✅ Confirmar reserva</button><button class="btn dangerBtn hidden" id="cancelReserveModal">Cancelar reserva actual</button></div></div></div></div></div>
 <div class="modal" id="delayModal"><div class="sheet"><div class="sheetHead"><div><div class="tiny">GESTIONAR PARTIDO RETRASADO</div><h3 id="delayMatch"></h3></div><button class="close" id="closeDelayModal">✕</button></div><div class="sheetBody"><div class="tiny" id="delayOrigin"></div><div class="reserveField"><label>Nueva semana</label><select id="delayTargetWeek"></select></div><div class="resultHint">El partido seguirá perteneciendo a su jornada oficial. Si eliges una semana posterior, aparecerá también allí como <b>reprogramado</b> y podrá reservar una pista de esa semana.</div><div class="reserveActions"><button class="btn gold" id="saveDelayBtn">💾 Guardar retraso</button><button class="btn dangerBtn" id="restoreDelayBtn">↩️ Devolver a jornada original</button></div></div></div></div>
 <div class="modal" id="resultModal"><div class="sheet"><div class="sheetHead"><div><div class="tiny" id="resultModalMode">RESULTADO DEL PARTIDO</div><h3 id="resultModalMatch"></h3></div><button class="close" id="closeResultModal">✕</button></div><div class="sheetBody">
 <div class="tiny" id="resultModalCat"></div>
@@ -1718,7 +1650,7 @@ async function copyTextRobust(text){
 async function copyPinMessage(player){
   const pin=data.pins[player];
   if(!pin){alert('Ese jugador todavía no tiene PIN.');return}
-  const msg=`Hola ${player}. Tu PIN para reservar pistas en la Liga CT Campeador es ${pin}.\n\nAcceso: https://ligasdetenis.github.io/ct-campeador-liga/\n\nAcceso: https://ligasdetenis.github.io/ct-campeador-liga/`;
+  const msg=`Hola ${player}. Tu PIN para reservar pistas en la Liga CT Campeador es ${pin}.`;
   const ok=await copyTextRobust(msg);
   if(ok){alert('📋 Mensaje copiado. Ya puedes pegarlo en WhatsApp.');return}
 
@@ -1732,7 +1664,7 @@ async function regeneratePinFor(player){
     data.pins[player]=String(r.pin||'');
     localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
     renderPins();
-    const msg=`Hola ${player}. Tu nuevo PIN para reservar pistas en la Liga CT Campeador es ${r.pin}.\n\nAcceso: https://ligasdetenis.github.io/ct-campeador-liga/`;
+    const msg=`Hola ${player}. Tu nuevo PIN para reservar pistas en la Liga CT Campeador es ${r.pin}.`;
     const copied=await copyTextRobust(msg);
     alert(`✅ PIN regenerado.\n\n${player}\nNuevo PIN: ${r.pin}`+(copied?'\n\n📋 Mensaje copiado al portapapeles.':''));
   }catch(e){
@@ -2115,8 +2047,6 @@ function mappInstallText(){
  if(isAndroidDevice())return deferredInstallPrompt?['Disponible para instalar','']:['Abrir en Chrome para instalar',''];
  return['Disponible según navegador',''];
 }
-
-
 async function renderModernProfile(){
  const box=$('#modernProfileContent');if(!box)return;
  const [pushText,pushCls]=await mappPushStatusText();
@@ -2129,7 +2059,7 @@ async function renderModernProfile(){
    </div>
    <div class="mapp-menu-row" id="mappPushRow"><div class="mapp-menu-icon">${mappIcon('bell')}</div><div><div class="mapp-menu-title">Avisos</div><div class="mapp-menu-sub ${pushCls}">${mappEsc(pushText)}</div></div><div>${mappIcon('chevron')}</div></div>
    <div class="mapp-menu-row" id="mappInstallRow"><div class="mapp-menu-icon">${mappIcon('phone')}</div><div><div class="mapp-menu-title">Aplicación</div><div class="mapp-menu-sub ${installCls}">${mappEsc(installText)}</div></div><div>${mappIcon('chevron')}</div></div>
-   <div class="mapp-menu-row"><div class="mapp-menu-icon">${mappIcon('lock')}</div><div><div class="mapp-menu-title">Mi PIN</div><div class="mapp-menu-sub" id="mappPinValue">••••</div></div><button class="mapp-pin-show" id="mappShowPin" type="button">Mostrar</button></div>
+   <div class="mapp-menu-row"><div class="mapp-menu-icon">${mappIcon('lock')}</div><div><div class="mapp-menu-title">Mi PIN</div><div class="mapp-menu-sub" id="mappPinValue">••••</div></div><button class="mapp-pin-show" id="mappShowPin">Mostrar</button></div>
    <div class="mapp-menu-row" id="mappLogoutRow"><div class="mapp-menu-icon">${mappIcon('logout')}</div><div><div class="mapp-menu-title">Sesión</div><div class="mapp-menu-sub">Cerrar sesión / Cambiar jugador</div></div><div>${mappIcon('chevron')}</div></div>
  </div>
  ${isAdmin()?`<div class="mapp-card"><div class="mapp-list-header"><div class="mapp-list-title">ADMINISTRACIÓN</div></div>
@@ -2219,7 +2149,6 @@ document.querySelectorAll('[data-modern-go]').forEach(b=>b.onclick=()=>mappShow(
 $('#modernContextBtn').onclick=mappOpenSelector;
 $('#modernSelectorClose').onclick=mappApplySelector;
 $('#modernSelectorSheet').onclick=e=>{if(e.target===$('#modernSelectorSheet'))$('#modernSelectorSheet').classList.remove('show')};
-
 $('#modernBellBtn').onclick=()=>{
   mappShow('profile');
   setTimeout(()=>$('#mappPushRow')?.scrollIntoView({behavior:'smooth',block:'center'}),120);
@@ -2431,5 +2360,5 @@ bootstrapApp();
 
 window.addEventListener('scroll',()=>{const a=document.getElementById('adminView');if(a)a.classList.toggle('adminScrolled',window.scrollY>(a.offsetTop+280));},{passive:true});
 </script>
-<div style="position:fixed;right:8px;bottom:78px;z-index:45;font-size:9px;opacity:.55;background:#180b0e;border:1px solid rgba(255,255,255,.12);padding:4px 7px;border-radius:999px">V3.13.5.3 · RESERVA DESDE PISTAS</div>
+<div style="position:fixed;right:8px;bottom:78px;z-index:45;font-size:9px;opacity:.55;background:#180b0e;border:1px solid rgba(255,255,255,.12);padding:4px 7px;border-radius:999px">V3.13.4 · RESERVA DESDE PISTAS</div>
 </body></html>
