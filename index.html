@@ -11,7 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 
-/* V3.14.2 · evita el flash del diseño antiguo durante el arranque */
+/* V3.14.3 · evita el flash del diseño antiguo durante el arranque */
 html.app-booting,
 html.app-booting body{
   background:#65000d!important;
@@ -206,7 +206,7 @@ select,input,textarea{min-width:0;max-width:100%}
 .calendarBtn:hover{background:rgba(255,201,40,.14)}
 @media(max-width:430px){.datePickerWrap{grid-template-columns:minmax(0,1fr) 44px}}
 
-/* V3.14.2 · LIMPIEZA ADMIN · Entrada directa por PIN · nuevo diseño */
+/* V3.14.3 · RANGO JORNADA · Entrada directa por PIN · nuevo diseño */
 .pinWelcome{
   position:fixed;
   inset:0;
@@ -1786,7 +1786,25 @@ const weeks=[
 function shortDateES(dateStr){const d=new Date(dateStr+'T12:00:00');return d.toLocaleDateString('es-ES',{day:'numeric',month:'short'}).replace(/\./g,'')}
 function makeWeekLabel(w){const n=Number(String(w.id).replace(/\D/g,''))||'';return `Semana ${n} · ${shortDateES(w.start)}–${shortDateES(w.end)}`}
 function applyWeekRanges(){for(const w of weeks){const r=data?.weekRanges?.[w.id];if(r&&/^\d{4}-\d{2}-\d{2}$/.test(r.start||'')&&/^\d{4}-\d{2}-\d{2}$/.test(r.end||'')&&r.start<=r.end){w.start=r.start;w.end=r.end}w.label=makeWeekLabel(w)}}
-function setWeekRangeLocal(start,end){if(!start||!end)return false;if(start>end){alert('La fecha de inicio no puede ser posterior a la fecha final.');return false}data.weekRanges=data.weekRanges||{};data.weekRanges[state.week]={start,end};applyWeekRanges();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));markFixtureDirty();renderWeeks();setDefaultQuickDate();renderDraftBoard();updateAdminSummaries();return true}
+function setWeekRangeLocal(start,end){
+  if(!start||!end)return false;
+  if(start>end){alert('La fecha de inicio no puede ser posterior a la fecha final.');return false}
+  data.weekRanges=data.weekRanges||{};
+  data.weekRanges[state.week]={start,end};
+  applyWeekRanges();
+  const removed=trimDraftToCurrentWeek({persist:true});
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+  markFixtureDirty();
+  renderWeeks();
+  setDefaultQuickDate();
+  renderDraftBoard();
+  updateAdminSummaries();
+  if(removed>0){
+    const h=$('#weekRangeHint');
+    if(h)h.textContent=`Rango actualizado: ${dayDateES(start)} → ${dayDateES(end)}. Se han eliminado ${removed} franja${removed===1?'':'s'} del borrador que quedaban fuera del nuevo rango.`;
+  }
+  return true
+}
 
 function fresh(){return {playerLists:{},fixtures:{},fixtureRounds:{},slots:{},drafts:{},published:{},bookings:{},results:{},pins:{},roles:{},staff:{},weekRanges:{},postponed:{}}}
 function normalizeData(x){const d=x&&typeof x==='object'?x:{};const wr={...(d.weekRanges||{})};if(d.weeks&&typeof d.weeks==='object'){for(const [id,w] of Object.entries(d.weeks)){if(w&&w.start&&w.end&&!wr[id])wr[id]={start:w.start,end:w.end}}}return {playerLists:d.playerLists||{},fixtures:d.fixtures||{},fixtureRounds:d.fixtureRounds||{},slots:d.slots||{},drafts:d.drafts||{},published:d.published||{},bookings:d.reservations||d.bookings||{},results:d.results||{},pins:d.pins||{},roles:{...(d.roles||{}),...(d.adminRoles||{})},staff:d.staff||{},weekRanges:wr,postponed:d.postponed||{}}}
@@ -2584,6 +2602,40 @@ async function removePushDevicesFor(player){
 let draftSlots=[];
 function persistDraft(){if(!data.drafts)data.drafts={};data.drafts[weekKey()]=draftSlots.map(x=>({...x}));save()}
 
+function currentWeekRange(){
+  return weeks.find(w=>w.id===state.week)||null;
+}
+function slotInsideCurrentWeek(s){
+  const w=currentWeekRange();
+  return !!(w && s && s.date && s.date>=w.start && s.date<=w.end);
+}
+function trimDraftToCurrentWeek({persist=true}={}){
+  const before=draftSlots.length;
+  draftSlots=draftSlots.filter(slotInsideCurrentWeek);
+  normalizeDraft();
+  if(persist && before!==draftSlots.length)persistDraft();
+  return before-draftSlots.length;
+}
+function trimStoredAvailabilityToCurrentWeek(){
+  const w=currentWeekRange();
+  if(!w)return {drafts:0,slots:0};
+
+  let removedDrafts=0, removedSlots=0;
+  const key=weekKey();
+
+  if(data.drafts?.[key]){
+    const before=data.drafts[key].length;
+    data.drafts[key]=data.drafts[key].filter(s=>s?.date>=w.start&&s?.date<=w.end);
+    removedDrafts=before-data.drafts[key].length;
+  }
+  if(data.slots?.[key]){
+    const before=data.slots[key].length;
+    data.slots[key]=data.slots[key].filter(s=>s?.date>=w.start&&s?.date<=w.end);
+    removedSlots=before-data.slots[key].length;
+  }
+  return {drafts:removedDrafts,slots:removedSlots};
+}
+
 function timeToMin(t){const [h,m]=t.split(':').map(Number);return h*60+m}
 function minToTime(n){return `${String(Math.floor(n/60)).padStart(2,'0')}:${String(n%60).padStart(2,'0')}`}
 function dayNameES(dateStr){const d=new Date(dateStr+'T12:00:00');return d.toLocaleDateString('es-ES',{weekday:'long'}).replace(/^./,c=>c.toUpperCase())}
@@ -2600,7 +2652,9 @@ function renderSlotRows(){
   // Primero recuperamos el borrador del admin. Si no existe, usamos lo ya publicado;
   // y si la semana es nueva, preparamos automáticamente el horario habitual.
   draftSlots=stored.length?stored.map(x=>({...x})):(saved.length?saved.map(x=>({...x})):buildDefaultWeekSlots());
+  trimDraftToCurrentWeek({persist:false});
   if(!stored.length&&!saved.length)persistDraft();
+  else persistDraft();
   renderSlotChips();
 }
 function partOfSlot(s){return timeToMin(s.time.split(' - ')[0])<15*60?'morning':'afternoon'}
@@ -2680,7 +2734,16 @@ function buildAllPart(part){
 }
 function buildFullWeek(){return [...buildAllPart('morning'),...buildAllPart('afternoon')]}
 function localISO(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
-function collectSlots(){normalizeDraft();return draftSlots.map(x=>({...x}))}
+function collectSlots(){
+  normalizeDraft();
+  const invalid=draftSlots.filter(s=>!slotInsideCurrentWeek(s)).length;
+  if(invalid){
+    draftSlots=draftSlots.filter(slotInsideCurrentWeek);
+    persistDraft();
+    renderDraftBoard();
+  }
+  return draftSlots.filter(slotInsideCurrentWeek).map(x=>({...x}));
+}
 function setDefaultQuickDate(){
   const inp=$('#customDate'); if(!inp)return;
   const w=weeks.find(x=>x.id===state.week); if(!w)return;
@@ -3335,7 +3398,7 @@ $('#savePlayers').onclick=async()=>{
 $('#clearPlayers').onclick=async()=>{if(!requireAdmin())return;if(confirm(`¿Vaciar la lista de jugadores de ${state.category} ${state.gender}?\n\nLos enfrentamientos ya cargados no se borrarán.`)){delete data.playerLists[playerListKey()];playerEditorDirty=false;localStorage.setItem(STORAGE_KEY,JSON.stringify(data));renderAll();try{await saveStateOnline();await refreshOnline({silent:true,force:true})}catch(e){alert(e.message)}}};
 $('#addFixture').onclick=()=>{if(!requireAdmin())return;const a=$('#fixturePlayerA').value,b=$('#fixturePlayerB').value;if(addFixturePair(a,b)){renderFixtureEditor();renderMatches();$('#fixturePlayerA').value='';$('#fixturePlayerB').value=''}};
 $('#importFixtures').onclick=()=>{if(!requireAdmin())return;const {pairs,unknown}=parseFixtureText($('#fixturePaste').value);if(!pairs.length){alert('No he encontrado enfrentamientos válidos en el texto.');return}let added=0;for(const [a,b] of pairs)if(addFixturePair(a,b,{silent:true}))added++;renderFixtureEditor();renderMatches();$('#fixtureImportStatus').textContent=`${added} partido${added===1?'':'s'} añadido${added===1?'':'s'}.`+(unknown.length?` ⚠ Nombres no encontrados exactamente en la lista: ${unknown.join(', ')}`:' Todos los nombres coinciden con la categoría.');};
-$('#saveFixtures').onclick=async()=>{if(!requireAdmin())return;const start=$('#weekStartDate').value,end=$('#weekEndDate').value;if(!start||!end){alert('Indica el inicio y el fin de la semana.');return}if(start>end){alert('La fecha de inicio no puede ser posterior a la fecha final.');return}data.weekRanges=data.weekRanges||{};data.weekRanges[state.week]={start,end};applyWeekRanges();const round=$('#externalRound').value.trim();if(round)data.fixtureRounds[fixtureKey()]=round;else delete data.fixtureRounds[fixtureKey()];ensurePins();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));const btn=$('#saveFixtures'),oldTxt=btn.textContent;btn.disabled=true;btn.textContent='⏳ Guardando…';try{await saveStateOnline();await saveUsersOnline();fixtureEditorDirty=false;setOnline(true,'☁️ Guardado');await refreshOnline({silent:true,force:true});alert(`✅ Jornada guardada online.\n\n${round||weeks.find(w=>w.id===state.week).label}\n${fixtures().length} partido${fixtures().length===1?'':'s'}.`)}catch(e){fixtureEditorDirty=true;setOnline(true,'✏️ Sin guardar');alert('No se ha podido guardar la jornada online.\n\n'+e.message)}finally{btn.disabled=false;btn.textContent=oldTxt}};
+$('#saveFixtures').onclick=async()=>{if(!requireAdmin())return;const start=$('#weekStartDate').value,end=$('#weekEndDate').value;if(!start||!end){alert('Indica el inicio y el fin de la semana.');return}if(start>end){alert('La fecha de inicio no puede ser posterior a la fecha final.');return}data.weekRanges=data.weekRanges||{};data.weekRanges[state.week]={start,end};applyWeekRanges();trimDraftToCurrentWeek({persist:false});trimStoredAvailabilityToCurrentWeek();persistDraft();const round=$('#externalRound').value.trim();if(round)data.fixtureRounds[fixtureKey()]=round;else delete data.fixtureRounds[fixtureKey()];ensurePins();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));const btn=$('#saveFixtures'),oldTxt=btn.textContent;btn.disabled=true;btn.textContent='⏳ Guardando…';try{await saveStateOnline();await saveUsersOnline();fixtureEditorDirty=false;setOnline(true,'☁️ Guardado');await refreshOnline({silent:true,force:true});alert(`✅ Jornada guardada online.\n\n${round||weeks.find(w=>w.id===state.week).label}\n${fixtures().length} partido${fixtures().length===1?'':'s'}.`)}catch(e){fixtureEditorDirty=true;setOnline(true,'✏️ Sin guardar');alert('No se ha podido guardar la jornada online.\n\n'+e.message)}finally{btn.disabled=false;btn.textContent=oldTxt}};
 $('#clearFixtures').onclick=async()=>{if(!requireAdmin())return;if(confirm('¿Vaciar todos los enfrentamientos de esta categoría y jornada?')){delete data.fixtures[fixtureKey()];delete data.fixtureRounds[fixtureKey()];localStorage.setItem(STORAGE_KEY,JSON.stringify(data));markFixtureDirty();renderAll();try{await saveStateOnline();fixtureEditorDirty=false;setOnline(true,'☁️ Guardado')}catch(e){alert(e.message)}}};
 $('#copyPrevFixtures').onclick=()=>{if(!requireAdmin())return;const i=weeks.findIndex(w=>w.id===state.week);if(i<=0){alert('No hay una semana anterior para copiar.');return}const prevKey=`${weeks[i-1].id}|${state.category}|${state.gender}`;const prev=data.fixtures[prevKey]||[];if(!prev.length){alert('La semana anterior no tiene enfrentamientos en esta categoría.');return}if(fixtures().length&&!confirm('Ya hay enfrentamientos en esta jornada. ¿Sustituirlos por los de la semana anterior?'))return;data.fixtures[fixtureKey()]=prev.map(m=>makeFixture(m.a,m.b));data.fixtureRounds[fixtureKey()]=data.fixtureRounds?.[prevKey]||'';localStorage.setItem(STORAGE_KEY,JSON.stringify(data));markFixtureDirty();renderFixtureEditor();renderMatches()};
 $('#draftHabitual').onclick=()=>{if(!requireAdmin())return;draftSlots=buildDefaultWeekSlots();persistDraft();renderDraftBoard()};
@@ -3346,8 +3409,13 @@ $('#addCustomBlock').onclick=addCustomBlock;
 $('#clearSlots').onclick=()=>{if(!requireAdmin())return;if(confirm('¿Vaciar por completo el borrador de disponibilidad?')){draftSlots=[];persistDraft();renderDraftBoard()}};
 $('#publishSlots').onclick=async()=>{
   if(!requireAdmin())return;
+  const beforeRangeCheck=draftSlots.length;
   const ss=collectSlots();
-  if(!ss.length){alert('Añade al menos una franja válida.');return}
+  const removedByRange=beforeRangeCheck-ss.length;
+  if(removedByRange>0){
+    alert(`⚠️ Se han descartado ${removedByRange} franja${removedByRange===1?'':'s'} que quedaban fuera del rango actual de la jornada.`);
+  }
+  if(!ss.length){alert('Añade al menos una franja válida dentro del rango de la jornada.');return}
   const btn=$('#publishSlots'),old=btn.textContent,status=$('#publishActionStatus');
   btn.disabled=true; btn.textContent='⏳ Publicando…';
   if(status)status.textContent='Guardando la disponibilidad online…';
