@@ -175,7 +175,7 @@ body.pinLocked{overflow:hidden}
 @media(max-width:520px){.pinWelcomeCard{padding:21px;border-radius:22px}.pinWelcomeLogo{width:96px;height:96px}.pinWelcomeTitle{font-size:21px}}
 
 
-/* V3.12.5 · Web Push nativo + PWA Android */
+/* V3.13.0 · REDISEÑO APP */
 .pushBox{margin-top:12px;padding:12px;border:1px solid var(--line);border-radius:15px;background:rgba(255,255,255,.025);display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
 .pushBox.hidden{display:none!important}
 .pushInfo{min-width:220px;flex:1}
@@ -211,6 +211,244 @@ body.pinLocked{overflow:hidden}
 .installBanner.show{display:flex}
 .installText{font-size:12px;line-height:1.4;color:var(--text);flex:1;min-width:220px}
 .installActions{display:flex;gap:8px;flex-wrap:wrap}
+
+
+/* =========================================================
+   V3.13.0 · REDISEÑO VISUAL APP
+   La lógica original permanece intacta.
+   ========================================================= */
+:root{
+  --app-red:#cf001d;
+  --app-red-dark:#720010;
+  --app-burgundy:#430810;
+  --app-gold:#e6b84c;
+  --app-page:#f4f4f3;
+  --app-card:#ffffff;
+  --app-text:#17171a;
+  --app-muted:#74767f;
+  --app-green:#16a05d;
+  --app-green-bg:#e5f8ed;
+  --app-line:#e9e9eb;
+  --app-shadow:0 8px 26px rgba(34,15,18,.09);
+}
+body.modern-ui{
+  background:var(--app-page)!important;
+  color:var(--app-text)!important;
+  padding-bottom:84px!important;
+}
+body.modern-ui > header,
+body.modern-ui > main,
+body.modern-ui > .bottomNav{display:none!important}
+body.modern-ui #modernApp{display:block}
+body:not(.modern-ui) #modernApp{display:none}
+
+#modernApp{
+  width:min(100%,760px);
+  margin:0 auto;
+  min-height:100dvh;
+  background:var(--app-page);
+  color:var(--app-text);
+  font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+.mapp-header{
+  color:#fff;
+  position:relative;
+  overflow:hidden;
+  background:
+    linear-gradient(90deg,rgba(76,0,13,.97),rgba(130,0,17,.88)),
+    url('header-bg.jpg') center 24%/cover no-repeat;
+  padding:18px 18px 0;
+  min-height:214px;
+}
+.mapp-header:after{
+  content:"";
+  position:absolute;inset:0;
+  background:radial-gradient(circle at 92% 30%,rgba(255,202,70,.13),transparent 31%);
+  pointer-events:none
+}
+.mapp-brand{
+  position:relative;z-index:1;
+  display:flex;align-items:center;gap:13px;
+  min-height:112px;
+}
+.mapp-logo{
+  width:112px;height:96px;object-fit:contain;flex:0 0 auto;
+  filter:drop-shadow(0 5px 12px rgba(0,0,0,.28));
+}
+.mapp-brand-copy{min-width:0;flex:1}
+.mapp-brand-title{font-size:24px;font-weight:900;letter-spacing:-.035em;line-height:1.05}
+.mapp-brand-sub{color:#f2c94c;font-size:17px;font-weight:650;margin-top:5px}
+.mapp-bell{
+  width:42px;height:42px;border-radius:50%;border:1px solid rgba(255,255,255,.2);
+  background:rgba(44,0,7,.56);color:white;display:grid;place-items:center;position:relative;
+  cursor:pointer
+}
+.mapp-bell-dot{position:absolute;right:5px;top:4px;width:9px;height:9px;background:#ff1735;border-radius:50%;border:2px solid #67000d}
+.mapp-context{
+  position:relative;z-index:1;
+  display:grid;grid-template-columns:1fr 1fr 1fr;
+  background:rgba(55,0,8,.46);
+  border:1px solid rgba(255,255,255,.19);
+  border-radius:14px 14px 0 0;
+  overflow:hidden;
+}
+.mapp-context-item{
+  min-width:0;padding:12px 10px;display:flex;align-items:center;gap:9px;cursor:pointer
+}
+.mapp-context-item+.mapp-context-item{border-left:1px solid rgba(255,255,255,.15)}
+.mapp-context-icon{color:#f5cb4d;flex:0 0 auto}
+.mapp-context-label{font-size:10px;color:#d7c8ca;line-height:1.1}
+.mapp-context-value{font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+
+.mapp-main{padding:14px 13px 22px}
+.mapp-screen{display:none}
+.mapp-screen.active{display:block;animation:mappFade .16s ease-out}
+@keyframes mappFade{from{opacity:.45;transform:translateY(3px)}to{opacity:1;transform:none}}
+.mapp-card{
+  background:var(--app-card);border:1px solid #ececed;border-radius:17px;
+  box-shadow:var(--app-shadow);margin-bottom:13px;overflow:hidden
+}
+.mapp-card-pad{padding:16px}
+.mapp-section-title{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  font-weight:900;font-size:19px;letter-spacing:-.02em;margin-bottom:13px
+}
+.mapp-section-title .left{display:flex;align-items:center;gap:10px}
+.mapp-title-icon{
+  width:34px;height:34px;border-radius:10px;background:#fff5dc;color:#d2a624;
+  display:grid;place-items:center
+}
+.mapp-round{
+  background:#fff5df;color:#a4691b;padding:7px 12px;border-radius:999px;
+  font-weight:800;font-size:12px;white-space:nowrap
+}
+.mapp-match-grid{display:grid;grid-template-columns:1fr 46px 1fr;align-items:center;gap:4px;text-align:center}
+.mapp-player-avatar{
+  width:78px;height:78px;border-radius:50%;margin:0 auto 8px;
+  display:grid;place-items:center;font-weight:900;font-size:23px;
+  color:#fff;background:linear-gradient(145deg,#8a0012,#e01a32);
+  border:4px solid #f0f0f0;box-shadow:0 2px 8px rgba(0,0,0,.12);
+  background-size:cover;background-position:center
+}
+.mapp-player-name{font-weight:900;font-size:16px;line-height:1.15}
+.mapp-vs{font-weight:900;color:#c90820;font-size:20px}
+.mapp-primary{
+  width:100%;border:0;border-radius:12px;background:linear-gradient(90deg,#d60020,#c0001a);
+  color:#fff;font-size:16px;font-weight:900;padding:15px 17px;display:flex;justify-content:center;
+  align-items:center;gap:9px;cursor:pointer;box-shadow:0 8px 18px rgba(196,0,27,.2)
+}
+.mapp-primary:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
+.mapp-primary .chev{margin-left:auto}
+.mapp-status{
+  margin:14px 0 12px;padding:12px 13px;border-radius:12px;display:flex;gap:10px;
+  align-items:flex-start;font-size:13px;line-height:1.35
+}
+.mapp-status.good{background:#e7f8ef;color:#176d48}
+.mapp-status.wait{background:#fff5df;color:#8b6218}
+.mapp-status strong{display:block;font-size:14px;margin-bottom:2px}
+.mapp-list-header{display:flex;align-items:center;justify-content:space-between;padding:15px 16px 8px}
+.mapp-list-title{font-weight:900;font-size:17px;display:flex;gap:9px;align-items:center}
+.mapp-link{border:0;background:none;color:#d60020;font-size:12px;font-weight:800;cursor:pointer}
+.mapp-slot-row{
+  display:grid;grid-template-columns:82px 1fr 68px 58px 18px;
+  gap:7px;align-items:center;padding:12px 16px;border-top:1px solid var(--app-line);
+  font-size:12px;cursor:pointer
+}
+.mapp-slot-row:active{background:#fafafa}
+.mapp-slot-date{color:#555b66;font-weight:700}
+.mapp-slot-time{font-weight:700}
+.mapp-slot-court{color:#656873}
+.mapp-free{
+  color:#0d8e4d;background:var(--app-green-bg);font-weight:900;border-radius:7px;
+  padding:5px 7px;text-align:center;font-size:10px
+}
+.mapp-busy{color:#a14453;background:#fde7eb;font-weight:850;border-radius:7px;padding:5px 6px;text-align:center;font-size:10px}
+.mapp-chevron{color:#7d8189}
+.mapp-empty{padding:20px;text-align:center;color:var(--app-muted);font-size:13px}
+.mapp-screen-heading{font-size:25px;font-weight:950;letter-spacing:-.035em;margin:4px 2px 13px}
+.mapp-subheading{font-size:13px;color:var(--app-muted);margin:-7px 2px 14px}
+.mapp-day-card{margin-bottom:12px}
+.mapp-day-title{font-size:14px;font-weight:900;padding:13px 15px;background:#fafafa;border-bottom:1px solid var(--app-line)}
+.mapp-day-slot{
+  display:grid;grid-template-columns:1fr 74px 74px 20px;gap:9px;align-items:center;
+  padding:12px 15px;border-bottom:1px solid var(--app-line);font-size:13px;cursor:pointer
+}
+.mapp-day-slot:last-child{border-bottom:0}
+.mapp-day-slot .time{font-weight:850}
+.mapp-day-slot .court{color:#5c6068}
+.mapp-profile-head{display:flex;align-items:center;gap:15px;padding:18px}
+.mapp-profile-avatar{
+  width:74px;height:74px;border-radius:50%;background:linear-gradient(145deg,#780010,#db1730);
+  color:#fff;display:grid;place-items:center;font-size:23px;font-weight:900;border:4px solid #f3f3f3;
+  background-size:cover;background-position:center;cursor:pointer;flex:0 0 auto
+}
+.mapp-profile-name{font-size:20px;font-weight:950;letter-spacing:-.02em}
+.mapp-profile-role{font-size:13px;color:var(--app-muted);margin-top:4px}
+.mapp-menu-row{
+  display:grid;grid-template-columns:48px 1fr auto;gap:12px;align-items:center;
+  min-height:88px;padding:12px 16px;border-top:1px solid var(--app-line);cursor:pointer
+}
+.mapp-menu-icon{
+  width:43px;height:43px;border-radius:50%;background:#fff0f1;color:#d5001f;
+  display:grid;place-items:center
+}
+.mapp-menu-icon.gray{background:#f0f1f3;color:#5d626c}
+.mapp-menu-title{font-size:16px;font-weight:900}
+.mapp-menu-sub{font-size:12px;color:var(--app-muted);margin-top:3px}
+.mapp-menu-sub.good{color:#0a963e}
+.mapp-pin-show{border:0;border-radius:9px;background:#f0f0f2;padding:8px 12px;font-weight:850;cursor:pointer}
+.mapp-nav{
+  position:fixed;z-index:3000;left:50%;transform:translateX(-50%);bottom:0;
+  width:min(100%,760px);height:74px;background:rgba(255,255,255,.97);
+  border-top:1px solid #ddd;display:grid;grid-template-columns:repeat(4,1fr);
+  padding-bottom:env(safe-area-inset-bottom);box-shadow:0 -8px 28px rgba(0,0,0,.06)
+}
+.mapp-nav-btn{
+  border:0;background:none;color:#656873;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:3px;font-size:10px;font-weight:650;cursor:pointer;position:relative
+}
+.mapp-nav-btn svg{width:23px;height:23px}
+.mapp-nav-btn.active{color:#d3001f;font-weight:900}
+.mapp-nav-btn.active:after{content:"";position:absolute;bottom:4px;width:46px;height:2px;background:#d3001f;border-radius:2px}
+.mapp-selector-sheet{
+  position:fixed;inset:0;z-index:5000;background:rgba(18,4,7,.42);display:none;
+  align-items:flex-end;justify-content:center
+}
+.mapp-selector-sheet.show{display:flex}
+.mapp-selector-panel{
+  width:min(100%,760px);background:#fff;border-radius:20px 20px 0 0;padding:18px 16px calc(22px + env(safe-area-inset-bottom));
+  box-shadow:0 -18px 45px rgba(0,0,0,.18)
+}
+.mapp-selector-title{font-size:19px;font-weight:950;margin-bottom:13px}
+.mapp-selector-grid{display:grid;grid-template-columns:1fr;gap:10px}
+.mapp-selector-grid label{font-size:11px;font-weight:800;color:#777}
+.mapp-selector-grid select{width:100%;border:1px solid #ddd;border-radius:11px;padding:11px;background:#fff;color:#222;font-weight:750}
+.mapp-admin-back{
+  position:sticky;top:8px;z-index:9999;margin:8px auto 10px;width:min(calc(100% - 20px),740px);
+  display:none;padding:12px 14px;border:0;border-radius:12px;background:#fff;color:#a70018;
+  font-weight:900;box-shadow:0 5px 20px rgba(0,0,0,.15);cursor:pointer
+}
+body.modern-admin > header,body.modern-admin > main{display:block!important}
+body.modern-admin #modernApp{display:none!important}
+body.modern-admin > header,body.modern-admin main>.hero,body.modern-admin #homeView,body.modern-admin #matchesView,body.modern-admin #courtsView{display:none!important}
+body.modern-admin #adminView{display:block!important;margin:0 auto 90px;width:min(calc(100% - 18px),900px)}
+body.modern-admin .mapp-admin-back{display:block}
+body.modern-admin .bottomNav{display:none!important}
+@media(max-width:520px){
+  .mapp-header{padding:13px 12px 0;min-height:204px}
+  .mapp-logo{width:103px;height:89px}
+  .mapp-brand-title{font-size:21px}
+  .mapp-brand-sub{font-size:15px}
+  .mapp-context-item{padding:11px 7px;gap:6px}
+  .mapp-context-value{font-size:11px}
+  .mapp-context-label{font-size:9px}
+  .mapp-main{padding:12px 10px 18px}
+  .mapp-card{border-radius:15px}
+  .mapp-card-pad{padding:14px}
+  .mapp-slot-row{grid-template-columns:72px 1fr 58px 54px 15px;padding:11px 13px;gap:5px}
+  .mapp-player-avatar{width:67px;height:67px;font-size:20px}
+  .mapp-player-name{font-size:14px}
+}
 
 </style>
 
@@ -288,7 +526,7 @@ body.pinLocked{overflow:hidden}
 </section>
 <section class="card" id="matchesView">
 <div class="head"><h2>📋 Enfrentamientos oficiales</h2><small id="matchMeta"></small></div>
-<div class="tiny" style="padding:0 14px 10px;color:var(--gold);font-weight:700">V3.11.7 · Cloudflare online · partidos retrasados y reprogramados · reservas seguras · resultados.</div>
+
 <div class="pad">
 <div class="stateBanner closed" id="reserveState"></div>
 <div class="matches" id="matches"></div>
@@ -403,6 +641,75 @@ Pablo Ruiz"></textarea>
 </div>
 <button class="adminBackTop" id="adminBackTop" type="button">↑ Arriba</button></section>
 </main>
+
+<button class="mapp-admin-back" id="modernAdminBack" type="button">← Volver a Mi perfil</button>
+<div id="modernApp" aria-live="polite">
+  <div class="mapp-header">
+    <div class="mapp-brand">
+      <img class="mapp-logo" src="cropped-logo_final-1.png" alt="CT Campeador">
+      <div class="mapp-brand-copy">
+        <div class="mapp-brand-title">CT CAMPEADOR</div>
+        <div class="mapp-brand-sub">Liga Federada</div>
+      </div>
+      <button class="mapp-bell" id="modernBellBtn" type="button" aria-label="Avisos">
+        <span id="modernBellIcon"></span><span class="mapp-bell-dot" id="modernBellDot"></span>
+      </button>
+    </div>
+    <div class="mapp-context" id="modernContextBtn">
+      <div class="mapp-context-item">
+        <span class="mapp-context-icon" id="modernTrophyIcon"></span>
+        <div><div class="mapp-context-label">Categoría</div><div class="mapp-context-value" id="modernCategory">—</div></div>
+      </div>
+      <div class="mapp-context-item">
+        <span class="mapp-context-icon" id="modernCalendarIcon"></span>
+        <div><div class="mapp-context-label">Semana</div><div class="mapp-context-value" id="modernWeek">—</div></div>
+      </div>
+      <div class="mapp-context-item">
+        <span class="mapp-context-icon" id="modernChartIcon"></span>
+        <div><div class="mapp-context-label">Temporada</div><div class="mapp-context-value">2026</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mapp-main">
+    <section class="mapp-screen active" id="modernHome">
+      <div id="modernHomeContent"></div>
+    </section>
+    <section class="mapp-screen" id="modernCourts">
+      <div class="mapp-screen-heading">Pistas</div>
+      <div class="mapp-subheading">Toca una franja libre para reservar directamente.</div>
+      <div id="modernCourtsContent"></div>
+    </section>
+    <section class="mapp-screen" id="modernMatch">
+      <div class="mapp-screen-heading">Mi partido</div>
+      <div id="modernMatchContent"></div>
+    </section>
+    <section class="mapp-screen" id="modernProfile">
+      <div class="mapp-screen-heading">Mi perfil</div>
+      <div class="mapp-subheading">Gestiona tu cuenta y preferencias</div>
+      <div id="modernProfileContent"></div>
+    </section>
+  </div>
+
+  <nav class="mapp-nav">
+    <button class="mapp-nav-btn active" data-modern-go="home" type="button"><span data-icon="home"></span><span>Inicio</span></button>
+    <button class="mapp-nav-btn" data-modern-go="courts" type="button"><span data-icon="court"></span><span>Pistas</span></button>
+    <button class="mapp-nav-btn" data-modern-go="match" type="button"><span data-icon="trophy"></span><span>Mi partido</span></button>
+    <button class="mapp-nav-btn" data-modern-go="profile" type="button"><span data-icon="user"></span><span>Mi perfil</span></button>
+  </nav>
+</div>
+
+<div class="mapp-selector-sheet" id="modernSelectorSheet">
+  <div class="mapp-selector-panel">
+    <div class="mapp-selector-title">Categoría y semana</div>
+    <div class="mapp-selector-grid">
+      <div><label>Categoría</label><select id="modernCatSelect"></select></div>
+      <div><label>Modalidad</label><select id="modernGenderSelect"><option>Masculino</option><option>Femenino</option></select></div>
+      <div><label>Semana</label><select id="modernWeekSelect"></select></div>
+      <button class="mapp-primary" id="modernSelectorClose" type="button">Aplicar</button>
+    </div>
+  </div>
+</div>
 <nav class="bottomNav"><button class="navBtn active" data-go="home"><span>🎾</span>Partidos</button><button class="navBtn" data-go="courts"><span>🏟️</span>Pistas</button><button class="navBtn hidden" data-go="admin" id="adminNavBtn"><span>⚙️</span>Configuración</button><button class="navBtn" id="refreshBtn"><span>🔄</span>Actualizar</button></nav>
 <div class="modal" id="reserveModal"><div class="sheet"><div class="sheetHead"><div><div class="tiny" id="modalMode">RESERVAR PARTIDO</div><h3 id="modalMatch"></h3></div><button class="close" id="closeModal">✕</button></div><div class="sheetBody"><div class="tiny" id="modalCat"></div><div class="reserveCurrent hidden" id="reserveCurrent"></div><div class="noSlots hidden" id="reserveNoSlots">No quedan huecos disponibles para esta semana.</div><div class="reserveForm" id="reserveForm"><div class="reserveField"><label>Día</label><select id="reserveDay"></select></div><div class="reserveField"><label>Franja horaria</label><select id="reserveTime"></select></div><div class="reserveField"><label>Pista</label><select id="reserveCourt"></select></div><div class="reserveActions"><button class="btn gold" id="confirmReserve">✅ Confirmar reserva</button><button class="btn dangerBtn hidden" id="cancelReserveModal">Cancelar reserva actual</button></div></div></div></div></div>
 <div class="modal" id="delayModal"><div class="sheet"><div class="sheetHead"><div><div class="tiny">GESTIONAR PARTIDO RETRASADO</div><h3 id="delayMatch"></h3></div><button class="close" id="closeDelayModal">✕</button></div><div class="sheetBody"><div class="tiny" id="delayOrigin"></div><div class="reserveField"><label>Nueva semana</label><select id="delayTargetWeek"></select></div><div class="resultHint">El partido seguirá perteneciendo a su jornada oficial. Si eliges una semana posterior, aparecerá también allí como <b>reprogramado</b> y podrá reservar una pista de esa semana.</div><div class="reserveActions"><button class="btn gold" id="saveDelayBtn">💾 Guardar retraso</button><button class="btn dangerBtn" id="restoreDelayBtn">↩️ Devolver a jornada original</button></div></div></div></div>
@@ -1332,7 +1639,235 @@ function wireAdminCompact(){
   });
   const top=document.getElementById('adminBackTop'); if(top&&!top.dataset.compactWired){top.dataset.compactWired='1';top.addEventListener('click',()=>document.getElementById('adminView')?.scrollIntoView({behavior:'smooth',block:'start'}));}
 }
-function renderAll(){renderTabs();renderWeeks();renderIdentity();renderState();renderMatches();renderSchedule();renderKpis();renderAdmin();updateAdminSummaries();wireAdminCompact();renderPushUI()}
+
+/* ===== V3.13.0 modern app shell ===== */
+const MAPP_ICONS={
+ home:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.7 12 3l9 7.7"/><path d="M5.5 9.3V21h13V9.3"/><path d="M9.5 21v-6h5v6"/></svg>`,
+ court:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="1.5"/><path d="M12 4v16M3 12h18M8 4v16M16 4v16"/></svg>`,
+ trophy:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4h8v4a4 4 0 0 1-8 0V4Z"/><path d="M6 5H3v2a4 4 0 0 0 4 4M18 5h3v2a4 4 0 0 1-4 4M12 12v5M8 21h8M9 17h6"/></svg>`,
+ user:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4.5 21a7.5 7.5 0 0 1 15 0"/></svg>`,
+ bell:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>`,
+ calendar:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18"/></svg>`,
+ chart:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 20V11M12 20V5M19 20V8"/></svg>`,
+ chevron:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"><path d="m9 18 6-6-6-6"/></svg>`,
+ phone:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M10 18h4"/></svg>`,
+ lock:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>`,
+ logout:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10 17l5-5-5-5M15 12H3"/><path d="M14 3h6v18h-6"/></svg>`,
+ gear:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6V21h-4v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H3v-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3A1.7 1.7 0 0 0 10 3h4a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.1v4H21a1.7 1.7 0 0 0-1.6 1Z"/></svg>`,
+ camera:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M4 8h3l1.5-2h7L17 8h3v11H4Z"/><circle cx="12" cy="13" r="3"/></svg>`
+};
+function mappIcon(name){return MAPP_ICONS[name]||''}
+function mappEsc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function mappInitials(name){const p=String(name||'?').trim().split(/\s+/);return (p[0]?.[0]||'')+(p.length>1?p[p.length-1][0]:'')}
+function mappPhotoKey(name){return 'ctcampeador_profile_photo_'+normalizeName(name)}
+function mappPhoto(name){try{return localStorage.getItem(mappPhotoKey(name))||''}catch(_){return ''}}
+function mappAvatar(name,cls='mapp-player-avatar'){
+ const ph=mappPhoto(name); const style=ph?` style="background-image:url('${ph.replace(/'/g,"%27")}')"`:'';
+ return `<div class="${cls}"${style}>${ph?'':mappEsc(mappInitials(name))}</div>`
+}
+function mappOwnMatches(){
+ if(!state.authenticated||!state.player||isAdmin())return [];
+ return viewFixtures().filter(m=>m.a===state.player||m.b===state.player)
+}
+function mappPrimaryMatch(){return mappOwnMatches()[0]||null}
+function mappOpponent(m){if(!m)return'';return m.a===state.player?m.b:m.a}
+function mappFreeSlots(){return slots().filter(s=>!slotBooking(s.id))}
+function mappWeekShort(){const w=weeks.find(x=>x.id===state.week);const n=String(w?.id||'').replace(/\D/g,'');return n?`Semana ${n}`:(w?.label||state.week)}
+function mappCurrentRound(){return fixtureRound()||'Jornada'}
+function mappShow(view){
+ const map={home:'modernHome',courts:'modernCourts',match:'modernMatch',profile:'modernProfile'};
+ Object.values(map).forEach(id=>$('#'+id)?.classList.remove('active'));
+ $('#'+map[view])?.classList.add('active');
+ document.querySelectorAll('[data-modern-go]').forEach(b=>b.classList.toggle('active',b.dataset.modernGo===view));
+ if(view==='profile')renderModernProfile();
+ if(view==='courts')renderModernCourts();
+ if(view==='match')renderModernMatch();
+ if(view==='home')renderModernHome();
+ window.scrollTo({top:0,behavior:'smooth'});
+}
+function mappOpenSelector(){
+ const cs=$('#modernCatSelect'),gs=$('#modernGenderSelect'),ws=$('#modernWeekSelect');
+ cs.innerHTML=CATEGORIES.map(c=>`<option ${c===state.category?'selected':''}>${mappEsc(c)}</option>`).join('');
+ gs.value=state.gender;
+ ws.innerHTML=weeks.map(w=>`<option value="${mappEsc(w.id)}" ${w.id===state.week?'selected':''}>${mappEsc(w.label)}</option>`).join('');
+ $('#modernSelectorSheet').classList.add('show')
+}
+function mappApplySelector(){
+ state.category=$('#modernCatSelect').value;
+ state.gender=$('#modernGenderSelect').value;
+ state.week=$('#modernWeekSelect').value;
+ $('#modernSelectorSheet').classList.remove('show');
+ renderAll();
+}
+function renderModernHeader(){
+ $('#modernCategory').textContent=`${state.category} · ${state.gender}`;
+ $('#modernWeek').textContent=mappWeekShort();
+ $('#modernBellDot').style.display=(typeof Notification!=='undefined'&&Notification.permission==='granted')?'none':'block';
+}
+function renderModernHome(){
+ const box=$('#modernHomeContent'); if(!box)return;
+ const m=mappPrimaryMatch(), frees=mappFreeSlots().slice(0,3);
+ let hero='';
+ if(isAdmin()){
+   hero=`<div class="mapp-card"><div class="mapp-card-pad">
+      <div class="mapp-section-title"><div class="left"><span class="mapp-title-icon">${mappIcon('gear')}</span>Administración</div></div>
+      <div class="mapp-status good"><div><strong>Sesión de administrador</strong>Gestiona la jornada, las pistas y los jugadores desde Mi perfil.</div></div>
+      <button class="mapp-primary" data-mapp-profile>Ir a Mi perfil <span class="chev">${mappIcon('chevron')}</span></button>
+   </div></div>`;
+ }else if(m){
+   const opp=mappOpponent(m),bk=bookingFor(m.id), can=isOpen()&&isReservableInCurrentWeek(m.id);
+   hero=`<div class="mapp-card"><div class="mapp-card-pad">
+      <div class="mapp-section-title"><div class="left"><span class="mapp-title-icon">${mappIcon('trophy')}</span>Tu partido</div><span class="mapp-round">${mappEsc(mappCurrentRound())}</span></div>
+      <div class="mapp-match-grid">
+        <div>${mappAvatar(state.player)}<div class="mapp-player-name">${mappEsc(state.player)}</div></div>
+        <div class="mapp-vs">VS</div>
+        <div>${mappAvatar(opp)}<div class="mapp-player-name">${mappEsc(opp)}</div></div>
+      </div>
+      ${bk?`<div class="mapp-status good"><div><strong>✓ Pista reservada</strong>${mappEsc(dayDateES(bk.date))} · ${mappEsc(bk.time)} · ${mappEsc(bk.court)}</div></div>`:
+      can?`<div class="mapp-status good"><div><strong>Reserva disponible</strong>Puedes reservar una pista para este partido.</div></div>`:
+      `<div class="mapp-status wait"><div><strong>Esperando disponibilidad</strong>El club todavía no ha abierto las reservas de esta semana.</div></div>`}
+      <button class="mapp-primary" data-mapp-reserve="${mappEsc(m.id)}" ${(!bk&&!can)?'disabled':''}>${mappIcon('calendar')} ${bk?'Cambiar pista':'Reservar pista'} <span class="chev">${mappIcon('chevron')}</span></button>
+   </div></div>`;
+ }else{
+   hero=`<div class="mapp-card"><div class="mapp-empty">No tienes ningún partido asignado en esta semana.</div></div>`;
+ }
+ const rows=frees.length?frees.map(s=>`<div class="mapp-slot-row" data-mapp-slot="${mappEsc(s.id)}">
+    <div class="mapp-slot-date">${mappEsc(shortDateES(s.date))}</div><div class="mapp-slot-time">${mappEsc(s.time)}</div>
+    <div class="mapp-slot-court">${mappEsc(s.court)}</div><div class="mapp-free">LIBRE</div><div class="mapp-chevron">${mappIcon('chevron')}</div>
+  </div>`).join(''):`<div class="mapp-empty">No hay pistas libres publicadas.</div>`;
+ box.innerHTML=hero+`<div class="mapp-card"><div class="mapp-list-header"><div class="mapp-list-title">${mappIcon('court')} Próximas pistas libres</div><button class="mapp-link" data-mapp-all-courts>Ver todas ›</button></div>${rows}</div>`;
+ box.querySelectorAll('[data-mapp-reserve]').forEach(b=>b.onclick=()=>openReserve(b.dataset.mappReserve));
+ box.querySelectorAll('[data-mapp-slot]').forEach(r=>r.onclick=()=>reserveFromOccupancy(r.dataset.mappSlot));
+ box.querySelector('[data-mapp-all-courts]')?.addEventListener('click',()=>mappShow('courts'));
+ box.querySelector('[data-mapp-profile]')?.addEventListener('click',()=>mappShow('profile'));
+}
+function renderModernCourts(){
+ const box=$('#modernCourtsContent');if(!box)return;
+ const ss=slots().slice().sort((a,b)=>(a.date+a.time+a.court).localeCompare(b.date+b.time+b.court));
+ if(!ss.length){box.innerHTML='<div class="mapp-card"><div class="mapp-empty">No hay disponibilidad publicada para esta semana.</div></div>';return}
+ const groups={};ss.forEach(s=>(groups[s.date]??=[]).push(s));
+ box.innerHTML=Object.entries(groups).map(([date,arr])=>`<div class="mapp-card mapp-day-card">
+   <div class="mapp-day-title">${mappEsc(dayDateES(date))}</div>
+   ${arr.map(s=>{const bk=slotBooking(s.id);return `<div class="mapp-day-slot" ${bk?'':`data-mapp-slot="${mappEsc(s.id)}"`}>
+      <div class="time">${mappEsc(s.time)}</div><div class="court">${mappEsc(s.court)}</div>
+      <div class="${bk?'mapp-busy':'mapp-free'}">${bk?'OCUPADA':'LIBRE'}</div><div class="mapp-chevron">${bk?'':mappIcon('chevron')}</div>
+   </div>`}).join('')}</div>`).join('');
+ box.querySelectorAll('[data-mapp-slot]').forEach(r=>r.onclick=()=>reserveFromOccupancy(r.dataset.mappSlot));
+}
+function renderModernMatch(){
+ const box=$('#modernMatchContent');if(!box)return;
+ const matches=mappOwnMatches();
+ if(isAdmin()){box.innerHTML='<div class="mapp-card"><div class="mapp-empty">La vista “Mi partido” está destinada a jugadores. Usa Administración desde Mi perfil.</div></div>';return}
+ if(!matches.length){box.innerHTML='<div class="mapp-card"><div class="mapp-empty">No tienes partido en esta semana.</div></div>';return}
+ box.innerHTML=matches.map(m=>{
+   const opp=mappOpponent(m),bk=bookingFor(m.id),r=resultFor(m.id),p=postponedInfo(m.id);
+   return `<div class="mapp-card"><div class="mapp-card-pad">
+    <div class="mapp-section-title"><div class="left"><span class="mapp-title-icon">${mappIcon('trophy')}</span>Mi partido</div><span class="mapp-round">${mappEsc(mappCurrentRound())}</span></div>
+    <div class="mapp-match-grid">
+      <div>${mappAvatar(state.player)}<div class="mapp-player-name">${mappEsc(state.player)}</div></div>
+      <div class="mapp-vs">VS</div>
+      <div>${mappAvatar(opp)}<div class="mapp-player-name">${mappEsc(opp)}</div></div>
+    </div>
+    <div style="margin-top:17px;border-top:1px solid var(--app-line)">
+      <div class="mapp-day-slot"><div class="court">Categoría</div><div style="grid-column:2/5;font-weight:800">${mappEsc(state.category)} · ${mappEsc(state.gender)}</div></div>
+      <div class="mapp-day-slot"><div class="court">Jornada</div><div style="grid-column:2/5;font-weight:800">${mappEsc(mappCurrentRound())}</div></div>
+      <div class="mapp-day-slot"><div class="court">Pista</div><div style="grid-column:2/5;font-weight:800">${bk?`${mappEsc(dayDateES(bk.date))} · ${mappEsc(bk.time)} · ${mappEsc(bk.court)}`:'Pendiente de reserva'}</div></div>
+      <div class="mapp-day-slot"><div class="court">Resultado</div><div style="grid-column:2/5;font-weight:800">${r?mappEsc(resultLabel(r)):'Pendiente'}</div></div>
+    </div>
+   </div>
+   <div class="mapp-menu-row" data-match-reserve="${mappEsc(m.id)}"><div class="mapp-menu-icon">${mappIcon('calendar')}</div><div><div class="mapp-menu-title">${bk?'Cambiar pista':'Reservar pista'}</div><div class="mapp-menu-sub">${bk?'Modifica tu reserva actual':'Elige día, hora y pista'}</div></div><div>${mappIcon('chevron')}</div></div>
+   <div class="mapp-menu-row" data-match-result="${mappEsc(m.id)}"><div class="mapp-menu-icon">${mappIcon('trophy')}</div><div><div class="mapp-menu-title">${r?'Ver / gestionar resultado':'Subir resultado'}</div><div class="mapp-menu-sub">Resultado del encuentro</div></div><div>${mappIcon('chevron')}</div></div>
+   ${p?`<div class="mapp-menu-row"><div class="mapp-menu-icon gray">${mappIcon('calendar')}</div><div><div class="mapp-menu-title">Partido retrasado</div><div class="mapp-menu-sub">${p.targetWeek?'Reprogramado para '+mappEsc(weeks.find(w=>w.id===p.targetWeek)?.label||p.targetWeek):'Pendiente de nueva semana'}</div></div></div>`:''}
+   </div>`;
+ }).join('');
+ box.querySelectorAll('[data-match-reserve]').forEach(x=>x.onclick=()=>openReserve(x.dataset.matchReserve));
+ box.querySelectorAll('[data-match-result]').forEach(x=>x.onclick=()=>openResultModal(x.dataset.matchResult));
+}
+async function mappPushStatusText(){
+ if(!('Notification' in window))return['No compatible',''];
+ if(Notification.permission==='denied')return['Bloqueados',''];
+ try{const sub=await currentPushSubscription();return sub?['Activados en este dispositivo','good']:['Toca para activar','']}catch(_){return['Configurar avisos','']}
+}
+function mappInstallText(){
+ if(isStandalonePWA())return['Instalada','good'];
+ if(isIOSPushDevice())return['Añadir a pantalla de inicio',''];
+ if(isAndroidDevice())return deferredInstallPrompt?['Disponible para instalar','']:['Abrir en Chrome para instalar',''];
+ return['Disponible según navegador',''];
+}
+async function renderModernProfile(){
+ const box=$('#modernProfileContent');if(!box)return;
+ const [pushText,pushCls]=await mappPushStatusText();
+ const [installText,installCls]=mappInstallText();
+ const pin=String(data.pins?.[state.player]||'');
+ box.innerHTML=`<div class="mapp-card">
+   <div class="mapp-profile-head">
+     ${mappAvatar(state.player,'mapp-profile-avatar')}
+     <div><div class="mapp-profile-name">${mappEsc(state.player)}</div><div class="mapp-profile-role">${isAdmin()?'Administrador':'Jugador · '+mappEsc(state.category)+' '+mappEsc(state.gender)}</div><div class="mapp-menu-sub">Toca la foto para cambiarla en este dispositivo</div></div>
+   </div>
+   <div class="mapp-menu-row" id="mappPushRow"><div class="mapp-menu-icon">${mappIcon('bell')}</div><div><div class="mapp-menu-title">Avisos</div><div class="mapp-menu-sub ${pushCls}">${mappEsc(pushText)}</div></div><div>${mappIcon('chevron')}</div></div>
+   <div class="mapp-menu-row" id="mappInstallRow"><div class="mapp-menu-icon">${mappIcon('phone')}</div><div><div class="mapp-menu-title">Aplicación</div><div class="mapp-menu-sub ${installCls}">${mappEsc(installText)}</div></div><div>${mappIcon('chevron')}</div></div>
+   <div class="mapp-menu-row"><div class="mapp-menu-icon">${mappIcon('lock')}</div><div><div class="mapp-menu-title">Mi PIN</div><div class="mapp-menu-sub" id="mappPinValue">••••</div></div><button class="mapp-pin-show" id="mappShowPin">Mostrar</button></div>
+   <div class="mapp-menu-row" id="mappLogoutRow"><div class="mapp-menu-icon">${mappIcon('logout')}</div><div><div class="mapp-menu-title">Sesión</div><div class="mapp-menu-sub">Cerrar sesión / Cambiar jugador</div></div><div>${mappIcon('chevron')}</div></div>
+ </div>
+ ${isAdmin()?`<div class="mapp-card"><div class="mapp-list-header"><div class="mapp-list-title">ADMINISTRACIÓN</div></div>
+   <div class="mapp-menu-row" id="mappAdminRow"><div class="mapp-menu-icon gray">${mappIcon('gear')}</div><div><div class="mapp-menu-title">Administración</div><div class="mapp-menu-sub">Opciones avanzadas</div></div><div>${mappIcon('chevron')}</div></div>
+ </div>`:''}
+ <input type="file" accept="image/*" id="mappPhotoInput" style="display:none">`;
+ const avatar=box.querySelector('.mapp-profile-avatar');
+ avatar?.addEventListener('click',()=>$('#mappPhotoInput').click());
+ $('#mappPhotoInput')?.addEventListener('change',mappSavePhoto);
+ $('#mappPushRow')?.addEventListener('click',async()=>{await activateNativePush();renderModernProfile();renderModernHeader()});
+ $('#mappInstallRow')?.addEventListener('click',installAppNow);
+ $('#mappShowPin')?.addEventListener('click',e=>{
+   const v=$('#mappPinValue');const shown=v.textContent!=='••••';v.textContent=shown?'••••':(pin||'No disponible');e.currentTarget.textContent=shown?'Mostrar':'Ocultar'
+ });
+ $('#mappLogoutRow')?.addEventListener('click',()=>$('#clearIdentity').click());
+ $('#mappAdminRow')?.addEventListener('click',()=>{document.body.classList.add('modern-admin');document.body.classList.remove('modern-ui');$('#adminView')?.classList.remove('hidden');renderAdmin();updateAdminSummaries();wireAdminCompact();window.scrollTo({top:0})});
+}
+function mappSavePhoto(e){
+ const file=e.target.files?.[0];if(!file)return;
+ if(!file.type.startsWith('image/'))return;
+ const reader=new FileReader();
+ reader.onload=()=>{
+   const img=new Image();
+   img.onload=()=>{
+     const c=document.createElement('canvas'),max=360,scale=Math.min(1,max/Math.max(img.width,img.height));
+     c.width=Math.round(img.width*scale);c.height=Math.round(img.height*scale);
+     c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+     try{localStorage.setItem(mappPhotoKey(state.player),c.toDataURL('image/jpeg',.82))}catch(_){}
+     renderModernUI();
+   };
+   img.src=reader.result;
+ };
+ reader.readAsDataURL(file);
+}
+function renderModernUI(){
+ if(!state.authenticated){
+   document.body.classList.remove('modern-ui','modern-admin');
+   return;
+ }
+ if(!document.body.classList.contains('modern-admin'))document.body.classList.add('modern-ui');
+ renderModernHeader();
+ renderModernHome();
+ renderModernCourts();
+ renderModernMatch();
+ renderModernProfile();
+}
+
+function renderAll(){renderTabs();renderWeeks();renderIdentity();renderState();renderMatches();renderSchedule();renderKpis();renderAdmin();updateAdminSummaries();wireAdminCompact();renderPushUI();renderModernUI()}
+
+
+document.querySelectorAll('[data-icon]').forEach(el=>el.innerHTML=mappIcon(el.dataset.icon));
+$('#modernBellIcon').innerHTML=mappIcon('bell');
+$('#modernTrophyIcon').innerHTML=mappIcon('trophy');
+$('#modernCalendarIcon').innerHTML=mappIcon('calendar');
+$('#modernChartIcon').innerHTML=mappIcon('chart');
+document.querySelectorAll('[data-modern-go]').forEach(b=>b.onclick=()=>mappShow(b.dataset.modernGo));
+$('#modernContextBtn').onclick=mappOpenSelector;
+$('#modernSelectorClose').onclick=mappApplySelector;
+$('#modernSelectorSheet').onclick=e=>{if(e.target===$('#modernSelectorSheet'))$('#modernSelectorSheet').classList.remove('show')};
+$('#modernBellBtn').onclick=()=>mappShow('profile');
+$('#modernAdminBack').onclick=()=>{document.body.classList.remove('modern-admin');document.body.classList.add('modern-ui');mappShow('profile');renderModernUI()};
 
 $('#welcomePinBtn').onclick=loginWithPinOnly;
 $('#pushActivateBtn').onclick=activateNativePush;
@@ -1535,5 +2070,5 @@ bootstrapApp();
 
 window.addEventListener('scroll',()=>{const a=document.getElementById('adminView');if(a)a.classList.toggle('adminScrolled',window.scrollY>(a.offsetTop+280));},{passive:true});
 </script>
-<div style="position:fixed;right:8px;bottom:78px;z-index:45;font-size:9px;opacity:.55;background:#180b0e;border:1px solid rgba(255,255,255,.12);padding:4px 7px;border-radius:999px">V3.12.5 · RESERVA DESDE PISTAS</div>
+<div style="position:fixed;right:8px;bottom:78px;z-index:45;font-size:9px;opacity:.55;background:#180b0e;border:1px solid rgba(255,255,255,.12);padding:4px 7px;border-radius:999px">V3.13.0 · RESERVA DESDE PISTAS</div>
 </body></html>
