@@ -175,7 +175,7 @@ body.pinLocked{overflow:hidden}
 @media(max-width:520px){.pinWelcomeCard{padding:21px;border-radius:22px}.pinWelcomeLogo{width:96px;height:96px}.pinWelcomeTitle{font-size:21px}}
 
 
-/* V3.13.3 · ESTADO AVISOS */
+/* V3.13.4 · SIN SCROLL HORIZONTAL */
 .pushBox{margin-top:12px;padding:12px;border:1px solid var(--line);border-radius:15px;background:rgba(255,255,255,.025);display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
 .pushBox.hidden{display:none!important}
 .pushInfo{min-width:220px;flex:1}
@@ -214,7 +214,7 @@ body.pinLocked{overflow:hidden}
 
 
 /* =========================================================
-   V3.13.3 · REDISEÑO VISUAL APP
+   V3.13.4 · REDISEÑO VISUAL APP
    La lógica original permanece intacta.
    ========================================================= */
 :root{
@@ -453,7 +453,7 @@ body.modern-admin .bottomNav{display:none!important}
 }
 
 
-/* V3.13.3 · header y administración */
+/* V3.13.4 · header y administración */
 .mapp-header:before{
   content:"";
   position:absolute;
@@ -575,7 +575,7 @@ body.modern-admin .mapp-admin-back{display:none!important}
 }
 
 
-/* V3.13.3 · corrección visual del header */
+/* V3.13.4 · corrección visual del header */
 .mapp-header:after{
   background:
     radial-gradient(ellipse at 72% 10%,rgba(255,255,255,.045),transparent 34%),
@@ -585,7 +585,7 @@ body.modern-admin .mapp-admin-back{display:none!important}
 .mapp-logo{max-width:none!important}
 
 
-/* V3.13.3 · campana de estado real */
+/* V3.13.4 · campana de estado real */
 .mapp-bell{
   transition:background .18s ease,border-color .18s ease,transform .12s ease;
 }
@@ -609,6 +609,41 @@ body.modern-admin .mapp-admin-back{display:none!important}
 }
 .mapp-bell.push-off .mapp-bell-dot,
 .mapp-bell.push-blocked .mapp-bell-dot{display:block}
+
+
+/* V3.13.4 · elimina barra gris horizontal en móvil */
+html,body,#modernApp,.mapp-main,.mapp-screen,.mapp-card,.mapp-profile-head,.mapp-menu-row{
+  max-width:100%!important;
+  box-sizing:border-box!important;
+}
+html,body,#modernApp{
+  overflow-x:hidden!important;
+}
+.mapp-main,.mapp-screen,.mapp-card{
+  overflow-x:hidden!important;
+}
+.mapp-menu-row{
+  width:100%!important;
+  min-width:0!important;
+  overflow:hidden!important;
+}
+.mapp-menu-row > *{
+  min-width:0!important;
+}
+.mapp-menu-row > div:nth-child(2){
+  overflow:hidden!important;
+}
+.mapp-menu-title,.mapp-menu-sub,.mapp-profile-name,.mapp-profile-role{
+  overflow-wrap:anywhere!important;
+  word-break:break-word!important;
+}
+.mapp-pin-show{
+  max-width:100%!important;
+  flex-shrink:0!important;
+}
+.mapp-nav{
+  overflow:hidden!important;
+}
 
 </style>
 
@@ -2325,5 +2360,5 @@ bootstrapApp();
 
 window.addEventListener('scroll',()=>{const a=document.getElementById('adminView');if(a)a.classList.toggle('adminScrolled',window.scrollY>(a.offsetTop+280));},{passive:true});
 </script>
-<div style="position:fixed;right:8px;bottom:78px;z-index:45;font-size:9px;opacity:.55;background:#180b0e;border:1px solid rgba(255,255,255,.12);padding:4px 7px;border-radius:999px">V3.13.3 · RESERVA DESDE PISTAS</div>
+<div style="position:fixed;right:8px;bottom:78px;z-index:45;font-size:9px;opacity:.55;background:#180b0e;border:1px solid rgba(255,255,255,.12);padding:4px 7px;border-radius:999px">V3.13.4 · RESERVA DESDE PISTAS</div>
 </body></html>
