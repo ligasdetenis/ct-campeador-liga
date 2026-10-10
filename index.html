@@ -175,7 +175,7 @@ body.pinLocked{overflow:hidden}
 @media(max-width:520px){.pinWelcomeCard{padding:21px;border-radius:22px}.pinWelcomeLogo{width:96px;height:96px}.pinWelcomeTitle{font-size:21px}}
 
 
-/* V3.13.5 · CAMBIO DE PIN */
+/* V3.13.5.1 · FIX BARRA GRIS */
 .pushBox{margin-top:12px;padding:12px;border:1px solid var(--line);border-radius:15px;background:rgba(255,255,255,.025);display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
 .pushBox.hidden{display:none!important}
 .pushInfo{min-width:220px;flex:1}
@@ -214,7 +214,7 @@ body.pinLocked{overflow:hidden}
 
 
 /* =========================================================
-   V3.13.5 · REDISEÑO VISUAL APP
+   V3.13.5.1 · REDISEÑO VISUAL APP
    La lógica original permanece intacta.
    ========================================================= */
 :root{
@@ -453,7 +453,7 @@ body.modern-admin .bottomNav{display:none!important}
 }
 
 
-/* V3.13.5 · header y administración */
+/* V3.13.5.1 · header y administración */
 .mapp-header:before{
   content:"";
   position:absolute;
@@ -575,7 +575,7 @@ body.modern-admin .mapp-admin-back{display:none!important}
 }
 
 
-/* V3.13.5 · corrección visual del header */
+/* V3.13.5.1 · corrección visual del header */
 .mapp-header:after{
   background:
     radial-gradient(ellipse at 72% 10%,rgba(255,255,255,.045),transparent 34%),
@@ -585,7 +585,7 @@ body.modern-admin .mapp-admin-back{display:none!important}
 .mapp-logo{max-width:none!important}
 
 
-/* V3.13.5 · campana de estado real */
+/* V3.13.5.1 · campana de estado real */
 .mapp-bell{
   transition:background .18s ease,border-color .18s ease,transform .12s ease;
 }
@@ -611,7 +611,7 @@ body.modern-admin .mapp-admin-back{display:none!important}
 .mapp-bell.push-blocked .mapp-bell-dot{display:block}
 
 
-/* V3.13.5 · elimina barra gris horizontal en móvil */
+/* V3.13.5.1 · elimina barra gris horizontal en móvil */
 html,body,#modernApp,.mapp-main,.mapp-screen,.mapp-card,.mapp-profile-head,.mapp-menu-row{
   max-width:100%!important;
   box-sizing:border-box!important;
@@ -646,7 +646,7 @@ html,body,#modernApp{
 }
 
 
-/* V3.13.5 · cambio de PIN del propio jugador */
+/* V3.13.5.1 · cambio de PIN del propio jugador */
 .mapp-pin-modal{
   position:fixed;inset:0;z-index:7000;display:none;
   align-items:flex-end;justify-content:center;
@@ -676,6 +676,63 @@ html,body,#modernApp{
 .mapp-pin-save{
   border:0;background:linear-gradient(90deg,#d60020,#b90019);color:#fff;border-radius:11px;
   padding:13px;font-weight:900
+}
+
+
+/* V3.13.5.1 · FIX definitivo overflow horizontal en Mi perfil */
+html,body{
+  width:100%!important;
+  max-width:100%!important;
+  overflow-x:hidden!important;
+}
+#modernApp,.mapp-main,.mapp-screen,.mapp-card,.mapp-profile-head,.mapp-menu-row{
+  width:100%!important;
+  max-width:100%!important;
+  box-sizing:border-box!important;
+  overflow-x:hidden!important;
+}
+.mapp-menu-row{
+  grid-template-columns:46px minmax(0,1fr) auto!important;
+}
+.mapp-menu-row > *{
+  min-width:0!important;
+}
+.mapp-menu-row > div:nth-child(2){
+  min-width:0!important;
+  overflow:hidden!important;
+}
+.mapp-menu-title,.mapp-menu-sub,.mapp-profile-name,.mapp-profile-role{
+  max-width:100%!important;
+  overflow-wrap:anywhere!important;
+  word-break:break-word!important;
+}
+.mapp-pin-show{
+  white-space:nowrap!important;
+  padding:7px 9px!important;
+  font-size:10px!important;
+}
+.mapp-pin-actions-inline{
+  display:flex!important;
+  gap:5px!important;
+  flex-wrap:wrap!important;
+  justify-content:flex-end!important;
+  max-width:116px!important;
+}
+@media(max-width:430px){
+  .mapp-menu-row{
+    grid-template-columns:43px minmax(0,1fr) 104px!important;
+    gap:8px!important;
+    padding-left:12px!important;
+    padding-right:12px!important;
+  }
+  .mapp-pin-actions-inline{
+    width:104px!important;
+    max-width:104px!important;
+  }
+  .mapp-pin-show{
+    padding:7px 7px!important;
+    font-size:9px!important;
+  }
 }
 
 </style>
@@ -2148,7 +2205,7 @@ async function renderModernProfile(){
    </div>
    <div class="mapp-menu-row" id="mappPushRow"><div class="mapp-menu-icon">${mappIcon('bell')}</div><div><div class="mapp-menu-title">Avisos</div><div class="mapp-menu-sub ${pushCls}">${mappEsc(pushText)}</div></div><div>${mappIcon('chevron')}</div></div>
    <div class="mapp-menu-row" id="mappInstallRow"><div class="mapp-menu-icon">${mappIcon('phone')}</div><div><div class="mapp-menu-title">Aplicación</div><div class="mapp-menu-sub ${installCls}">${mappEsc(installText)}</div></div><div>${mappIcon('chevron')}</div></div>
-   <div class="mapp-menu-row"><div class="mapp-menu-icon">${mappIcon('lock')}</div><div><div class="mapp-menu-title">Mi PIN</div><div class="mapp-menu-sub" id="mappPinValue">••••</div></div><div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end"><button class="mapp-pin-show" id="mappShowPin" type="button">Mostrar</button><button class="mapp-pin-show" id="mappChangePin" type="button" style="background:#fff0f2;color:#c7001d">Cambiar</button></div></div>
+   <div class="mapp-menu-row"><div class="mapp-menu-icon">${mappIcon('lock')}</div><div><div class="mapp-menu-title">Mi PIN</div><div class="mapp-menu-sub" id="mappPinValue">••••</div></div><div class="mapp-pin-actions-inline"><button class="mapp-pin-show" id="mappShowPin" type="button">Mostrar</button><button class="mapp-pin-show" id="mappChangePin" type="button" style="background:#fff0f2;color:#c7001d">Cambiar</button></div></div>
    <div class="mapp-menu-row" id="mappLogoutRow"><div class="mapp-menu-icon">${mappIcon('logout')}</div><div><div class="mapp-menu-title">Sesión</div><div class="mapp-menu-sub">Cerrar sesión / Cambiar jugador</div></div><div>${mappIcon('chevron')}</div></div>
  </div>
  ${isAdmin()?`<div class="mapp-card"><div class="mapp-list-header"><div class="mapp-list-title">ADMINISTRACIÓN</div></div>
@@ -2455,5 +2512,5 @@ bootstrapApp();
 
 window.addEventListener('scroll',()=>{const a=document.getElementById('adminView');if(a)a.classList.toggle('adminScrolled',window.scrollY>(a.offsetTop+280));},{passive:true});
 </script>
-<div style="position:fixed;right:8px;bottom:78px;z-index:45;font-size:9px;opacity:.55;background:#180b0e;border:1px solid rgba(255,255,255,.12);padding:4px 7px;border-radius:999px">V3.13.5 · RESERVA DESDE PISTAS</div>
+<div style="position:fixed;right:8px;bottom:78px;z-index:45;font-size:9px;opacity:.55;background:#180b0e;border:1px solid rgba(255,255,255,.12);padding:4px 7px;border-radius:999px">V3.13.5.1 · RESERVA DESDE PISTAS</div>
 </body></html>
