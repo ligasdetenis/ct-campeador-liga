@@ -157,7 +157,7 @@ select,input,textarea{min-width:0;max-width:100%}
 .calendarBtn:hover{background:rgba(255,201,40,.14)}
 @media(max-width:430px){.datePickerWrap{grid-template-columns:minmax(0,1fr) 44px}}
 
-/* V3.13.6 · Entrada directa por PIN · nuevo diseño */
+/* V3.13.7 · Entrada directa por PIN · nuevo diseño */
 .pinWelcome{
   position:fixed;
   inset:0;
@@ -1396,6 +1396,7 @@ data.roles["Adrián Prádanos"]="admin";
 let apiToken=localStorage.getItem(TOKEN_KEY)||"";
 let state={category:"Infantil",gender:"Masculino",week:"W1",reserveMatchId:null,resultMatchId:null,delayMatchId:null,player:"",authenticated:false,showPins:false};
 let fixtureEditorDirty=false;
+let playerEditorDirty=false;
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 let saveTimer=null;
 let reservationPending=false;
@@ -1422,7 +1423,14 @@ async function restoreSession(){
   }
 }
 function setOnline(ok,text){const el=$('#onlineState');if(!el)return;el.classList.toggle('off',!ok);el.textContent=text||(ok?'☁️ Online':'⚠️ Sin conexión')}
-async function refreshOnline({silent=false,force=false}={}){if(fixtureEditorDirty&&!force){setOnline(true,'✏️ Cambios sin guardar');return false}try{const j=await apiRequest({action:'read'},{auth:false});const remote=normalizeData(j.state);data.playerLists=remote.playerLists;data.fixtures=remote.fixtures;data.fixtureRounds=remote.fixtureRounds;data.slots=remote.slots;data.drafts=remote.drafts;data.published=remote.published;data.bookings=remote.bookings;data.results=remote.results;data.weekRanges=remote.weekRanges||data.weekRanges||{};data.postponed=remote.postponed||{};applyWeekRanges();data.staff={...(data.staff||{}),...(remote.staff||{})};data.roles={...(data.roles||{}),...(remote.roles||{})};data.roles["Adrián Prádanos"]="admin";localStorage.setItem(STORAGE_KEY,JSON.stringify(data));setOnline(true,'☁️ Online');renderAll();return true}catch(e){setOnline(false,'⚠️ Offline');if(!silent)alert('No se ha podido actualizar desde Cloudflare.\n\n'+e.message);return false}}
+
+function adminEditorActive(){
+  if(!isAdmin()) return false;
+  const el=document.activeElement;
+  return !!(el && el.closest && el.closest('#adminView') && /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName));
+}
+
+async function refreshOnline({silent=false,force=false}={}){if((fixtureEditorDirty||playerEditorDirty||adminEditorActive())&&!force){setOnline(true,'✏️ Editando · actualización pausada');return false}try{const j=await apiRequest({action:'read'},{auth:false});const remote=normalizeData(j.state);data.playerLists=remote.playerLists;data.fixtures=remote.fixtures;data.fixtureRounds=remote.fixtureRounds;data.slots=remote.slots;data.drafts=remote.drafts;data.published=remote.published;data.bookings=remote.bookings;data.results=remote.results;data.weekRanges=remote.weekRanges||data.weekRanges||{};data.postponed=remote.postponed||{};applyWeekRanges();data.staff={...(data.staff||{}),...(remote.staff||{})};data.roles={...(data.roles||{}),...(remote.roles||{})};data.roles["Adrián Prádanos"]="admin";localStorage.setItem(STORAGE_KEY,JSON.stringify(data));setOnline(true,'☁️ Online');renderAll();return true}catch(e){setOnline(false,'⚠️ Offline');if(!silent)alert('No se ha podido actualizar desde Cloudflare.\n\n'+e.message);return false}}
 async function saveStateOnline(){if(!apiToken||!isAdmin())return;await apiRequest({action:'saveState',state:publicState()});setOnline(true,'☁️ Guardado')}
 async function saveUsersOnline(){if(!apiToken||!isAdmin())return;const users=allIdentities().map(name=>({name,pin:String(data.pins[name]||''),role:roleOf(name)==='admin'?'admin':'player',active:true})).filter(u=>/^\d{4}$/.test(u.pin));await apiRequest({action:'saveUsers',users});}
 async function loadAdminUsers(){if(!apiToken||!isAdmin())return;const j=await apiRequest({action:'listUsers'});for(const u of j.users||[]){data.pins[u.name]=String(u.pin||'');data.roles[u.name]=u.role==='admin'?'admin':'jugador';if(!allPlayers().includes(u.name))data.staff[u.name]={name:u.name}}localStorage.setItem(STORAGE_KEY,JSON.stringify(data));}
@@ -1982,7 +1990,7 @@ function renderAdmin(){
   const admin=isAdmin();
   $('#adminNavBtn').classList.toggle('hidden',!admin);
   if(!admin){$('#adminView').classList.add('hidden');return}
-  const cps=categoryPlayers();$('#playerPaste').value=cps.join('\n');$('#playerCount').textContent=`${cps.length} jugador${cps.length===1?'':'es'}`;$('#fixturePaste').value='';renderFixtureEditor();const cw=weeks.find(w=>w.id===state.week);if(cw){$('#weekStartDate').value=cw.start;$('#weekEndDate').value=cw.end;$('#weekRangeHint').textContent=`Rango actual: ${dayDateES(cw.start)} → ${dayDateES(cw.end)}. Las pistas del borrador se limitarán a estas fechas.`}renderSlotRows();setDefaultQuickDate();renderPins();renderRoles();renderExternalAdmins();renderWhats();
+  const cps=categoryPlayers();if(!playerEditorDirty)$('#playerPaste').value=cps.join('\n');$('#playerCount').textContent=`${cps.length} jugador${cps.length===1?'':'es'}`;$('#fixturePaste').value='';renderFixtureEditor();const cw=weeks.find(w=>w.id===state.week);if(cw){$('#weekStartDate').value=cw.start;$('#weekEndDate').value=cw.end;$('#weekRangeHint').textContent=`Rango actual: ${dayDateES(cw.start)} → ${dayDateES(cw.end)}. Las pistas del borrador se limitarán a estas fechas.`}renderSlotRows();setDefaultQuickDate();renderPins();renderRoles();renderExternalAdmins();renderWhats();
 }
 function renderRoles(){const tb=$('#roleTable');const ps=allIdentities();tb.innerHTML=ps.map(p=>`<tr><td><b>${p}</b></td><td><select data-role-person="${p.replace(/"/g,'&quot;')}"><option value="jugador" ${roleOf(p)==='jugador'?'selected':''}>Jugador</option><option value="admin" ${roleOf(p)==='admin'?'selected':''}>ADMIN</option></select></td></tr>`).join('');tb.querySelectorAll('[data-role-person]').forEach(s=>s.onchange=()=>{if(!requireAdmin())return;s.disabled=true;data.roles[s.dataset.rolePerson]=s.value;save();saveUsersOnline().catch(e=>alert(e.message));renderAll();alert(`Permiso actualizado: ${s.dataset.rolePerson} → ${s.value.toUpperCase()}`)})}
 function renderPins(){
@@ -2542,6 +2550,11 @@ function renderModernAdminContext(){
 function applyModernAdminContext(){
   const cs=$('#adminCategorySelect'),gs=$('#adminGenderSelect'),ws=$('#adminWeekSelect');
   if(!cs||!gs||!ws)return;
+  if(playerEditorDirty){
+    const ok=confirm('Tienes cambios sin guardar en la lista de jugadores.\n\n¿Quieres cambiar de categoría/semana y perder esos cambios?');
+    if(!ok){renderModernAdminContext();return}
+    playerEditorDirty=false;
+  }
   state.category=cs.value;
   state.gender=gs.value;
   state.week=ws.value;
@@ -2631,6 +2644,7 @@ $('#externalRound').addEventListener('input',e=>{if(!requireAdmin())return;const
 ['#weekStartDate','#weekEndDate'].forEach(id=>$(id).addEventListener('change',()=>{if(!requireAdmin())return;const start=$('#weekStartDate').value,end=$('#weekEndDate').value;if(start&&end&&start<=end){setWeekRangeLocal(start,end);const h=$('#weekRangeHint');if(h)h.textContent=`Rango sin guardar: ${dayDateES(start)} → ${dayDateES(end)}. Pulsa “Guardar jornada” para publicarlo.`}else if(start&&end){alert('La fecha de inicio no puede ser posterior a la fecha final.')}}));
 $('#prevWeek').onclick=()=>{let i=weeks.findIndex(w=>w.id===state.week);if(i>0){state.week=weeks[i-1].id;renderAll()}};
 $('#nextWeek').onclick=()=>{let i=weeks.findIndex(w=>w.id===state.week);if(i<weeks.length-1){state.week=weeks[i+1].id;renderAll()}};
+$('#playerPaste').addEventListener('input',()=>{if(!requireAdmin())return;playerEditorDirty=true;setOnline(true,'✏️ Lista de jugadores sin guardar');});
 $('#savePlayers').onclick=async()=>{
   if(!requireAdmin())return;
   const btn=$('#savePlayers');
@@ -2651,14 +2665,15 @@ $('#savePlayers').onclick=async()=>{
     // Guardado online explícito y secuencial para evitar que el refresco de 10 s pise la lista recién cargada.
     await saveStateOnline();
     await saveUsersOnline();
-    await refreshOnline({silent:true});
+    playerEditorDirty=false;
+    await refreshOnline({silent:true,force:true});
     renderAll();
     alert(`✅ ${list.length} jugador${list.length===1?'':'es'} guardado${list.length===1?'':'s'} en ${state.category} ${state.gender}.\n\nYa aparecen en el desplegable de acceso.`);
   }catch(e){
     alert('No se ha podido guardar la lista online.\n\n'+e.message);
   }finally{btn.disabled=false;btn.textContent=oldText}
 };
-$('#clearPlayers').onclick=async()=>{if(!requireAdmin())return;if(confirm(`¿Vaciar la lista de jugadores de ${state.category} ${state.gender}?\n\nLos enfrentamientos ya cargados no se borrarán.`)){delete data.playerLists[playerListKey()];localStorage.setItem(STORAGE_KEY,JSON.stringify(data));renderAll();try{await saveStateOnline();await refreshOnline({silent:true})}catch(e){alert(e.message)}}};
+$('#clearPlayers').onclick=async()=>{if(!requireAdmin())return;if(confirm(`¿Vaciar la lista de jugadores de ${state.category} ${state.gender}?\n\nLos enfrentamientos ya cargados no se borrarán.`)){delete data.playerLists[playerListKey()];playerEditorDirty=false;localStorage.setItem(STORAGE_KEY,JSON.stringify(data));renderAll();try{await saveStateOnline();await refreshOnline({silent:true,force:true})}catch(e){alert(e.message)}}};
 $('#addFixture').onclick=()=>{if(!requireAdmin())return;const a=$('#fixturePlayerA').value,b=$('#fixturePlayerB').value;if(addFixturePair(a,b)){renderFixtureEditor();renderMatches();$('#fixturePlayerA').value='';$('#fixturePlayerB').value=''}};
 $('#importFixtures').onclick=()=>{if(!requireAdmin())return;const {pairs,unknown}=parseFixtureText($('#fixturePaste').value);if(!pairs.length){alert('No he encontrado enfrentamientos válidos en el texto.');return}let added=0;for(const [a,b] of pairs)if(addFixturePair(a,b,{silent:true}))added++;renderFixtureEditor();renderMatches();$('#fixtureImportStatus').textContent=`${added} partido${added===1?'':'s'} añadido${added===1?'':'s'}.`+(unknown.length?` ⚠ Nombres no encontrados exactamente en la lista: ${unknown.join(', ')}`:' Todos los nombres coinciden con la categoría.');};
 $('#saveFixtures').onclick=async()=>{if(!requireAdmin())return;const start=$('#weekStartDate').value,end=$('#weekEndDate').value;if(!start||!end){alert('Indica el inicio y el fin de la semana.');return}if(start>end){alert('La fecha de inicio no puede ser posterior a la fecha final.');return}data.weekRanges=data.weekRanges||{};data.weekRanges[state.week]={start,end};applyWeekRanges();const round=$('#externalRound').value.trim();if(round)data.fixtureRounds[fixtureKey()]=round;else delete data.fixtureRounds[fixtureKey()];ensurePins();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));const btn=$('#saveFixtures'),oldTxt=btn.textContent;btn.disabled=true;btn.textContent='⏳ Guardando…';try{await saveStateOnline();await saveUsersOnline();fixtureEditorDirty=false;setOnline(true,'☁️ Guardado');await refreshOnline({silent:true,force:true});alert(`✅ Jornada guardada online.\n\n${round||weeks.find(w=>w.id===state.week).label}\n${fixtures().length} partido${fixtures().length===1?'':'s'}.`)}catch(e){fixtureEditorDirty=true;setOnline(true,'✏️ Sin guardar');alert('No se ha podido guardar la jornada online.\n\n'+e.message)}finally{btn.disabled=false;btn.textContent=oldTxt}};
