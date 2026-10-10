@@ -157,7 +157,7 @@ select,input,textarea{min-width:0;max-width:100%}
 .calendarBtn:hover{background:rgba(255,201,40,.14)}
 @media(max-width:430px){.datePickerWrap{grid-template-columns:minmax(0,1fr) 44px}}
 
-/* V3.13.5 · Entrada directa por PIN · nuevo diseño */
+/* V3.13.6 · Entrada directa por PIN · nuevo diseño */
 .pinWelcome{
   position:fixed;
   inset:0;
@@ -822,6 +822,63 @@ html,body,#modernApp{
 }
 .mapp-nav{
   overflow:hidden!important;
+}
+
+
+/* V3.13.6 · Pistas agrupadas por día y pista */
+.mapp-courts-day{
+  background:#fff;
+  border:1px solid #ececef;
+  border-radius:17px;
+  box-shadow:var(--app-shadow);
+  margin-bottom:13px;
+  overflow:hidden;
+}
+.mapp-courts-day-title{
+  padding:14px 16px;
+  font-size:17px;
+  font-weight:950;
+  border-bottom:1px solid var(--app-line);
+  background:#fbfbfc;
+}
+.mapp-court-block{
+  padding:13px 14px 14px;
+}
+.mapp-court-block + .mapp-court-block{
+  border-top:1px solid var(--app-line);
+}
+.mapp-court-name{
+  font-size:13px;
+  font-weight:950;
+  color:#8b0015;
+  margin-bottom:8px;
+}
+.mapp-court-slot{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto 18px;
+  gap:10px;
+  align-items:center;
+  padding:11px 0;
+  border-top:1px solid #f0f0f2;
+  cursor:pointer;
+}
+.mapp-court-slot:first-of-type{border-top:0}
+.mapp-court-slot .time{
+  font-size:13px;
+  font-weight:850;
+  color:#1d1f23;
+}
+.mapp-court-slot .booking{
+  font-size:11px;
+  color:#686c74;
+  margin-top:2px;
+  line-height:1.25;
+}
+.mapp-court-slot.is-busy{cursor:default}
+.mapp-court-slot.is-free:active{background:#f7fbf8}
+@media(max-width:520px){
+  .mapp-court-block{padding:11px 12px 12px}
+  .mapp-courts-day-title{padding:13px 14px}
 }
 
 </style>
@@ -2190,15 +2247,38 @@ function renderModernHome(){
 }
 function renderModernCourts(){
  const box=$('#modernCourtsContent');if(!box)return;
- const ss=slots().slice().sort((a,b)=>(a.date+a.time+a.court).localeCompare(b.date+b.time+b.court));
- if(!ss.length){box.innerHTML='<div class="mapp-card"><div class="mapp-empty">No hay disponibilidad publicada para esta semana.</div></div>';return}
- const groups={};ss.forEach(s=>(groups[s.date]??=[]).push(s));
- box.innerHTML=Object.entries(groups).map(([date,arr])=>`<div class="mapp-card mapp-day-card">
-   <div class="mapp-day-title">${mappEsc(dayDateES(date))}</div>
-   ${arr.map(s=>{const bk=slotBooking(s.id);return `<div class="mapp-day-slot" ${bk?'':`data-mapp-slot="${mappEsc(s.id)}"`}>
-      <div class="time">${mappEsc(s.time)}</div><div class="court">${mappEsc(s.court)}</div>
-      <div class="${bk?'mapp-busy':'mapp-free'}">${bk?'OCUPADA':'LIBRE'}</div><div class="mapp-chevron">${bk?'':mappIcon('chevron')}</div>
-   </div>`}).join('')}</div>`).join('');
+ const ss=slots().slice().sort((a,b)=>(a.date+a.court+a.time).localeCompare(b.date+b.court+b.time));
+ if(!ss.length){
+   box.innerHTML='<div class="mapp-card"><div class="mapp-empty">No hay disponibilidad publicada para esta semana.</div></div>';
+   return
+ }
+ const byDay={};
+ ss.forEach(s=>{
+   if(!byDay[s.date])byDay[s.date]={};
+   if(!byDay[s.date][s.court])byDay[s.date][s.court]=[];
+   byDay[s.date][s.court].push(s);
+ });
+ box.innerHTML=Object.entries(byDay).map(([date,courts])=>{
+   const courtNames=Object.keys(courts).sort((a,b)=>a.localeCompare(b,'es',{numeric:true}));
+   return `<div class="mapp-courts-day">
+     <div class="mapp-courts-day-title">${mappEsc(dayDateES(date))}</div>
+     ${courtNames.map(court=>`
+       <div class="mapp-court-block">
+         <div class="mapp-court-name">${mappEsc(court)}</div>
+         ${courts[court].sort((a,b)=>a.time.localeCompare(b.time)).map(s=>{
+           const bk=slotBooking(s.id);
+           return `<div class="mapp-court-slot ${bk?'is-busy':'is-free'}" ${bk?'':`data-mapp-slot="${mappEsc(s.id)}"`}>
+             <div>
+               <div class="time">${mappEsc(s.time)}</div>
+               ${bk?`<div class="booking">${mappEsc(bk.a)} vs ${mappEsc(bk.b)}</div>`:''}
+             </div>
+             <div class="${bk?'mapp-busy':'mapp-free'}">${bk?'OCUPADA':'LIBRE'}</div>
+             <div class="mapp-chevron">${bk?'':mappIcon('chevron')}</div>
+           </div>`
+         }).join('')}
+       </div>`).join('')}
+   </div>`
+ }).join('');
  box.querySelectorAll('[data-mapp-slot]').forEach(r=>r.onclick=()=>reserveFromOccupancy(r.dataset.mappSlot));
 }
 function renderModernMatch(){
