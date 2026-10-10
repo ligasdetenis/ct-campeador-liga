@@ -12,7 +12,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 
-/* V3.16.6 · arranque directo sin capa superpuesta */
+/* V3.16.7 · arranque directo sin capa superpuesta */
 :root{
   --bg:#100708; --bg2:#25090d; --card:#1b0d10; --card2:#261015;
   --line:rgba(255,255,255,.11); --text:#fff8f0; --muted:#d9b8ad;
@@ -2351,7 +2351,9 @@ async function loadAdminUsers() { if (!apiToken || !isAdmin())
     data.roles[u.name] = u.role === 'admin' ? 'admin' : 'jugador';
     if (!allPlayers().includes(u.name))
         data.staff[u.name] = { name: u.name };
-} localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+} try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch (storageError) {
+    console.warn('No se pudo guardar la caché admin:', storageError);
+} }
 function fixtureKey() { return `${state.week}|${state.category}|${state.gender}`; }
 function playerListKey() { return `${state.category}|${state.gender}`; }
 function categoryPlayers() { return data.playerLists[playerListKey()] || []; }
@@ -2635,16 +2637,33 @@ async function loginWithPinOnly() {
         }
         const j = await apiRequest({ action: 'loginPin', pin }, { auth: false });
         apiToken = j.token;
-        localStorage.setItem(TOKEN_KEY, apiToken);
+        try { localStorage.setItem(TOKEN_KEY, apiToken); } catch (storageError) {
+            console.warn('No se pudo guardar el token localmente:', storageError);
+        }
         state.player = j.user.name;
         state.authenticated = true;
         data.roles[state.player] = j.user.role === 'admin' ? 'admin' : 'jugador';
-        if (isAdmin())
-            await loadAdminUsers();
+
+        // iOS/Safari: nunca bloquear la salida de la pantalla PIN por tareas secundarias.
         routePlayerToOwnCategory(state.player);
         hidePinWelcome();
         setOnline(true, '☁️ Online');
-        renderAll();
+        try { renderAll(); } catch (renderError) {
+            console.error('Error al pintar tras login:', renderError);
+        }
+
+        // Los datos extra de administración se cargan DESPUÉS de entrar.
+        // Si Safari deja la petición pendiente, ya no puede retener la pantalla "Entrando…".
+        if (isAdmin()) {
+            try {
+                await promiseTimeout(loadAdminUsers(), 6000, 'Carga de usuarios admin no respondió a tiempo');
+                try { renderAll(); } catch (renderError2) {
+                    console.error('Error al refrescar admin:', renderError2);
+                }
+            } catch (adminLoadError) {
+                console.warn('Carga secundaria de administración:', adminLoadError);
+            }
+        }
     }
     catch (e) {
         showPinWelcome(e.message || 'PIN incorrecto.', true);
@@ -4657,7 +4676,13 @@ function renderModernUI() {
     renderResultsTicker();
     renderModernProfile();
 }
-function renderAll() { renderTabs(); renderWeeks(); renderIdentity(); renderState(); renderMatches(); renderSchedule(); renderKpis(); renderAdmin(); updateAdminSummaries(); wireAdminCompact(); renderPushUI(); renderModernUI(); renderModernAdminContext(); }
+function renderAll() {
+    if(state.authenticated){
+        const pinOv=document.getElementById('pinWelcome');
+        if(pinOv) pinOv.classList.add('hidden');
+        document.body.classList.remove('pinLocked');
+    }
+ renderTabs(); renderWeeks(); renderIdentity(); renderState(); renderMatches(); renderSchedule(); renderKpis(); renderAdmin(); updateAdminSummaries(); wireAdminCompact(); renderPushUI(); renderModernUI(); renderModernAdminContext(); }
 document.querySelectorAll('[data-icon]').forEach(el => el.innerHTML = mappIcon(el.dataset.icon));
 $('#modernTrophyIcon').innerHTML = mappIcon('trophy');
 $('#modernCalendarIcon').innerHTML = mappIcon('calendar');
@@ -5174,7 +5199,7 @@ async function bootstrapApp() {
         renderAll();
     }
     catch (e) {
-        console.error('Error de arranque V3.16.6:', e);
+        console.error('Error de arranque V3.16.7:', e);
         setOnline(false, '⚠️ Sin conexión');
         if (!state.authenticated)
             showPinWelcome('PIN personal de 4 cifras', false);
