@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 
-<html lang="es" class="app-booting">
+<html lang="es">
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,maximum-scale=1" name="viewport"/>
@@ -11,54 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 
-/* V3.16.4 · evita el flash del diseño antiguo durante el arranque */
-html.app-booting,
-html.app-booting body{
-  background:#65000d!important;
-  overflow:hidden!important;
-}
-html.app-booting body > *{
-  opacity:0!important;
-  pointer-events:none!important;
-}
-html.app-booting body::before{
-  content:"CT CAMPEADOR";
-  position:fixed;
-  z-index:999999;
-  inset:0;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding-bottom:18px;
-  color:#fff;
-  background:
-    linear-gradient(145deg,transparent 0 54%,rgba(255,255,255,.035) 54.5% 55.2%,transparent 55.7%),
-    repeating-linear-gradient(90deg,rgba(255,255,255,.018) 0 1px,transparent 1px 18px),
-    repeating-linear-gradient(0deg,rgba(255,255,255,.014) 0 1px,transparent 1px 20px),
-    linear-gradient(125deg,#3e0007 0%,#65000d 43%,#8c0015 72%,#560009 100%);
-  font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-  font-size:20px;
-  font-weight:950;
-  letter-spacing:-.02em;
-  text-align:center;
-}
-html.app-booting body::after{
-  content:"II Liga Federada";
-  position:fixed;
-  z-index:1000000;
-  left:0;right:0;
-  top:calc(50% + 18px);
-  text-align:center;
-  color:#f2c94c;
-  font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-  font-size:12px;
-  font-weight:750;
-  pointer-events:none;
-}
-html.app-ready body > *{
-  opacity:1;
-}
-
+/* V3.16.5 · arranque directo sin capa superpuesta */
 :root{
   --bg:#100708; --bg2:#25090d; --card:#1b0d10; --card2:#261015;
   --line:rgba(255,255,255,.11); --text:#fff8f0; --muted:#d9b8ad;
@@ -206,7 +159,7 @@ select,input,textarea{min-width:0;max-width:100%}
 .calendarBtn:hover{background:rgba(255,201,40,.14)}
 @media(max-width:430px){.datePickerWrap{grid-template-columns:minmax(0,1fr) 44px}}
 
-/* V3.16.4 · ARRANQUE SAFARI · Entrada directa por PIN · nuevo diseño */
+/* V3.16.5 · ARRANQUE SAFARI · Entrada directa por PIN · nuevo diseño */
 .pinWelcome{
   position:fixed;
   inset:0;
@@ -1827,15 +1780,16 @@ body.modern-admin #adminView>.head{display:none!important}
 }
 
 
-/* V3.16.4 · el splash nunca puede bloquear la app indefinidamente */
-html.app-booting body::before,
-html.app-booting body::after{
-  animation:bootFailsafe 0s linear 8s forwards;
-}
-@keyframes bootFailsafe{
-  to{visibility:hidden;opacity:0;pointer-events:none}
 }
 
+
+/* V3.16.5 · estabilidad Safari / iPadOS: sin front-layer ni back-layer */
+html,body{min-height:100%}
+body{
+  transform:none!important;
+  -webkit-transform:none!important;
+  isolation:auto!important;
+}
 </style>
 
 <link rel="manifest" href="manifest.webmanifest">
@@ -4221,10 +4175,7 @@ $('#saveDelayBtn').onclick=saveDelay;$('#restoreDelayBtn').onclick=restoreDelay;
 $('#resultType').onchange=syncResultType;$('#saveResultBtn').onclick=saveResult;$('#confirmResultBtn').onclick=()=>confirmResult(state.resultMatchId);$('#deleteResultBtn').onclick=()=>deleteResult(state.resultMatchId);$('#closeResultModal').onclick=()=>$('#resultModal').classList.remove('show');$('#resultModal').onclick=e=>{if(e.target===$('#resultModal'))$('#resultModal').classList.remove('show')};
 $$('.navBtn[data-go]').forEach(b=>b.onclick=()=>{const go=b.dataset.go;$$('.navBtn').forEach(x=>x.classList.remove('active'));b.classList.add('active');if(go==='home')$('#homeView').scrollIntoView({behavior:'smooth',block:'start'});if(go==='courts')$('#courtsView').scrollIntoView({behavior:'smooth',block:'start'});if(go==='admin'){if(!isAdmin()){alert('Acceso restringido a administradores.');return;}$('#adminView').classList.remove('hidden');$('#adminView').scrollIntoView({behavior:'smooth',block:'start'})}});
 $('#refreshBtn').onclick=()=>refreshOnline();
-function releaseBootScreen(){
-  document.documentElement.classList.remove('app-booting');
-  document.documentElement.classList.add('app-ready');
-}
+function releaseBootScreen(){ /* sin overlay de arranque */ }
 function promiseTimeout(promise,ms,label){
   let timer;
   const timeout=new Promise((_,reject)=>{
@@ -4276,7 +4227,7 @@ async function bootstrapApp(){
 
     renderAll();
   }catch(e){
-    console.error('Error de arranque V3.16.4:',e);
+    console.error('Error de arranque V3.16.5:',e);
     setOnline(false,'⚠️ Sin conexión');
     if(!state.authenticated)showPinWelcome('PIN personal de 4 cifras',false);
   }
