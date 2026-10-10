@@ -11,7 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 
-/* V3.16.1 · evita el flash del diseño antiguo durante el arranque */
+/* V3.16.2 · evita el flash del diseño antiguo durante el arranque */
 html.app-booting,
 html.app-booting body{
   background:#65000d!important;
@@ -206,7 +206,7 @@ select,input,textarea{min-width:0;max-width:100%}
 .calendarBtn:hover{background:rgba(255,201,40,.14)}
 @media(max-width:430px){.datePickerWrap{grid-template-columns:minmax(0,1fr) 44px}}
 
-/* V3.16.1 · FIX ADMIN START · Entrada directa por PIN · nuevo diseño */
+/* V3.16.2 · BOTÓN DISPOSITIVOS · Entrada directa por PIN · nuevo diseño */
 .pinWelcome{
   position:fixed;
   inset:0;
@@ -1762,6 +1762,25 @@ body.modern-admin #adminView>.head{display:none!important}
   .adminPrimary>.adminSummary .adminSummaryTitle{font-size:13px!important}
   .adminPrimary>.adminSummary .adminSummaryMeta{font-size:9px!important}
   .adminPrimary>.adminAccordionBody{padding:12px!important}
+}
+
+
+/* V3.16.2 · visibilidad botón actualizar dispositivos */
+#refreshPushDevices{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  min-height:36px!important;
+  padding:8px 12px!important;
+  border:1px solid #d9dde3!important;
+  background:#ffffff!important;
+  color:#2f3338!important;
+  border-radius:8px!important;
+  font-size:11px!important;
+  font-weight:850!important;
+  box-shadow:none!important;
+  opacity:1!important;
+  visibility:visible!important;
 }
 
 </style>
