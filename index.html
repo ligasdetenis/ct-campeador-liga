@@ -11,7 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 
-/* V3.14.0 · evita el flash del diseño antiguo durante el arranque */
+/* V3.14.1 · evita el flash del diseño antiguo durante el arranque */
 html.app-booting,
 html.app-booting body{
   background:#65000d!important;
@@ -206,7 +206,7 @@ select,input,textarea{min-width:0;max-width:100%}
 .calendarBtn:hover{background:rgba(255,201,40,.14)}
 @media(max-width:430px){.datePickerWrap{grid-template-columns:minmax(0,1fr) 44px}}
 
-/* V3.14.0 · RESULTADOS + TICKER · Entrada directa por PIN · nuevo diseño */
+/* V3.14.1 · MENÚ + MARCADOR · Entrada directa por PIN · nuevo diseño */
 .pinWelcome{
   position:fixed;
   inset:0;
@@ -1299,6 +1299,109 @@ body.modern-ui{padding-bottom:116px!important}
   .mapp-results-toolbar .week{grid-column:1/-1}
   .mapp-ticker-label{padding:0 8px;font-size:9px}
   .mapp-ticker-item{font-size:10px;padding:0 12px}
+}
+
+
+/* V3.14.1 · menú inferior en una sola línea + tanteos alineados */
+.mapp-nav{
+  grid-template-columns:repeat(5,minmax(0,1fr))!important;
+  height:74px!important;
+  overflow:hidden!important;
+}
+.mapp-nav-btn{
+  min-width:0!important;
+  width:100%!important;
+  padding:5px 1px!important;
+  gap:2px!important;
+  font-size:9px!important;
+  line-height:1.05!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+}
+.mapp-nav-btn > span:last-child{
+  display:block!important;
+  width:100%!important;
+  max-width:100%!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+  text-align:center!important;
+}
+.mapp-nav-btn svg{
+  width:21px!important;
+  height:21px!important;
+  min-width:21px!important;
+  min-height:21px!important;
+}
+.mapp-nav-btn.active:after{width:34px!important}
+
+.mapp-result-scoreboard{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  column-gap:12px;
+  align-items:center;
+}
+.mapp-result-score-head{
+  display:grid;
+  grid-template-columns:repeat(3,30px);
+  gap:5px;
+  justify-content:end;
+  color:#a0a3aa;
+  font-size:8px;
+  font-weight:850;
+  text-align:center;
+  padding:0 0 5px;
+}
+.mapp-result-player{display:contents!important}
+.mapp-result-name{
+  min-width:0;
+  padding:8px 0;
+  border-top:1px solid #f0f0f2;
+  font-size:13px!important;
+  font-weight:850!important;
+}
+.mapp-result-score-cells{
+  display:grid;
+  grid-template-columns:repeat(3,30px);
+  gap:5px;
+  justify-content:end;
+  padding:6px 0;
+  border-top:1px solid #f0f0f2;
+}
+.mapp-result-score-cell{
+  width:30px;
+  height:30px;
+  display:grid;
+  place-items:center;
+  border-radius:8px;
+  background:#f5f5f7;
+  color:#17171a;
+  font-size:13px;
+  font-weight:950;
+  font-variant-numeric:tabular-nums;
+}
+.mapp-result-score-cell.empty{
+  background:transparent;
+  color:#c5c7cc;
+}
+.mapp-result-score-special{
+  grid-column:2;
+  justify-self:end;
+  font-size:11px;
+  font-weight:900;
+  color:#7b7f87;
+  white-space:nowrap;
+  padding:6px 0;
+}
+@media(max-width:420px){
+  .mapp-nav-btn{font-size:8px!important}
+  .mapp-nav-btn svg{width:20px!important;height:20px!important}
+  .mapp-result-score-head,
+  .mapp-result-score-cells{
+    grid-template-columns:repeat(3,27px);
+    gap:4px;
+  }
+  .mapp-result-score-cell{width:27px;height:28px;font-size:12px}
 }
 
 </style>
@@ -2672,6 +2775,28 @@ function resultScoresForPlayers(item){
   return {a:'—',b:'—'};
 }
 
+
+function resultScoreCells(item){
+  const r=item.result||{};
+  if(r.type==='normal' || r.type==='retirement'){
+    const sets=(r.sets||[]).slice(0,3);
+    return {
+      a:[0,1,2].map(i=>sets[i]?.a ?? ''),
+      b:[0,1,2].map(i=>sets[i]?.b ?? '')
+    };
+  }
+  if(r.type==='wo'){
+    return {
+      a:[r.winner===item.a?'WO':'','',''],
+      b:[r.winner===item.b?'WO':'','','']
+    };
+  }
+  return {a:['','',''],b:['','','']};
+}
+function renderScoreCells(values){
+  return values.map(v=>`<span class="mapp-result-score-cell ${v===''?'empty':''}">${v===''?'—':mappEsc(v)}</span>`).join('');
+}
+
 function resultSpecialLabel(r){
   if(r.type==='retirement') return 'Retirada';
   if(r.type==='wo') return 'WO / No presentado';
@@ -2716,9 +2841,13 @@ function renderModernResults(){
         <span>${mappEsc(resultRoundFor(item))}</span>
       </div>
       <div class="mapp-result-body">
-        <div class="mapp-result-player"><div class="mapp-result-name">${mappEsc(item.a)}</div><div class="mapp-result-score">${mappEsc(sc.a)}</div></div>
-        <div class="mapp-result-player"><div class="mapp-result-name">${mappEsc(item.b)}</div><div class="mapp-result-score">${mappEsc(sc.b)}</div></div>
-        ${special?`<div class="mapp-result-special">${mappEsc(special)}</div>`:''}
+        <div class="mapp-result-scoreboard">
+          <div></div>
+          <div class="mapp-result-score-head"><span>S1</span><span>S2</span><span>S3</span></div>
+          <div class="mapp-result-player"><div class="mapp-result-name">${mappEsc(item.a)}</div><div class="mapp-result-score-cells">${renderScoreCells(resultScoreCells(item).a)}</div></div>
+          <div class="mapp-result-player"><div class="mapp-result-name">${mappEsc(item.b)}</div><div class="mapp-result-score-cells">${renderScoreCells(resultScoreCells(item).b)}</div></div>
+          ${special?`<div></div><div class="mapp-result-score-special">${mappEsc(special)}</div>`:''}
+        </div>
         <div class="mapp-result-confirmed">✓ Resultado confirmado</div>
       </div>
     </div>`;
