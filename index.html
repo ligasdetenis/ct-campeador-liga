@@ -175,7 +175,7 @@ body.pinLocked{overflow:hidden}
 @media(max-width:520px){.pinWelcomeCard{padding:21px;border-radius:22px}.pinWelcomeLogo{width:96px;height:96px}.pinWelcomeTitle{font-size:21px}}
 
 
-/* V3.13.1 · REDISEÑO APP */
+/* V3.13.3 · ESTADO AVISOS */
 .pushBox{margin-top:12px;padding:12px;border:1px solid var(--line);border-radius:15px;background:rgba(255,255,255,.025);display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
 .pushBox.hidden{display:none!important}
 .pushInfo{min-width:220px;flex:1}
@@ -214,7 +214,7 @@ body.pinLocked{overflow:hidden}
 
 
 /* =========================================================
-   V3.13.1 · REDISEÑO VISUAL APP
+   V3.13.3 · REDISEÑO VISUAL APP
    La lógica original permanece intacta.
    ========================================================= */
 :root{
@@ -255,12 +255,10 @@ body:not(.modern-ui) #modernApp{display:none}
   position:relative;
   overflow:hidden;
   background:
-    radial-gradient(circle at 86% 47%, rgba(205,154,43,.96) 0 7%, rgba(156,108,26,.96) 7.4% 11%, transparent 11.6%),
-    radial-gradient(circle at 89% 53%, rgba(255,218,116,.22) 0 13%, transparent 13.6%),
-    linear-gradient(145deg, transparent 0 54%, rgba(255,255,255,.06) 54.5% 55.2%, transparent 55.8%),
-    repeating-linear-gradient(90deg, rgba(255,255,255,.025) 0 1px, transparent 1px 16px),
-    repeating-linear-gradient(0deg, rgba(255,255,255,.018) 0 1px, transparent 1px 18px),
-    linear-gradient(120deg,#440008 0%,#69000d 35%,#8d0015 68%,#5d000b 100%);
+    linear-gradient(145deg, transparent 0 55%, rgba(255,255,255,.055) 55.3% 56%, transparent 56.4%),
+    repeating-linear-gradient(90deg, rgba(255,255,255,.022) 0 1px, transparent 1px 17px),
+    repeating-linear-gradient(0deg, rgba(255,255,255,.016) 0 1px, transparent 1px 19px),
+    linear-gradient(120deg,#430008 0%,#65000d 36%,#8b0015 68%,#59000a 100%);
   padding:18px 18px 0;
   min-height:214px;
 }
@@ -272,19 +270,19 @@ body:not(.modern-ui) #modernApp{display:none}
 }
 .mapp-brand{
   position:relative;z-index:1;
-  display:flex;align-items:center;gap:13px;
-  min-height:112px;
+  display:flex;align-items:center;gap:12px;
+  min-height:132px;
 }
 .mapp-logo{
-  width:112px;height:96px;object-fit:contain;flex:0 0 auto;
+  width:140px;height:118px;object-fit:contain;flex:0 0 auto;
   filter:drop-shadow(0 5px 12px rgba(0,0,0,.28));
 }
 .mapp-brand-copy{min-width:0;flex:1}
-.mapp-brand-title{font-size:24px;font-weight:900;letter-spacing:-.035em;line-height:1.05}
+.mapp-brand-title{font-size:23px;font-weight:900;letter-spacing:-.035em;line-height:1.05}
 .mapp-brand-sub{color:#f2c94c;font-size:17px;font-weight:650;margin-top:5px}
 .mapp-bell{
   width:42px;height:42px;border-radius:50%;border:1px solid rgba(255,255,255,.2);
-  background:rgba(44,0,7,.56);color:white;display:grid;place-items:center;position:relative;
+  background:rgba(54,0,8,.62);color:#fff;display:grid;place-items:center;position:relative;
   cursor:pointer
 }
 .mapp-bell-dot{position:absolute;right:5px;top:4px;width:9px;height:9px;background:#ff1735;border-radius:50%;border:2px solid #67000d}
@@ -440,9 +438,9 @@ body.modern-admin .mapp-admin-back{display:block}
 body.modern-admin .bottomNav{display:none!important}
 @media(max-width:520px){
   .mapp-header{padding:13px 12px 0;min-height:204px}
-  .mapp-logo{width:103px;height:89px}
-  .mapp-brand-title{font-size:21px}
-  .mapp-brand-sub{font-size:15px}
+  .mapp-logo{width:126px;height:108px}
+  .mapp-brand-title{font-size:19px}
+  .mapp-brand-sub{font-size:14px}
   .mapp-context-item{padding:11px 7px;gap:6px}
   .mapp-context-value{font-size:11px}
   .mapp-context-label{font-size:9px}
@@ -455,7 +453,7 @@ body.modern-admin .bottomNav{display:none!important}
 }
 
 
-/* V3.13.1 · header y administración */
+/* V3.13.3 · header y administración */
 .mapp-header:before{
   content:"";
   position:absolute;
@@ -575,6 +573,42 @@ body.modern-admin .mapp-admin-back{display:none!important}
   body.modern-admin .adminQuickNav{top:119px!important}
   .mapp-admin-body{width:calc(100% - 12px)}
 }
+
+
+/* V3.13.3 · corrección visual del header */
+.mapp-header:after{
+  background:
+    radial-gradient(ellipse at 72% 10%,rgba(255,255,255,.045),transparent 34%),
+    linear-gradient(180deg,rgba(255,255,255,.025),transparent 38%)!important;
+}
+.mapp-bell svg{display:block;stroke:#fff!important}
+.mapp-logo{max-width:none!important}
+
+
+/* V3.13.3 · campana de estado real */
+.mapp-bell{
+  transition:background .18s ease,border-color .18s ease,transform .12s ease;
+}
+.mapp-bell:active{transform:scale(.96)}
+.mapp-bell.push-on{
+  background:rgba(255,255,255,.12)!important;
+  border-color:rgba(255,255,255,.22)!important;
+}
+.mapp-bell.push-off{
+  background:rgba(54,0,8,.68)!important;
+  border-color:rgba(255,255,255,.18)!important;
+}
+.mapp-bell.push-blocked{
+  background:rgba(117,117,117,.5)!important;
+  border-color:rgba(255,255,255,.16)!important;
+}
+.mapp-bell-dot{
+  display:none;
+  position:absolute;right:4px;top:3px;width:10px;height:10px;
+  background:#ff1735;border-radius:50%;border:2px solid #67000d
+}
+.mapp-bell.push-off .mapp-bell-dot,
+.mapp-bell.push-blocked .mapp-bell-dot{display:block}
 
 </style>
 
@@ -798,7 +832,7 @@ Pablo Ruiz"></textarea>
         <div class="mapp-brand-sub">Liga Federada</div>
       </div>
       <button class="mapp-bell" id="modernBellBtn" type="button" aria-label="Avisos">
-        <span id="modernBellIcon"></span><span class="mapp-bell-dot" id="modernBellDot"></span>
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg><span class="mapp-bell-dot" id="modernBellDot"></span>
       </button>
     </div>
     <div class="mapp-context" id="modernContextBtn">
@@ -1845,10 +1879,48 @@ function mappApplySelector(){
  $('#modernSelectorSheet').classList.remove('show');
  renderAll();
 }
+
+async function mappRefreshBellState(){
+  const btn=$('#modernBellBtn'),dot=$('#modernBellDot');
+  if(!btn||!dot)return;
+  btn.classList.remove('push-on','push-off','push-blocked');
+
+  if(!('Notification' in window)||!('serviceWorker' in navigator)||!('PushManager' in window)){
+    btn.classList.add('push-blocked');
+    btn.title='Avisos no compatibles en este dispositivo';
+    dot.style.display='block';
+    return;
+  }
+
+  if(Notification.permission==='denied'){
+    btn.classList.add('push-blocked');
+    btn.title='Avisos bloqueados';
+    dot.style.display='block';
+    return;
+  }
+
+  try{
+    const sub=await currentPushSubscription();
+    if(sub && Notification.permission==='granted'){
+      btn.classList.add('push-on');
+      btn.title='Avisos activados';
+      dot.style.display='none';
+    }else{
+      btn.classList.add('push-off');
+      btn.title='Avisos pendientes de activar';
+      dot.style.display='block';
+    }
+  }catch(_){
+    btn.classList.add('push-off');
+    btn.title='Configurar avisos';
+    dot.style.display='block';
+  }
+}
+
 function renderModernHeader(){
  $('#modernCategory').textContent=`${state.category} · ${state.gender}`;
  $('#modernWeek').textContent=mappWeekShort();
- $('#modernBellDot').style.display=(typeof Notification!=='undefined'&&Notification.permission==='granted')?'none':'block';
+ mappRefreshBellState();
 }
 function renderModernHome(){
  const box=$('#modernHomeContent'); if(!box)return;
@@ -1962,7 +2034,7 @@ async function renderModernProfile(){
  const avatar=box.querySelector('.mapp-profile-avatar');
  avatar?.addEventListener('click',()=>$('#mappPhotoInput').click());
  $('#mappPhotoInput')?.addEventListener('change',mappSavePhoto);
- $('#mappPushRow')?.addEventListener('click',async()=>{await activateNativePush();renderModernProfile();renderModernHeader()});
+ $('#mappPushRow')?.addEventListener('click',async()=>{await activateNativePush();await renderModernProfile();renderModernHeader();mappRefreshBellState()});
  $('#mappInstallRow')?.addEventListener('click',installAppNow);
  $('#mappShowPin')?.addEventListener('click',e=>{
    const v=$('#mappPinValue');const shown=v.textContent!=='••••';v.textContent=shown?'••••':(pin||'No disponible');e.currentTarget.textContent=shown?'Mostrar':'Ocultar'
@@ -2035,7 +2107,6 @@ function renderAll(){renderTabs();renderWeeks();renderIdentity();renderState();r
 
 
 document.querySelectorAll('[data-icon]').forEach(el=>el.innerHTML=mappIcon(el.dataset.icon));
-$('#modernBellIcon').innerHTML=mappIcon('bell');
 $('#modernTrophyIcon').innerHTML=mappIcon('trophy');
 $('#modernCalendarIcon').innerHTML=mappIcon('calendar');
 $('#modernChartIcon').innerHTML=mappIcon('chart');
@@ -2043,7 +2114,10 @@ document.querySelectorAll('[data-modern-go]').forEach(b=>b.onclick=()=>mappShow(
 $('#modernContextBtn').onclick=mappOpenSelector;
 $('#modernSelectorClose').onclick=mappApplySelector;
 $('#modernSelectorSheet').onclick=e=>{if(e.target===$('#modernSelectorSheet'))$('#modernSelectorSheet').classList.remove('show')};
-$('#modernBellBtn').onclick=()=>mappShow('profile');
+$('#modernBellBtn').onclick=()=>{
+  mappShow('profile');
+  setTimeout(()=>$('#mappPushRow')?.scrollIntoView({behavior:'smooth',block:'center'}),120);
+};
 $('#modernAdminBack').onclick=closeModernAdmin;
 $('#modernAdminBack2').onclick=closeModernAdmin;
 $('#adminCategorySelect').onchange=applyModernAdminContext;
@@ -2251,5 +2325,5 @@ bootstrapApp();
 
 window.addEventListener('scroll',()=>{const a=document.getElementById('adminView');if(a)a.classList.toggle('adminScrolled',window.scrollY>(a.offsetTop+280));},{passive:true});
 </script>
-<div style="position:fixed;right:8px;bottom:78px;z-index:45;font-size:9px;opacity:.55;background:#180b0e;border:1px solid rgba(255,255,255,.12);padding:4px 7px;border-radius:999px">V3.13.1 · RESERVA DESDE PISTAS</div>
+<div style="position:fixed;right:8px;bottom:78px;z-index:45;font-size:9px;opacity:.55;background:#180b0e;border:1px solid rgba(255,255,255,.12);padding:4px 7px;border-radius:999px">V3.13.3 · RESERVA DESDE PISTAS</div>
 </body></html>
