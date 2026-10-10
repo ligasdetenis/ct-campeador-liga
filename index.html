@@ -11,7 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 
-/* V3.14.1 · evita el flash del diseño antiguo durante el arranque */
+/* V3.14.2 · evita el flash del diseño antiguo durante el arranque */
 html.app-booting,
 html.app-booting body{
   background:#65000d!important;
@@ -206,7 +206,7 @@ select,input,textarea{min-width:0;max-width:100%}
 .calendarBtn:hover{background:rgba(255,201,40,.14)}
 @media(max-width:430px){.datePickerWrap{grid-template-columns:minmax(0,1fr) 44px}}
 
-/* V3.14.1 · MENÚ + MARCADOR · Entrada directa por PIN · nuevo diseño */
+/* V3.14.2 · LIMPIEZA ADMIN · Entrada directa por PIN · nuevo diseño */
 .pinWelcome{
   position:fixed;
   inset:0;
@@ -1402,6 +1402,32 @@ body.modern-ui{padding-bottom:116px!important}
     gap:4px;
   }
   .mapp-result-score-cell{width:27px;height:28px;font-size:12px}
+}
+
+
+/* V3.14.2 · limpieza admin de reservas/resultados huérfanos */
+.mapp-admin-clean{
+  border:1px solid #f0c7ce;
+  background:#fff5f6;
+  color:#c30d22;
+  border-radius:9px;
+  padding:6px 8px;
+  font-size:10px;
+  font-weight:900;
+  white-space:nowrap;
+  cursor:pointer;
+}
+.mapp-admin-clean:active{transform:translateY(1px)}
+.mapp-result-admin-row{
+  display:flex;
+  justify-content:flex-end;
+  margin-top:10px;
+}
+.mapp-court-slot.admin-busy{
+  grid-template-columns:minmax(0,1fr) auto auto;
+}
+@media(max-width:420px){
+  .mapp-admin-clean{font-size:9px;padding:6px 7px}
 }
 
 </style>
@@ -2820,6 +2846,40 @@ function renderResultsFilters(){
     weeks.map(w=>`<option value="${mappEsc(w.id)}" ${resultsViewState.week===w.id?'selected':''}>${mappEsc(w.label)}</option>`).join('');
 }
 
+
+async function adminDeleteResultDirect(matchId,a,b){
+  if(!isAdmin())return;
+  const label=`${a||'Partido'}${b?' vs '+b:''}`;
+  if(!confirm(`¿Eliminar este resultado?\n\n${label}\n\nSe borrará definitivamente de la lista de resultados.`))return;
+  try{
+    await apiRequest({action:'deleteResult',matchId});
+    if(data.results)delete data.results[matchId];
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+    await refreshOnline({silent:true,force:true});
+    renderAll();
+    alert('🗑️ Resultado eliminado.');
+  }catch(e){
+    alert('No se ha podido eliminar el resultado.\n\n'+e.message);
+  }
+}
+
+async function adminReleaseBookingDirect(matchId,reservation){
+  if(!isAdmin())return;
+  const label=`${reservation?.a||'Partido'}${reservation?.b?' vs '+reservation.b:''}`;
+  const when=reservation?`${dayDateES(reservation.date)} · ${reservation.time} · ${reservation.court}`:'';
+  if(!confirm(`¿Liberar esta pista?\n\n${label}\n${when}\n\nLa reserva se eliminará y la pista volverá a quedar libre.`))return;
+  try{
+    await apiRequest({action:'cancelReservation',matchId});
+    if(data.bookings)delete data.bookings[matchId];
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+    await refreshOnline({silent:true,force:true});
+    renderAll();
+    alert('🔓 Pista liberada.');
+  }catch(e){
+    alert('No se ha podido liberar la pista.\n\n'+e.message);
+  }
+}
+
 function renderModernResults(){
   const box=$('#modernResultsContent');if(!box)return;
   renderResultsFilters();
@@ -2849,9 +2909,18 @@ function renderModernResults(){
           ${special?`<div></div><div class="mapp-result-score-special">${mappEsc(special)}</div>`:''}
         </div>
         <div class="mapp-result-confirmed">✓ Resultado confirmado</div>
+        ${isAdmin()?`<div class="mapp-result-admin-row"><button class="mapp-admin-clean" type="button" data-admin-delete-result="${mappEsc(item.matchId)}">🗑️ Eliminar</button></div>`:''}
       </div>
     </div>`;
   }).join('');
+  box.querySelectorAll('[data-admin-delete-result]').forEach(btn=>{
+    btn.onclick=e=>{
+      e.stopPropagation();
+      const mid=btn.dataset.adminDeleteResult;
+      const item=rows.find(x=>x.matchId===mid);
+      adminDeleteResultDirect(mid,item?.a,item?.b);
+    };
+  });
 }
 
 function tickerTextFor(item){
@@ -3006,13 +3075,18 @@ function renderModernCourts(){
        <div class="mapp-court-block">
          <div class="mapp-court-name">${mappEsc(court)}</div>
          ${courts[court].sort((a,b)=>a.time.localeCompare(b.time)).map(s=>{
-           const bk=slotBooking(s.id);
-           return `<div class="mapp-court-slot ${bk?'is-busy':'is-free'}" ${bk?'':`data-mapp-slot="${mappEsc(s.id)}"`}>
+           const entry=Object.entries(data.bookings||{}).find(([,b])=>b.week===state.week&&b.slotId===s.id);
+           const matchId=entry?.[0]||'';
+           const bk=entry?.[1]||null;
+           return `<div class="mapp-court-slot ${bk?'is-busy':'is-free'} ${bk&&isAdmin()?'admin-busy':''}" ${bk?'':`data-mapp-slot="${mappEsc(s.id)}"`}>
              <div>
                <div class="time">${mappEsc(s.time)}</div>
                ${bk?`<div class="booking">${mappEsc(bk.a)} vs ${mappEsc(bk.b)}</div>`:''}
              </div>
-             <div class="${bk?'mapp-busy':'mapp-free'}">${bk?'OCUPADA':'LIBRE'}</div>
+             ${bk&&isAdmin()
+               ? `<button class="mapp-admin-clean" type="button" data-admin-release-booking="${mappEsc(matchId)}">🔓 Liberar</button>`
+               : `<div class="${bk?'mapp-busy':'mapp-free'}">${bk?'OCUPADA':'LIBRE'}</div>`
+             }
              <div class="mapp-chevron">${bk?'':mappIcon('chevron')}</div>
            </div>`
          }).join('')}
@@ -3020,6 +3094,14 @@ function renderModernCourts(){
    </div>`
  }).join('');
  box.querySelectorAll('[data-mapp-slot]').forEach(r=>r.onclick=()=>reserveFromOccupancy(r.dataset.mappSlot));
+ box.querySelectorAll('[data-admin-release-booking]').forEach(btn=>{
+   btn.onclick=e=>{
+     e.stopPropagation();
+     const mid=btn.dataset.adminReleaseBooking;
+     const reservation=data.bookings?.[mid];
+     adminReleaseBookingDirect(mid,reservation);
+   };
+ });
 }
 function renderModernMatch(){
  const box=$('#modernMatchContent');if(!box)return;
