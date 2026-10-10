@@ -157,7 +157,7 @@ select,input,textarea{min-width:0;max-width:100%}
 .calendarBtn:hover{background:rgba(255,201,40,.14)}
 @media(max-width:430px){.datePickerWrap{grid-template-columns:minmax(0,1fr) 44px}}
 
-/* V3.13.8 · CATEGORÍA AUTOMÁTICA · Entrada directa por PIN · nuevo diseño */
+/* V3.13.8.1 · FIX BOTÓN RESERVA · Entrada directa por PIN · nuevo diseño */
 .pinWelcome{
   position:fixed;
   inset:0;
@@ -1042,6 +1042,32 @@ html,body,#modernApp{
 @media(max-width:520px){
   .mapp-court-block{padding:11px 12px 12px}
   .mapp-courts-day-title{padding:13px 14px}
+}
+
+
+/* V3.13.8.1 · corrige iconos gigantes en botones principales */
+.mapp-primary svg{
+  width:22px!important;
+  height:22px!important;
+  min-width:22px!important;
+  min-height:22px!important;
+  max-width:22px!important;
+  max-height:22px!important;
+  flex:0 0 22px!important;
+  display:block!important;
+}
+.mapp-primary .chev svg{
+  width:20px!important;
+  height:20px!important;
+  min-width:20px!important;
+  min-height:20px!important;
+  max-width:20px!important;
+  max-height:20px!important;
+  flex:0 0 20px!important;
+}
+.mapp-primary{
+  min-height:52px!important;
+  padding:13px 16px!important;
 }
 
 </style>
