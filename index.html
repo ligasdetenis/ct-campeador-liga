@@ -11,7 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 
-/* V3.16.0 · evita el flash del diseño antiguo durante el arranque */
+/* V3.16.1 · evita el flash del diseño antiguo durante el arranque */
 html.app-booting,
 html.app-booting body{
   background:#65000d!important;
@@ -206,7 +206,7 @@ select,input,textarea{min-width:0;max-width:100%}
 .calendarBtn:hover{background:rgba(255,201,40,.14)}
 @media(max-width:430px){.datePickerWrap{grid-template-columns:minmax(0,1fr) 44px}}
 
-/* V3.16.0 · ADMIN REDISEÑADO · Entrada directa por PIN · nuevo diseño */
+/* V3.16.1 · FIX ADMIN START · Entrada directa por PIN · nuevo diseño */
 .pinWelcome{
   position:fixed;
   inset:0;
@@ -3319,15 +3319,15 @@ function updateAdminSummaries(){
  }
  const am=$('#adminMeta_accessDevices');
  if(am){
-   const users=(adminUsers||[]).length, devs=(adminPushDevices||[]).length;
+   const users=allIdentities().length, devs=Number(window.__pushDeviceCount||0);
    am.textContent=`${users} usuario${users===1?'':'s'} · ${devs} dispositivo${devs===1?'':'s'}`;
  }
  const subFx=$('#adminMeta_fixtures_sub'); if(subFx)subFx.textContent=`${(fixtures()||[]).length} partido${(fixtures()||[]).length===1?'':'s'}`;
  const subSl=$('#adminMeta_slots_sub'); if(subSl)subSl.textContent=`${(slots()||[]).length} franja${(slots()||[]).length===1?'':'s'}`;
  const subPin=$('#adminMeta_pins_sub'); if(subPin)subPin.textContent=`${Object.keys(data.pins||{}).length} jugadores`;
- const subDev=$('#adminMeta_devices_sub'); if(subDev)subDev.textContent=`${(adminPushDevices||[]).length} dispositivos`;
+ const subDev=$('#adminMeta_devices_sub'); if(subDev){const n=Number(window.__pushDeviceCount||0);subDev.textContent=`${n} dispositivo${n===1?'':'s'}`;}
  const subAdm=$('#adminMeta_admins_sub'); if(subAdm)subAdm.textContent=`${(data.staff?.admins||[]).length} externos`;
- const subRoles=$('#adminMeta_roles_sub'); if(subRoles)subRoles.textContent=`${(adminUsers||[]).length} usuarios`;
+ const subRoles=$('#adminMeta_roles_sub'); if(subRoles){const n=allIdentities().length;subRoles.textContent=`${n} usuario${n===1?'':'s'}`;}
 
 }
 function wireAdminCompact(){
