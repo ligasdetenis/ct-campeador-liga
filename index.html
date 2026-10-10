@@ -175,7 +175,7 @@ body.pinLocked{overflow:hidden}
 @media(max-width:520px){.pinWelcomeCard{padding:21px;border-radius:22px}.pinWelcomeLogo{width:96px;height:96px}.pinWelcomeTitle{font-size:21px}}
 
 
-/* V3.12.3 · Web Push nativo */
+/* V3.12.4 · Web Push nativo */
 .pushBox{margin-top:12px;padding:12px;border:1px solid var(--line);border-radius:15px;background:rgba(255,255,255,.025);display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
 .pushBox.hidden{display:none!important}
 .pushInfo{min-width:220px;flex:1}
@@ -188,6 +188,24 @@ body.pinLocked{overflow:hidden}
 
 .iosPushHelp{margin-top:8px;padding:10px 11px;border-radius:13px;background:rgba(255,201,40,.06);border:1px solid rgba(255,201,40,.18);font-size:11px;color:#f2d7cf;line-height:1.45;width:100%}
 .iosPushHelp.hidden{display:none!important}
+
+.freeSlotRow{cursor:pointer;transition:background .14s ease,transform .08s ease}
+.freeSlotRow:hover{background:rgba(38,214,122,.07)}
+.freeSlotRow:active{background:rgba(38,214,122,.13)}
+.freeSlotRow .slotFree{white-space:nowrap}
+.freeSlotRow .slotFree::after{
+  content:" · RESERVAR";
+  display:inline;
+  font-size:.72em;
+  font-weight:900;
+  letter-spacing:.03em;
+  opacity:.82
+}
+@media(max-width:700px){
+  .freeSlotRow td{position:relative}
+  .freeSlotRow .slotFree::after{content:" · TOCAR"}
+}
+
 </style>
 
 <link rel="manifest" href="manifest.webmanifest">
@@ -810,8 +828,72 @@ function renderSchedule(){
    box.innerHTML='<div class="empty">El club todavía no ha publicado franjas para esta semana.</div>';
    return;
  }
- box.innerHTML=`<table><thead><tr><th>Día</th><th>Hora</th><th>Pista</th><th>Estado</th><th>Partido</th></tr></thead><tbody>${ss.map(s=>{const bk=slotBooking(s.id);return `<tr><td><b>${dayDateES(s.date)}</b></td><td>${s.time}</td><td>${s.court}</td><td class="${bk?'slotBusy':'slotFree'}">${bk?'OCUPADA':'LIBRE'}</td><td>${bk?`${bk.a} vs ${bk.b}`:'—'}</td></tr>`}).join('')}</tbody></table>`;
+ box.innerHTML=`<table><thead><tr><th>Día</th><th>Hora</th><th>Pista</th><th>Estado</th><th>Partido</th></tr></thead><tbody>${ss.map(s=>{const bk=slotBooking(s.id);return `<tr ${bk?'':`class="freeSlotRow" data-free-slot="${s.id}" tabindex="0" role="button" aria-label="Reservar ${dayDateES(s.date)}, ${s.time}, ${s.court}"`}><td><b>${dayDateES(s.date)}</b></td><td>${s.time}</td><td>${s.court}</td><td class="${bk?'slotBusy':'slotFree'}">${bk?'OCUPADA':'LIBRE'}</td><td>${bk?`${bk.a} vs ${bk.b}`:'—'}</td></tr>`}).join('')}</tbody></table>`;
+ box.querySelectorAll('[data-free-slot]').forEach(row=>{
+   const go=()=>reserveFromOccupancy(row.dataset.freeSlot);
+   row.onclick=go;
+   row.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}};
+ });
 }
+
+function eligibleMatchesForFreeSlot(){
+  const unique=new Map();
+  allWeekFixtures().forEach(m=>{
+    if(!m?.id || unique.has(m.id))return;
+    const real=findFixtureById(m.id)||m;
+    if(!isReservableInCurrentWeek(m.id))return;
+    if(!isAdmin()&&!canPlayerReserve(real))return;
+    unique.set(m.id,real);
+  });
+  return [...unique.values()];
+}
+function reserveFromOccupancy(slotId){
+  if(!state.authenticated||!state.player){
+    alert('Entra primero con tu PIN para poder reservar esta franja.');
+    return;
+  }
+  if(!isOpen()){
+    alert('Las reservas están cerradas.');
+    return;
+  }
+  const s=slots().find(x=>x.id===slotId);
+  if(!s)return;
+  if(slotBooking(slotId)){
+    alert('Esta pista acaba de ser ocupada. Pulsa Actualizar para ver el estado más reciente.');
+    return;
+  }
+
+  const matches=eligibleMatchesForFreeSlot();
+  if(!matches.length){
+    alert(isAdmin()
+      ? 'No hay partidos reservables en esta semana.'
+      : 'No tienes ningún partido reservable en esta semana.');
+    return;
+  }
+
+  let mid='';
+  if(matches.length===1){
+    mid=matches[0].id;
+  }else{
+    const lines=matches.map((m,i)=>{
+      const current=bookingFor(m.id);
+      return `${i+1}. ${m.a} vs ${m.b}${current?' · CAMBIAR RESERVA':''}`;
+    });
+    const ans=prompt(
+      `¿Qué partido quieres reservar en esta franja?\n\n${dayDateES(s.date)} · ${s.time} · ${s.court}\n\n${lines.join('\n')}\n\nEscribe el número:`,
+      '1'
+    );
+    if(ans===null)return;
+    const n=Number(ans);
+    if(!Number.isInteger(n)||n<1||n>matches.length){
+      alert('Selecciona un número válido.');
+      return;
+    }
+    mid=matches[n-1].id;
+  }
+  openReserve(mid,slotId);
+}
+
 function reservableSlotsFor(mid){
  if(!isOpen()) return [];
  const current=bookingFor(mid);
@@ -840,7 +922,7 @@ function fillReserveCourts(mid,preferredCourt=''){
  if(preferredCourt){const hit=ss.find(s=>s.court===preferredCourt);if(hit)sel.value=hit.id}
  $('#confirmReserve').disabled=!sel.value;
 }
-function openReserve(mid){
+function openReserve(mid,preferredSlotId=''){
  state.reserveMatchId=mid;const m=findFixtureById(mid);if(!m)return;
  if(!canPlayerReserve(m)&&!isAdmin()){alert("Solo uno de los dos jugadores de este enfrentamiento o un administrador puede reservarlo.");return;}if(!isReservableInCurrentWeek(mid)){alert("Este partido está asignado a otra semana. Gestiona primero su retraso/reprogramación.");return;}
  $('#modalMatch').textContent=`${m.a} vs ${m.b}`;
@@ -852,7 +934,16 @@ function openReserve(mid){
  if(current)$('#reserveCurrent').innerHTML=`<b>Reserva actual:</b> ${dayDateES(current.date)} · ${current.time} · ${current.court}`;
  $('#reserveNoSlots').classList.toggle('hidden',!!ss.length);
  $('#reserveForm').classList.toggle('hidden',!ss.length);
- if(ss.length)fillReserveDays(mid,current?.date||'');
+ if(ss.length){
+   const preferred=preferredSlotId?slots().find(x=>x.id===preferredSlotId):null;
+   fillReserveDays(mid,preferred?.date||current?.date||'');
+   if(preferred){
+     fillReserveTimes(mid,preferred.time);
+     fillReserveCourts(mid,preferred.court);
+     if($('#reserveCourt').querySelector(`option[value="${preferred.id}"]`))$('#reserveCourt').value=preferred.id;
+     $('#confirmReserve').disabled=!$('#reserveCourt').value;
+   }
+ }
  $('#reserveModal').classList.add('show');
 }
 async function book(mid,sid){
@@ -1372,5 +1463,5 @@ bootstrapApp();
 
 window.addEventListener('scroll',()=>{const a=document.getElementById('adminView');if(a)a.classList.toggle('adminScrolled',window.scrollY>(a.offsetTop+280));},{passive:true});
 </script>
-<div style="position:fixed;right:8px;bottom:78px;z-index:45;font-size:9px;opacity:.55;background:#180b0e;border:1px solid rgba(255,255,255,.12);padding:4px 7px;border-radius:999px">V3.12.3 · PIN + PUSH NATIVO iPHONE</div>
+<div style="position:fixed;right:8px;bottom:78px;z-index:45;font-size:9px;opacity:.55;background:#180b0e;border:1px solid rgba(255,255,255,.12);padding:4px 7px;border-radius:999px">V3.12.4 · RESERVA DESDE PISTAS</div>
 </body></html>
