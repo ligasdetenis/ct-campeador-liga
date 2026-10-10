@@ -11,7 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 
-/* V3.13.8.3 · evita el flash del diseño antiguo durante el arranque */
+/* V3.14.0 · evita el flash del diseño antiguo durante el arranque */
 html.app-booting,
 html.app-booting body{
   background:#65000d!important;
@@ -96,7 +96,7 @@ main{max-width:1180px;margin:auto;padding:14px;display:grid;gap:14px}.card{borde
 .customBlock .field label{font-size:9px}
 @media(max-width:760px){.customBlockGrid{grid-template-columns:1fr 1fr}.customBlockGrid .dateField{grid-column:1/-1}.customBlockGrid button{grid-column:1/-1;width:100%}}
 @media(max-width:430px){.customBlockGrid{grid-template-columns:1fr}.customBlockGrid .dateField,.customBlockGrid button{grid-column:auto}}
-.bottomNav{position:fixed;left:50%;transform:translateX(-50%);bottom:10px;z-index:40;width:min(620px,calc(100% - 20px));background:rgba(24,10,13,.94);backdrop-filter:blur(16px);border:1px solid var(--line);border-radius:18px;box-shadow:0 15px 40px rgba(0,0,0,.5);display:grid;grid-template-columns:repeat(4,1fr);padding:6px}.navBtn{border:0;background:transparent;color:var(--muted);padding:8px 4px;border-radius:12px;font-size:10px;font-weight:700}.navBtn span{display:block;font-size:18px;margin-bottom:2px}.navBtn.active{background:rgba(255,201,40,.1);color:var(--gold)}
+.bottomNav{position:fixed;left:50%;transform:translateX(-50%);bottom:10px;z-index:40;width:min(620px,calc(100% - 20px));background:rgba(24,10,13,.94);backdrop-filter:blur(16px);border:1px solid var(--line);border-radius:18px;box-shadow:0 15px 40px rgba(0,0,0,.5);display:grid;grid-template-columns:repeat(5,1fr);padding:6px}.navBtn{border:0;background:transparent;color:var(--muted);padding:8px 4px;border-radius:12px;font-size:10px;font-weight:700}.navBtn span{display:block;font-size:18px;margin-bottom:2px}.navBtn.active{background:rgba(255,201,40,.1);color:var(--gold)}
 
 .resultLine{margin-top:8px;padding:8px 9px;border-radius:11px;border:1px solid var(--line);background:rgba(255,255,255,.035);font-size:11px;line-height:1.35}
 .resultLine b{color:#fff}.resultPending{border-color:rgba(255,157,49,.32);background:rgba(255,157,49,.07)}.resultConfirmed{border-color:rgba(62,215,139,.32);background:rgba(62,215,139,.07)}
@@ -206,7 +206,7 @@ select,input,textarea{min-width:0;max-width:100%}
 .calendarBtn:hover{background:rgba(255,201,40,.14)}
 @media(max-width:430px){.datePickerWrap{grid-template-columns:minmax(0,1fr) 44px}}
 
-/* V3.13.8.3 · II LIGA + LINK PIN · Entrada directa por PIN · nuevo diseño */
+/* V3.14.0 · RESULTADOS + TICKER · Entrada directa por PIN · nuevo diseño */
 .pinWelcome{
   position:fixed;
   inset:0;
@@ -1119,6 +1119,188 @@ html,body,#modernApp{
   padding:13px 16px!important;
 }
 
+
+/* V3.14.0 · Resultados públicos + ticker */
+body.modern-ui{padding-bottom:116px!important}
+
+.mapp-results-toolbar{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:8px;
+  margin:0 0 13px;
+}
+.mapp-results-filter{
+  background:#fff;
+  border:1px solid #e5e6e9;
+  border-radius:12px;
+  padding:8px 9px;
+}
+.mapp-results-filter label{
+  display:block;
+  color:#8b8f97;
+  font-size:9px;
+  font-weight:800;
+  margin-bottom:3px;
+  text-transform:uppercase;
+  letter-spacing:.05em;
+}
+.mapp-results-filter select{
+  width:100%;
+  border:0;
+  outline:0;
+  background:transparent;
+  color:#1e2024;
+  font-size:11px;
+  font-weight:850;
+  padding:0;
+}
+.mapp-result-card{
+  background:#fff;
+  border:1px solid #ececef;
+  border-radius:16px;
+  box-shadow:var(--app-shadow);
+  margin-bottom:10px;
+  overflow:hidden;
+}
+.mapp-result-meta{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  padding:10px 14px;
+  background:#fafafb;
+  border-bottom:1px solid #ededf0;
+  color:#777b83;
+  font-size:10px;
+  font-weight:750;
+}
+.mapp-result-category{
+  color:#8c0015;
+  font-weight:900;
+}
+.mapp-result-body{
+  padding:13px 14px;
+}
+.mapp-result-player{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:12px;
+  align-items:center;
+  padding:4px 0;
+}
+.mapp-result-player + .mapp-result-player{
+  border-top:1px solid #f0f0f2;
+}
+.mapp-result-name{
+  font-size:13px;
+  font-weight:850;
+  color:#1c1d21;
+  overflow-wrap:anywhere;
+}
+.mapp-result-score{
+  font-size:14px;
+  font-weight:950;
+  color:#17171a;
+  white-space:nowrap;
+}
+.mapp-result-special{
+  display:inline-flex;
+  margin-top:9px;
+  padding:5px 8px;
+  border-radius:8px;
+  background:#f3f3f5;
+  color:#656971;
+  font-size:10px;
+  font-weight:850;
+}
+.mapp-result-confirmed{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  margin-top:10px;
+  color:#0d9251;
+  font-size:10px;
+  font-weight:850;
+}
+.mapp-result-empty{
+  background:#fff;
+  border:1px solid #ececef;
+  border-radius:16px;
+  box-shadow:var(--app-shadow);
+  padding:28px 18px;
+  text-align:center;
+  color:#7b7e86;
+  font-size:13px;
+}
+
+.mapp-ticker{
+  position:fixed;
+  z-index:2999;
+  left:50%;
+  transform:translateX(-50%);
+  bottom:74px;
+  width:min(100%,760px);
+  height:34px;
+  display:none;
+  align-items:center;
+  overflow:hidden;
+  background:linear-gradient(90deg,#520009,#7f0012 55%,#5b000a);
+  border-top:1px solid rgba(255,255,255,.08);
+  box-shadow:0 -5px 15px rgba(0,0,0,.08);
+  cursor:pointer;
+}
+.mapp-ticker.show{display:flex}
+.mapp-ticker-label{
+  position:relative;
+  z-index:2;
+  height:100%;
+  flex:0 0 auto;
+  display:flex;
+  align-items:center;
+  padding:0 10px;
+  background:#450007;
+  color:#f1c84a;
+  font-size:10px;
+  font-weight:950;
+  white-space:nowrap;
+  border-right:1px solid rgba(255,255,255,.12);
+}
+.mapp-ticker-window{
+  min-width:0;
+  overflow:hidden;
+  flex:1;
+}
+.mapp-ticker-track{
+  display:flex;
+  width:max-content;
+  align-items:center;
+  white-space:nowrap;
+  animation:mappTickerMove 28s linear infinite;
+  will-change:transform;
+}
+.mapp-ticker:hover .mapp-ticker-track{animation-play-state:paused}
+.mapp-ticker-item{
+  color:#fff;
+  font-size:11px;
+  font-weight:750;
+  padding:0 16px;
+}
+.mapp-ticker-item b{color:#80e4ad}
+.mapp-ticker-item .cat{color:#f0c64a;font-weight:900}
+.mapp-ticker-sep{color:rgba(255,255,255,.4)}
+@keyframes mappTickerMove{
+  from{transform:translateX(0)}
+  to{transform:translateX(-50%)}
+}
+@media(prefers-reduced-motion:reduce){
+  .mapp-ticker-track{animation:none}
+}
+@media(max-width:520px){
+  .mapp-results-toolbar{grid-template-columns:1fr 1fr}
+  .mapp-results-toolbar .week{grid-column:1/-1}
+  .mapp-ticker-label{padding:0 8px;font-size:9px}
+  .mapp-ticker-item{font-size:10px;padding:0 12px}
+}
+
 </style>
 
 <link rel="manifest" href="manifest.webmanifest">
@@ -1388,6 +1570,16 @@ Pablo Ruiz"></textarea>
       <div class="mapp-screen-heading">Mi partido</div>
       <div id="modernMatchContent"></div>
     </section>
+    <section class="mapp-screen" id="modernResults">
+      <div class="mapp-screen-heading">Resultados</div>
+      <div class="mapp-subheading">Solo se muestran resultados confirmados.</div>
+      <div class="mapp-results-toolbar">
+        <div class="mapp-results-filter"><label>Categoría</label><select id="resultsCategory"></select></div>
+        <div class="mapp-results-filter"><label>Género</label><select id="resultsGender"><option>Masculino</option><option>Femenino</option></select></div>
+        <div class="mapp-results-filter week"><label>Semana</label><select id="resultsWeek"></select></div>
+      </div>
+      <div id="modernResultsContent"></div>
+    </section>
     <section class="mapp-screen" id="modernProfile">
       <div class="mapp-screen-heading">Mi perfil</div>
       <div class="mapp-subheading">Gestiona tu cuenta y preferencias</div>
@@ -1395,10 +1587,16 @@ Pablo Ruiz"></textarea>
     </section>
   </div>
 
+
+  <div class="mapp-ticker" id="modernTicker" role="button" tabindex="0" aria-label="Ver últimos resultados">
+    <div class="mapp-ticker-label">🏆 Últimos resultados</div>
+    <div class="mapp-ticker-window"><div class="mapp-ticker-track" id="modernTickerTrack"></div></div>
+  </div>
   <nav class="mapp-nav">
     <button class="mapp-nav-btn active" data-modern-go="home" type="button"><span data-icon="home"></span><span>Inicio</span></button>
     <button class="mapp-nav-btn" data-modern-go="courts" type="button"><span data-icon="court"></span><span>Pistas</span></button>
     <button class="mapp-nav-btn" data-modern-go="match" type="button"><span data-icon="trophy"></span><span>Mi partido</span></button>
+    <button class="mapp-nav-btn" data-modern-go="results" type="button"><span data-icon="chart"></span><span>Resultados</span></button>
     <button class="mapp-nav-btn" data-modern-go="profile" type="button"><span data-icon="user"></span><span>Mi perfil</span></button>
   </nav>
 </div>
@@ -2434,14 +2632,133 @@ function mappOpponent(m){if(!m)return'';return m.a===state.player?m.b:m.a}
 function mappFreeSlots(){return slots().filter(s=>!slotBooking(s.id))}
 function mappWeekShort(){const w=weeks.find(x=>x.id===state.week);const n=String(w?.id||'').replace(/\D/g,'');return n?`Semana ${n}`:(w?.label||state.week)}
 function mappCurrentRound(){return fixtureRound()||'Jornada'}
+
+const resultsViewState={category:null,gender:null,week:'all'};
+
+function confirmedResultsAll(){
+  const out=[];
+  for(const [matchId,r] of Object.entries(data.results||{})){
+    if(!r || r.status!=='confirmed') continue;
+    const rec=fixtureRecord(matchId);
+    out.push({
+      matchId,
+      result:r,
+      a:r.a || rec?.m?.a || '',
+      b:r.b || rec?.m?.b || '',
+      category:r.category || rec?.category || '',
+      gender:r.gender || rec?.gender || '',
+      week:r.week || rec?.week || '',
+      when:r.confirmedAt || r.updatedAt || r.submittedAt || ''
+    });
+  }
+  out.sort((x,y)=>String(y.when).localeCompare(String(x.when)));
+  return out;
+}
+
+function resultScoresForPlayers(item){
+  const r=item.result||{};
+  if(r.type==='normal' || r.type==='retirement'){
+    const a=(r.sets||[]).map(s=>s.a).join('  ');
+    const b=(r.sets||[]).map(s=>s.b).join('  ');
+    return {a:a||'—',b:b||'—'};
+  }
+  if(r.type==='wo'){
+    return {
+      a:r.winner===item.a?'WO':'—',
+      b:r.winner===item.b?'WO':'—'
+    };
+  }
+  if(r.type==='not_played') return {a:'—',b:'—'};
+  return {a:'—',b:'—'};
+}
+
+function resultSpecialLabel(r){
+  if(r.type==='retirement') return 'Retirada';
+  if(r.type==='wo') return 'WO / No presentado';
+  if(r.type==='not_played') return 'Partido no disputado';
+  return '';
+}
+
+function resultRoundFor(item){
+  const key=`${item.week}|${item.category}|${item.gender}`;
+  return data.fixtureRounds?.[key] || weeks.find(w=>w.id===item.week)?.label || item.week || '';
+}
+
+function renderResultsFilters(){
+  const cs=$('#resultsCategory'),gs=$('#resultsGender'),ws=$('#resultsWeek');
+  if(!cs||!gs||!ws)return;
+  if(!resultsViewState.category) resultsViewState.category=state.category;
+  if(!resultsViewState.gender) resultsViewState.gender=state.gender;
+  cs.innerHTML=CATEGORIES.map(c=>`<option ${c===resultsViewState.category?'selected':''}>${mappEsc(c)}</option>`).join('');
+  gs.value=resultsViewState.gender;
+  ws.innerHTML=`<option value="all">Todas las semanas</option>`+
+    weeks.map(w=>`<option value="${mappEsc(w.id)}" ${resultsViewState.week===w.id?'selected':''}>${mappEsc(w.label)}</option>`).join('');
+}
+
+function renderModernResults(){
+  const box=$('#modernResultsContent');if(!box)return;
+  renderResultsFilters();
+  const rows=confirmedResultsAll().filter(x=>
+    x.category===resultsViewState.category &&
+    x.gender===resultsViewState.gender &&
+    (resultsViewState.week==='all'||x.week===resultsViewState.week)
+  );
+  if(!rows.length){
+    box.innerHTML='<div class="mapp-result-empty">Todavía no hay resultados confirmados para esta selección.</div>';
+    return;
+  }
+  box.innerHTML=rows.map(item=>{
+    const sc=resultScoresForPlayers(item);
+    const special=resultSpecialLabel(item.result);
+    return `<div class="mapp-result-card">
+      <div class="mapp-result-meta">
+        <span class="mapp-result-category">${mappEsc(item.category)} · ${mappEsc(item.gender)}</span>
+        <span>${mappEsc(resultRoundFor(item))}</span>
+      </div>
+      <div class="mapp-result-body">
+        <div class="mapp-result-player"><div class="mapp-result-name">${mappEsc(item.a)}</div><div class="mapp-result-score">${mappEsc(sc.a)}</div></div>
+        <div class="mapp-result-player"><div class="mapp-result-name">${mappEsc(item.b)}</div><div class="mapp-result-score">${mappEsc(sc.b)}</div></div>
+        ${special?`<div class="mapp-result-special">${mappEsc(special)}</div>`:''}
+        <div class="mapp-result-confirmed">✓ Resultado confirmado</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function tickerTextFor(item){
+  const r=item.result;
+  if(r.type==='normal' || r.type==='retirement'){
+    const score=(r.sets||[]).map(s=>`${s.a}-${s.b}`).join(' · ');
+    return `${item.a} ${score} ${item.b}${r.type==='retirement'?' · RET.':''}`;
+  }
+  if(r.type==='wo') return `${item.a} vs ${item.b} · WO ${r.winner}`;
+  if(r.type==='not_played') return `${item.a} vs ${item.b} · No disputado`;
+  return `${item.a} vs ${item.b}`;
+}
+
+function renderResultsTicker(){
+  const ticker=$('#modernTicker'),track=$('#modernTickerTrack');
+  if(!ticker||!track)return;
+  const latest=confirmedResultsAll().slice(0,8);
+  if(!latest.length){
+    ticker.classList.remove('show');
+    track.innerHTML='';
+    return;
+  }
+  const items=latest.map(item=>`<span class="mapp-ticker-item"><span class="cat">${mappEsc(item.category)} ${item.gender==='Masculino'?'M.':'F.'}</span> · <b>${mappEsc(tickerTextFor(item))}</b></span><span class="mapp-ticker-sep">•</span>`).join('');
+  track.innerHTML=items+items;
+  ticker.classList.add('show');
+}
+
 function mappShow(view){
- const map={home:'modernHome',courts:'modernCourts',match:'modernMatch',profile:'modernProfile'};
+ const map={home:'modernHome',courts:'modernCourts',match:'modernMatch',results:'modernResults',profile:'modernProfile'};
  Object.values(map).forEach(id=>$('#'+id)?.classList.remove('active'));
  $('#'+map[view])?.classList.add('active');
  document.querySelectorAll('[data-modern-go]').forEach(b=>b.classList.toggle('active',b.dataset.modernGo===view));
  if(view==='profile')renderModernProfile();
  if(view==='courts')renderModernCourts();
  if(view==='match')renderModernMatch();
+ if(view==='results')renderModernResults();
  if(view==='home')renderModernHome();
  window.scrollTo({top:0,behavior:'smooth'});
 }
@@ -2708,6 +3025,8 @@ function renderModernUI(){
  renderModernHome();
  renderModernCourts();
  renderModernMatch();
+ renderModernResults();
+ renderResultsTicker();
  renderModernProfile();
 }
 
@@ -2719,6 +3038,12 @@ $('#modernTrophyIcon').innerHTML=mappIcon('trophy');
 $('#modernCalendarIcon').innerHTML=mappIcon('calendar');
 $('#modernChartIcon').innerHTML=mappIcon('chart');
 document.querySelectorAll('[data-modern-go]').forEach(b=>b.onclick=()=>mappShow(b.dataset.modernGo));
+$('#resultsCategory').onchange=e=>{resultsViewState.category=e.target.value;renderModernResults()};
+$('#resultsGender').onchange=e=>{resultsViewState.gender=e.target.value;renderModernResults()};
+$('#resultsWeek').onchange=e=>{resultsViewState.week=e.target.value;renderModernResults()};
+$('#modernTicker').onclick=()=>mappShow('results');
+$('#modernTicker').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();mappShow('results')}};
+
 $('#modernContextBtn').onclick=mappOpenSelector;
 $('#modernSelectorClose').onclick=mappApplySelector;
 $('#modernSelectorSheet').onclick=e=>{if(e.target===$('#modernSelectorSheet'))$('#modernSelectorSheet').classList.remove('show')};
