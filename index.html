@@ -11,7 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 
-/* V3.15.0 · evita el flash del diseño antiguo durante el arranque */
+/* V3.15.1 · evita el flash del diseño antiguo durante el arranque */
 html.app-booting,
 html.app-booting body{
   background:#65000d!important;
@@ -206,7 +206,7 @@ select,input,textarea{min-width:0;max-width:100%}
 .calendarBtn:hover{background:rgba(255,201,40,.14)}
 @media(max-width:430px){.datePickerWrap{grid-template-columns:minmax(0,1fr) 44px}}
 
-/* V3.15.0 · ADMIN PARTIDOS · Entrada directa por PIN · nuevo diseño */
+/* V3.15.1 · RESULTADOS PRO · Entrada directa por PIN · nuevo diseño */
 .pinWelcome{
   position:fixed;
   inset:0;
@@ -1520,6 +1520,126 @@ body.modern-ui{padding-bottom:116px!important}
   .adminMatchActions2{max-width:none;justify-content:flex-start}
 }
 
+
+/* V3.15.1 · Resultados más limpios + ticker profesional */
+.mapp-result-scoreboard{
+  display:block!important;
+}
+.mapp-result-score-head,
+.mapp-result-line{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) 32px 32px 32px!important;
+  gap:6px!important;
+  align-items:center!important;
+}
+.mapp-result-score-head{
+  padding:0 0 6px!important;
+  color:#92969e!important;
+  font-size:8px!important;
+  font-weight:900!important;
+  text-align:center!important;
+}
+.mapp-result-score-head span:first-child{
+  text-align:left!important;
+}
+.mapp-result-line{
+  min-height:42px!important;
+  border-top:1px solid #eceef1!important;
+}
+.mapp-result-line .mapp-result-name{
+  border:0!important;
+  padding:8px 0!important;
+  font-size:13px!important;
+  font-weight:850!important;
+  line-height:1.25!important;
+}
+.mapp-result-line .mapp-result-score-cell{
+  width:32px!important;
+  height:30px!important;
+  margin:0!important;
+  border-radius:8px!important;
+  background:#f3f4f6!important;
+  font-size:13px!important;
+  font-weight:950!important;
+  text-align:center!important;
+}
+.mapp-result-line .mapp-result-score-cell.empty{
+  background:transparent!important;
+  color:#c2c5cb!important;
+}
+.mapp-result-score-special{
+  display:inline-flex!important;
+  margin-top:8px!important;
+  padding:5px 8px!important;
+  border-radius:8px!important;
+  background:#f3f4f6!important;
+  color:#656a72!important;
+  font-size:10px!important;
+  font-weight:850!important;
+}
+
+/* Ticker sobrio, estilo marcador deportivo */
+.mapp-ticker{
+  height:32px!important;
+  background:#191b20!important;
+  border-top:1px solid #2b2e34!important;
+  box-shadow:0 -4px 12px rgba(0,0,0,.10)!important;
+}
+.mapp-ticker-label{
+  background:#191b20!important;
+  color:#f3f4f6!important;
+  border-right:1px solid #34373d!important;
+  padding:0 12px!important;
+  font-size:9px!important;
+  font-weight:900!important;
+  letter-spacing:.06em!important;
+  text-transform:uppercase!important;
+}
+.mapp-ticker-label::before{
+  content:"";
+  width:6px;
+  height:6px;
+  border-radius:50%;
+  background:#9b1830;
+  margin-right:7px;
+  flex:0 0 auto;
+}
+.mapp-ticker-item{
+  color:#d9dce2!important;
+  font-size:10px!important;
+  font-weight:650!important;
+  padding:0 18px!important;
+}
+.mapp-ticker-item b{
+  color:#ffffff!important;
+  font-weight:850!important;
+}
+.mapp-ticker-item .cat{
+  color:#aeb3bc!important;
+  font-weight:800!important;
+  text-transform:uppercase!important;
+  font-size:9px!important;
+  letter-spacing:.03em!important;
+}
+.mapp-ticker-sep{
+  color:#646871!important;
+  font-size:9px!important;
+}
+@media(max-width:420px){
+  .mapp-result-score-head,
+  .mapp-result-line{
+    grid-template-columns:minmax(0,1fr) 29px 29px 29px!important;
+    gap:5px!important;
+  }
+  .mapp-result-line .mapp-result-score-cell{
+    width:29px!important;
+    height:29px!important;
+    font-size:12px!important;
+  }
+  .mapp-ticker-label{padding:0 9px!important;font-size:8px!important}
+  .mapp-ticker-item{padding:0 14px!important;font-size:9px!important}
+}
+
 </style>
 
 <link rel="manifest" href="manifest.webmanifest">
@@ -1825,7 +1945,7 @@ Pablo Ruiz"></textarea>
 
 
   <div class="mapp-ticker" id="modernTicker" role="button" tabindex="0" aria-label="Ver últimos resultados">
-    <div class="mapp-ticker-label">🏆 Últimos resultados</div>
+    <div class="mapp-ticker-label">Últimos resultados</div>
     <div class="mapp-ticker-window"><div class="mapp-ticker-track" id="modernTickerTrack"></div></div>
   </div>
   <nav class="mapp-nav">
@@ -3174,8 +3294,10 @@ function renderResultsFilters(){
   if(!cs||!gs||!ws)return;
   if(!resultsViewState.category) resultsViewState.category=state.category;
   if(!resultsViewState.gender) resultsViewState.gender=state.gender;
-  cs.innerHTML=CATEGORIES.map(c=>`<option ${c===resultsViewState.category?'selected':''}>${mappEsc(c)}</option>`).join('');
-  gs.value=resultsViewState.gender;
+  cs.innerHTML=`<option value="all">Todas</option>`+CATEGORIES.map(c=>`<option value="${mappEsc(c)}">${mappEsc(c)}</option>`).join('');
+  gs.innerHTML=`<option value="all">Todos</option><option value="Masculino">Masculino</option><option value="Femenino">Femenino</option>`;
+  cs.value=resultsViewState.category||'all';
+  gs.value=resultsViewState.gender||'all';
   ws.innerHTML=`<option value="all">Todas las semanas</option>`+
     weeks.map(w=>`<option value="${mappEsc(w.id)}" ${resultsViewState.week===w.id?'selected':''}>${mappEsc(w.label)}</option>`).join('');
 }
@@ -3218,8 +3340,8 @@ function renderModernResults(){
   const box=$('#modernResultsContent');if(!box)return;
   renderResultsFilters();
   const rows=confirmedResultsAll().filter(x=>
-    x.category===resultsViewState.category &&
-    x.gender===resultsViewState.gender &&
+    (resultsViewState.category==='all'||x.category===resultsViewState.category) &&
+    (resultsViewState.gender==='all'||x.gender===resultsViewState.gender) &&
     (resultsViewState.week==='all'||x.week===resultsViewState.week)
   );
   if(!rows.length){
@@ -3236,11 +3358,10 @@ function renderModernResults(){
       </div>
       <div class="mapp-result-body">
         <div class="mapp-result-scoreboard">
-          <div></div>
-          <div class="mapp-result-score-head"><span>S1</span><span>S2</span><span>S3</span></div>
-          <div class="mapp-result-player"><div class="mapp-result-name">${mappEsc(item.a)}</div><div class="mapp-result-score-cells">${renderScoreCells(resultScoreCells(item).a)}</div></div>
-          <div class="mapp-result-player"><div class="mapp-result-name">${mappEsc(item.b)}</div><div class="mapp-result-score-cells">${renderScoreCells(resultScoreCells(item).b)}</div></div>
-          ${special?`<div></div><div class="mapp-result-score-special">${mappEsc(special)}</div>`:''}
+          <div class="mapp-result-score-head"><span>Jugador</span><span>S1</span><span>S2</span><span>S3</span></div>
+          <div class="mapp-result-line"><div class="mapp-result-name">${mappEsc(item.a)}</div>${renderScoreCells(resultScoreCells(item).a)}</div>
+          <div class="mapp-result-line"><div class="mapp-result-name">${mappEsc(item.b)}</div>${renderScoreCells(resultScoreCells(item).b)}</div>
+          ${special?`<div class="mapp-result-score-special">${mappEsc(special)}</div>`:''}
         </div>
         <div class="mapp-result-confirmed">✓ Resultado confirmado</div>
         ${isAdmin()?`<div class="mapp-result-admin-row"><button class="mapp-admin-clean" type="button" data-admin-delete-result="${mappEsc(item.matchId)}">🗑️ Eliminar</button></div>`:''}
