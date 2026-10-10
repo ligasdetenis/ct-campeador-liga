@@ -11,7 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 
-/* V3.16.2 · evita el flash del diseño antiguo durante el arranque */
+/* V3.16.4 · evita el flash del diseño antiguo durante el arranque */
 html.app-booting,
 html.app-booting body{
   background:#65000d!important;
@@ -206,7 +206,7 @@ select,input,textarea{min-width:0;max-width:100%}
 .calendarBtn:hover{background:rgba(255,201,40,.14)}
 @media(max-width:430px){.datePickerWrap{grid-template-columns:minmax(0,1fr) 44px}}
 
-/* V3.16.2 · BOTÓN DISPOSITIVOS · Entrada directa por PIN · nuevo diseño */
+/* V3.16.4 · ARRANQUE SAFARI · Entrada directa por PIN · nuevo diseño */
 .pinWelcome{
   position:fixed;
   inset:0;
@@ -1783,6 +1783,59 @@ body.modern-admin #adminView>.head{display:none!important}
   visibility:visible!important;
 }
 
+
+/* V3.16.3 · pistas ocupadas visualmente desactivadas */
+.mapp-court-slot.is-busy{
+  background:#f1f2f4!important;
+  border-color:#e3e5e8!important;
+  color:#858991!important;
+  cursor:default!important;
+  opacity:.72!important;
+}
+.mapp-court-slot.is-busy .time{
+  color:#666b73!important;
+}
+.mapp-court-slot.is-busy .booking{
+  color:#8b8f96!important;
+}
+.mapp-court-slot.is-busy .mapp-busy{
+  background:#e4e6e9!important;
+  color:#777c84!important;
+  border-color:#d8dbe0!important;
+}
+.mapp-court-slot.is-busy .mapp-chevron{
+  display:none!important;
+}
+.mapp-court-slot.is-busy:hover{
+  transform:none!important;
+  box-shadow:none!important;
+}
+.mapp-court-slot.is-busy .mapp-admin-clean{
+  opacity:1!important;
+  background:#fff!important;
+  color:#5f646c!important;
+  border-color:#d6d9de!important;
+}
+
+
+.adminMatchActions2 button:disabled{
+  opacity:.42!important;
+  cursor:not-allowed!important;
+  background:#f4f5f6!important;
+  color:#8b8f95!important;
+  border-color:#e3e5e8!important;
+}
+
+
+/* V3.16.4 · el splash nunca puede bloquear la app indefinidamente */
+html.app-booting body::before,
+html.app-booting body::after{
+  animation:bootFailsafe 0s linear 8s forwards;
+}
+@keyframes bootFailsafe{
+  to{visibility:hidden;opacity:0;pointer-events:none}
+}
+
 </style>
 
 <link rel="manifest" href="manifest.webmanifest">
@@ -2202,12 +2255,22 @@ function setWeekRangeLocal(start,end){
 
 function fresh(){return {playerLists:{},fixtures:{},fixtureRounds:{},slots:{},drafts:{},published:{},bookings:{},results:{},profiles:{},pins:{},roles:{},staff:{},weekRanges:{},postponed:{}}}
 function normalizeData(x){const d=x&&typeof x==='object'?x:{};const wr={...(d.weekRanges||{})};if(d.weeks&&typeof d.weeks==='object'){for(const [id,w] of Object.entries(d.weeks)){if(w&&w.start&&w.end&&!wr[id])wr[id]={start:w.start,end:w.end}}}return {playerLists:d.playerLists||{},fixtures:d.fixtures||{},fixtureRounds:d.fixtureRounds||{},slots:d.slots||{},drafts:d.drafts||{},published:d.published||{},bookings:d.reservations||d.bookings||{},results:d.results||{},profiles:d.profiles||{},pins:d.pins||{},roles:{...(d.roles||{}),...(d.adminRoles||{})},staff:d.staff||{},weekRanges:wr,postponed:d.postponed||{}}}
-let data=normalizeData(JSON.parse(localStorage.getItem(STORAGE_KEY)||"null")||fresh());
+function safeLoadData(){
+  try{
+    const raw=localStorage.getItem(STORAGE_KEY);
+    return normalizeData(raw?JSON.parse(raw):fresh());
+  }catch(e){
+    console.warn('No se pudo leer la caché local:',e);
+    return fresh();
+  }
+}
+let data=safeLoadData();
 applyWeekRanges();
 if(!data.staff["Adrián Prádanos"])data.staff["Adrián Prádanos"]={name:"Adrián Prádanos"};
 // Administrador inicial: debe estar visible en TODAS las categorías incluso antes del primer login.
 data.roles["Adrián Prádanos"]="admin";
-let apiToken=localStorage.getItem(TOKEN_KEY)||"";
+let apiToken="";
+try{apiToken=localStorage.getItem(TOKEN_KEY)||""}catch(e){console.warn('Token local no disponible:',e)}
 let state={category:"Infantil",gender:"Masculino",week:"W1",reserveMatchId:null,resultMatchId:null,delayMatchId:null,player:"",authenticated:false,showPins:false};
 let fixtureEditorDirty=false;
 let playerEditorDirty=false;
@@ -2724,6 +2787,9 @@ function eligibleMatchesForFreeSlot(){
   allWeekFixtures().forEach(m=>{
     if(!m?.id || unique.has(m.id))return;
     const real=findFixtureById(m.id)||m;
+    const r=resultFor(m.id);
+    // Un partido ya confirmado/finalizado nunca debe volver a ofrecerse para reservar.
+    if(r?.status==='confirmed')return;
     if(!isReservableInCurrentWeek(m.id))return;
     if(!isAdmin()&&!canPlayerReserve(real))return;
     unique.set(m.id,real);
@@ -2807,6 +2873,11 @@ function fillReserveCourts(mid,preferredCourt=''){
 }
 function openReserve(mid,preferredSlotId=''){
  state.reserveMatchId=mid;const m=findFixtureById(mid);if(!m)return;
+ const finished=resultFor(mid);
+ if(finished?.status==='confirmed'){
+   alert('Este partido ya está finalizado y tiene un resultado confirmado. No se puede reservar ni cambiar de pista.');
+   return;
+ }
  if(!canPlayerReserve(m)&&!isAdmin()){alert("Solo uno de los dos jugadores de este enfrentamiento o un administrador puede reservarlo.");return;}if(!isReservableInCurrentWeek(mid)){alert("Este partido está asignado a otra semana. Gestiona primero su retraso/reprogramación.");return;}
  $('#modalMatch').textContent=`${m.a} vs ${m.b}`;
  $('#modalCat').textContent=`${state.category} · ${state.gender} · ${weeks.find(w=>w.id===state.week).label}`;
@@ -2832,6 +2903,12 @@ function openReserve(mid,preferredSlotId=''){
 async function book(mid,sid){
  if(reservationPending)return;
  const m=findFixtureById(mid),s=slots().find(x=>x.id===sid);if(!m||!s)return;
+ if(resultFor(mid)?.status==='confirmed'){
+   alert('Este partido ya está finalizado y no admite nuevas reservas.');
+   $('#reserveModal').classList.remove('show');
+   renderAll();
+   return;
+ }
  if(!canPlayerReserve(m)&&!isAdmin()){alert("No puedes reservar un partido en el que no participas.");return;}if(!isReservableInCurrentWeek(mid)){alert("Este partido está asignado a otra semana.");return;}
  const btn=$('#confirmReserve');
  const oldText=btn.textContent;
@@ -2951,7 +3028,7 @@ function renderAdminMatches(){
             </div>
             <div class="adminMatchActions2">
               <button class="primary" type="button" data-admin-match-result="${mappEsc(m.id)}">Resultado</button>
-              <button type="button" data-admin-match-court="${mappEsc(m.id)}">${bk?'Cambiar pista':'Asignar pista'}</button>
+              <button type="button" data-admin-match-court="${mappEsc(m.id)}" ${r?.status==='confirmed'?'disabled title="Partido finalizado"':''}>${bk?'Cambiar pista':'Asignar pista'}</button>
               ${bk?`<button type="button" data-admin-match-free="${mappEsc(m.id)}">Liberar</button>`:''}
               <button type="button" data-admin-match-delay="${mappEsc(m.id)}">Reprogramar</button>
               <button class="danger" type="button" data-admin-match-delete="${mappEsc(m.id)}">Eliminar</button>
@@ -4144,30 +4221,68 @@ $('#saveDelayBtn').onclick=saveDelay;$('#restoreDelayBtn').onclick=restoreDelay;
 $('#resultType').onchange=syncResultType;$('#saveResultBtn').onclick=saveResult;$('#confirmResultBtn').onclick=()=>confirmResult(state.resultMatchId);$('#deleteResultBtn').onclick=()=>deleteResult(state.resultMatchId);$('#closeResultModal').onclick=()=>$('#resultModal').classList.remove('show');$('#resultModal').onclick=e=>{if(e.target===$('#resultModal'))$('#resultModal').classList.remove('show')};
 $$('.navBtn[data-go]').forEach(b=>b.onclick=()=>{const go=b.dataset.go;$$('.navBtn').forEach(x=>x.classList.remove('active'));b.classList.add('active');if(go==='home')$('#homeView').scrollIntoView({behavior:'smooth',block:'start'});if(go==='courts')$('#courtsView').scrollIntoView({behavior:'smooth',block:'start'});if(go==='admin'){if(!isAdmin()){alert('Acceso restringido a administradores.');return;}$('#adminView').classList.remove('hidden');$('#adminView').scrollIntoView({behavior:'smooth',block:'start'})}});
 $('#refreshBtn').onclick=()=>refreshOnline();
+function releaseBootScreen(){
+  document.documentElement.classList.remove('app-booting');
+  document.documentElement.classList.add('app-ready');
+}
+function promiseTimeout(promise,ms,label){
+  let timer;
+  const timeout=new Promise((_,reject)=>{
+    timer=setTimeout(()=>reject(new Error(label||'Tiempo de espera agotado')),ms);
+  });
+  return Promise.race([promise,timeout]).finally(()=>clearTimeout(timer));
+}
 async function bootstrapApp(){
+  // La interfaz debe aparecer aunque Safari tarde o bloquee una petición de red.
   try{
     renderAll();
-    setOnline(false,'☁️ Conectando…');
-    const restored=await restoreSession();
-    await refreshOnline({silent:true});
+  }catch(e){
+    console.error('Error en render inicial:',e);
+  }
+
+  releaseBootScreen();
+  setOnline(false,'☁️ Conectando…');
+
+  // Sin sesión guardada no esperamos a Cloudflare para mostrar el acceso.
+  if(!apiToken){
+    showPinWelcome('PIN personal de 4 cifras',false);
+  }
+
+  try{
+    let restored=false;
+    if(apiToken){
+      try{
+        restored=await promiseTimeout(restoreSession(),7000,'Cloudflare no respondió a tiempo');
+      }catch(e){
+        console.warn('Restauración de sesión:',e);
+        restored=false;
+      }
+    }
+
+    // La actualización online tampoco bloquea el arranque.
+    try{
+      await promiseTimeout(refreshOnline({silent:true}),7000,'Actualización online no respondió a tiempo');
+    }catch(e){
+      console.warn('Actualización inicial:',e);
+      setOnline(false,'⚠️ Sin conexión');
+    }
+
     if(restored){
       routePlayerToOwnCategory(state.player);
       hidePinWelcome();
-    }else{
+    }else if(!state.authenticated){
       showPinWelcome('PIN personal de 4 cifras',false);
     }
+
     renderAll();
-    document.documentElement.classList.remove('app-booting');
-    document.documentElement.classList.add('app-ready');
-    setInterval(()=>refreshOnline({silent:true}),10000);
-    window.addEventListener('beforeunload',e=>{if(fixtureEditorDirty){e.preventDefault();e.returnValue='';}});
   }catch(e){
-    document.documentElement.classList.remove('app-booting');
-    document.documentElement.classList.add('app-ready');
-    console.error('Error de arranque V3.12:',e);
-    setOnline(false,'⚠️ Error V3.11.3');
-    alert('Error de arranque del index V3.12.\n\n'+(e?.message||String(e)));
+    console.error('Error de arranque V3.16.4:',e);
+    setOnline(false,'⚠️ Sin conexión');
+    if(!state.authenticated)showPinWelcome('PIN personal de 4 cifras',false);
   }
+
+  setInterval(()=>refreshOnline({silent:true}),10000);
+  window.addEventListener('beforeunload',e=>{if(fixtureEditorDirty){e.preventDefault();e.returnValue='';}});
 }
 bootstrapApp();
 
