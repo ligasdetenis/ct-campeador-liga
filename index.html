@@ -764,6 +764,169 @@ body.modern-admin .mapp-admin-back{display:none!important}
 .mapp-logo{max-width:none!important}
 
 
+
+/* V3.13.6 · modales alineados con la nueva estética */
+body.modern-ui .modal{
+  align-items:flex-end;
+  justify-content:center;
+  padding:14px 10px calc(14px + env(safe-area-inset-bottom));
+  background:rgba(19,8,11,.42);
+  backdrop-filter:blur(7px);
+  -webkit-backdrop-filter:blur(7px);
+  z-index:5200;
+}
+body.modern-ui .modal .sheet{
+  position:relative;
+  width:min(100%,720px);
+  max-height:min(88vh,860px);
+  background:#fff;
+  border:1px solid #ececef;
+  border-radius:24px 24px 18px 18px;
+  box-shadow:0 20px 60px rgba(34,15,18,.18);
+  overflow:hidden;
+}
+body.modern-ui .modal .sheet::before{
+  content:"";
+  position:absolute;
+  left:0;right:0;top:0;
+  height:5px;
+  background:linear-gradient(90deg,#d60020,#f1475f);
+}
+body.modern-ui .modal .sheetHead{
+  padding:20px 18px 14px;
+  border-bottom:1px solid #ececef;
+  background:linear-gradient(180deg,#fff 0%,#fff7f8 100%);
+  align-items:flex-start;
+}
+body.modern-ui .modal .sheetHead h3{
+  margin:2px 0 0;
+  color:var(--app-text);
+  font-size:22px;
+  font-weight:900;
+  line-height:1.15;
+  letter-spacing:-.03em;
+}
+body.modern-ui .modal .tiny{
+  color:#8b8f97;
+  font-size:11px;
+  font-weight:800;
+  text-transform:uppercase;
+  letter-spacing:.06em;
+}
+body.modern-ui .modal .close{
+  flex:0 0 auto;
+  width:44px;
+  height:44px;
+  border-radius:14px;
+  border:1px solid #e6e7eb;
+  background:#fff;
+  color:#686d76;
+  font-size:22px;
+  line-height:1;
+  box-shadow:0 4px 14px rgba(0,0,0,.06);
+}
+body.modern-ui .modal .sheetBody{
+  padding:16px 18px 18px;
+  gap:14px;
+  background:#fff;
+  color:var(--app-text);
+}
+body.modern-ui .modal .reserveCurrent{
+  padding:12px 14px;
+  border-radius:14px;
+  border:1px solid #bfe7cf;
+  background:#edf9f2;
+  color:#16643d;
+  font-size:13px;
+  line-height:1.35;
+}
+body.modern-ui .modal .noSlots{
+  padding:14px;
+  border:1px dashed #d9dde3;
+  border-radius:14px;
+  color:#727783;
+  background:#fafafb;
+  font-size:13px;
+}
+body.modern-ui .modal .reserveForm,
+body.modern-ui .modal .resultActions,
+body.modern-ui .modal .reserveActions{gap:10px}
+body.modern-ui .modal .reserveField label,
+body.modern-ui .modal .resultHint .label{
+  color:#7d8189;
+  font-size:11px;
+  font-weight:800;
+  text-transform:uppercase;
+  letter-spacing:.05em;
+}
+body.modern-ui .modal .reserveField select,
+body.modern-ui .modal .scorePair input{
+  width:100%;
+  border:1px solid #dde0e6;
+  border-radius:14px;
+  background:#fff;
+  color:#17171a;
+  font-weight:800;
+  min-height:56px;
+  padding:14px 16px;
+  box-shadow:none;
+}
+body.modern-ui .modal .reserveField select:focus,
+body.modern-ui .modal .scorePair input:focus{
+  border-color:#d60020;
+  box-shadow:0 0 0 4px rgba(214,0,32,.08);
+}
+body.modern-ui .modal .resultHint{
+  padding:12px 14px;
+  border-radius:14px;
+  background:#f7f7f9;
+  color:#6b7078;
+  font-size:12px;
+  line-height:1.45;
+}
+body.modern-ui .modal .scorePair{gap:8px}
+body.modern-ui .modal .resultGrid.three{gap:10px}
+body.modern-ui .modal .btn{
+  width:100%;
+  min-height:54px;
+  border-radius:14px;
+  font-size:15px;
+  font-weight:900;
+  border:0;
+  box-shadow:none;
+}
+body.modern-ui .modal .btn.gold{
+  background:linear-gradient(90deg,#f3c52c 0%,#ebaf05 100%);
+  color:#382400;
+}
+body.modern-ui .modal .btn.green{
+  background:linear-gradient(90deg,#18b368 0%,#0f944f 100%);
+  color:#fff;
+}
+body.modern-ui .modal .btn.dangerBtn{
+  background:#fff;
+  color:#cb0d26;
+  border:1.5px solid #f0c7ce;
+}
+body.modern-ui .modal .choice{
+  border:1px solid #e8eaee;
+  border-radius:14px;
+  padding:12px 14px;
+  background:#fff;
+}
+body.modern-ui .modal .choice b{font-size:14px;color:#17171a}
+body.modern-ui .modal .choice span{font-size:11px;color:#7b8088}
+@media(max-width:520px){
+  body.modern-ui .modal{padding:10px 8px calc(10px + env(safe-area-inset-bottom));}
+  body.modern-ui .modal .sheet{border-radius:22px 22px 16px 16px;max-width:100%;}
+  body.modern-ui .modal .sheetHead{padding:18px 14px 12px;}
+  body.modern-ui .modal .sheetHead h3{font-size:20px;}
+  body.modern-ui .modal .sheetBody{padding:14px;gap:12px;}
+  body.modern-ui .modal .reserveField select,
+  body.modern-ui .modal .scorePair input,
+  body.modern-ui .modal .btn{min-height:52px;}
+}
+
 /* V3.13.4 · campana de estado real */
 .mapp-bell{
   transition:background .18s ease,border-color .18s ease,transform .12s ease;
