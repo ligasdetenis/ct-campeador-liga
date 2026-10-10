@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 
-<html lang="es">
+<html lang="es" class="app-booting">
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,maximum-scale=1" name="viewport"/>
@@ -11,7 +11,54 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 
-/* V3.16.8 · arranque directo sin capa superpuesta */
+/* V3.16.3 · evita el flash del diseño antiguo durante el arranque */
+html.app-booting,
+html.app-booting body{
+  background:#65000d!important;
+  overflow:hidden!important;
+}
+html.app-booting body > *{
+  opacity:0!important;
+  pointer-events:none!important;
+}
+html.app-booting body::before{
+  content:"CT CAMPEADOR";
+  position:fixed;
+  z-index:999999;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding-bottom:18px;
+  color:#fff;
+  background:
+    linear-gradient(145deg,transparent 0 54%,rgba(255,255,255,.035) 54.5% 55.2%,transparent 55.7%),
+    repeating-linear-gradient(90deg,rgba(255,255,255,.018) 0 1px,transparent 1px 18px),
+    repeating-linear-gradient(0deg,rgba(255,255,255,.014) 0 1px,transparent 1px 20px),
+    linear-gradient(125deg,#3e0007 0%,#65000d 43%,#8c0015 72%,#560009 100%);
+  font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-size:20px;
+  font-weight:950;
+  letter-spacing:-.02em;
+  text-align:center;
+}
+html.app-booting body::after{
+  content:"II Liga Federada";
+  position:fixed;
+  z-index:1000000;
+  left:0;right:0;
+  top:calc(50% + 18px);
+  text-align:center;
+  color:#f2c94c;
+  font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-size:12px;
+  font-weight:750;
+  pointer-events:none;
+}
+html.app-ready body > *{
+  opacity:1;
+}
+
 :root{
   --bg:#100708; --bg2:#25090d; --card:#1b0d10; --card2:#261015;
   --line:rgba(255,255,255,.11); --text:#fff8f0; --muted:#d9b8ad;
@@ -159,7 +206,7 @@ select,input,textarea{min-width:0;max-width:100%}
 .calendarBtn:hover{background:rgba(255,201,40,.14)}
 @media(max-width:430px){.datePickerWrap{grid-template-columns:minmax(0,1fr) 44px}}
 
-/* V3.16.5 · ARRANQUE SAFARI · Entrada directa por PIN · nuevo diseño */
+/* V3.16.3 · PISTAS OCUPADAS + PARTIDOS FINALIZADOS · Entrada directa por PIN · nuevo diseño */
 .pinWelcome{
   position:fixed;
   inset:0;
@@ -1779,17 +1826,6 @@ body.modern-admin #adminView>.head{display:none!important}
   border-color:#e3e5e8!important;
 }
 
-
-}
-
-
-/* V3.16.5 · estabilidad Safari / iPadOS: sin front-layer ni back-layer */
-html,body{min-height:100%}
-body{
-  transform:none!important;
-  -webkit-transform:none!important;
-  isolation:auto!important;
-}
 </style>
 
 <link rel="manifest" href="manifest.webmanifest">
@@ -2209,22 +2245,12 @@ function setWeekRangeLocal(start,end){
 
 function fresh(){return {playerLists:{},fixtures:{},fixtureRounds:{},slots:{},drafts:{},published:{},bookings:{},results:{},profiles:{},pins:{},roles:{},staff:{},weekRanges:{},postponed:{}}}
 function normalizeData(x){const d=x&&typeof x==='object'?x:{};const wr={...(d.weekRanges||{})};if(d.weeks&&typeof d.weeks==='object'){for(const [id,w] of Object.entries(d.weeks)){if(w&&w.start&&w.end&&!wr[id])wr[id]={start:w.start,end:w.end}}}return {playerLists:d.playerLists||{},fixtures:d.fixtures||{},fixtureRounds:d.fixtureRounds||{},slots:d.slots||{},drafts:d.drafts||{},published:d.published||{},bookings:d.reservations||d.bookings||{},results:d.results||{},profiles:d.profiles||{},pins:d.pins||{},roles:{...(d.roles||{}),...(d.adminRoles||{})},staff:d.staff||{},weekRanges:wr,postponed:d.postponed||{}}}
-function safeLoadData(){
-  try{
-    const raw=localStorage.getItem(STORAGE_KEY);
-    return normalizeData(raw?JSON.parse(raw):fresh());
-  }catch(e){
-    console.warn('No se pudo leer la caché local:',e);
-    return fresh();
-  }
-}
-let data=safeLoadData();
+let data=normalizeData(JSON.parse(localStorage.getItem(STORAGE_KEY)||"null")||fresh());
 applyWeekRanges();
 if(!data.staff["Adrián Prádanos"])data.staff["Adrián Prádanos"]={name:"Adrián Prádanos"};
 // Administrador inicial: debe estar visible en TODAS las categorías incluso antes del primer login.
 data.roles["Adrián Prádanos"]="admin";
-let apiToken="";
-try{apiToken=localStorage.getItem(TOKEN_KEY)||""}catch(e){console.warn('Token local no disponible:',e)}
+let apiToken=localStorage.getItem(TOKEN_KEY)||"";
 let state={category:"Infantil",gender:"Masculino",week:"W1",reserveMatchId:null,resultMatchId:null,delayMatchId:null,player:"",authenticated:false,showPins:false};
 let fixtureEditorDirty=false;
 let playerEditorDirty=false;
@@ -2383,7 +2409,6 @@ function visibleIdentitiesForCategory(){const admins=allIdentities().filter(p=>r
 function showPinWelcome(message='PIN personal de 4 cifras',isError=false){
   const ov=$('#pinWelcome'),msg=$('#welcomePinMsg'),inp=$('#welcomePin');
   if(!ov)return;
-  if(state.authenticated)return;
   ov.classList.remove('hidden');
   document.body.classList.add('pinLocked');
   if(msg){msg.textContent=message;msg.classList.toggle('error',!!isError)}
@@ -2460,49 +2485,23 @@ async function loginWithPinOnly(){
     showPinWelcome('Introduce un PIN válido de 4 cifras.',true);
     return;
   }
-
   const btn=$('#welcomePinBtn');
   const old=btn?.textContent||'Entrar';
-
   try{
-    if(btn){btn.disabled=true;btn.textContent='Entrando…'}
-
+    if(btn){btn.disabled=true;btn.textContent='⏳ Entrando…'}
     const j=await apiRequest({action:'loginPin',pin},{auth:false});
-
     apiToken=j.token;
-    try{localStorage.setItem(TOKEN_KEY,apiToken)}catch(e){console.warn('No se pudo guardar el token',e)}
-
+    localStorage.setItem(TOKEN_KEY,apiToken);
     state.player=j.user.name;
     state.authenticated=true;
     data.roles[state.player]=j.user.role==='admin'?'admin':'jugador';
-
-    // IMPORTANTE: cerrar la pantalla PIN en cuanto el servidor confirma el acceso.
-    // Ninguna carga secundaria puede volver a bloquearla.
+    if(isAdmin())await loadAdminUsers();
     routePlayerToOwnCategory(state.player);
     hidePinWelcome();
     setOnline(true,'☁️ Online');
-
-    try{
-      renderAll();
-    }catch(e){
-      console.error('Error de render tras login:',e);
-    }
-
-    // Carga secundaria del administrador: nunca bloquea el acceso.
-    if(isAdmin()){
-      loadAdminUsers()
-        .then(()=>{try{renderAll()}catch(e){console.error('Error refrescando admin:',e)}})
-        .catch(e=>console.warn('No se pudieron cargar usuarios admin:',e));
-    }
-
+    renderAll();
   }catch(e){
-    // Solo mostrar de nuevo la pantalla PIN si el login realmente NO llegó a completarse.
-    if(!state.authenticated){
-      showPinWelcome(e.message||'PIN incorrecto.',true);
-    }else{
-      console.error('Error posterior al login:',e);
-      hidePinWelcome();
-    }
+    showPinWelcome(e.message||'PIN incorrecto.',true);
   }finally{
     if(btn){btn.disabled=false;btn.textContent=old}
   }
@@ -3987,13 +3986,7 @@ function renderModernUI(){
  renderModernProfile();
 }
 
-function renderAll(){
-  if(state.authenticated){
-    const ov=document.getElementById('pinWelcome');
-    if(ov)ov.classList.add('hidden');
-    document.body.classList.remove('pinLocked');
-  }
-renderTabs();renderWeeks();renderIdentity();renderState();renderMatches();renderSchedule();renderKpis();renderAdmin();updateAdminSummaries();wireAdminCompact();renderPushUI();renderModernUI();renderModernAdminContext()}
+function renderAll(){renderTabs();renderWeeks();renderIdentity();renderState();renderMatches();renderSchedule();renderKpis();renderAdmin();updateAdminSummaries();wireAdminCompact();renderPushUI();renderModernUI();renderModernAdminContext()}
 
 
 document.querySelectorAll('[data-icon]').forEach(el=>el.innerHTML=mappIcon(el.dataset.icon));
@@ -4208,65 +4201,30 @@ $('#saveDelayBtn').onclick=saveDelay;$('#restoreDelayBtn').onclick=restoreDelay;
 $('#resultType').onchange=syncResultType;$('#saveResultBtn').onclick=saveResult;$('#confirmResultBtn').onclick=()=>confirmResult(state.resultMatchId);$('#deleteResultBtn').onclick=()=>deleteResult(state.resultMatchId);$('#closeResultModal').onclick=()=>$('#resultModal').classList.remove('show');$('#resultModal').onclick=e=>{if(e.target===$('#resultModal'))$('#resultModal').classList.remove('show')};
 $$('.navBtn[data-go]').forEach(b=>b.onclick=()=>{const go=b.dataset.go;$$('.navBtn').forEach(x=>x.classList.remove('active'));b.classList.add('active');if(go==='home')$('#homeView').scrollIntoView({behavior:'smooth',block:'start'});if(go==='courts')$('#courtsView').scrollIntoView({behavior:'smooth',block:'start'});if(go==='admin'){if(!isAdmin()){alert('Acceso restringido a administradores.');return;}$('#adminView').classList.remove('hidden');$('#adminView').scrollIntoView({behavior:'smooth',block:'start'})}});
 $('#refreshBtn').onclick=()=>refreshOnline();
-function releaseBootScreen(){ /* sin overlay de arranque */ }
-function promiseTimeout(promise,ms,label){
-  let timer;
-  const timeout=new Promise((_,reject)=>{
-    timer=setTimeout(()=>reject(new Error(label||'Tiempo de espera agotado')),ms);
-  });
-  return Promise.race([promise,timeout]).finally(()=>clearTimeout(timer));
-}
 async function bootstrapApp(){
-  // La interfaz debe aparecer aunque Safari tarde o bloquee una petición de red.
   try{
     renderAll();
-  }catch(e){
-    console.error('Error en render inicial:',e);
-  }
-
-  releaseBootScreen();
-  setOnline(false,'☁️ Conectando…');
-
-  // Sin sesión guardada no esperamos a Cloudflare para mostrar el acceso.
-  if(!apiToken){
-    showPinWelcome('PIN personal de 4 cifras',false);
-  }
-
-  try{
-    let restored=false;
-    if(apiToken){
-      try{
-        restored=await promiseTimeout(restoreSession(),7000,'Cloudflare no respondió a tiempo');
-      }catch(e){
-        console.warn('Restauración de sesión:',e);
-        restored=false;
-      }
-    }
-
-    // La actualización online tampoco bloquea el arranque.
-    try{
-      await promiseTimeout(refreshOnline({silent:true}),7000,'Actualización online no respondió a tiempo');
-    }catch(e){
-      console.warn('Actualización inicial:',e);
-      setOnline(false,'⚠️ Sin conexión');
-    }
-
+    setOnline(false,'☁️ Conectando…');
+    const restored=await restoreSession();
+    await refreshOnline({silent:true});
     if(restored){
       routePlayerToOwnCategory(state.player);
       hidePinWelcome();
-    }else if(!state.authenticated){
+    }else{
       showPinWelcome('PIN personal de 4 cifras',false);
     }
-
     renderAll();
+    document.documentElement.classList.remove('app-booting');
+    document.documentElement.classList.add('app-ready');
+    setInterval(()=>refreshOnline({silent:true}),10000);
+    window.addEventListener('beforeunload',e=>{if(fixtureEditorDirty){e.preventDefault();e.returnValue='';}});
   }catch(e){
-    console.error('Error de arranque V3.16.5:',e);
-    setOnline(false,'⚠️ Sin conexión');
-    if(!state.authenticated)showPinWelcome('PIN personal de 4 cifras',false);
+    document.documentElement.classList.remove('app-booting');
+    document.documentElement.classList.add('app-ready');
+    console.error('Error de arranque V3.12:',e);
+    setOnline(false,'⚠️ Error V3.11.3');
+    alert('Error de arranque del index V3.12.\n\n'+(e?.message||String(e)));
   }
-
-  setInterval(()=>refreshOnline({silent:true}),10000);
-  window.addEventListener('beforeunload',e=>{if(fixtureEditorDirty){e.preventDefault();e.returnValue='';}});
 }
 bootstrapApp();
 
