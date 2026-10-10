@@ -11,7 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 
-/* V3.15.2 · evita el flash del diseño antiguo durante el arranque */
+/* V3.15.2.1 · evita el flash del diseño antiguo durante el arranque */
 html.app-booting,
 html.app-booting body{
   background:#65000d!important;
@@ -206,7 +206,7 @@ select,input,textarea{min-width:0;max-width:100%}
 .calendarBtn:hover{background:rgba(255,201,40,.14)}
 @media(max-width:430px){.datePickerWrap{grid-template-columns:minmax(0,1fr) 44px}}
 
-/* V3.15.2 · FOTO CLOUD · Entrada directa por PIN · nuevo diseño */
+/* V3.15.2.1 · KV OPTIMIZADO · Entrada directa por PIN · nuevo diseño */
 .pinWelcome{
   position:fixed;
   inset:0;
@@ -2079,7 +2079,12 @@ function adminEditorActive(){
 }
 
 async function refreshOnline({silent=false,force=false}={}){if((fixtureEditorDirty||playerEditorDirty||adminEditorActive())&&!force){setOnline(true,'✏️ Editando · actualización pausada');return false}try{const j=await apiRequest({action:'read'},{auth:false});const remote=normalizeData(j.state);data.playerLists=remote.playerLists;data.fixtures=remote.fixtures;data.fixtureRounds=remote.fixtureRounds;data.slots=remote.slots;data.drafts=remote.drafts;data.published=remote.published;data.bookings=remote.bookings;data.results=remote.results;data.profiles=remote.profiles||data.profiles||{};data.weekRanges=remote.weekRanges||data.weekRanges||{};data.postponed=remote.postponed||{};applyWeekRanges();data.staff={...(data.staff||{}),...(remote.staff||{})};data.roles={...(data.roles||{}),...(remote.roles||{})};data.roles["Adrián Prádanos"]="admin";localStorage.setItem(STORAGE_KEY,JSON.stringify(data));setOnline(true,'☁️ Online');renderAll();return true}catch(e){setOnline(false,'⚠️ Offline');if(!silent)alert('No se ha podido actualizar desde Cloudflare.\n\n'+e.message);return false}}
-async function saveStateOnline(){if(!apiToken||!isAdmin())return;await apiRequest({action:'saveState',state:publicState()});setOnline(true,'☁️ Guardado')}
+async function saveStateOnline(){
+  if(!apiToken||!isAdmin())return;
+  if(saveTimer){clearTimeout(saveTimer);saveTimer=null}
+  await apiRequest({action:'saveState',state:publicState()});
+  setOnline(true,'☁️ Guardado')
+}
 async function saveUsersOnline(){if(!apiToken||!isAdmin())return;const users=allIdentities().map(name=>({name,pin:String(data.pins[name]||''),role:roleOf(name)==='admin'?'admin':'player',active:true})).filter(u=>/^\d{4}$/.test(u.pin));await apiRequest({action:'saveUsers',users});}
 async function loadAdminUsers(){if(!apiToken||!isAdmin())return;const j=await apiRequest({action:'listUsers'});for(const u of j.users||[]){data.pins[u.name]=String(u.pin||'');data.roles[u.name]=u.role==='admin'?'admin':'jugador';if(!allPlayers().includes(u.name))data.staff[u.name]={name:u.name}}localStorage.setItem(STORAGE_KEY,JSON.stringify(data));}
 
@@ -2186,7 +2191,8 @@ function ensurePins(){
     used.add(pin);
     if(!data.roles[p])data.roles[p]='jugador';
   }
-  save();
+  // Los PIN se suben mediante saveUsersOnline(); aquí solo actualizamos la copia local.
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
 }
 function visibleIdentitiesForCategory(){const admins=allIdentities().filter(p=>roleOf(p)==='admin');const category=categoryPlayers();const visible=[...new Set([...category,...admins])].sort((a,b)=>a.localeCompare(b,'es'));if(state.authenticated&&state.player&&!visible.includes(state.player))visible.push(state.player);return visible}
 
@@ -3041,12 +3047,11 @@ function normalizeDraft(){
 function renderSlotRows(){
   const saved=slots();
   const stored=(data.drafts&&data.drafts[weekKey()])||[];
-  // Primero recuperamos el borrador del admin. Si no existe, usamos lo ya publicado;
-  // y si la semana es nueva, preparamos automáticamente el horario habitual.
+  // Renderizar el panel NO debe provocar escrituras en Cloudflare.
+  // El borrador solo se persiste cuando el administrador lo modifica realmente.
   draftSlots=stored.length?stored.map(x=>({...x})):(saved.length?saved.map(x=>({...x})):buildDefaultWeekSlots());
   trimDraftToCurrentWeek({persist:false});
-  if(!stored.length&&!saved.length)persistDraft();
-  else persistDraft();
+  normalizeDraft();
   renderSlotChips();
 }
 function partOfSlot(s){return timeToMin(s.time.split(' - ')[0])<15*60?'morning':'afternoon'}
