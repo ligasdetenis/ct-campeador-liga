@@ -157,7 +157,7 @@ select,input,textarea{min-width:0;max-width:100%}
 .calendarBtn:hover{background:rgba(255,201,40,.14)}
 @media(max-width:430px){.datePickerWrap{grid-template-columns:minmax(0,1fr) 44px}}
 
-/* V3.13.7 · Entrada directa por PIN · nuevo diseño */
+/* V3.13.8 · CATEGORÍA AUTOMÁTICA · Entrada directa por PIN · nuevo diseño */
 .pinWelcome{
   position:fixed;
   inset:0;
@@ -1554,18 +1554,66 @@ function hidePinWelcome(){
   $('#pinWelcome')?.classList.add('hidden');
   document.body.classList.remove('pinLocked');
 }
-function routePlayerToOwnCategory(player){
-  if(!player||roleOf(player)==='admin')return;
+function playerCategoryMemberships(player){
+  if(!player)return [];
+  const target=String(player).trim();
+  const found=[];
   for(const [key,list] of Object.entries(data.playerLists||{})){
-    if(!Array.isArray(list)||!list.some(n=>String(n).localeCompare(String(player),'es',{sensitivity:'base'})===0))continue;
-    const sep=key.lastIndexOf('::');
-    if(sep>0){
-      const cat=key.slice(0,sep),gen=key.slice(sep+2);
-      if(CATEGORIES.includes(cat))state.category=cat;
-      if(gen==='Masculino'||gen==='Femenino')state.gender=gen;
-      return;
+    if(!Array.isArray(list))continue;
+    const belongs=list.some(n=>String(n).localeCompare(target,'es',{sensitivity:'base'})===0);
+    if(!belongs)continue;
+
+    let cat='',gen='';
+    if(key.includes('|')){
+      const parts=key.split('|');
+      cat=parts[0]||'';
+      gen=parts[1]||'';
+    }else if(key.includes('::')){
+      const sep=key.lastIndexOf('::');
+      cat=key.slice(0,sep);
+      gen=key.slice(sep+2);
     }
+
+    if(!CATEGORIES.includes(cat))continue;
+    if(gen!=='Masculino'&&gen!=='Femenino')continue;
+
+    found.push({
+      category:cat,
+      gender:gen,
+      rank:CATEGORIES.indexOf(cat)
+    });
   }
+
+  // Eliminar duplicados y ordenar de categoría inferior a superior.
+  const unique=[];
+  const seen=new Set();
+  for(const item of found){
+    const k=`${item.category}|${item.gender}`;
+    if(seen.has(k))continue;
+    seen.add(k);
+    unique.push(item);
+  }
+  unique.sort((a,b)=>a.rank-b.rank || a.gender.localeCompare(b.gender,'es'));
+  return unique;
+}
+
+function routePlayerToOwnCategory(player){
+  if(!player||roleOf(player)==='admin')return null;
+
+  const memberships=playerCategoryMemberships(player);
+  if(!memberships.length)return null;
+
+  // Si está en varias categorías, por defecto entra en la inferior.
+  const lowestRank=memberships[0].rank;
+  const lowest=memberships.filter(x=>x.rank===lowestRank);
+
+  // Si por alguna razón está en la misma categoría en ambos géneros,
+  // conservar el género actual cuando sea posible.
+  const chosen=lowest.find(x=>x.gender===state.gender) || lowest[0];
+
+  state.category=chosen.category;
+  state.gender=chosen.gender;
+  return chosen;
 }
 async function loginWithPinOnly(){
   const pin=$('#welcomePin')?.value.trim()||'';
@@ -2500,7 +2548,7 @@ async function renderModernProfile(){
  box.innerHTML=`<div class="mapp-card">
    <div class="mapp-profile-head">
      ${mappAvatar(state.player,'mapp-profile-avatar')}
-     <div><div class="mapp-profile-name">${mappEsc(state.player)}</div><div class="mapp-profile-role">${isAdmin()?'Administrador':'Jugador · '+mappEsc(state.category)+' '+mappEsc(state.gender)}</div><div class="mapp-menu-sub">Toca la foto para cambiarla en este dispositivo</div></div>
+     <div><div class="mapp-profile-name">${mappEsc(state.player)}</div><div class="mapp-profile-role">${isAdmin()?'Administrador':'Jugador · '+mappEsc(state.category)+' '+mappEsc(state.gender)}</div>${!isAdmin()&&playerCategoryMemberships(state.player).length>1?`<div class="mapp-menu-sub">Inscrito en ${playerCategoryMemberships(state.player).length} categorías · acceso inicial a la inferior</div>`:`<div class="mapp-menu-sub">Toca la foto para cambiarla en este dispositivo</div>`}</div>
    </div>
    <div class="mapp-menu-row" id="mappPushRow"><div class="mapp-menu-icon">${mappIcon('bell')}</div><div><div class="mapp-menu-title">Avisos</div><div class="mapp-menu-sub ${pushCls}">${mappEsc(pushText)}</div></div><div>${mappIcon('chevron')}</div></div>
    <div class="mapp-menu-row" id="mappInstallRow"><div class="mapp-menu-icon">${mappIcon('phone')}</div><div><div class="mapp-menu-title">Aplicación</div><div class="mapp-menu-sub ${installCls}">${mappEsc(installText)}</div></div><div>${mappIcon('chevron')}</div></div>
@@ -2621,7 +2669,7 @@ $('#welcomePin').addEventListener('input',e=>{
 $('#welcomePin').addEventListener('keydown',e=>{if(e.key==='Enter')loginWithPinOnly()});
 
 $('#playerIdentity').onchange=e=>{if(!state.authenticated)state.player=e.target.value;$('#playerPin').value='';renderIdentity()};
-$('#loginBtn').onclick=async()=>{const player=$('#playerIdentity').value,pin=$('#playerPin').value.trim();if(!player){alert('Selecciona tu nombre.');return}if(!/^\d{4}$/.test(pin)){alert('Introduce un PIN de 4 cifras.');return}try{$('#loginBtn').disabled=true;const j=await apiRequest({action:'login',name:player,pin},{auth:false});apiToken=j.token;localStorage.setItem(TOKEN_KEY,apiToken);state.player=j.user.name;state.authenticated=true;data.roles[state.player]=j.user.role==='admin'?'admin':'jugador';if(isAdmin())await loadAdminUsers();$('#playerPin').value='';setOnline(true,'☁️ Online');renderAll()}catch(e){alert('No se ha podido iniciar sesión.\n\n'+e.message)}finally{$('#loginBtn').disabled=false}};
+$('#loginBtn').onclick=async()=>{const player=$('#playerIdentity').value,pin=$('#playerPin').value.trim();if(!player){alert('Selecciona tu nombre.');return}if(!/^\d{4}$/.test(pin)){alert('Introduce un PIN de 4 cifras.');return}try{$('#loginBtn').disabled=true;const j=await apiRequest({action:'login',name:player,pin},{auth:false});apiToken=j.token;localStorage.setItem(TOKEN_KEY,apiToken);state.player=j.user.name;state.authenticated=true;data.roles[state.player]=j.user.role==='admin'?'admin':'jugador';if(isAdmin())await loadAdminUsers();routePlayerToOwnCategory(state.player);$('#playerPin').value='';setOnline(true,'☁️ Online');renderAll()}catch(e){alert('No se ha podido iniciar sesión.\n\n'+e.message)}finally{$('#loginBtn').disabled=false}};
 $('#playerPin').addEventListener('keydown',e=>{if(e.key==='Enter')$('#loginBtn').click()});
 $('#clearIdentity').onclick=async()=>{try{if(apiToken)await apiRequest({action:'logout'})}catch(e){}apiToken='';localStorage.removeItem(TOKEN_KEY);state.player='';state.authenticated=false;$('#playerPin').value='';renderAll();showPinWelcome('Introduce tu PIN para cambiar de usuario.',false)};
 $$('.gender').forEach(b=>b.onclick=()=>{state.gender=b.dataset.gender;renderAll()});
