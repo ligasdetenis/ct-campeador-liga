@@ -175,7 +175,7 @@ body.pinLocked{overflow:hidden}
 @media(max-width:520px){.pinWelcomeCard{padding:21px;border-radius:22px}.pinWelcomeLogo{width:96px;height:96px}.pinWelcomeTitle{font-size:21px}}
 
 
-/* V3.12.4 · Web Push nativo */
+/* V3.12.5 · Web Push nativo + PWA Android */
 .pushBox{margin-top:12px;padding:12px;border:1px solid var(--line);border-radius:15px;background:rgba(255,255,255,.025);display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
 .pushBox.hidden{display:none!important}
 .pushInfo{min-width:220px;flex:1}
@@ -205,6 +205,12 @@ body.pinLocked{overflow:hidden}
   .freeSlotRow td{position:relative}
   .freeSlotRow .slotFree::after{content:" · TOCAR"}
 }
+
+
+.installBanner{display:none;margin:12px 0;padding:12px;border:1px solid var(--line);border-radius:15px;background:rgba(255,255,255,.025);align-items:center;gap:10px;justify-content:space-between;flex-wrap:wrap}
+.installBanner.show{display:flex}
+.installText{font-size:12px;line-height:1.4;color:var(--text);flex:1;min-width:220px}
+.installActions{display:flex;gap:8px;flex-wrap:wrap}
 
 </style>
 
@@ -271,6 +277,13 @@ body.pinLocked{overflow:hidden}
     <b>iPhone/iPad:</b> Safari no permite Web Push desde una pestaña normal. Pulsa <b>Compartir</b> → <b>Añadir a pantalla de inicio</b>. Después abre <b>CT Campeador</b> desde el icono creado y activa los avisos allí.
   </div>
 </div>
+</div>
+<div class="installBanner" id="installBanner">
+  <div class="installText" id="installText">📲 Puedes instalar CT Campeador como app.</div>
+  <div class="installActions">
+    <button class="btn gold" id="installAppBtn" type="button">📲 Instalar app</button>
+    <button class="btn secondary" id="dismissInstallBtn" type="button">Ahora no</button>
+  </div>
 </div>
 </section>
 <section class="card" id="matchesView">
@@ -678,6 +691,63 @@ function isStandalonePWA(){
   return window.matchMedia?.('(display-mode: standalone)').matches ||
          navigator.standalone===true;
 }
+
+let deferredInstallPrompt=null;
+
+function isAndroidDevice(){
+  return /android/i.test(navigator.userAgent);
+}
+function updateInstallBanner(){
+  const box=$('#installBanner');
+  const btn=$('#installAppBtn');
+  const txt=$('#installText');
+  if(!box||!btn||!txt)return;
+
+  if(isStandalonePWA()){
+    box.classList.remove('show');
+    return;
+  }
+
+  if(isIOSPushDevice()){
+    txt.textContent='📲 Instala CT Campeador en tu iPhone/iPad desde Safari → Compartir → Añadir a pantalla de inicio.';
+    btn.textContent='📲 Ver cómo instalar';
+    box.classList.add('show');
+    return;
+  }
+
+  if(isAndroidDevice() && deferredInstallPrompt){
+    txt.textContent='📲 Puedes instalar CT Campeador como app en tu Android.';
+    btn.textContent='📲 Instalar CT Campeador';
+    box.classList.add('show');
+    return;
+  }
+
+  box.classList.remove('show');
+}
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();
+  deferredInstallPrompt=e;
+  updateInstallBanner();
+});
+window.addEventListener('appinstalled',()=>{
+  deferredInstallPrompt=null;
+  updateInstallBanner();
+});
+async function installAppNow(){
+  if(isIOSPushDevice()){
+    alert('En iPhone/iPad:\\n\\nSafari → Compartir → Añadir a pantalla de inicio.');
+    return;
+  }
+  if(!deferredInstallPrompt){
+    alert('La instalación todavía no está disponible en este navegador. En Android, prueba con Chrome.');
+    return;
+  }
+  deferredInstallPrompt.prompt();
+  try{await deferredInstallPrompt.userChoice}catch(_){}
+  deferredInstallPrompt=null;
+  updateInstallBanner();
+}
+
 async function renderPushUI(){
   const box=$('#pushBox'),txt=$('#pushText'),btn=$('#pushActivateBtn');
   if(!box||!txt||!btn)return;
@@ -737,7 +807,7 @@ async function activateNativePush(){
       });
     }
     await syncPushSubscription(sub);
-    await renderPushUI();
+    await renderPushUI();updateInstallBanner();
   }catch(e){
     alert('No se han podido activar los avisos.\n\n'+(e.message||e));
     btn.disabled=false;btn.textContent=old;
@@ -1266,6 +1336,8 @@ function renderAll(){renderTabs();renderWeeks();renderIdentity();renderState();r
 
 $('#welcomePinBtn').onclick=loginWithPinOnly;
 $('#pushActivateBtn').onclick=activateNativePush;
+$('#installAppBtn').onclick=installAppNow;
+$('#dismissInstallBtn').onclick=()=>$('#installBanner')?.classList.remove('show');
 $('#welcomePin').addEventListener('input',e=>{
   e.target.value=e.target.value.replace(/\D/g,'').slice(0,4);
   const m=$('#welcomePinMsg');
@@ -1463,5 +1535,5 @@ bootstrapApp();
 
 window.addEventListener('scroll',()=>{const a=document.getElementById('adminView');if(a)a.classList.toggle('adminScrolled',window.scrollY>(a.offsetTop+280));},{passive:true});
 </script>
-<div style="position:fixed;right:8px;bottom:78px;z-index:45;font-size:9px;opacity:.55;background:#180b0e;border:1px solid rgba(255,255,255,.12);padding:4px 7px;border-radius:999px">V3.12.4 · RESERVA DESDE PISTAS</div>
+<div style="position:fixed;right:8px;bottom:78px;z-index:45;font-size:9px;opacity:.55;background:#180b0e;border:1px solid rgba(255,255,255,.12);padding:4px 7px;border-radius:999px">V3.12.5 · RESERVA DESDE PISTAS</div>
 </body></html>
