@@ -11,7 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 
-/* V3.15.2.1 · evita el flash del diseño antiguo durante el arranque */
+/* V3.16.0 · evita el flash del diseño antiguo durante el arranque */
 html.app-booting,
 html.app-booting body{
   background:#65000d!important;
@@ -206,7 +206,7 @@ select,input,textarea{min-width:0;max-width:100%}
 .calendarBtn:hover{background:rgba(255,201,40,.14)}
 @media(max-width:430px){.datePickerWrap{grid-template-columns:minmax(0,1fr) 44px}}
 
-/* V3.15.2.1 · KV OPTIMIZADO · Entrada directa por PIN · nuevo diseño */
+/* V3.16.0 · ADMIN REDISEÑADO · Entrada directa por PIN · nuevo diseño */
 .pinWelcome{
   position:fixed;
   inset:0;
@@ -1640,6 +1640,130 @@ body.modern-ui{padding-bottom:116px!important}
   .mapp-ticker-item{padding:0 14px!important;font-size:9px!important}
 }
 
+
+/* V3.16.0 · Panel de administración tipo gestor */
+body.modern-admin #adminView>.head{display:none!important}
+.adminManager{display:grid!important;grid-template-columns:1fr!important;gap:10px!important}
+.adminQuickNav{display:none!important}
+
+.adminPrimary{
+  border:1px solid #e2e4e8!important;
+  border-radius:14px!important;
+  background:#fff!important;
+  box-shadow:0 4px 14px rgba(25,30,40,.05)!important;
+  overflow:hidden!important;
+  padding:0!important;
+}
+.adminPrimary>.adminSummary{
+  min-height:56px!important;
+  padding:0 16px!important;
+  background:#fff!important;
+  border:0!important;
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto auto!important;
+  align-items:center!important;
+  gap:10px!important;
+  cursor:pointer!important;
+}
+.adminPrimary>.adminSummary::after{
+  content:"⌄"!important;
+  color:#7f838b!important;
+  font-size:15px!important;
+  line-height:1!important;
+}
+.adminPrimary[open]>.adminSummary::after{content:"⌃"!important}
+.adminPrimary>.adminSummary .adminSummaryTitle{
+  color:#1f2227!important;
+  font-size:14px!important;
+  font-weight:900!important;
+  letter-spacing:-.01em!important;
+}
+.adminPrimary>.adminSummary .adminSummaryMeta{
+  color:#8b8f97!important;
+  font-size:10px!important;
+  font-weight:800!important;
+  white-space:nowrap!important;
+}
+.adminPrimary>.adminAccordionBody{
+  padding:14px 16px 16px!important;
+  border-top:1px solid #eceef1!important;
+  background:#fbfbfc!important;
+}
+.adminSubsection{
+  border:1px solid #e6e8ec;
+  border-radius:12px;
+  background:#fff;
+  overflow:hidden;
+  margin-bottom:12px;
+}
+.adminSubsection:last-child{margin-bottom:0}
+.adminSubsectionHead{
+  min-height:44px;
+  padding:0 13px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  border-bottom:1px solid #eceef1;
+  background:#fafafb;
+  color:#282b31;
+  font-size:12px;
+  font-weight:900;
+}
+.adminSubsectionHead>span:last-child{
+  color:#92969d;
+  font-size:9px;
+  font-weight:800;
+}
+.adminSubsectionBody{padding:12px}
+.adminPrimary .authNote,
+.adminPrimary .tiny{color:#747981!important}
+.adminPrimary button{
+  border-radius:8px!important;
+  box-shadow:none!important;
+}
+.adminMatchActions2 button{
+  background:#fff!important;
+  color:#303238!important;
+  border:1px solid #dfe2e7!important;
+}
+.adminMatchActions2 .primary{
+  background:#6d0010!important;
+  color:#fff!important;
+  border-color:#6d0010!important;
+}
+.adminMatchActions2 .danger{
+  background:#fff!important;
+  color:#b4232f!important;
+  border-color:#e4c7cb!important;
+}
+.adminMatchStatus .adminPill{
+  background:#f3f4f6!important;
+  color:#646870!important;
+  border:1px solid #e6e8eb!important;
+}
+.adminMatchStatus .adminPill.ok{
+  background:#eef7f2!important;
+  color:#28764d!important;
+  border-color:#d7eadf!important;
+}
+.adminMatchStatus .adminPill.info{
+  background:#f1f4f7!important;
+  color:#59616b!important;
+  border-color:#e0e4e8!important;
+}
+.adminMatchStatus .adminPill.warn{
+  background:#f8f5ed!important;
+  color:#75643d!important;
+  border-color:#ebe2ca!important;
+}
+@media(max-width:640px){
+  .adminPrimary>.adminSummary{padding:0 13px!important}
+  .adminPrimary>.adminSummary .adminSummaryTitle{font-size:13px!important}
+  .adminPrimary>.adminSummary .adminSummaryMeta{font-size:9px!important}
+  .adminPrimary>.adminAccordionBody{padding:12px!important}
+}
+
 </style>
 
 <link rel="manifest" href="manifest.webmanifest">
@@ -1760,37 +1884,31 @@ body.modern-ui{padding-bottom:116px!important}
   <div class="mapp-admin-body">
 <section class="card hidden" id="adminView">
 <div class="head"><h2>⚙️ Gestión semanal <span class="adminBadge">ADMIN</span></h2><small>V3.11.6 · semanas configurables</small></div>
-<div class="pad adminGrid"><div class="adminQuickNav" id="adminQuickNav"><button class="adminQuickBtn" data-admin-target="matchesAdmin" type="button">🎾 Partidos</button><button class="adminQuickBtn" data-admin-target="players" type="button">👥 Jugadores</button><button class="adminQuickBtn" data-admin-target="fixtures" type="button">📥 Carga jornada</button><button class="adminQuickBtn" data-admin-target="slots" type="button">🏟️ Pistas</button><button class="adminQuickBtn" data-admin-target="pins" type="button">🔐 PIN</button><button class="adminQuickBtn" data-admin-target="devices" type="button">🔔 Dispositivos</button><button class="adminQuickBtn" data-admin-target="admins" type="button">🛡️ Admins</button><button class="adminQuickBtn" data-admin-target="roles" type="button">👤 Permisos</button><button class="adminQuickBtn" data-admin-target="whats" type="button">📣 WhatsApp</button></div>
+<div class="pad adminGrid adminManager">
 
-<details class="adminBlock adminAccordion" data-admin-section="matchesAdmin" open="">
+<details class="adminBlock adminAccordion adminPrimary" data-admin-section="matchesAdmin" open>
   <summary class="adminSummary">
     <span class="adminSummaryTitle">Partidos</span>
     <span class="adminSummaryMeta" id="adminMeta_matchesAdmin">Todos los enfrentamientos</span>
   </summary>
-  <div class="adminAccordionBody">
-    <div class="authNote">Vista global del torneo. Aquí puedes consultar y gestionar <b>todos los partidos</b> por categoría y género, independientemente del jugador con el que hayas iniciado sesión.</div>
+  <div class="adminAccordionBody"><div class="authNote">Vista global del torneo. Aquí puedes consultar y gestionar <b>todos los partidos</b> por categoría y género, independientemente del jugador con el que hayas iniciado sesión.</div>
     <div class="adminMatchesToolbar">
       <div class="field"><label>Categoría</label><select id="adminMatchesCategory"><option value="all">Todas</option></select></div>
       <div class="field"><label>Género</label><select id="adminMatchesGender"><option value="all">Todos</option><option>Masculino</option><option>Femenino</option></select></div>
       <div class="field week"><label>Semana</label><select id="adminMatchesWeek"><option value="all">Todas las semanas</option></select></div>
     </div>
-    <div id="adminMatchesList" class="adminMatchGroups"></div>
-  </div>
+    <div id="adminMatchesList" class="adminMatchGroups"></div></div>
 </details>
 
-<details class="adminBlock adminAccordion" data-admin-section="players" open=""><summary class="adminSummary"><span class="adminSummaryTitle">1 · Jugadores de la categoría</span><span class="adminSummaryMeta" id="adminMeta_players">Abrir</span></summary><div class="adminAccordionBody">
-
-<div class="authNote">Carga aquí la lista completa de jugadores de <b>la categoría y sexo seleccionados</b>. No depende de la semana. Una línea por jugador.</div>
-<div class="tiny" style="margin-bottom:8px">Puedes pegar directamente una lista desde Excel, WhatsApp o iSquad. Se eliminan líneas vacías y duplicados.</div>
-<textarea id="playerPaste" placeholder="Carlos Pérez
-Hugo Martín
-Mario López
-Pablo Ruiz"></textarea>
-<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"><button class="btn gold" id="savePlayers">Guardar jugadores</button><button class="btn danger" id="clearPlayers">Vaciar lista</button><span class="countBadge" id="playerCount">0 jugadores</span></div>
-</div></details>
-<details class="adminBlock adminAccordion" data-admin-section="fixtures"><summary class="adminSummary"><span class="adminSummaryTitle">Carga de jornada</span><span class="adminSummaryMeta" id="adminMeta_fixtures">Abrir</span></summary><div class="adminAccordionBody">
-
-<div class="authNote">La jornada viene marcada desde iSquad u otra fuente externa. Selecciona la semana de arriba, escribe la <b>jornada oficial</b> y carga exactamente los enfrentamientos que correspondan.</div>
+<details class="adminBlock adminAccordion adminPrimary" data-admin-section="journeyCourts">
+  <summary class="adminSummary">
+    <span class="adminSummaryTitle">Jornada y pistas</span>
+    <span class="adminSummaryMeta" id="adminMeta_journeyCourts">Jornada actual</span>
+  </summary>
+  <div class="adminAccordionBody">
+    <div class="adminSubsection">
+      <div class="adminSubsectionHead"><span>Enfrentamientos oficiales</span><span id="adminMeta_fixtures_sub">Abrir</span></div>
+      <div class="adminSubsectionBody"><div class="authNote">La jornada viene marcada desde iSquad u otra fuente externa. Selecciona la semana de arriba, escribe la <b>jornada oficial</b> y carga exactamente los enfrentamientos que correspondan.</div>
 <div class="roundBox">
 <div class="field"><label>Jornada oficial</label><input id="externalRound" placeholder="Ej. Jornada 4" type="text"/></div>
 <div class="field"><label>Inicio de la semana</label><div class="datePickerWrap"><input id="weekStartDate" type="date"/><button class="calendarBtn" id="openWeekStartCal" type="button" aria-label="Abrir calendario para la fecha de inicio" title="Abrir calendario">📅</button></div></div>
@@ -1803,80 +1921,110 @@ Pablo Ruiz"></textarea>
 <div class="fixtureQuick">
 <div class="field"><label>Jugador A</label><select id="fixturePlayerA"></select></div>
 <div class="field"><label>Jugador B</label><select id="fixturePlayerB"></select></div>
-<button class="btn gold" id="addFixture" type="button">＋ Añadir</button>
+<button class="btn gold" id="addFixture" type="button">Añadir</button>
 </div>
 <div class="fixtureList" id="fixtureList"></div>
 <div class="fixtureDivider"></div>
 <div class="tiny" style="margin-bottom:8px"><b>Pegar jornada completa</b> · Una línea por partido. Admite <b>Jugador A vs Jugador B</b>, <b>Jugador A - Jugador B</b> o <b>Jugador A;Jugador B</b>.</div>
 <textarea id="fixturePaste" placeholder="Carlos Pérez vs Hugo Martín\nMario López - Pablo Ruiz"></textarea>
 <div class="fixtureImportStatus" id="fixtureImportStatus">La lista pegada se añadirá a los partidos que ya hayas introducido arriba, evitando duplicados.</div>
-<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"><button class="btn secondary" id="importFixtures" type="button">⬇ Importar lista</button><button class="btn gold" id="saveFixtures">💾 Guardar jornada</button><button class="btn danger" id="clearFixtures">Vaciar jornada</button></div>
-</div></details>
-<details class="adminBlock adminAccordion" data-admin-section="slots"><summary class="adminSummary"><span class="adminSummaryTitle">3 · Borrador de disponibilidad de pistas</span><span class="adminSummaryMeta" id="adminMeta_slots">Abrir</span></summary><div class="adminAccordionBody">
-
-<div class="tiny">Cada turno dura <b>1 h 30 min</b>. La mañana usa siempre <b>10:00–11:30 · 11:30–13:00 · 13:00–14:30</b> y la tarde <b>16:00–17:30 · 17:30–19:00 · 19:00–20:30</b>. Prepara el borrador, elimina los tramos que no estén disponibles y publícalo cuando esté listo.</div>
+<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"><button class="btn secondary" id="importFixtures" type="button">Importar lista</button><button class="btn gold" id="saveFixtures">Guardar jornada</button><button class="btn danger" id="clearFixtures">Vaciar jornada</button></div></div>
+    </div>
+    <div class="adminSubsection">
+      <div class="adminSubsectionHead"><span>Disponibilidad de pistas</span><span id="adminMeta_slots_sub">Abrir</span></div>
+      <div class="adminSubsectionBody"><div class="tiny">Cada turno dura <b>1 h 30 min</b>. La mañana usa siempre <b>10:00–11:30 · 11:30–13:00 · 13:00–14:30</b> y la tarde <b>16:00–17:30 · 17:30–19:00 · 19:00–20:30</b>. Prepara el borrador, elimina los tramos que no estén disponibles y publícalo cuando esté listo.</div>
 <div class="draftToolbar">
 <button class="presetBtn" id="draftHabitual">↺ Horario habitual</button>
-<button class="presetBtn" id="draftAllMorning">☀️ Todas las mañanas</button>
-<button class="presetBtn" id="draftAllAfternoon">🌇 Todas las tardes</button>
-<button class="presetBtn" id="draftFullWeek">📅 Semana completa</button>
+<button class="presetBtn" id="draftAllMorning">Todas las mañanas</button>
+<button class="presetBtn" id="draftAllAfternoon">Todas las tardes</button>
+<button class="presetBtn" id="draftFullWeek">Semana completa</button>
 <button class="btn danger" id="clearSlots">Vaciar borrador</button>
 <span class="countBadge" id="slotCount">0 franjas</span>
 </div>
 <div class="customBlock">
-<div class="customBlockTitle">➕ Bloque horario personalizado</div>
+<div class="customBlockTitle">Bloque horario personalizado</div>
 <div class="tiny" style="margin-bottom:9px">Para excepciones: elige un día y cualquier intervalo. La app lo dividirá automáticamente en tramos de <b>1 h 30 min</b>.</div>
 <div class="customBlockGrid">
 <div class="field dateField"><label>Día</label><input id="customDate" type="date"/></div>
 <div class="field"><label>Desde</label><input id="customFrom" step="900" type="time" value="14:30"/></div>
 <div class="field"><label>Hasta</label><input id="customTo" step="900" type="time" value="16:00"/></div>
 <div class="field"><label>Nº pistas</label><input id="customCourts" max="10" min="1" type="number" value="1"/></div>
-<button class="btn gold" id="addCustomBlock">＋ Añadir al borrador</button>
+<button class="btn gold" id="addCustomBlock">Añadir al borrador</button>
 </div>
 </div>
 <div class="authNote">El horario es solo un <b>borrador privado del administrador</b>. Los jugadores no verán nada hasta que pulses <b>Publicar disponibilidad y abrir reservas</b>.</div>
 <div class="draftBoard" id="draftBoard"></div>
 <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
-<button class="btn green" id="publishSlots">✅ Publicar disponibilidad y abrir reservas</button>
-<button class="btn secondary" id="resendPushNotice">🔔 Reenviar aviso</button>
-<button class="btn danger" id="closeSlots">📴 Despublicar disponibilidad y cerrar reservas</button>
+<button class="btn green" id="publishSlots">Publicar disponibilidad y abrir reservas</button>
+<button class="btn secondary" id="resendPushNotice">Reenviar aviso</button>
+<button class="btn danger" id="closeSlots">Despublicar disponibilidad y cerrar reservas</button>
 <span class="tiny" id="publishActionStatus" style="width:100%;margin-top:4px">Al publicar por primera vez —o volver a publicar tras despublicar— se envía un aviso Push a los dispositivos suscritos.</span>
-</div>
-</div></details>
-<details class="adminBlock adminAccordion" data-admin-section="pins"><summary class="adminSummary"><span class="adminSummaryTitle">4 · PIN de jugadores</span><span class="adminSummaryMeta" id="adminMeta_pins">Abrir</span></summary><div class="adminAccordionBody">
+</div></div>
+    </div>
+  </div>
+</details>
 
-<div class="tiny">Genera PIN de 4 cifras automáticamente para todos los jugadores cargados. Puedes regenerar uno concreto si fuera necesario. Los PIN se guardan online en Cloudflare junto con los usuarios.</div>
-<div class="quickActions"><button class="btn gold" id="generatePins">🔐 Generar PIN que falten</button><button class="btn secondary" id="showPins">👁 Mostrar / ocultar PIN</button><button class="btn danger" id="resetPins">♻ Regenerar todos</button></div>
-<div class="schedule" style="margin-top:10px"><table><thead><tr><th>Jugador</th><th>PIN</th><th>Mensaje</th><th>Acción</th></tr></thead><tbody id="pinTable"></tbody></table></div>
-</div></details>
+<details class="adminBlock adminAccordion adminPrimary" data-admin-section="players">
+  <summary class="adminSummary">
+    <span class="adminSummaryTitle">Jugadores</span>
+    <span class="adminSummaryMeta" id="adminMeta_players">Abrir</span>
+  </summary>
+  <div class="adminAccordionBody"><div class="authNote">Carga aquí la lista completa de jugadores de <b>la categoría y sexo seleccionados</b>. No depende de la semana. Una línea por jugador.</div>
+<div class="tiny" style="margin-bottom:8px">Puedes pegar directamente una lista desde Excel, WhatsApp o iSquad. Se eliminan líneas vacías y duplicados.</div>
+<textarea id="playerPaste" placeholder="Carlos Pérez
+Hugo Martín
+Mario López
+Pablo Ruiz"></textarea>
+<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"><button class="btn gold" id="savePlayers">Guardar jugadores</button><button class="btn danger" id="clearPlayers">Vaciar lista</button><span class="countBadge" id="playerCount">0 jugadores</span></div></div>
+</details>
 
-<details class="adminBlock adminAccordion" data-admin-section="devices"><summary class="adminSummary"><span class="adminSummaryTitle">5 · Dispositivos y avisos</span><span class="adminSummaryMeta" id="adminMeta_devices">Abrir</span></summary><div class="adminAccordionBody">
-<div class="tiny">Consulta qué jugadores tienen dispositivos suscritos a los avisos. Puedes dar de baja todos los dispositivos de un jugador si cambia de móvil, pierde el dispositivo o deja de querer recibir notificaciones.</div>
-<div class="quickActions"><button class="btn secondary" id="refreshPushDevices" type="button">🔄 Actualizar dispositivos</button></div>
-<div class="schedule" style="margin-top:10px"><table><thead><tr><th>Jugador</th><th>Dispositivos</th><th>Última alta</th><th>Acción</th></tr></thead><tbody id="pushDevicesTable"><tr><td colspan="4">Pulsa “Actualizar dispositivos”.</td></tr></tbody></table></div>
-</div></details>
-<details class="adminBlock adminAccordion" data-admin-section="admins"><summary class="adminSummary"><span class="adminSummaryTitle">6 · Administradores externos</span><span class="adminSummaryMeta" id="adminMeta_admins">Abrir</span></summary><div class="adminAccordionBody">
-
-<div class="tiny">Crea administradores que <b>no tienen que pertenecer a ninguna categoría ni ser jugadores</b>. Aparecerán siempre en el desplegable de acceso y verán ⚙️ Configuración al iniciar sesión.</div>
+<details class="adminBlock adminAccordion adminPrimary" data-admin-section="accessDevices">
+  <summary class="adminSummary">
+    <span class="adminSummaryTitle">Accesos y dispositivos</span>
+    <span class="adminSummaryMeta" id="adminMeta_accessDevices">Usuarios y dispositivos</span>
+  </summary>
+  <div class="adminAccordionBody">
+    <div class="adminSubsection">
+      <div class="adminSubsectionHead"><span>PIN de jugadores</span><span id="adminMeta_pins_sub">Abrir</span></div>
+      <div class="adminSubsectionBody"><div class="tiny">Genera PIN de 4 cifras automáticamente para todos los jugadores cargados. Puedes regenerar uno concreto si fuera necesario. Los PIN se guardan online en Cloudflare junto con los usuarios.</div>
+<div class="quickActions"><button class="btn gold" id="generatePins">Generar PIN que falten</button><button class="btn secondary" id="showPins">Mostrar / ocultar PIN</button><button class="btn danger" id="resetPins">Regenerar todos</button></div>
+<div class="schedule" style="margin-top:10px"><table><thead><tr><th>Jugador</th><th>PIN</th><th>Mensaje</th><th>Acción</th></tr></thead><tbody id="pinTable"></tbody></table></div></div>
+    </div>
+    <div class="adminSubsection">
+      <div class="adminSubsectionHead"><span>Dispositivos y avisos</span><span id="adminMeta_devices_sub">Abrir</span></div>
+      <div class="adminSubsectionBody"><div class="tiny">Consulta qué jugadores tienen dispositivos suscritos a los avisos. Puedes dar de baja todos los dispositivos de un jugador si cambia de móvil, pierde el dispositivo o deja de querer recibir notificaciones.</div>
+<div class="quickActions"><button class="btn secondary" id="refreshPushDevices" type="button">Actualizar dispositivos</button></div>
+<div class="schedule" style="margin-top:10px"><table><thead><tr><th>Jugador</th><th>Dispositivos</th><th>Última alta</th><th>Acción</th></tr></thead><tbody id="pushDevicesTable"><tr><td colspan="4">Pulsa “Actualizar dispositivos”.</td></tr></tbody></table></div></div>
+    </div>
+    <div class="adminSubsection">
+      <div class="adminSubsectionHead"><span>Administradores externos</span><span id="adminMeta_admins_sub">Abrir</span></div>
+      <div class="adminSubsectionBody"><div class="tiny">Crea administradores que <b>no tienen que pertenecer a ninguna categoría ni ser jugadores</b>. Aparecerán siempre en el desplegable de acceso y verán ⚙️ Configuración al iniciar sesión.</div>
 <div class="generator" style="margin-top:10px">
 <div class="wide"><label>Nombre del administrador</label><input id="newAdminName" placeholder="Ej. Responsable del club" type="text"/></div>
 <div><label>PIN (opcional)</label><input id="newAdminPin" inputmode="numeric" maxlength="4" placeholder="Auto" type="text"/></div>
-<button class="btn gold" id="addExternalAdmin">＋ Crear ADMIN</button>
+<button class="btn gold" id="addExternalAdmin">Crear ADMIN</button>
 </div>
 <div class="schedule" style="margin-top:10px"><table><thead><tr><th>Administrador</th><th>PIN</th><th>Acciones</th></tr></thead><tbody id="externalAdminTable"></tbody></table></div>
-<div class="authNote">Si dejas el PIN vacío, se genera automáticamente. No se añade a ninguna lista de jugadores.</div>
-</div></details>
-<details class="adminBlock adminAccordion" data-admin-section="roles"><summary class="adminSummary"><span class="adminSummaryTitle">7 · Permisos de acceso</span><span class="adminSummaryMeta" id="adminMeta_roles">Abrir</span></summary><div class="adminAccordionBody">
-
-<div class="tiny">Solo las personas marcadas como <b>ADMIN</b> verán la opción ⚙️ Configuración y podrán modificar enfrentamientos, horarios, PIN o abrir/cerrar reservas.</div>
+<div class="authNote">Si dejas el PIN vacío, se genera automáticamente. No se añade a ninguna lista de jugadores.</div></div>
+    </div>
+    <div class="adminSubsection">
+      <div class="adminSubsectionHead"><span>Permisos de acceso</span><span id="adminMeta_roles_sub">Abrir</span></div>
+      <div class="adminSubsectionBody"><div class="tiny">Solo las personas marcadas como <b>ADMIN</b> verán la opción ⚙️ Configuración y podrán modificar enfrentamientos, horarios, PIN o abrir/cerrar reservas.</div>
 <div class="schedule" style="margin-top:10px"><table><thead><tr><th>Persona</th><th>Rol</th></tr></thead><tbody id="roleTable"></tbody></table></div>
-<div class="authNote">Administrador inicial de prueba: <b>Adrián Prádanos</b> · PIN <b>2020</b>. Puedes dar permiso ADMIN a otros usuarios desde esta tabla.</div>
-</div></details>
-<details class="adminBlock adminAccordion" data-admin-section="whats"><summary class="adminSummary"><span class="adminSummaryTitle">8 · Resumen para WhatsApp</span><span class="adminSummaryMeta" id="adminMeta_whats">Abrir</span></summary><div class="adminAccordionBody">
+<div class="authNote">Administrador inicial de prueba: <b>Adrián Prádanos</b> · PIN <b>2020</b>. Puedes dar permiso ADMIN a otros usuarios desde esta tabla.</div></div>
+    </div>
+  </div>
+</details>
 
-<textarea id="whatsPreview" readonly=""></textarea>
-<button class="btn gold" id="copyWhats" style="margin-top:8px">📋 Copiar mensaje</button>
-</div></details>
+<details class="adminBlock adminAccordion adminPrimary" data-admin-section="whats">
+  <summary class="adminSummary">
+    <span class="adminSummaryTitle">Comunicación</span>
+    <span class="adminSummaryMeta" id="adminMeta_whats">Abrir</span>
+  </summary>
+  <div class="adminAccordionBody"><textarea id="whatsPreview" readonly=""></textarea>
+<button class="btn gold" id="copyWhats" style="margin-top:8px">Copiar mensaje</button></div>
+</details>
+
 </div>
 <button class="adminBackTop" id="adminBackTop" type="button">↑ Arriba</button></section>
 </main>
@@ -2783,11 +2931,11 @@ function renderAdminMatches(){
               </div>
             </div>
             <div class="adminMatchActions2">
-              <button class="primary" type="button" data-admin-match-result="${mappEsc(m.id)}">✏️ Resultado</button>
-              <button type="button" data-admin-match-court="${mappEsc(m.id)}">${bk?'🏟️ Cambiar pista':'🏟️ Asignar pista'}</button>
-              ${bk?`<button type="button" data-admin-match-free="${mappEsc(m.id)}">🔓 Liberar</button>`:''}
-              <button type="button" data-admin-match-delay="${mappEsc(m.id)}">🔄 Reprogramar</button>
-              <button class="danger" type="button" data-admin-match-delete="${mappEsc(m.id)}">🗑️ Eliminar</button>
+              <button class="primary" type="button" data-admin-match-result="${mappEsc(m.id)}">Resultado</button>
+              <button type="button" data-admin-match-court="${mappEsc(m.id)}">${bk?'Cambiar pista':'Asignar pista'}</button>
+              ${bk?`<button type="button" data-admin-match-free="${mappEsc(m.id)}">Liberar</button>`:''}
+              <button type="button" data-admin-match-delay="${mappEsc(m.id)}">Reprogramar</button>
+              <button class="danger" type="button" data-admin-match-delete="${mappEsc(m.id)}">Eliminar</button>
             </div>
           </div>`;
         }).join('')}
@@ -2866,7 +3014,7 @@ function renderPins(){
     const pin=data.pins[p]||'—';
     const shown=state.showPins?pin:'••••';
     const safe=p.replace(/"/g,'&quot;');
-    return `<tr><td><b>${p}</b></td><td><span class="mono">${shown}</span></td><td><button class="btn secondary" data-copy-pin="${safe}">📋 Copiar mensaje</button></td><td><button class="btn danger" data-regenerate-pin="${safe}">♻ Nuevo PIN</button></td></tr>`;
+    return `<tr><td><b>${p}</b></td><td><span class="mono">${shown}</span></td><td><button class="btn secondary" data-copy-pin="${safe}">Copiar mensaje</button></td><td><button class="btn danger" data-regenerate-pin="${safe}">♻ Nuevo PIN</button></td></tr>`;
   }).join('');
   tb.querySelectorAll('[data-copy-pin]').forEach(b=>b.onclick=()=>copyPinMessage(b.dataset.copyPin));
   tb.querySelectorAll('[data-regenerate-pin]').forEach(b=>b.onclick=()=>regeneratePinFor(b.dataset.regeneratePin));
@@ -3074,7 +3222,7 @@ function renderDraftBoard(){
   const partHtml=(date,part,label,icon)=>{
     const arr=draftSlots.filter(s=>s.date===date&&partOfSlot(s)===part);
     const cls=part==='morning'?'morning':'afternoon';
-    const action=arr.length?`<span style="display:flex;gap:5px"><button class="miniAdd" data-addcourt="${date}|${part}">＋ pista</button><button class="iconBtn" data-delpart="${date}|${part}" title="Quitar bloque">✕ bloque</button></span>`:`<button class="miniAdd" data-addpart="${date}|${part}">＋ Añadir</button>`;
+    const action=arr.length?`<span style="display:flex;gap:5px"><button class="miniAdd" data-addcourt="${date}|${part}">＋ pista</button><button class="iconBtn" data-delpart="${date}|${part}" title="Quitar bloque">✕ bloque</button></span>`:`<button class="miniAdd" data-addpart="${date}|${part}">Añadir</button>`;
     return `<div class="draftPart"><div class="draftPartHead"><div class="draftPartTitle ${cls}">${icon} ${label}</div>${action}</div><div class="draftSlots">${arr.length?arr.map(s=>`<div class="draftSlot"><div><b>${s.time}</b><div class="meta">${s.court}</div></div><button class="iconBtn" data-delslot="${s.id}">✕</button></div>`).join(''):`<div class="draftEmpty">Sin disponibilidad</div>`}</div></div>`;
   };
   box.innerHTML=days.map(date=>`<div class="draftDay"><div class="draftDayHead"><b>${dayDateES(date)}</b><span class="tiny">${draftSlots.filter(s=>s.date===date).length} franjas</span></div><div class="draftParts">${partHtml(date,'morning','Mañana','☀️')}${partHtml(date,'afternoon','Tarde','🌇')}</div></div>`).join('');
@@ -3164,6 +3312,23 @@ function updateAdminSummaries(){
   set('adminMeta_admins',`${ac} externo${ac===1?'':'s'}`);
   set('adminMeta_roles',`${allIdentities().length} usuarios`);
   set('adminMeta_whats','Mensaje semanal');
+ const jm=$('#adminMeta_journeyCourts');
+ if(jm){
+   const fx=(fixtures()||[]).length, sl=(slots()||[]).length;
+   jm.textContent=`${weeks.find(w=>w.id===state.week)?.label||state.week} · ${fx} partido${fx===1?'':'s'} · ${sl} franja${sl===1?'':'s'}`;
+ }
+ const am=$('#adminMeta_accessDevices');
+ if(am){
+   const users=(adminUsers||[]).length, devs=(adminPushDevices||[]).length;
+   am.textContent=`${users} usuario${users===1?'':'s'} · ${devs} dispositivo${devs===1?'':'s'}`;
+ }
+ const subFx=$('#adminMeta_fixtures_sub'); if(subFx)subFx.textContent=`${(fixtures()||[]).length} partido${(fixtures()||[]).length===1?'':'s'}`;
+ const subSl=$('#adminMeta_slots_sub'); if(subSl)subSl.textContent=`${(slots()||[]).length} franja${(slots()||[]).length===1?'':'s'}`;
+ const subPin=$('#adminMeta_pins_sub'); if(subPin)subPin.textContent=`${Object.keys(data.pins||{}).length} jugadores`;
+ const subDev=$('#adminMeta_devices_sub'); if(subDev)subDev.textContent=`${(adminPushDevices||[]).length} dispositivos`;
+ const subAdm=$('#adminMeta_admins_sub'); if(subAdm)subAdm.textContent=`${(data.staff?.admins||[]).length} externos`;
+ const subRoles=$('#adminMeta_roles_sub'); if(subRoles)subRoles.textContent=`${(adminUsers||[]).length} usuarios`;
+
 }
 function wireAdminCompact(){
   const details=[...document.querySelectorAll('#adminView .adminAccordion')];
@@ -3390,7 +3555,7 @@ function renderModernResults(){
           ${special?`<div class="mapp-result-score-special">${mappEsc(special)}</div>`:''}
         </div>
         <div class="mapp-result-confirmed">✓ Resultado confirmado</div>
-        ${isAdmin()?`<div class="mapp-result-admin-row"><button class="mapp-admin-clean" type="button" data-admin-delete-result="${mappEsc(item.matchId)}">🗑️ Eliminar</button></div>`:''}
+        ${isAdmin()?`<div class="mapp-result-admin-row"><button class="mapp-admin-clean" type="button" data-admin-delete-result="${mappEsc(item.matchId)}">Eliminar</button></div>`:''}
       </div>
     </div>`;
   }).join('');
@@ -3565,7 +3730,7 @@ function renderModernCourts(){
                ${bk?`<div class="booking">${mappEsc(bk.a)} vs ${mappEsc(bk.b)}</div>`:''}
              </div>
              ${bk&&isAdmin()
-               ? `<button class="mapp-admin-clean" type="button" data-admin-release-booking="${mappEsc(matchId)}">🔓 Liberar</button>`
+               ? `<button class="mapp-admin-clean" type="button" data-admin-release-booking="${mappEsc(matchId)}">Liberar</button>`
                : `<div class="${bk?'mapp-busy':'mapp-free'}">${bk?'OCUPADA':'LIBRE'}</div>`
              }
              <div class="mapp-chevron">${bk?'':mappIcon('chevron')}</div>
