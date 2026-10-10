@@ -11,7 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 
-/* V3.15.1 · evita el flash del diseño antiguo durante el arranque */
+/* V3.15.2 · evita el flash del diseño antiguo durante el arranque */
 html.app-booting,
 html.app-booting body{
   background:#65000d!important;
@@ -206,7 +206,7 @@ select,input,textarea{min-width:0;max-width:100%}
 .calendarBtn:hover{background:rgba(255,201,40,.14)}
 @media(max-width:430px){.datePickerWrap{grid-template-columns:minmax(0,1fr) 44px}}
 
-/* V3.15.1 · RESULTADOS PRO · Entrada directa por PIN · nuevo diseño */
+/* V3.15.2 · FOTO CLOUD · Entrada directa por PIN · nuevo diseño */
 .pinWelcome{
   position:fixed;
   inset:0;
@@ -2033,8 +2033,8 @@ function setWeekRangeLocal(start,end){
   return true
 }
 
-function fresh(){return {playerLists:{},fixtures:{},fixtureRounds:{},slots:{},drafts:{},published:{},bookings:{},results:{},pins:{},roles:{},staff:{},weekRanges:{},postponed:{}}}
-function normalizeData(x){const d=x&&typeof x==='object'?x:{};const wr={...(d.weekRanges||{})};if(d.weeks&&typeof d.weeks==='object'){for(const [id,w] of Object.entries(d.weeks)){if(w&&w.start&&w.end&&!wr[id])wr[id]={start:w.start,end:w.end}}}return {playerLists:d.playerLists||{},fixtures:d.fixtures||{},fixtureRounds:d.fixtureRounds||{},slots:d.slots||{},drafts:d.drafts||{},published:d.published||{},bookings:d.reservations||d.bookings||{},results:d.results||{},pins:d.pins||{},roles:{...(d.roles||{}),...(d.adminRoles||{})},staff:d.staff||{},weekRanges:wr,postponed:d.postponed||{}}}
+function fresh(){return {playerLists:{},fixtures:{},fixtureRounds:{},slots:{},drafts:{},published:{},bookings:{},results:{},profiles:{},pins:{},roles:{},staff:{},weekRanges:{},postponed:{}}}
+function normalizeData(x){const d=x&&typeof x==='object'?x:{};const wr={...(d.weekRanges||{})};if(d.weeks&&typeof d.weeks==='object'){for(const [id,w] of Object.entries(d.weeks)){if(w&&w.start&&w.end&&!wr[id])wr[id]={start:w.start,end:w.end}}}return {playerLists:d.playerLists||{},fixtures:d.fixtures||{},fixtureRounds:d.fixtureRounds||{},slots:d.slots||{},drafts:d.drafts||{},published:d.published||{},bookings:d.reservations||d.bookings||{},results:d.results||{},profiles:d.profiles||{},pins:d.pins||{},roles:{...(d.roles||{}),...(d.adminRoles||{})},staff:d.staff||{},weekRanges:wr,postponed:d.postponed||{}}}
 let data=normalizeData(JSON.parse(localStorage.getItem(STORAGE_KEY)||"null")||fresh());
 applyWeekRanges();
 if(!data.staff["Adrián Prádanos"])data.staff["Adrián Prádanos"]={name:"Adrián Prádanos"};
@@ -2058,6 +2058,7 @@ async function restoreSession(){
     state.player=j.user.name;
     state.authenticated=true;
     data.roles[state.player]=j.user.role==='admin'?'admin':'jugador';
+    if(j.state?.profiles)data.profiles=j.state.profiles;
     localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
     if(isAdmin())await loadAdminUsers();
     return true;
@@ -2077,7 +2078,7 @@ function adminEditorActive(){
   return !!(el && el.closest && el.closest('#adminView') && /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName));
 }
 
-async function refreshOnline({silent=false,force=false}={}){if((fixtureEditorDirty||playerEditorDirty||adminEditorActive())&&!force){setOnline(true,'✏️ Editando · actualización pausada');return false}try{const j=await apiRequest({action:'read'},{auth:false});const remote=normalizeData(j.state);data.playerLists=remote.playerLists;data.fixtures=remote.fixtures;data.fixtureRounds=remote.fixtureRounds;data.slots=remote.slots;data.drafts=remote.drafts;data.published=remote.published;data.bookings=remote.bookings;data.results=remote.results;data.weekRanges=remote.weekRanges||data.weekRanges||{};data.postponed=remote.postponed||{};applyWeekRanges();data.staff={...(data.staff||{}),...(remote.staff||{})};data.roles={...(data.roles||{}),...(remote.roles||{})};data.roles["Adrián Prádanos"]="admin";localStorage.setItem(STORAGE_KEY,JSON.stringify(data));setOnline(true,'☁️ Online');renderAll();return true}catch(e){setOnline(false,'⚠️ Offline');if(!silent)alert('No se ha podido actualizar desde Cloudflare.\n\n'+e.message);return false}}
+async function refreshOnline({silent=false,force=false}={}){if((fixtureEditorDirty||playerEditorDirty||adminEditorActive())&&!force){setOnline(true,'✏️ Editando · actualización pausada');return false}try{const j=await apiRequest({action:'read'},{auth:false});const remote=normalizeData(j.state);data.playerLists=remote.playerLists;data.fixtures=remote.fixtures;data.fixtureRounds=remote.fixtureRounds;data.slots=remote.slots;data.drafts=remote.drafts;data.published=remote.published;data.bookings=remote.bookings;data.results=remote.results;data.profiles=remote.profiles||data.profiles||{};data.weekRanges=remote.weekRanges||data.weekRanges||{};data.postponed=remote.postponed||{};applyWeekRanges();data.staff={...(data.staff||{}),...(remote.staff||{})};data.roles={...(data.roles||{}),...(remote.roles||{})};data.roles["Adrián Prádanos"]="admin";localStorage.setItem(STORAGE_KEY,JSON.stringify(data));setOnline(true,'☁️ Online');renderAll();return true}catch(e){setOnline(false,'⚠️ Offline');if(!silent)alert('No se ha podido actualizar desde Cloudflare.\n\n'+e.message);return false}}
 async function saveStateOnline(){if(!apiToken||!isAdmin())return;await apiRequest({action:'saveState',state:publicState()});setOnline(true,'☁️ Guardado')}
 async function saveUsersOnline(){if(!apiToken||!isAdmin())return;const users=allIdentities().map(name=>({name,pin:String(data.pins[name]||''),role:roleOf(name)==='admin'?'admin':'player',active:true})).filter(u=>/^\d{4}$/.test(u.pin));await apiRequest({action:'saveUsers',users});}
 async function loadAdminUsers(){if(!apiToken||!isAdmin())return;const j=await apiRequest({action:'listUsers'});for(const u of j.users||[]){data.pins[u.name]=String(u.pin||'');data.roles[u.name]=u.role==='admin'?'admin':'jugador';if(!allPlayers().includes(u.name))data.staff[u.name]={name:u.name}}localStorage.setItem(STORAGE_KEY,JSON.stringify(data));}
@@ -3201,7 +3202,27 @@ function mappIcon(name){return MAPP_ICONS[name]||''}
 function mappEsc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function mappInitials(name){const p=String(name||'?').trim().split(/\s+/);return (p[0]?.[0]||'')+(p.length>1?p[p.length-1][0]:'')}
 function mappPhotoKey(name){return 'ctcampeador_profile_photo_'+normalizeName(name)}
-function mappPhoto(name){try{return localStorage.getItem(mappPhotoKey(name))||''}catch(_){return ''}}
+function mappLocalPhoto(name){try{return localStorage.getItem(mappPhotoKey(name))||''}catch(_){return ''}}
+function mappPhoto(name){
+ const cloud=data.profiles?.[name]?.photoDataUrl;
+ if(cloud)return cloud;
+ return mappLocalPhoto(name);
+}
+const mappPhotoSyncing=new Set();
+async function mappMaybeMigrateLegacyPhoto(name){
+ if(!state.authenticated||!apiToken||!name||mappPhotoSyncing.has(name))return;
+ if(data.profiles?.[name]?.photoDataUrl)return;
+ const local=mappLocalPhoto(name);
+ if(!local||!local.startsWith('data:image/'))return;
+ mappPhotoSyncing.add(name);
+ try{
+   const j=await apiRequest({action:'upsertProfile',profile:{player:name,photoDataUrl:local}});
+   data.profiles=data.profiles||{};
+   data.profiles[name]=j.profile;
+   localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+ }catch(e){console.warn('Migración de foto:',e)}
+ finally{mappPhotoSyncing.delete(name)}
+}
 function mappAvatar(name,cls='mapp-player-avatar'){
  const ph=mappPhoto(name); const style=ph?` style="background-image:url('${ph.replace(/'/g,"%27")}')"`:'';
  return `<div class="${cls}"${style}>${ph?'':mappEsc(mappInitials(name))}</div>`
@@ -3600,13 +3621,14 @@ function mappInstallText(){
 }
 async function renderModernProfile(){
  const box=$('#modernProfileContent');if(!box)return;
+ if(state.player)mappMaybeMigrateLegacyPhoto(state.player);
  const [pushText,pushCls]=await mappPushStatusText();
  const [installText,installCls]=mappInstallText();
  const pin=String(data.pins?.[state.player]||'');
  box.innerHTML=`<div class="mapp-card">
    <div class="mapp-profile-head">
      ${mappAvatar(state.player,'mapp-profile-avatar')}
-     <div><div class="mapp-profile-name">${mappEsc(state.player)}</div><div class="mapp-profile-role">${isAdmin()?'Administrador':'Jugador · '+mappEsc(state.category)+' '+mappEsc(state.gender)}</div>${!isAdmin()&&playerCategoryMemberships(state.player).length>1?`<div class="mapp-menu-sub">Inscrito en ${playerCategoryMemberships(state.player).length} categorías · acceso inicial a la inferior</div>`:`<div class="mapp-menu-sub">Toca la foto para cambiarla en este dispositivo</div>`}</div>
+     <div><div class="mapp-profile-name">${mappEsc(state.player)}</div><div class="mapp-profile-role">${isAdmin()?'Administrador':'Jugador · '+mappEsc(state.category)+' '+mappEsc(state.gender)}</div>${!isAdmin()&&playerCategoryMemberships(state.player).length>1?`<div class="mapp-menu-sub">Inscrito en ${playerCategoryMemberships(state.player).length} categorías · acceso inicial a la inferior</div>`:`<div class="mapp-menu-sub">Toca la foto para cambiarla · sincronizada en Cloudflare</div>`}</div>
    </div>
    <div class="mapp-menu-row" id="mappPushRow"><div class="mapp-menu-icon">${mappIcon('bell')}</div><div><div class="mapp-menu-title">Avisos</div><div class="mapp-menu-sub ${pushCls}">${mappEsc(pushText)}</div></div><div>${mappIcon('chevron')}</div></div>
    <div class="mapp-menu-row" id="mappInstallRow"><div class="mapp-menu-icon">${mappIcon('phone')}</div><div><div class="mapp-menu-title">Aplicación</div><div class="mapp-menu-sub ${installCls}">${mappEsc(installText)}</div></div><div>${mappIcon('chevron')}</div></div>
@@ -3628,22 +3650,44 @@ async function renderModernProfile(){
  $('#mappLogoutRow')?.addEventListener('click',()=>$('#clearIdentity').click());
  $('#mappAdminRow')?.addEventListener('click',openModernAdmin);
 }
-function mappSavePhoto(e){
- const file=e.target.files?.[0];if(!file)return;
- if(!file.type.startsWith('image/'))return;
- const reader=new FileReader();
- reader.onload=()=>{
-   const img=new Image();
-   img.onload=()=>{
-     const c=document.createElement('canvas'),max=360,scale=Math.min(1,max/Math.max(img.width,img.height));
-     c.width=Math.round(img.width*scale);c.height=Math.round(img.height*scale);
-     c.getContext('2d').drawImage(img,0,0,c.width,c.height);
-     try{localStorage.setItem(mappPhotoKey(state.player),c.toDataURL('image/jpeg',.82))}catch(_){}
-     renderModernUI();
-   };
-   img.src=reader.result;
- };
- reader.readAsDataURL(file);
+async function mappSavePhoto(e){
+ const file=e.target.files?.[0];
+ e.target.value='';
+ if(!file)return;
+ if(!file.type.startsWith('image/')){alert('Selecciona una imagen válida.');return}
+ if(!state.authenticated||!apiToken||!state.player){alert('Debes iniciar sesión para cambiar la foto.');return}
+ try{
+   const dataUrl=await new Promise((resolve,reject)=>{
+     const reader=new FileReader();
+     reader.onerror=()=>reject(new Error('No se pudo leer la imagen.'));
+     reader.onload=()=>{
+       const img=new Image();
+       img.onerror=()=>reject(new Error('La imagen no es válida.'));
+       img.onload=()=>{
+         const size=256;
+         const c=document.createElement('canvas');
+         c.width=size;c.height=size;
+         const ctx=c.getContext('2d');
+         const scale=Math.max(size/img.width,size/img.height);
+         const w=img.width*scale,h=img.height*scale;
+         ctx.drawImage(img,(size-w)/2,(size-h)/2,w,h);
+         resolve(c.toDataURL('image/jpeg',.78));
+       };
+       img.src=reader.result;
+     };
+     reader.readAsDataURL(file);
+   });
+   if(dataUrl.length>180000)throw new Error('La imagen sigue siendo demasiado grande después de comprimirla.');
+   const j=await apiRequest({action:'upsertProfile',profile:{player:state.player,photoDataUrl:dataUrl}});
+   data.profiles=data.profiles||{};
+   data.profiles[state.player]=j.profile;
+   try{localStorage.setItem(mappPhotoKey(state.player),dataUrl)}catch(_){}
+   localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+   renderAll();
+   alert('📷 Foto guardada y sincronizada en Cloudflare.');
+ }catch(err){
+   alert('No se pudo guardar la foto.\n\n'+(err?.message||err));
+ }
 }
 
 function renderModernAdminContext(){
@@ -3735,7 +3779,7 @@ $('#welcomePin').addEventListener('input',e=>{
 $('#welcomePin').addEventListener('keydown',e=>{if(e.key==='Enter')loginWithPinOnly()});
 
 $('#playerIdentity').onchange=e=>{if(!state.authenticated)state.player=e.target.value;$('#playerPin').value='';renderIdentity()};
-$('#loginBtn').onclick=async()=>{const player=$('#playerIdentity').value,pin=$('#playerPin').value.trim();if(!player){alert('Selecciona tu nombre.');return}if(!/^\d{4}$/.test(pin)){alert('Introduce un PIN de 4 cifras.');return}try{$('#loginBtn').disabled=true;const j=await apiRequest({action:'login',name:player,pin},{auth:false});apiToken=j.token;localStorage.setItem(TOKEN_KEY,apiToken);state.player=j.user.name;state.authenticated=true;data.roles[state.player]=j.user.role==='admin'?'admin':'jugador';if(isAdmin())await loadAdminUsers();routePlayerToOwnCategory(state.player);$('#playerPin').value='';setOnline(true,'☁️ Online');renderAll()}catch(e){alert('No se ha podido iniciar sesión.\n\n'+e.message)}finally{$('#loginBtn').disabled=false}};
+$('#loginBtn').onclick=async()=>{const player=$('#playerIdentity').value,pin=$('#playerPin').value.trim();if(!player){alert('Selecciona tu nombre.');return}if(!/^\d{4}$/.test(pin)){alert('Introduce un PIN de 4 cifras.');return}try{$('#loginBtn').disabled=true;const j=await apiRequest({action:'login',name:player,pin},{auth:false});apiToken=j.token;localStorage.setItem(TOKEN_KEY,apiToken);state.player=j.user.name;state.authenticated=true;data.roles[state.player]=j.user.role==='admin'?'admin':'jugador';if(isAdmin())await loadAdminUsers();routePlayerToOwnCategory(state.player);$('#playerPin').value='';setOnline(true,'☁️ Online');await refreshOnline({silent:true,force:true});renderAll()}catch(e){alert('No se ha podido iniciar sesión.\n\n'+e.message)}finally{$('#loginBtn').disabled=false}};
 $('#playerPin').addEventListener('keydown',e=>{if(e.key==='Enter')$('#loginBtn').click()});
 $('#clearIdentity').onclick=async()=>{try{if(apiToken)await apiRequest({action:'logout'})}catch(e){}apiToken='';localStorage.removeItem(TOKEN_KEY);state.player='';state.authenticated=false;$('#playerPin').value='';renderAll();showPinWelcome('Introduce tu PIN para cambiar de usuario.',false)};
 $$('.gender').forEach(b=>b.onclick=()=>{state.gender=b.dataset.gender;renderAll()});
