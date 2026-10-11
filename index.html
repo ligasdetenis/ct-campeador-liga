@@ -151,7 +151,7 @@ select,input,textarea{min-width:0;max-width:100%}
 .adminAccordionBody>.authNote:first-child,.adminAccordionBody>.tiny:first-child{margin-top:10px}
 .adminBackTop{position:sticky;bottom:84px;margin-left:auto;display:none;border:1px solid rgba(255,201,40,.35);background:rgba(24,10,13,.94);color:var(--gold);border-radius:999px;padding:9px 12px;font-size:11px;font-weight:700;z-index:16}
 #adminView.adminScrolled .adminBackTop{display:block}
-@media(max-width:600px){.adminQuickNav{top:70px}.adminSummaryMeta{max-width:45%}.adminAccordionBody{padding:0 10px 10px}}\n/* V3.13.2 · Auditoría visual completa de Administración */
+@media(max-width:600px){.adminQuickNav{top:70px}.adminSummaryMeta{max-width:45%}.adminAccordionBody{padding:0 10px 10px}}\n/* V3.13.3 · Auditoría visual completa de Administración */
 #adminView .adminAccordionBody{overflow:visible}
 #adminView .btn,#adminView .presetBtn,#adminView .calendarBtn{min-height:42px;visibility:visible;filter:none}
 #adminView .btn.secondary{background:#342027;border-color:rgba(255,255,255,.24);color:#fff8f0}
@@ -192,6 +192,10 @@ select,input,textarea{min-width:0;max-width:100%}
 @media(max-width:600px){.notifyBox{grid-template-columns:1fr}.notifyBox .btn{width:100%}}
 @media(max-width:520px){.welcomeCard{padding:18px;border-radius:20px}.welcomeLogo{width:94px;height:94px}.welcomeTitle{font-size:21px}}
 
+
+/* V3.13.4 · Base64 + lecturas optimizadas + fotos en resultados */
+.playerWithPhoto{display:inline-flex;align-items:center;gap:7px;vertical-align:middle}.playerAvatar{width:34px;height:34px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,196,60,.55);background:#eef0f3;flex:0 0 auto}.playerAvatar.avatarLg{width:48px;height:48px}.playerAvatarFallback{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;background:#f0f1f4;color:#7f0a14;font-size:11px;font-weight:900;border:2px solid rgba(127,10,20,.14);flex:0 0 auto}.playerAvatarFallback.avatarLg{width:48px;height:48px;font-size:13px}.resultPeople{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:8px 0 3px}.resultPerson{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:800}.resultVs{font-size:10px;color:var(--muted);font-weight:900}.photoAdminGrid{display:grid;grid-template-columns:minmax(180px,1fr) minmax(240px,2fr) auto;gap:8px;align-items:end;margin-top:10px}.photoPreviewBox{display:flex;align-items:center;gap:10px;margin-top:10px;padding:10px;border:1px solid var(--line);border-radius:12px;background:#fff}.photoPreviewBox .name{font-weight:900}.syncHint{font-size:10px;color:var(--muted);margin-top:6px}.btn.savingSkipped{opacity:.82}
+@media(max-width:720px){.photoAdminGrid{grid-template-columns:1fr}.photoAdminGrid .btn{width:100%}.playerAvatar{width:31px;height:31px}.playerAvatarFallback{width:31px;height:31px}.resultPeople{gap:7px}.resultPerson{font-size:11px}}
 </style>
 </head>
 <body class="welcomeLocked">
@@ -250,7 +254,7 @@ select,input,textarea{min-width:0;max-width:100%}
 </section>
 <section class="card" id="matchesView">
 <div class="head"><h2>📋 Enfrentamientos oficiales</h2><small id="matchMeta"></small></div>
-<div class="tiny" style="padding:0 14px 10px;color:var(--gold);font-weight:700">V3.13.2 · Admin visible · Push propio</div>
+<div class="tiny" style="padding:0 14px 10px;color:var(--gold);font-weight:700">V3.13.3 · Admin visible · Push propio</div>
 <div class="pad">
 <div class="stateBanner closed" id="reserveState"></div>
 <div class="matches" id="matches"></div>
@@ -261,7 +265,7 @@ select,input,textarea{min-width:0;max-width:100%}
 <div class="schedule" id="schedule"></div>
 </section>
 <section class="card hidden" id="adminView">
-<div class="head"><h2>⚙️ Gestión semanal <span class="adminBadge">ADMIN</span></h2><small>V3.13.2 · Admin visible · Push propio</small></div>
+<div class="head"><h2>⚙️ Gestión semanal <span class="adminBadge">ADMIN</span></h2><small>V3.13.3 · Admin visible · Push propio</small></div>
 <div class="pad adminGrid"><div class="adminQuickNav" id="adminQuickNav"><button class="adminQuickBtn" data-admin-target="players" type="button">👥 Jugadores</button><button class="adminQuickBtn" data-admin-target="fixtures" type="button">🎾 Jornada</button><button class="adminQuickBtn" data-admin-target="slots" type="button">🏟️ Pistas</button><button class="adminQuickBtn" data-admin-target="pins" type="button">🔐 PIN</button><button class="adminQuickBtn" data-admin-target="admins" type="button">🛡️ Admins</button><button class="adminQuickBtn" data-admin-target="roles" type="button">👤 Permisos</button><button class="adminQuickBtn" data-admin-target="whats" type="button">📣 WhatsApp</button></div>
 <details class="adminBlock adminAccordion" data-admin-section="players" open=""><summary class="adminSummary"><span class="adminSummaryTitle">1 · Jugadores de la categoría</span><span class="adminSummaryMeta" id="adminMeta_players">Abrir</span></summary><div class="adminAccordionBody">
 
@@ -351,7 +355,18 @@ Pablo Ruiz"></textarea>
 <div class="schedule" style="margin-top:10px"><table><thead><tr><th>Persona</th><th>Rol</th></tr></thead><tbody id="roleTable"></tbody></table></div>
 <div class="authNote">Administrador inicial de prueba: <b>Adrián Prádanos</b> · PIN <b>2020</b>. Puedes dar permiso ADMIN a otros usuarios desde esta tabla.</div>
 </div></details>
-<details class="adminBlock adminAccordion" data-admin-section="whats"><summary class="adminSummary"><span class="adminSummaryTitle">7 · Resumen para WhatsApp</span><span class="adminSummaryMeta" id="adminMeta_whats">Abrir</span></summary><div class="adminAccordionBody">
+<details class="adminBlock adminAccordion" data-admin-section="photos"><summary class="adminSummary"><span class="adminSummaryTitle">7 · Fotos de jugadores</span><span class="adminSummaryMeta" id="adminMeta_photos">Abrir</span></summary><div class="adminAccordionBody">
+<div class="tiny">Asocia una foto a cada jugador directamente desde el móvil u ordenador. La aplicación la reduce automáticamente y la guarda en formato <b>Base64</b>, como hacíamos antes. La foto aparecerá especialmente en los <b>resultados</b> y también junto al nombre del jugador en sus partidos.</div>
+<div class="photoAdminGrid">
+<div class="field"><label>Jugador</label><select id="photoPlayer"></select></div>
+<div class="field"><label>Elegir foto</label><input id="photoFile" type="file" accept="image/*"/></div>
+<button class="btn gold" id="savePlayerPhoto" type="button">📸 Guardar foto</button>
+</div>
+<div class="quickActions" style="margin-top:8px"><button class="btn dangerBtn" id="deletePlayerPhoto" type="button">Quitar foto</button></div>
+<div class="photoPreviewBox" id="photoPreviewBox"><span class="tiny">Selecciona un jugador para ver su foto actual.</span></div>
+<div class="syncHint">La imagen se comprime antes de guardarse (máx. 320 × 320 px) para que el Base64 no haga crecer innecesariamente los datos de la liga.</div>
+</div></details>
+<details class="adminBlock adminAccordion" data-admin-section="whats"><summary class="adminSummary"><span class="adminSummaryTitle">8 · Resumen para WhatsApp</span><span class="adminSummaryMeta" id="adminMeta_whats">Abrir</span></summary><div class="adminAccordionBody">
 
 <textarea id="whatsPreview" readonly=""></textarea>
 <button class="btn gold" id="copyWhats" style="margin-top:8px">📋 Copiar mensaje</button>
@@ -404,8 +419,8 @@ function makeWeekLabel(w){const n=Number(String(w.id).replace(/\D/g,''))||'';ret
 function applyWeekRanges(){for(const w of weeks){const r=data?.weekRanges?.[w.id];if(r&&/^\d{4}-\d{2}-\d{2}$/.test(r.start||'')&&/^\d{4}-\d{2}-\d{2}$/.test(r.end||'')&&r.start<=r.end){w.start=r.start;w.end=r.end}w.label=makeWeekLabel(w)}}
 function setWeekRangeLocal(start,end){if(!start||!end)return false;if(start>end){alert('La fecha de inicio no puede ser posterior a la fecha final.');return false}data.weekRanges=data.weekRanges||{};data.weekRanges[state.week]={start,end};applyWeekRanges();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));markFixtureDirty();renderWeeks();setDefaultQuickDate();renderDraftBoard();updateAdminSummaries();return true}
 
-function fresh(){return {playerLists:{},fixtures:{},fixtureRounds:{},slots:{},drafts:{},published:{},bookings:{},results:{},pins:{},roles:{},staff:{},weekRanges:{},postponed:{}}}
-function normalizeData(x){const d=x&&typeof x==='object'?x:{};const wr={...(d.weekRanges||{})};if(d.weeks&&typeof d.weeks==='object'){for(const [id,w] of Object.entries(d.weeks)){if(w&&w.start&&w.end&&!wr[id])wr[id]={start:w.start,end:w.end}}}return {playerLists:d.playerLists||{},fixtures:d.fixtures||{},fixtureRounds:d.fixtureRounds||{},slots:d.slots||{},drafts:d.drafts||{},published:d.published||{},bookings:d.reservations||d.bookings||{},results:d.results||{},pins:d.pins||{},roles:{...(d.roles||{}),...(d.adminRoles||{})},staff:d.staff||{},weekRanges:wr,postponed:d.postponed||{}}}
+function fresh(){return {playerLists:{},fixtures:{},fixtureRounds:{},slots:{},drafts:{},published:{},bookings:{},results:{},pins:{},roles:{},staff:{},weekRanges:{},postponed:{},playerPhotos:{}}}
+function normalizeData(x){const d=x&&typeof x==='object'?x:{};const wr={...(d.weekRanges||{})};if(d.weeks&&typeof d.weeks==='object'){for(const [id,w] of Object.entries(d.weeks)){if(w&&w.start&&w.end&&!wr[id])wr[id]={start:w.start,end:w.end}}}return {playerLists:d.playerLists||{},fixtures:d.fixtures||{},fixtureRounds:d.fixtureRounds||{},slots:d.slots||{},drafts:d.drafts||{},published:d.published||{},bookings:d.reservations||d.bookings||{},results:d.results||{},pins:d.pins||{},roles:{...(d.roles||{}),...(d.adminRoles||{})},staff:d.staff||{},weekRanges:wr,postponed:d.postponed||{},playerPhotos:d.playerPhotos||{}}}
 let data=normalizeData(JSON.parse(localStorage.getItem(STORAGE_KEY)||"null")||fresh());
 applyWeekRanges();
 if(!data.staff["Adrián Prádanos"])data.staff["Adrián Prádanos"]={name:"Adrián Prádanos"};
@@ -418,7 +433,8 @@ const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 let saveTimer=null;
 let reservationPending=false;
 function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(data));if(isAdmin()&&apiToken){clearTimeout(saveTimer);saveTimer=setTimeout(()=>saveStateOnline().catch(console.warn),350)}}
-function publicState(){return {playerLists:data.playerLists,fixtures:data.fixtures,fixtureRounds:data.fixtureRounds,slots:data.slots,drafts:data.drafts,published:data.published,bookings:data.bookings,reservations:data.bookings,results:data.results,staff:data.staff,adminRoles:Object.fromEntries(Object.entries(data.roles||{}).filter(([,r])=>r==='admin')),weekRanges:data.weekRanges||{},postponed:data.postponed||{},weeks:Object.fromEntries(weeks.map(w=>[w.id,w])),updatedAt:new Date().toISOString()}}
+function stateCore(){return {playerLists:data.playerLists,fixtures:data.fixtures,fixtureRounds:data.fixtureRounds,slots:data.slots,drafts:data.drafts,published:data.published,bookings:data.bookings,reservations:data.bookings,results:data.results,staff:data.staff,adminRoles:Object.fromEntries(Object.entries(data.roles||{}).filter(([,r])=>r==='admin')),weekRanges:data.weekRanges||{},postponed:data.postponed||{},playerPhotos:data.playerPhotos||{},weeks:Object.fromEntries(weeks.map(w=>[w.id,w]))}}
+function publicState(){return {...stateCore(),updatedAt:new Date().toISOString()}}
 async function apiRequest(payload,{auth=true}={}){const headers={'Content-Type':'application/json'};if(auth&&apiToken)headers.Authorization='Bearer '+apiToken;const r=await fetch(API_URL,{method:'POST',headers,body:JSON.stringify(payload)});let j={};try{j=await r.json()}catch(e){}if(!r.ok||j.ok===false)throw new Error(j.error||('HTTP '+r.status));return j}
 async function restoreSession(){
   if(!apiToken)return false;
@@ -441,10 +457,14 @@ async function restoreSession(){
     return false;
   }
 }
+let lastRefreshAt=0,lastSavedStateHash='',lastSavedUsersHash='';
+const AUTO_REFRESH_MS=300000,MIN_VISIBLE_REFRESH_MS=120000;
+function payloadHash(v){try{return JSON.stringify(v)}catch{return ''}}
+function currentUsersPayload(){return allIdentities().map(name=>({name,pin:String(data.pins[name]||''),role:roleOf(name)==='admin'?'admin':'player',active:true})).filter(u=>/^\d{4}$/.test(u.pin))}
 function setOnline(ok,text){const el=$('#onlineState');if(!el)return;el.classList.toggle('off',!ok);el.textContent=text||(ok?'☁️ Online':'⚠️ Sin conexión')}
-async function refreshOnline({silent=false,force=false}={}){if(fixtureEditorDirty&&!force){setOnline(true,'✏️ Cambios sin guardar');return false}try{const j=await apiRequest({action:'read'},{auth:false});const remote=normalizeData(j.state);data.playerLists=remote.playerLists;data.fixtures=remote.fixtures;data.fixtureRounds=remote.fixtureRounds;data.slots=remote.slots;data.drafts=remote.drafts;data.published=remote.published;data.bookings=remote.bookings;data.results=remote.results;data.weekRanges=remote.weekRanges||data.weekRanges||{};data.postponed=remote.postponed||{};applyWeekRanges();data.staff={...(data.staff||{}),...(remote.staff||{})};data.roles={...(data.roles||{}),...(remote.roles||{})};data.roles["Adrián Prádanos"]="admin";localStorage.setItem(STORAGE_KEY,JSON.stringify(data));setOnline(true,'☁️ Online');renderAll();return true}catch(e){setOnline(false,'⚠️ Offline');if(!silent)alert('No se ha podido actualizar desde Cloudflare.\n\n'+e.message);return false}}
-async function saveStateOnline(){if(!apiToken||!isAdmin())return;await apiRequest({action:'saveState',state:publicState()});setOnline(true,'☁️ Guardado')}
-async function saveUsersOnline(){if(!apiToken||!isAdmin())return;const users=allIdentities().map(name=>({name,pin:String(data.pins[name]||''),role:roleOf(name)==='admin'?'admin':'player',active:true})).filter(u=>/^\d{4}$/.test(u.pin));await apiRequest({action:'saveUsers',users});}
+async function refreshOnline({silent=false,force=false}={}){if(fixtureEditorDirty&&!force){setOnline(true,'✏️ Cambios sin guardar');return false}try{const j=await apiRequest({action:'read'},{auth:false});const remote=normalizeData(j.state);data.playerLists=remote.playerLists;data.fixtures=remote.fixtures;data.fixtureRounds=remote.fixtureRounds;data.slots=remote.slots;data.drafts=remote.drafts;data.published=remote.published;data.bookings=remote.bookings;data.results=remote.results;data.weekRanges=remote.weekRanges||data.weekRanges||{};data.postponed=remote.postponed||{};data.playerPhotos=remote.playerPhotos||{};applyWeekRanges();data.staff={...(data.staff||{}),...(remote.staff||{})};data.roles={...(data.roles||{}),...(remote.roles||{})};data.roles["Adrián Prádanos"]="admin";localStorage.setItem(STORAGE_KEY,JSON.stringify(data));lastRefreshAt=Date.now();lastSavedStateHash=payloadHash(stateCore());lastSavedUsersHash=payloadHash(currentUsersPayload());setOnline(true,'☁️ Online');renderAll();return true}catch(e){setOnline(false,'⚠️ Offline');if(!silent)alert('No se ha podido actualizar desde Cloudflare.\n\n'+e.message);return false}}
+async function saveStateOnline(){if(!apiToken||!isAdmin())return;const core=stateCore(),hash=payloadHash(core);if(hash&&hash===lastSavedStateHash){setOnline(true,'☁️ Sin cambios');return {skipped:true}}await apiRequest({action:'saveState',state:{...core,updatedAt:new Date().toISOString()}});lastSavedStateHash=hash;setOnline(true,'☁️ Guardado');return {skipped:false}}
+async function saveUsersOnline(){if(!apiToken||!isAdmin())return;const users=currentUsersPayload(),hash=payloadHash(users);if(hash&&hash===lastSavedUsersHash)return {skipped:true};await apiRequest({action:'saveUsers',users});lastSavedUsersHash=hash;return {skipped:false}}
 async function loadAdminUsers(){if(!apiToken||!isAdmin())return;const j=await apiRequest({action:'listUsers'});for(const u of j.users||[]){data.pins[u.name]=String(u.pin||'');data.roles[u.name]=u.role==='admin'?'admin':'jugador';if(!allPlayers().includes(u.name))data.staff[u.name]={name:u.name}}localStorage.setItem(STORAGE_KEY,JSON.stringify(data));}
 
 
@@ -650,6 +670,10 @@ function resultLabel(r){
  if(r.type==='not_played')return 'Partido no disputado';
  return (r.sets||[]).map(x=>`${x.a}-${x.b}`).join(' / ');
 }
+function playerInitials(name){return String(name||'').trim().split(/\s+/).filter(Boolean).slice(0,2).map(x=>x[0]?.toUpperCase()||'').join('')||'🎾'}
+function photoUrlFor(name){return String(data.playerPhotos?.[name]||'').trim()}
+function playerAvatarHTML(name,large=false){const u=photoUrlFor(name),cls=large?' avatarLg':'';if(u)return `<img class="playerAvatar${cls}" src="${u.replace(/"/g,'&quot;')}" alt="${String(name).replace(/"/g,'&quot;')}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='inline-flex'"><span class="playerAvatarFallback${cls}" style="display:none">${playerInitials(name)}</span>`;return `<span class="playerAvatarFallback${cls}">${playerInitials(name)}</span>`}
+function playerWithPhotoHTML(name){return `<span class="playerWithPhoto">${playerAvatarHTML(name)}<span>${name}</span></span>`}
 function renderMatches(){const fs=viewFixtures(), box=$('#matches');const officialCount=fixtures().length,carriedCount=fs.filter(m=>m._carried).length;$('#matchMeta').textContent=`${fixtureRound()?fixtureRound()+' · ':''}${officialCount} oficial${officialCount===1?'':'es'}${carriedCount?` · ${carriedCount} retrasado${carriedCount===1?'':'s'}`:''}`;if(!fs.length){box.innerHTML='<div class="empty">No hay enfrentamientos cargados para esta categoría y semana.</div>';return}
  const official=fs.filter(m=>!m._carried),carried=fs.filter(m=>m._carried);
  const card=m=>{
@@ -663,9 +687,9 @@ function renderMatches(){const fs=viewFixtures(), box=$('#matches');const offici
    let resultActions='';
    if(state.authenticated&&(mine||admin)){if(!r) resultActions=`<button class="btn gold" data-result-mid="${m.id}">Subir resultado</button>`;else if(r.status==='pending'&&!admin&&r.submittedBy!==state.player) resultActions=`<button class="btn green" data-confirm-result="${m.id}">Confirmar resultado</button>`;else if(r.status==='pending') resultActions=`<button class="btn gold" data-result-mid="${m.id}">Editar resultado</button>`;else if(admin) resultActions=`<button class="btn gold" data-result-mid="${m.id}">Corregir resultado</button>`}
    const delayAction=admin?`<button class="btn secondary" data-delay-mid="${m.id}">${p?'🔄 Gestionar retraso':'🔄 Retrasar'}</button>`:'';
-   const resultHtml=r?`<div class="resultLine ${r.status==='confirmed'?'resultConfirmed':'resultPending'}"><b>Resultado:</b> ${resultLabel(r)} <span class="resultBadge ${r.status==='confirmed'?'confirmed':'pending'}">${r.status==='confirmed'?'CONFIRMADO':'PENDIENTE DE CONFIRMAR'}</span>${r.status==='pending'?`<div class="tiny" style="margin-top:4px">Enviado por ${r.submittedBy}</div>`:''}</div>`:'';
+   const resultHtml=r?`<div class="resultLine ${r.status==='confirmed'?'resultConfirmed':'resultPending'}"><div class="resultPeople"><div class="resultPerson">${playerAvatarHTML(m.a,true)}<span>${m.a}</span></div><span class="resultVs">VS</span><div class="resultPerson">${playerAvatarHTML(m.b,true)}<span>${m.b}</span></div></div><b>Resultado:</b> ${resultLabel(r)} <span class="resultBadge ${r.status==='confirmed'?'confirmed':'pending'}">${r.status==='confirmed'?'CONFIRMADO':'PENDIENTE DE CONFIRMAR'}</span>${r.status==='pending'?`<div class="tiny" style="margin-top:4px">Enviado por ${r.submittedBy}</div>`:''}</div>`:'';
    const pBadge=p?`<div class="postponedBadge ${p.targetWeek?'reprogrammedBadge':''}">${p.targetWeek?`➡️ Reprogramado a ${weeks.find(w=>w.id===p.targetWeek)?.label||p.targetWeek}`:'🔄 Partido retrasado · pendiente de nueva semana'}</div>`:'';
-   return `<div class="match ${mine?'mineMatch':'notMine'} ${p?'postponedMatch':''}"><div><div class="cat">${state.category} · ${state.gender}${mine?' · TU PARTIDO':''}</div><div class="players">${m.a} <span style="color:var(--muted);font-weight:700">vs</span> ${m.b}</div><div class="booking">${detail}</div>${pBadge}<div style="margin-top:7px"><span class="status ${st}">${label}</span></div>${resultHtml}</div><div class="matchActions">${reserveActions}${resultActions}${delayAction}</div></div>`
+   return `<div class="match ${mine?'mineMatch':'notMine'} ${p?'postponedMatch':''}"><div><div class="cat">${state.category} · ${state.gender}${mine?' · TU PARTIDO':''}</div><div class="players">${playerWithPhotoHTML(m.a)} <span style="color:var(--muted);font-weight:700;margin:0 3px">vs</span> ${playerWithPhotoHTML(m.b)}</div><div class="booking">${detail}</div>${pBadge}<div style="margin-top:7px"><span class="status ${st}">${label}</span></div>${resultHtml}</div><div class="matchActions">${reserveActions}${resultActions}${delayAction}</div></div>`
  };
  box.innerHTML=(official.length?`<div class="matchSectionTitle">Partidos de esta jornada</div>${official.map(card).join('')}`:'')+(carried.length?`<div class="matchSectionTitle">🔄 Partidos retrasados de jornadas anteriores</div>${carried.map(card).join('')}`:'');
  box.querySelectorAll('[data-reserve-mid]').forEach(b=>b.onclick=()=>openReserve(b.dataset.reserveMid));
@@ -680,7 +704,7 @@ async function saveDelay(){if(!isAdmin())return;const mid=state.delayMatchId,rec
 async function restoreDelay(){if(!isAdmin())return;const mid=state.delayMatchId,rec=fixtureRecord(mid);if(!rec)return;if(!confirm(`¿Devolver ${rec.m.a} vs ${rec.m.b} a su jornada oficial?`))return;delete data.postponed[mid];localStorage.setItem(STORAGE_KEY,JSON.stringify(data));$('#delayModal').classList.remove('show');renderAll();try{await saveStateOnline();setOnline(true,'☁️ Guardado');alert('✅ Partido devuelto a su jornada oficial.')}catch(e){alert(e.message)}}
 function readSet(aId,bId){const av=$(aId).value,bv=$(bId).value;if(av===''&&bv==='')return null;if(av===''||bv==='')throw new Error('Completa los dos tanteos del set.');const a=Number(av),b=Number(bv);if(!Number.isInteger(a)||!Number.isInteger(b)||a<0||b<0||a>99||b>99||a===b)throw new Error('Revisa el tanteo de los sets.');return {a,b}}
 function syncResultType(){const type=$('#resultType').value;$('#scoreFields').classList.toggle('hidden',type==='wo'||type==='not_played');$('#winnerField').classList.toggle('hidden',!(type==='wo'||type==='retirement'))}
-function openResultModal(mid){state.resultMatchId=mid;const m=findFixtureById(mid);if(!m)return;if(!isAdmin()&&!canPlayerReserve(m)){alert('Solo los jugadores del partido o un administrador pueden gestionar el resultado.');return}const r=resultFor(mid);$('#resultModalMatch').textContent=`${m.a} vs ${m.b}`;$('#resultModalCat').textContent=`${state.category} · ${state.gender} · ${weeks.find(w=>w.id===state.week).label}`;$('#resultWinner').innerHTML=`<option value="">Selecciona ganador</option><option value="${m.a.replace(/"/g,'&quot;')}">${m.a}</option><option value="${m.b.replace(/"/g,'&quot;')}">${m.b}</option>`;$('#resultType').value=r?.type||'normal';const sets=r?.sets||[];[['#rS1A','#rS1B'],['#rS2A','#rS2B'],['#rS3A','#rS3B']].forEach((ids,i)=>{$(ids[0]).value=sets[i]?.a??'';$(ids[1]).value=sets[i]?.b??''});$('#resultWinner').value=r?.winner||'';$('#resultModalMode').textContent=r?'EDITAR RESULTADO':'SUBIR RESULTADO';$('#resultExisting').classList.toggle('hidden',!r);if(r)$('#resultExisting').innerHTML=`<b>Estado actual:</b> ${resultLabel(r)} · ${r.status==='confirmed'?'Confirmado':'Pendiente de confirmar'}`;const canConfirm=!!r&&r.status==='pending'&&!isAdmin()&&r.submittedBy!==state.player&&canPlayerReserve(m);$('#confirmResultBtn').classList.toggle('hidden',!canConfirm);$('#saveResultBtn').classList.toggle('hidden',canConfirm||(!isAdmin()&&r?.status==='confirmed'));$('#saveResultBtn').textContent=isAdmin()?(r?'💾 Guardar corrección':'✅ Guardar resultado'):(r?'📤 Actualizar resultado':'📤 Enviar resultado');$('#deleteResultBtn').classList.toggle('hidden',!(isAdmin()&&r));syncResultType();$('#resultModal').classList.add('show')}
+function openResultModal(mid){state.resultMatchId=mid;const m=findFixtureById(mid);if(!m)return;if(!isAdmin()&&!canPlayerReserve(m)){alert('Solo los jugadores del partido o un administrador pueden gestionar el resultado.');return}const r=resultFor(mid);$('#resultModalMatch').textContent=`${m.a} vs ${m.b}`;$('#resultModalCat').textContent=`${state.category} · ${state.gender} · ${weeks.find(w=>w.id===state.week).label}`;$('#resultWinner').innerHTML=`<option value="">Selecciona ganador</option><option value="${m.a.replace(/"/g,'&quot;')}">${m.a}</option><option value="${m.b.replace(/"/g,'&quot;')}">${m.b}</option>`;$('#resultType').value=r?.type||'normal';const sets=r?.sets||[];[['#rS1A','#rS1B'],['#rS2A','#rS2B'],['#rS3A','#rS3B']].forEach((ids,i)=>{$(ids[0]).value=sets[i]?.a??'';$(ids[1]).value=sets[i]?.b??''});$('#resultWinner').value=r?.winner||'';$('#resultModalMode').textContent=r?'EDITAR RESULTADO':'SUBIR RESULTADO';$('#resultExisting').classList.toggle('hidden',!r);if(r)$('#resultExisting').innerHTML=`<div class="resultPeople"><div class="resultPerson">${playerAvatarHTML(m.a,true)}<span>${m.a}</span></div><span class="resultVs">VS</span><div class="resultPerson">${playerAvatarHTML(m.b,true)}<span>${m.b}</span></div></div><b>Estado actual:</b> ${resultLabel(r)} · ${r.status==='confirmed'?'Confirmado':'Pendiente de confirmar'}`;const canConfirm=!!r&&r.status==='pending'&&!isAdmin()&&r.submittedBy!==state.player&&canPlayerReserve(m);$('#confirmResultBtn').classList.toggle('hidden',!canConfirm);$('#saveResultBtn').classList.toggle('hidden',canConfirm||(!isAdmin()&&r?.status==='confirmed'));$('#saveResultBtn').textContent=isAdmin()?(r?'💾 Guardar corrección':'✅ Guardar resultado'):(r?'📤 Actualizar resultado':'📤 Enviar resultado');$('#deleteResultBtn').classList.toggle('hidden',!(isAdmin()&&r));syncResultType();$('#resultModal').classList.add('show')}
 async function saveResult(){const mid=state.resultMatchId,m=fixtures().find(x=>x.id===mid);if(!m)return;try{const type=$('#resultType').value;let sets=[];if(type!=='wo'&&type!=='not_played'){for(const [a,b] of [['#rS1A','#rS1B'],['#rS2A','#rS2B'],['#rS3A','#rS3B']]){const set=readSet(a,b);if(set)sets.push(set)}if(type==='normal'&&sets.length<2)throw new Error('Introduce al menos los dos primeros sets.')}const winner=(type==='wo'||type==='retirement')?$('#resultWinner').value:'';if((type==='wo'||type==='retirement')&&!winner)throw new Error('Selecciona el ganador.');const btn=$('#saveResultBtn'),old=btn.textContent;btn.disabled=true;btn.textContent='⏳ Guardando…';try{const j=await apiRequest({action:'submitResult',matchId:mid,result:{type,sets,winner}});data.results[mid]=j.result;localStorage.setItem(STORAGE_KEY,JSON.stringify(data));$('#resultModal').classList.remove('show');renderAll();alert(j.result.status==='confirmed'?'✅ Resultado guardado y confirmado.':'✅ Resultado enviado. Queda pendiente de confirmación del rival.')}finally{btn.disabled=false;btn.textContent=old}}catch(e){alert(e.message)}}
 async function confirmResult(mid){const m=findFixtureById(mid),r=resultFor(mid);if(!m||!r)return;const ok=confirm(`¿Confirmas este resultado?\n\n${m.a} vs ${m.b}\n${resultLabel(r)}\n\nUna vez confirmado, solo un administrador podrá corregirlo.`);if(!ok)return;try{const j=await apiRequest({action:'confirmResult',matchId:mid});data.results[mid]=j.result;localStorage.setItem(STORAGE_KEY,JSON.stringify(data));renderAll();alert('✅ Resultado confirmado.')}catch(e){alert(e.message);await refreshOnline({silent:true})}}
 async function deleteResult(mid){if(!isAdmin())return;const m=findFixtureById(mid);if(!m)return;if(!confirm(`¿Borrar el resultado de ${m.a} vs ${m.b}?`))return;try{await apiRequest({action:'deleteResult',matchId:mid});delete data.results[mid];localStorage.setItem(STORAGE_KEY,JSON.stringify(data));$('#resultModal').classList.remove('show');renderAll();alert('🗑️ Resultado borrado.')}catch(e){alert(e.message)}}
@@ -779,7 +803,12 @@ async function book(mid,sid){
    btn.disabled=!$('#reserveCourt').value;
  }
 }
-function renderAdmin(){
+let photoDraftData='';
+function renderPhotoAdmin(){const sel=$('#photoPlayer');if(!sel)return;const players=allPlayers();const prev=sel.value;sel.innerHTML='<option value="">Selecciona jugador</option>'+players.map(p=>`<option value="${p.replace(/"/g,'&quot;')}">${p}</option>`).join('');if(prev&&players.includes(prev))sel.value=prev;const name=sel.value,current=name?photoUrlFor(name):'';const box=$('#photoPreviewBox');if(!name){box.innerHTML='<span class="tiny">Selecciona un jugador para ver su foto actual.</span>';return}const shown=photoDraftData||current;const avatar=shown?`<img class="playerAvatar avatarLg" src="${shown}" alt="${String(name).replace(/"/g,'&quot;')}">`:`<span class="playerAvatarFallback avatarLg">${playerInitials(name)}</span>`;box.innerHTML=`${avatar}<div><div class="name">${name}</div><div class="tiny">${photoDraftData?'Nueva foto preparada · pulsa Guardar foto':(current?'Foto Base64 guardada':'Sin foto asignada · se mostrarán iniciales')}</div></div>`}
+function fileToCompressedBase64(file){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onerror=()=>reject(new Error('No se pudo leer la imagen.'));reader.onload=()=>{const img=new Image();img.onerror=()=>reject(new Error('El archivo no parece una imagen válida.'));img.onload=()=>{const max=320,scale=Math.min(1,max/img.width,max/img.height),w=Math.max(1,Math.round(img.width*scale)),h=Math.max(1,Math.round(img.height*scale));const c=document.createElement('canvas');c.width=w;c.height=h;const ctx=c.getContext('2d');ctx.drawImage(img,0,0,w,h);resolve(c.toDataURL('image/jpeg',0.78))};img.src=reader.result};reader.readAsDataURL(file)})}
+async function savePlayerPhoto(){if(!requireAdmin())return;const name=$('#photoPlayer').value;if(!name){alert('Selecciona un jugador.');return}if(!photoDraftData){alert('Elige primero una foto.');return}data.playerPhotos=data.playerPhotos||{};data.playerPhotos[name]=photoDraftData;photoDraftData='';localStorage.setItem(STORAGE_KEY,JSON.stringify(data));renderAll();try{await saveStateOnline();alert('✅ Foto guardada para '+name+'.')}catch(e){alert('La foto queda guardada en este dispositivo, pero no se pudo guardar online.\n\n'+e.message)}}
+async function deletePlayerPhoto(){if(!requireAdmin())return;const name=$('#photoPlayer').value;if(!name)return;photoDraftData='';delete data.playerPhotos?.[name];localStorage.setItem(STORAGE_KEY,JSON.stringify(data));renderAll();try{await saveStateOnline();alert('✅ Foto eliminada. Se mostrarán las iniciales.')}catch(e){alert(e.message)}}
+function renderAdmin(){renderPhotoAdmin();
   const admin=isAdmin();
   $('#adminNavBtn').classList.toggle('hidden',!admin);
   if(!admin){$('#adminView').classList.add('hidden');return}
@@ -1162,6 +1191,7 @@ $('#welcomePin').addEventListener('keydown',e=>{if(e.key==='Enter')loginWithPinO
 $('#reserveDay').onchange=()=>fillReserveTimes(state.reserveMatchId,'');
 $('#reserveTime').onchange=()=>fillReserveCourts(state.reserveMatchId,'');
 $('#confirmReserve').onclick=()=>{if(reservationPending)return;const sid=$('#reserveCourt').value;if(!sid){alert('Selecciona una pista disponible.');return}book(state.reserveMatchId,sid)};
+$('#photoPlayer').onchange=()=>{photoDraftData='';if($('#photoFile'))$('#photoFile').value='';renderPhotoAdmin()};$('#photoFile').onchange=async()=>{const f=$('#photoFile').files?.[0];if(!f){photoDraftData='';renderPhotoAdmin();return}try{photoDraftData=await fileToCompressedBase64(f);renderPhotoAdmin()}catch(e){photoDraftData='';$('#photoFile').value='';alert(e.message)}};$('#savePlayerPhoto').onclick=savePlayerPhoto;$('#deletePlayerPhoto').onclick=deletePlayerPhoto;
 $('#cancelReserveModal').onclick=()=>{const mid=state.reserveMatchId;$('#reserveModal').classList.remove('show');cancelBooking(mid)};
 $('#closeModal').onclick=()=>$('#reserveModal').classList.remove('show');$('#reserveModal').onclick=e=>{if(e.target===$('#reserveModal'))$('#reserveModal').classList.remove('show')};
 $('#saveDelayBtn').onclick=saveDelay;$('#restoreDelayBtn').onclick=restoreDelay;$('#closeDelayModal').onclick=()=>$('#delayModal').classList.remove('show');$('#delayModal').onclick=e=>{if(e.target===$('#delayModal'))$('#delayModal').classList.remove('show')};
@@ -1173,16 +1203,16 @@ async function bootstrapApp(){
     renderAll();
     setOnline(false,'☁️ Conectando…');
     const restored=await restoreSession();
-    await refreshOnline({silent:true});
-    if(restored){routeUserToOwnCategory(state.player);hideWelcome();await syncExistingPushSubscription();}
+    if(restored){await refreshOnline({silent:true});routeUserToOwnCategory(state.player);hideWelcome();await syncExistingPushSubscription();}
     else showWelcome('Introduce tu PIN para entrar.',false);
     renderAll();
     await renderNotificationUI();
-    setInterval(()=>refreshOnline({silent:true}),10000);
+    setInterval(()=>{if(document.visibilityState==='visible'&&state.authenticated&&!fixtureEditorDirty)refreshOnline({silent:true})},AUTO_REFRESH_MS);
+    document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&state.authenticated&&!fixtureEditorDirty&&Date.now()-lastRefreshAt>MIN_VISIBLE_REFRESH_MS)refreshOnline({silent:true})});
     window.addEventListener('beforeunload',e=>{if(fixtureEditorDirty){e.preventDefault();e.returnValue='';}});
   }catch(e){
     console.error('Error de arranque V3.13:',e);
-    setOnline(false,'⚠️ Error V3.13');
+    setOnline(false,'⚠️ Error V3.13.4');
     showWelcome('No se ha podido iniciar la app. Revisa la conexión.',true);
   }
 }
@@ -1190,5 +1220,5 @@ bootstrapApp();
 
 window.addEventListener('scroll',()=>{const a=document.getElementById('adminView');if(a)a.classList.toggle('adminScrolled',window.scrollY>(a.offsetTop+280));},{passive:true});
 </script>
-<div style="position:fixed;right:8px;bottom:78px;z-index:45;font-size:9px;opacity:.55;background:#180b0e;border:1px solid rgba(255,255,255,.12);padding:4px 7px;border-radius:999px">V3.13.2 · Admin visible · Push propio</div>
+<div style="position:fixed;right:8px;bottom:78px;z-index:45;font-size:9px;opacity:.55;background:#180b0e;border:1px solid rgba(255,255,255,.12);padding:4px 7px;border-radius:999px">V3.13.3 · Admin visible · Push propio</div>
 </body></html>
