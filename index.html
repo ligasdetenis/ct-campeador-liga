@@ -482,11 +482,7 @@ body:not(.modern-ui) #modernApp{display:none}
   color:#fff;
   position:relative;
   overflow:hidden;
-  background:
-    linear-gradient(145deg, transparent 0 55%, rgba(255,255,255,.055) 55.3% 56%, transparent 56.4%),
-    repeating-linear-gradient(90deg, rgba(255,255,255,.022) 0 1px, transparent 1px 17px),
-    repeating-linear-gradient(0deg, rgba(255,255,255,.016) 0 1px, transparent 1px 19px),
-    linear-gradient(120deg,#430008 0%,#65000d 36%,#8b0015 68%,#59000a 100%);
+  background:#57000d;
   padding:18px 18px 0;
   min-height:214px;
 }
@@ -497,7 +493,7 @@ body:not(.modern-ui) #modernApp{display:none}
   pointer-events:none
 }
 .mapp-brand{
-  position:relative;z-index:1;
+  position:relative;z-index:2;
   display:flex;align-items:center;gap:12px;
   min-height:132px;
 }
@@ -686,17 +682,15 @@ body.modern-admin .bottomNav{display:none!important}
 .mapp-header:before{
   content:"";
   position:absolute;
-  width:220px;height:120px;
-  left:-28px;top:4px;
-  opacity:.22;
-  background:
-    repeating-linear-gradient(0deg,transparent 0 9px,rgba(255,255,255,.23) 10px 11px),
-    repeating-linear-gradient(90deg,transparent 0 12px,rgba(255,255,255,.18) 13px 14px);
-  transform:skewX(-14deg) rotate(-7deg);
-  mask-image:linear-gradient(90deg,#000 0%,rgba(0,0,0,.75) 62%,transparent 100%);
+  inset:-8px;
+  background-image:url('header-tenis.webp');
+  background-size:cover;
+  background-position:center 60%;
+  filter:blur(2.6px);
+  transform:scale(1.035);
+  opacity:.72;
   pointer-events:none;
-}
-.mapp-logo{background:transparent!important}
+}.mapp-logo{background:transparent!important}
 
 /* Administración moderna */
 .mapp-admin-shell{
@@ -807,8 +801,9 @@ body.modern-admin .mapp-admin-back{display:none!important}
 /* V3.13.4 · corrección visual del header */
 .mapp-header:after{
   background:
-    radial-gradient(ellipse at 72% 10%,rgba(255,255,255,.045),transparent 34%),
-    linear-gradient(180deg,rgba(255,255,255,.025),transparent 38%)!important;
+    linear-gradient(90deg,rgba(42,0,7,.72) 0%,rgba(78,0,12,.58) 42%,rgba(44,0,7,.56) 100%),
+    linear-gradient(180deg,rgba(16,0,3,.16) 0%,rgba(31,0,5,.42) 100%)!important;
+  backdrop-filter:saturate(.82);
 }
 .mapp-bell svg{display:block;stroke:#fff!important}
 .mapp-logo{max-width:none!important}
