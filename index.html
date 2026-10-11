@@ -2227,8 +2227,8 @@ const CATEGORIES=["Benjamín","Alevín","Infantil","Cadete","Junior","Absoluto"]
 const STORAGE_KEY="ctcampeador_reservas_v3_cloudflare_cache";
 const TOKEN_KEY="ctcampeador_api_token";
 const API_URL="https://ct-campeador-api.ligasdetenis.workers.dev/";
-const PUSH_URL="https://ct-campeador-push-test.ligasdetenis.workers.dev";
-const PUSH_VAPID_PUBLIC_KEY="BDbOo56Aem6MIO1ypKIlgpolkqB2HmcvjAIPiGe1YgbT7cVUs23XWJVvBj8yt7Snqea8mL_w7sTaRL1e1lm4Kls";
+const PUSH_URL="https://ct-campeador-push-v1.ligasdetenis.workers.dev";
+let PUSH_VAPID_PUBLIC_KEY="";
 const PUSH_SW_URL="/ct-campeador-liga/push-sw.js";
 const weeks=[
  {id:"W1",label:"Semana 1 · 17–25 octubre",start:"2026-10-17",end:"2026-10-25"},
@@ -2553,6 +2553,22 @@ function base64UrlToUint8Array(base64String){
   for(let i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);
   return out;
 }
+async function getPushPublicKey(){
+  if(PUSH_VAPID_PUBLIC_KEY)return PUSH_VAPID_PUBLIC_KEY;
+  const r=await fetch(PUSH_URL+'/public-key',{cache:'no-store'});
+  let j={};try{j=await r.json()}catch(e){}
+  if(!r.ok||j.ok===false||!j.publicKey)throw new Error(j.error||'No se ha podido obtener la clave Push.');
+  PUSH_VAPID_PUBLIC_KEY=String(j.publicKey);
+  return PUSH_VAPID_PUBLIC_KEY;
+}
+function getPushDeviceId(){
+  let id=localStorage.getItem('ctc_push_v1_device');
+  if(!id){
+    id=crypto.randomUUID?crypto.randomUUID():'dev-'+Date.now()+'-'+Math.random().toString(36).slice(2);
+    localStorage.setItem('ctc_push_v1_device',id);
+  }
+  return id;
+}
 async function pushRegistration(){
   if(!('serviceWorker' in navigator))throw new Error('Este navegador no soporta Service Worker.');
   await navigator.serviceWorker.register(PUSH_SW_URL,{scope:'/ct-campeador-liga/'});
@@ -2571,7 +2587,7 @@ function pushSubscriptionFingerprint(sub,userName){
   }catch(_){return ''}
 }
 async function syncPushSubscription(sub,{force=false}={}){
-  if(!sub||!state.authenticated||!state.player)return false;
+  if(!sub||!state.authenticated||!state.player||!apiToken)return false;
   const fp=pushSubscriptionFingerprint(sub,state.player);
   if(!force&&fp){
     try{
@@ -2581,8 +2597,15 @@ async function syncPushSubscription(sub,{force=false}={}){
   }
   const r=await fetch(PUSH_URL+'/subscribe',{
     method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({subscription:sub.toJSON?sub.toJSON():sub,userName:state.player})
+    headers:{
+      'Content-Type':'application/json',
+      'Authorization':'Bearer '+apiToken
+    },
+    body:JSON.stringify({
+      deviceId:getPushDeviceId(),
+      subscription:sub.toJSON?sub.toJSON():sub,
+      userName:state.player
+    })
   });
   let j={};try{j=await r.json()}catch(e){}
   if(!r.ok||j.ok===false)throw new Error(j.error||('HTTP '+r.status));
@@ -2694,7 +2717,7 @@ async function renderPushUI(){
 }
 async function activateNativePush(){
   const btn=$('#pushActivateBtn');
-  if(!state.authenticated){alert('Entra primero con tu PIN.');return}
+  if(!state.authenticated||!apiToken){alert('Entra primero con tu PIN.');return}
   if(isIOSPushDevice()&&!isStandalonePWA()){
     const h=$('#iosPushHelp'); if(h)h.classList.remove('hidden');
     alert('En iPhone/iPad debes abrir CT Campeador como app instalada.\n\nSafari → Compartir → Añadir a pantalla de inicio.\n\nDespués abre CT Campeador desde el icono y vuelve a pulsar Activar avisos.');
@@ -2705,15 +2728,35 @@ async function activateNativePush(){
     btn.disabled=true;btn.textContent='⏳ Activando…';
     const permission=await Notification.requestPermission();
     if(permission!=='granted')throw new Error('Permiso de notificaciones no concedido: '+permission);
+
+    const publicKey=await getPushPublicKey();
+    const wanted=base64UrlToUint8Array(publicKey);
     const reg=await pushRegistration();
     let sub=await reg.pushManager.getSubscription();
+
+    if(sub){
+      try{
+        const current=sub.options?.applicationServerKey;
+        const same=current && current.byteLength===wanted.byteLength &&
+          new Uint8Array(current).every((v,i)=>v===wanted[i]);
+        if(!same){
+          await sub.unsubscribe().catch(()=>{});
+          sub=null;
+        }
+      }catch(_){
+        await sub.unsubscribe().catch(()=>{});
+        sub=null;
+      }
+    }
+
     if(!sub){
       sub=await reg.pushManager.subscribe({
         userVisibleOnly:true,
-        applicationServerKey:base64UrlToUint8Array(PUSH_VAPID_PUBLIC_KEY)
+        applicationServerKey:wanted
       });
     }
-    await syncPushSubscription(sub);
+
+    await syncPushSubscription(sub,{force:true});
     await renderPushUI();updateInstallBanner();
   }catch(e){
     alert('No se han podido activar los avisos.\n\n'+(e.message||e));
@@ -2721,14 +2764,24 @@ async function activateNativePush(){
   }
 }
 async function sendAvailabilityPush(force=false){
+  if(!apiToken)throw new Error('Sesión de administrador no disponible.');
   const w=weeks.find(x=>x.id===weekKey());
-  return apiRequest({
-    action:'sendAvailabilityPush',
-    weekId:weekKey(),
-    weekLabel:w?.label||weekKey(),
-    url:'https://ligasdetenis.github.io/ct-campeador-liga/',
-    force:!!force
+  const r=await fetch(PUSH_URL+'/send-availability',{
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      'Authorization':'Bearer '+apiToken
+    },
+    body:JSON.stringify({
+      weekId:weekKey(),
+      weekLabel:w?.label||weekKey(),
+      url:'https://ligasdetenis.github.io/ct-campeador-liga/',
+      force:!!force
+    })
   });
+  let j={};try{j=await r.json()}catch(e){}
+  if(!r.ok||j.ok===false)throw new Error(j.error||('HTTP '+r.status));
+  return j;
 }
 
 function renderIdentity(){const sel=$('#playerIdentity');const ps=visibleIdentitiesForCategory();sel.innerHTML='<option value="">Selecciona tu nombre</option>'+ps.map(p=>`<option value="${p.replace(/"/g,'&quot;')}">${p}${roleOf(p)==='admin'?' · ADMIN':''}</option>`).join('');if(state.player&&!allIdentities().includes(state.player)){state.player='';state.authenticated=false;localStorage.removeItem('ctcampeador_auth_player')}sel.value=state.player;sel.disabled=state.authenticated;$('#playerPin').disabled=state.authenticated;$('#loginBtn').disabled=state.authenticated;const info=$('#identityInfo');if(!state.authenticated){info.innerHTML='<span class="identityWarn">Sin identificar.</span> Solo aparecen jugadores de '+state.category+' '+state.gender+' y administradores.'}else{const own=allWeekFixtures().filter(m=>m.a===state.player||m.b===state.player);info.innerHTML=`<span class="identityOk">✓ ${state.player}</span> · ${isAdmin()?'ADMIN':'jugador'} · sesión iniciada · ${own.length} partido${own.length===1?'':'s'} esta semana`}}
@@ -3226,10 +3279,21 @@ async function loadPushDevices(){
   const tb=$('#pushDevicesTable');
   if(tb)tb.innerHTML='<tr><td colspan="4">⏳ Cargando dispositivos…</td></tr>';
   try{
-    const r=await apiRequest({action:'listPushDevices'});
+    const rr=await fetch(PUSH_URL+'/admin/devices',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'Authorization':'Bearer '+apiToken
+      },
+      body:'{}'
+    });
+    let r={};try{r=await rr.json()}catch(e){}
+    if(!rr.ok||r.ok===false)throw new Error(r.error||('HTTP '+rr.status));
+
     const groups=Array.isArray(r.users)?r.users:[];
     if(!groups.length){
       if(tb)tb.innerHTML='<tr><td colspan="4">No hay dispositivos suscritos.</td></tr>';
+      window.__pushDeviceCount=0;
       updateAdminSummaries();
       return;
     }
@@ -3251,13 +3315,23 @@ async function removePushDevicesFor(player){
   if(!requireAdmin())return;
   if(!confirm(`¿Dar de baja TODOS los dispositivos de ${player}?\n\nEse jugador dejará de recibir avisos hasta que vuelva a activar las notificaciones.`))return;
   try{
-    const r=await apiRequest({action:'removePushDevices',userName:player});
+    const rr=await fetch(PUSH_URL+'/admin/remove-user',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'Authorization':'Bearer '+apiToken
+      },
+      body:JSON.stringify({userName:player})
+    });
+    let r={};try{r=await rr.json()}catch(e){}
+    if(!rr.ok||r.ok===false)throw new Error(r.error||('HTTP '+rr.status));
     alert(`✅ Dispositivos dados de baja: ${r.removed||0}.`);
     await loadPushDevices();
   }catch(e){
     alert('No se han podido dar de baja los dispositivos.\n\n'+e.message);
   }
 }
+
 let draftSlots=[];
 function persistDraft(){if(!data.drafts)data.drafts={};data.drafts[weekKey()]=draftSlots.map(x=>({...x}));save()}
 
