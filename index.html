@@ -1087,7 +1087,33 @@ html,body,#modernApp{
   margin-top:2px;
   line-height:1.25;
 }
-.mapp-court-slot.is-busy{cursor:default}
+.mapp-court-slot.is-busy{
+  cursor:default;
+  background:#7d2632;
+  border-top-color:#7d2632;
+  border-radius:10px;
+  padding:11px 10px;
+  margin:3px 0;
+}
+.mapp-court-slot.is-busy .time{
+  color:#e3c7cc;
+}
+.mapp-court-slot.is-busy .booking{
+  color:#cfaeb5;
+}
+.mapp-court-slot.is-busy .mapp-busy{
+  color:#dec4c9;
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.10);
+}
+.mapp-court-slot.is-busy .mapp-chevron{
+  opacity:.15;
+}
+.mapp-court-slot.is-busy .mapp-admin-clean{
+  background:#fff4f5;
+  color:#a20e25;
+  border-color:#efc0c7;
+}
 .mapp-court-slot.is-free:active{background:#f7fbf8}
 @media(max-width:520px){
   .mapp-court-block{padding:11px 12px 12px}
