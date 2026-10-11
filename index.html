@@ -2094,7 +2094,7 @@ Pablo Ruiz"></textarea>
       <div class="adminSubsectionHead"><span>Permisos de acceso</span><span id="adminMeta_roles_sub">Abrir</span></div>
       <div class="adminSubsectionBody"><div class="tiny">Solo las personas marcadas como <b>ADMIN</b> verán la opción ⚙️ Configuración y podrán modificar enfrentamientos, horarios, PIN o abrir/cerrar reservas.</div>
 <div class="schedule" style="margin-top:10px"><table><thead><tr><th>Persona</th><th>Rol</th></tr></thead><tbody id="roleTable"></tbody></table></div>
-<div class="authNote">Administrador inicial de prueba: <b>Adrián Prádanos</b> · PIN <b>2020</b>. Puedes dar permiso ADMIN a otros usuarios desde esta tabla.</div></div>
+<div class="authNote">Los permisos ADMIN se gestionan desde esta tabla. No existe ningún PIN de administrador predeterminado.</div></div>
     </div>
   </div>
 </details>
@@ -2227,7 +2227,6 @@ const CATEGORIES=["Benjamín","Alevín","Infantil","Cadete","Junior","Absoluto"]
 const STORAGE_KEY="ctcampeador_reservas_v3_cloudflare_cache";
 const TOKEN_KEY="ctcampeador_api_token";
 const API_URL="https://ct-campeador-api.ligasdetenis.workers.dev/";
-const PUSH_URL="https://ct-campeador-push-test.ligasdetenis.workers.dev";
 const PUSH_VAPID_PUBLIC_KEY="BDbOo56Aem6MIO1ypKIlgpolkqB2HmcvjAIPiGe1YgbT7cVUs23XWJVvBj8yt7Snqea8mL_w7sTaRL1e1lm4Kls";
 const PUSH_SW_URL="/ct-campeador-liga/push-sw.js";
 const weeks=[
@@ -2268,9 +2267,6 @@ function fresh(){return {playerLists:{},fixtures:{},fixtureRounds:{},slots:{},dr
 function normalizeData(x){const d=x&&typeof x==='object'?x:{};const wr={...(d.weekRanges||{})};if(d.weeks&&typeof d.weeks==='object'){for(const [id,w] of Object.entries(d.weeks)){if(w&&w.start&&w.end&&!wr[id])wr[id]={start:w.start,end:w.end}}}return {playerLists:d.playerLists||{},fixtures:d.fixtures||{},fixtureRounds:d.fixtureRounds||{},slots:d.slots||{},drafts:d.drafts||{},published:d.published||{},bookings:d.reservations||d.bookings||{},results:d.results||{},profiles:d.profiles||{},pins:d.pins||{},roles:{...(d.roles||{}),...(d.adminRoles||{})},staff:d.staff||{},weekRanges:wr,postponed:d.postponed||{}}}
 let data=normalizeData(JSON.parse(localStorage.getItem(STORAGE_KEY)||"null")||fresh());
 applyWeekRanges();
-if(!data.staff["Adrián Prádanos"])data.staff["Adrián Prádanos"]={name:"Adrián Prádanos"};
-// Administrador inicial: debe estar visible en TODAS las categorías incluso antes del primer login.
-data.roles["Adrián Prádanos"]="admin";
 let apiToken=localStorage.getItem(TOKEN_KEY)||"";
 let state={category:"Infantil",gender:"Masculino",week:"W1",reserveMatchId:null,resultMatchId:null,delayMatchId:null,player:"",authenticated:false,showPins:false};
 let fixtureEditorDirty=false;
@@ -2278,7 +2274,7 @@ let playerEditorDirty=false;
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 let saveTimer=null;
 let reservationPending=false;
-// V3.16.1 · consumo optimizado
+// V3.17.1 · Security Push · consumo optimizado
 const AUTO_REFRESH_MS=5*60*1000;       // 5 min con la app visible
 const MIN_VISIBLE_REFRESH_MS=2*60*1000; // al volver a la app, mínimo 2 min desde la última lectura
 const PUSH_SYNC_CACHE_KEY='ctcampeador_push_sync_v3161';
@@ -2286,7 +2282,7 @@ const PUSH_RESYNC_MS=7*24*60*60*1000;  // revalidación push como máximo una ve
 let lastRefreshAt=0;
 function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(data));if(isAdmin()&&apiToken){clearTimeout(saveTimer);saveTimer=setTimeout(()=>saveStateOnline().catch(console.warn),350)}}
 function publicState(){return {playerLists:data.playerLists,fixtures:data.fixtures,fixtureRounds:data.fixtureRounds,slots:data.slots,drafts:data.drafts,published:data.published,bookings:data.bookings,reservations:data.bookings,results:data.results,staff:data.staff,adminRoles:Object.fromEntries(Object.entries(data.roles||{}).filter(([,r])=>r==='admin')),weekRanges:data.weekRanges||{},postponed:data.postponed||{},weeks:Object.fromEntries(weeks.map(w=>[w.id,w])),updatedAt:new Date().toISOString()}}
-async function apiRequest(payload,{auth=true}={}){const headers={'Content-Type':'application/json'};if(auth&&apiToken)headers.Authorization='Bearer '+apiToken;const r=await fetch(API_URL,{method:'POST',headers,body:JSON.stringify(payload)});let j={};try{j=await r.json()}catch(e){}if(!r.ok||j.ok===false)throw new Error(j.error||('HTTP '+r.status));return j}
+async function apiRequest(payload,{auth=true}={}){const headers={'Content-Type':'application/json'};if(auth&&apiToken)headers.Authorization='Bearer '+apiToken;const r=await fetch(API_URL,{method:'POST',headers,body:JSON.stringify(payload)});let j={};try{j=await r.json()}catch(e){}if(r.status===401&&auth){apiToken='';localStorage.removeItem(TOKEN_KEY);state.player='';state.authenticated=false;setTimeout(()=>showPinWelcome('Tu sesión ha caducado o ha sido revocada. Introduce de nuevo tu PIN.',true),0)}if(!r.ok||j.ok===false)throw new Error(j.error||('HTTP '+r.status));return j}
 async function restoreSession(){
   if(!apiToken)return false;
   try{
@@ -2303,7 +2299,6 @@ async function restoreSession(){
       data.roles={...(data.roles||{}),...(remote.roles||{})};applyWeekRanges();
     }
     data.roles[state.player]=j.user.role==='admin'?'admin':'jugador';
-    data.roles["Adrián Prádanos"]='admin';
     lastRefreshAt=Date.now();
     localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
     if(isAdmin())await loadAdminUsers();
@@ -2324,7 +2319,7 @@ function adminEditorActive(){
   return !!(el && el.closest && el.closest('#adminView') && /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName));
 }
 
-async function refreshOnline({silent=false,force=false}={}){if((fixtureEditorDirty||playerEditorDirty||adminEditorActive())&&!force){setOnline(true,'✏️ Editando · actualización pausada');return false}try{const j=await apiRequest({action:'read'},{auth:false});const remote=normalizeData(j.state);data.playerLists=remote.playerLists;data.fixtures=remote.fixtures;data.fixtureRounds=remote.fixtureRounds;data.slots=remote.slots;data.drafts=remote.drafts;data.published=remote.published;data.bookings=remote.bookings;data.results=remote.results;data.profiles=remote.profiles||data.profiles||{};data.weekRanges=remote.weekRanges||data.weekRanges||{};data.postponed=remote.postponed||{};applyWeekRanges();data.staff={...(data.staff||{}),...(remote.staff||{})};data.roles={...(data.roles||{}),...(remote.roles||{})};data.roles["Adrián Prádanos"]="admin";localStorage.setItem(STORAGE_KEY,JSON.stringify(data));lastRefreshAt=Date.now();setOnline(true,'☁️ Online');renderAll();return true}catch(e){setOnline(false,'⚠️ Offline');if(!silent)alert('No se ha podido actualizar desde Cloudflare.\n\n'+e.message);return false}}
+async function refreshOnline({silent=false,force=false}={}){if((fixtureEditorDirty||playerEditorDirty||adminEditorActive())&&!force){setOnline(true,'✏️ Editando · actualización pausada');return false}try{const j=await apiRequest({action:'read'});const remote=normalizeData(j.state);data.playerLists=remote.playerLists;data.fixtures=remote.fixtures;data.fixtureRounds=remote.fixtureRounds;data.slots=remote.slots;data.drafts=remote.drafts;data.published=remote.published;data.bookings=remote.bookings;data.results=remote.results;data.profiles=remote.profiles||data.profiles||{};data.weekRanges=remote.weekRanges||data.weekRanges||{};data.postponed=remote.postponed||{};applyWeekRanges();data.staff={...(data.staff||{}),...(remote.staff||{})};data.roles={...(data.roles||{}),...(remote.roles||{})};localStorage.setItem(STORAGE_KEY,JSON.stringify(data));lastRefreshAt=Date.now();setOnline(true,'☁️ Online');renderAll();return true}catch(e){setOnline(false,'⚠️ Offline');if(!silent)alert('No se ha podido actualizar desde Cloudflare.\n\n'+e.message);return false}}
 async function saveStateOnline(){
   if(!apiToken||!isAdmin())return;
   if(saveTimer){clearTimeout(saveTimer);saveTimer=null}
@@ -2579,13 +2574,10 @@ async function syncPushSubscription(sub,{force=false}={}){
       if(cached?.fingerprint===fp && Date.now()-Number(cached.syncedAt||0)<PUSH_RESYNC_MS)return true;
     }catch(_){}
   }
-  const r=await fetch(PUSH_URL+'/subscribe',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({subscription:sub.toJSON?sub.toJSON():sub,userName:state.player})
+  const j=await apiRequest({
+    action:'subscribePush',
+    subscription:sub.toJSON?sub.toJSON():sub
   });
-  let j={};try{j=await r.json()}catch(e){}
-  if(!r.ok||j.ok===false)throw new Error(j.error||('HTTP '+r.status));
   if(fp){try{localStorage.setItem(PUSH_SYNC_CACHE_KEY,JSON.stringify({fingerprint:fp,syncedAt:Date.now()}))}catch(_){}}
   return true;
 }
@@ -3142,7 +3134,7 @@ function renderExternalAdmins(){
   tb.innerHTML=admins.map(p=>{
     const shown=state.showPins?(data.pins[p]||'—'):'••••';
     const locked=(p===state.player);
-    return `<tr><td><b>${p}</b>${p==='Adrián Prádanos'?' <span class="adminBadge">INICIAL</span>':''}</td><td><span class="mono">${shown}</span></td><td><div class="matchActions"><button class="btn secondary" data-copy-admin="${p.replace(/"/g,'&quot;')}">📋 Copiar</button><button class="btn dangerBtn" data-delete-admin="${p.replace(/"/g,'&quot;')}" ${locked?'disabled':''}>Eliminar</button></div></td></tr>`;
+    return `<tr><td><b>${p}</b></td><td><span class="mono">${shown}</span></td><td><div class="matchActions"><button class="btn secondary" data-copy-admin="${p.replace(/"/g,'&quot;')}">📋 Copiar</button><button class="btn dangerBtn" data-delete-admin="${p.replace(/"/g,'&quot;')}" ${locked?'disabled':''}>Eliminar</button></div></td></tr>`;
   }).join('');
   tb.querySelectorAll('[data-copy-admin]').forEach(b=>b.onclick=()=>copyPinMessage(b.dataset.copyAdmin));
   tb.querySelectorAll('[data-delete-admin]').forEach(b=>b.onclick=async()=>{

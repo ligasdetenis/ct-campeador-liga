@@ -1,30 +1,30 @@
-const API_URL='https://ct-campeador-api.ligasdetenis.workers.dev/';
-const APP_URL='https://ligasdetenis.github.io/ct-campeador-liga/';
-self.addEventListener('install',()=>self.skipWaiting());
-self.addEventListener('activate',event=>event.waitUntil(self.clients.claim()));
-self.addEventListener('push',event=>{
-  event.waitUntil((async()=>{
-    let msg={title:'🎾 CT Campeador',body:'Hay novedades en la liga.',url:APP_URL};
-    try{
-      const r=await fetch(API_URL+'?pushMessage=1',{cache:'no-store'});
-      if(r.ok) msg={...msg,...await r.json()};
-    }catch(e){}
-    await self.registration.showNotification(msg.title||'🎾 CT Campeador',{
-      body:msg.body||'Hay novedades en la liga.',
-      icon:'./icon-192.png',
-      badge:'./icon-192.png',
-      tag:'ct-campeador-disponibilidad',
-      renotify:true,
-      data:{url:msg.url||APP_URL}
-    });
-  })());
+self.addEventListener('push', event => {
+  let data = {};
+  try { data = event.data ? event.data.json() : {}; }
+  catch (_) { data = { body: event.data ? event.data.text() : '' }; }
+
+  const title = data.title || '🎾 CT Campeador';
+  const options = {
+    body: data.body || 'Hay novedades en la liga.',
+    icon: data.icon || '/ct-campeador-liga/icon-192.png',
+    badge: data.badge || '/ct-campeador-liga/icon-192.png',
+    tag: data.tag || 'ct-campeador-disponibilidad',
+    renotify: true,
+    data: { url: data.url || 'https://ligasdetenis.github.io/ct-campeador-liga/' }
+  };
+  event.waitUntil(self.registration.showNotification(title, options));
 });
-self.addEventListener('notificationclick',event=>{
+
+self.addEventListener('notificationclick', event => {
   event.notification.close();
-  const target=event.notification.data?.url||APP_URL;
-  event.waitUntil((async()=>{
-    const list=await self.clients.matchAll({type:'window',includeUncontrolled:true});
-    for(const c of list){if('focus' in c){try{await c.navigate(target)}catch(e){} return c.focus();}}
-    return self.clients.openWindow(target);
-  })());
+  const url = event.notification?.data?.url || 'https://ligasdetenis.github.io/ct-campeador-liga/';
+  event.waitUntil(clients.matchAll({type:'window',includeUncontrolled:true}).then(list => {
+    for (const client of list) {
+      if ('focus' in client) {
+        try { client.navigate(url); } catch (_) {}
+        return client.focus();
+      }
+    }
+    return clients.openWindow ? clients.openWindow(url) : undefined;
+  }));
 });
