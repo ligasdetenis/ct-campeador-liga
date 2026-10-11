@@ -574,7 +574,7 @@ body:not(.modern-ui) #modernApp{display:none}
 .mapp-status strong{display:block;font-size:14px;margin-bottom:2px}
 .mapp-list-header{display:flex;align-items:center;justify-content:space-between;padding:15px 16px 8px}
 .mapp-list-title{font-weight:900;font-size:17px;display:flex;gap:9px;align-items:center}
-.mapp-court-icon{width:auto;height:21px;max-width:30px;object-fit:contain;display:block;flex:0 0 auto}
+.mapp-court-icon{width:21px;height:21px;object-fit:contain;display:block;flex:0 0 21px}
 .mapp-link{border:0;background:none;color:#d60020;font-size:12px;font-weight:800;cursor:pointer}
 .mapp-slot-row{
   display:grid;grid-template-columns:82px 1fr 68px 58px 18px;
@@ -1084,30 +1084,22 @@ html,body,#modernApp{
 }
 .mapp-court-slot.is-busy{
   cursor:default;
-  background:#7d2632;
-  border-top-color:#7d2632;
-  border-radius:10px;
-  padding:11px 10px;
-  margin:3px 0;
+  background:#f3e4e7;
 }
 .mapp-court-slot.is-busy .time{
-  color:#e3c7cc;
+  color:#8c686f;
 }
 .mapp-court-slot.is-busy .booking{
-  color:#cfaeb5;
+  color:#9a767d;
 }
 .mapp-court-slot.is-busy .mapp-busy{
-  color:#dec4c9;
-  background:rgba(255,255,255,.08);
-  border:1px solid rgba(255,255,255,.10);
+  color:#9a767d;
 }
 .mapp-court-slot.is-busy .mapp-chevron{
-  opacity:.15;
+  color:#b49ca1;
 }
 .mapp-court-slot.is-busy .mapp-admin-clean{
-  background:#fff4f5;
-  color:#a20e25;
-  border-color:#efc0c7;
+  color:#8b5560;
 }
 .mapp-court-slot.is-free:active{background:#f7fbf8}
 @media(max-width:520px){
@@ -1623,9 +1615,14 @@ body.modern-ui{padding-bottom:116px!important}
   width:6px;
   height:6px;
   border-radius:50%;
-  background:#9b1830;
+  background:#d01838;
   margin-right:7px;
   flex:0 0 auto;
+  animation:mappTickerDotPulse 1.15s ease-in-out infinite;
+}
+@keyframes mappTickerDotPulse{
+  0%,100%{opacity:1;transform:scale(1)}
+  50%{opacity:.22;transform:scale(.72)}
 }
 .mapp-ticker-item{
   color:#d9dce2!important;
