@@ -2277,7 +2277,7 @@ let reservationPending=false;
 // V3.17.1 · Security Push · consumo optimizado
 const AUTO_REFRESH_MS=5*60*1000;       // 5 min con la app visible
 const MIN_VISIBLE_REFRESH_MS=2*60*1000; // al volver a la app, mínimo 2 min desde la última lectura
-const PUSH_SYNC_CACHE_KEY='ctcampeador_push_sync_v3161';
+const PUSH_SYNC_CACHE_KEY='ctcampeador_push_sync_v31712';
 const PUSH_RESYNC_MS=7*24*60*60*1000;  // revalidación push como máximo una vez por semana
 let lastRefreshAt=0;
 function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(data));if(isAdmin()&&apiToken){clearTimeout(saveTimer);saveTimer=setTimeout(()=>saveStateOnline().catch(console.warn),350)}}
@@ -2548,6 +2548,36 @@ function base64UrlToUint8Array(base64String){
   for(let i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);
   return out;
 }
+function arrayBufferToBase64Url(buffer){
+  if(!buffer)return '';
+  const bytes=new Uint8Array(buffer);
+  let binary='';
+  for(const b of bytes)binary+=String.fromCharCode(b);
+  return btoa(binary).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+function pushSubscriptionUsesCurrentKey(sub){
+  try{
+    const key=sub?.options?.applicationServerKey;
+    if(!key)return true; // navegadores que no exponen la clave: no destruimos la suscripción
+    return arrayBufferToBase64Url(key)===PUSH_VAPID_PUBLIC_KEY;
+  }catch(_){return true}
+}
+async function ensureCurrentPushSubscription({createIfMissing=false}={}){
+  const reg=await pushRegistration();
+  let sub=await reg.pushManager.getSubscription();
+  if(sub&&!pushSubscriptionUsesCurrentKey(sub)){
+    try{await sub.unsubscribe()}catch(_){}
+    sub=null;
+    try{localStorage.removeItem(PUSH_SYNC_CACHE_KEY)}catch(_){}
+  }
+  if(!sub&&createIfMissing&&Notification.permission==='granted'){
+    sub=await reg.pushManager.subscribe({
+      userVisibleOnly:true,
+      applicationServerKey:base64UrlToUint8Array(PUSH_VAPID_PUBLIC_KEY)
+    });
+  }
+  return sub;
+}
 async function pushRegistration(){
   if(!('serviceWorker' in navigator))throw new Error('Este navegador no soporta Service Worker.');
   await navigator.serviceWorker.register(PUSH_SW_URL,{scope:'/ct-campeador-liga/'});
@@ -2555,8 +2585,7 @@ async function pushRegistration(){
 }
 async function currentPushSubscription(){
   try{
-    const reg=await pushRegistration();
-    return await reg.pushManager.getSubscription();
+    return await ensureCurrentPushSubscription({createIfMissing:Notification.permission==='granted'});
   }catch(e){return null}
 }
 function pushSubscriptionFingerprint(sub,userName){
@@ -2697,15 +2726,9 @@ async function activateNativePush(){
     btn.disabled=true;btn.textContent='⏳ Activando…';
     const permission=await Notification.requestPermission();
     if(permission!=='granted')throw new Error('Permiso de notificaciones no concedido: '+permission);
-    const reg=await pushRegistration();
-    let sub=await reg.pushManager.getSubscription();
-    if(!sub){
-      sub=await reg.pushManager.subscribe({
-        userVisibleOnly:true,
-        applicationServerKey:base64UrlToUint8Array(PUSH_VAPID_PUBLIC_KEY)
-      });
-    }
-    await syncPushSubscription(sub);
+    const sub=await ensureCurrentPushSubscription({createIfMissing:true});
+    if(!sub)throw new Error('No se pudo crear la suscripción Push.');
+    await syncPushSubscription(sub,{force:true});
     await renderPushUI();updateInstallBanner();
   }catch(e){
     alert('No se han podido activar los avisos.\n\n'+(e.message||e));
