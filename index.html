@@ -2227,7 +2227,15 @@ const CATEGORIES=["Benjamín","Alevín","Infantil","Cadete","Junior","Absoluto"]
 const STORAGE_KEY="ctcampeador_reservas_v3_cloudflare_cache";
 const TOKEN_KEY="ctcampeador_api_token";
 const API_URL="https://ct-campeador-api.ligasdetenis.workers.dev/";
-const PUSH_VAPID_PUBLIC_KEY="BDbOo56Aem6MIO1ypKIlgpolkqB2HmcvjAIPiGe1YgbT7cVUs23XWJVvBj8yt7Snqea8mL_w7sTaRL1e1lm4Kls";
+let PUSH_VAPID_PUBLIC_KEY="";
+async function loadPushPublicKey(){
+  if(PUSH_VAPID_PUBLIC_KEY)return PUSH_VAPID_PUBLIC_KEY;
+  const j=await apiRequest({action:'getPushConfig'});
+  const key=String(j?.vapidPublicKey||'').trim();
+  if(!key)throw new Error('No hay una clave VAPID pública configurada.');
+  PUSH_VAPID_PUBLIC_KEY=key;
+  return key;
+}
 const PUSH_SW_URL="/ct-campeador-liga/push-sw.js";
 const weeks=[
  {id:"W1",label:"Semana 1 · 17–25 octubre",start:"2026-10-17",end:"2026-10-25"},
@@ -2277,7 +2285,7 @@ let reservationPending=false;
 // V3.17.1 · Security Push · consumo optimizado
 const AUTO_REFRESH_MS=5*60*1000;       // 5 min con la app visible
 const MIN_VISIBLE_REFRESH_MS=2*60*1000; // al volver a la app, mínimo 2 min desde la última lectura
-const PUSH_SYNC_CACHE_KEY='ctcampeador_push_sync_v31712';
+const PUSH_SYNC_CACHE_KEY='ctcampeador_push_sync_v31713';
 const PUSH_RESYNC_MS=7*24*60*60*1000;  // revalidación push como máximo una vez por semana
 let lastRefreshAt=0;
 function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(data));if(isAdmin()&&apiToken){clearTimeout(saveTimer);saveTimer=setTimeout(()=>saveStateOnline().catch(console.warn),350)}}
@@ -2563,6 +2571,7 @@ function pushSubscriptionUsesCurrentKey(sub){
   }catch(_){return true}
 }
 async function ensureCurrentPushSubscription({createIfMissing=false}={}){
+  await loadPushPublicKey();
   const reg=await pushRegistration();
   let sub=await reg.pushManager.getSubscription();
   if(sub&&!pushSubscriptionUsesCurrentKey(sub)){
