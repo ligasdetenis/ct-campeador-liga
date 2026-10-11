@@ -1772,6 +1772,87 @@ body.modern-admin #adminView>.head{display:none!important}
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="CT Campeador">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
+
+<style id="v31612-admin-buttons-fix">
+/* V3.16.1.2 · Contraste completo de botones en Administración */
+body.modern-admin #adminView button,
+body.modern-admin #adminView .btn{
+  opacity:1;
+  visibility:visible;
+  -webkit-text-fill-color:currentColor;
+}
+body.modern-admin #adminView .btn{
+  background:#202227!important;
+  color:#fff!important;
+  border:1px solid #202227!important;
+  box-shadow:0 1px 2px rgba(0,0,0,.08)!important;
+}
+body.modern-admin #adminView .btn:hover{filter:brightness(.96)}
+body.modern-admin #adminView .btn.gold{
+  background:linear-gradient(135deg,#f8cf3a,#e9ad08)!important;
+  color:#322000!important;
+  border-color:#ddb01c!important;
+}
+body.modern-admin #adminView .btn.green{
+  background:linear-gradient(135deg,#20bd73,#15945a)!important;
+  color:#fff!important;
+  border-color:#15945a!important;
+}
+body.modern-admin #adminView .btn.secondary{
+  background:#fff!important;
+  color:#34363c!important;
+  border:1.5px solid #cfd2d8!important;
+}
+body.modern-admin #adminView .btn.danger,
+body.modern-admin #adminView .danger.btn,
+body.modern-admin #adminView .btn.dangerBtn{
+  background:#fff3f4!important;
+  color:#c8102e!important;
+  border:1.5px solid #ef9eaa!important;
+}
+body.modern-admin #adminView .presetBtn{
+  background:#fff8df!important;
+  color:#6d4c00!important;
+  border:1px solid #e2c55b!important;
+}
+body.modern-admin #adminView .calendarBtn{
+  background:#fff!important;
+  color:#333!important;
+  border:1px solid #cfd2d8!important;
+}
+body.modern-admin #adminView .slotChip button{
+  color:#b90f29!important;
+  -webkit-text-fill-color:#b90f29!important;
+}
+body.modern-admin #adminView .btn:disabled,
+body.modern-admin #adminView button:disabled{
+  opacity:.48!important;
+  color:#71747b!important;
+  -webkit-text-fill-color:#71747b!important;
+  cursor:not-allowed!important;
+}
+/* Acciones críticas de pistas: siempre visibles, incluso si quedan fuera del primer viewport */
+body.modern-admin #adminView #publishSlots,
+body.modern-admin #adminView #resendPushNotice,
+body.modern-admin #adminView #closeSlots{
+  min-height:42px!important;
+  padding:10px 14px!important;
+  font-weight:900!important;
+}
+body.modern-admin #adminView #resendPushNotice{
+  background:#fff!important;
+  color:#2f3136!important;
+  border:1.5px solid #aeb3bc!important;
+}
+@media(max-width:700px){
+  body.modern-admin #adminView .quickActions .btn,
+  body.modern-admin #adminView #publishSlots,
+  body.modern-admin #adminView #resendPushNotice,
+  body.modern-admin #adminView #closeSlots{
+    width:100%!important;
+  }
+}
+</style>
 </head>
 <body>
 
