@@ -2089,8 +2089,9 @@ Pablo Ruiz"></textarea>
     <div class="adminSubsection">
       <div class="adminSubsectionHead"><span>PIN de jugadores</span><span id="adminMeta_pins_sub">Abrir</span></div>
       <div class="adminSubsectionBody"><div class="tiny">Genera PIN de 4 cifras automáticamente para todos los jugadores cargados. Puedes regenerar uno concreto si fuera necesario. Los PIN se guardan online en Cloudflare junto con los usuarios.</div>
-<div class="quickActions"><button class="btn gold" id="generatePins">Generar PIN que falten</button><button class="btn secondary" id="showPins">Mostrar / ocultar PIN</button><button class="btn danger" id="resetPins">Regenerar todos</button></div>
-<div class="schedule" style="margin-top:10px"><table><thead><tr><th>Jugador</th><th>PIN</th><th>Mensaje</th><th>Acción</th></tr></thead><tbody id="pinTable"></tbody></table></div></div>
+<div class="quickActions"><button class="btn gold" id="generatePins">Generar PIN que falten</button><button class="btn secondary" id="showPins">Mostrar / ocultar PIN</button><button class="btn danger" id="resetPins">Regenerar todos</button><button class="btn dangerBtn" id="deleteSelectedUsers" disabled>🗑️ Eliminar seleccionados</button></div>
+<div class="tiny" id="selectedUsersInfo" style="margin-top:7px">Selecciona uno o varios usuarios para eliminarlos rápidamente.</div>
+<div class="schedule" style="margin-top:10px"><table><thead><tr><th style="width:42px"><input id="selectAllUsers" type="checkbox" aria-label="Seleccionar todos"></th><th>Usuario</th><th>PIN</th><th>Mensaje</th><th>Acciones</th></tr></thead><tbody id="pinTable"></tbody></table></div></div>
     </div>
     <div class="adminSubsection">
       <div class="adminSubsectionHead"><span>Dispositivos y avisos</span><span id="adminMeta_devices_sub">Abrir</span></div>
@@ -2099,19 +2100,20 @@ Pablo Ruiz"></textarea>
 <div class="schedule" style="margin-top:10px"><table><thead><tr><th>Jugador</th><th>Dispositivos</th><th>Última alta</th><th>Acción</th></tr></thead><tbody id="pushDevicesTable"><tr><td colspan="4">Pulsa “Actualizar dispositivos”.</td></tr></tbody></table></div></div>
     </div>
     <div class="adminSubsection">
-      <div class="adminSubsectionHead"><span>Administradores externos</span><span id="adminMeta_admins_sub">Abrir</span></div>
-      <div class="adminSubsectionBody"><div class="tiny">Crea administradores que <b>no tienen que pertenecer a ninguna categoría ni ser jugadores</b>. Aparecerán siempre en el desplegable de acceso y verán ⚙️ Configuración al iniciar sesión.</div>
+      <div class="adminSubsectionHead"><span>Otros usuarios</span><span id="adminMeta_admins_sub">Abrir</span></div>
+      <div class="adminSubsectionBody"><div class="tiny">Crea usuarios que <b>no tienen que ser jugadores</b>. Puedes asignarlos como <b>Miembro</b> o <b>Administrador</b>. Los Miembros pueden entrar en la app sin pertenecer a una categoría deportiva.</div>
 <div class="generator" style="margin-top:10px">
-<div class="wide"><label>Nombre del administrador</label><input id="newAdminName" placeholder="Ej. Responsable del club" type="text"/></div>
-<div><label>PIN (opcional)</label><input id="newAdminPin" inputmode="numeric" maxlength="6" placeholder="Auto" type="text"/></div>
-<button class="btn gold" id="addExternalAdmin">Crear ADMIN</button>
+<div class="wide"><label>Nombre del usuario</label><input id="newAdminName" placeholder="Ej. Socio del club" type="text"/></div>
+<div><label>Tipo</label><select id="newUserRole"><option value="miembro">Miembro</option><option value="admin">Administrador</option></select></div>
+<div><label>PIN (opcional)</label><input id="newAdminPin" inputmode="numeric" maxlength="6" placeholder="Auto · 6 cifras" type="text"/></div>
+<button class="btn gold" id="addExternalAdmin">Crear usuario</button>
 </div>
-<div class="schedule" style="margin-top:10px"><table><thead><tr><th>Administrador</th><th>PIN</th><th>Acciones</th></tr></thead><tbody id="externalAdminTable"></tbody></table></div>
-<div class="authNote">Si dejas el PIN vacío, se genera automáticamente. No se añade a ninguna lista de jugadores.</div></div>
+<div class="schedule" style="margin-top:10px"><table><thead><tr><th>Usuario</th><th>Tipo</th><th>PIN</th><th>Acciones</th></tr></thead><tbody id="externalAdminTable"></tbody></table></div>
+<div class="authNote">Si dejas el PIN vacío, se genera automáticamente con 6 cifras. Los Miembros no se añaden a ninguna lista de jugadores.</div></div>
     </div>
     <div class="adminSubsection">
       <div class="adminSubsectionHead"><span>Permisos de acceso</span><span id="adminMeta_roles_sub">Abrir</span></div>
-      <div class="adminSubsectionBody"><div class="tiny">Solo las personas marcadas como <b>ADMIN</b> verán la opción ⚙️ Configuración y podrán modificar enfrentamientos, horarios, PIN o abrir/cerrar reservas.</div>
+      <div class="adminSubsectionBody"><div class="tiny">Los <b>Jugadores</b> participan en su categoría, los <b>Miembros</b> pueden acceder sin ser jugadores y solo los <b>ADMIN</b> ven ⚙️ Configuración.</div>
 <div class="schedule" style="margin-top:10px"><table><thead><tr><th>Persona</th><th>Rol</th></tr></thead><tbody id="roleTable"></tbody></table></div>
 <div class="authNote">Administrador inicial de prueba: <b>Adrián Prádanos</b> · PIN <b>2020</b>. Puedes dar permiso ADMIN a otros usuarios desde esta tabla.</div></div>
     </div>
@@ -2284,7 +2286,7 @@ function setWeekRangeLocal(start,end){
 }
 
 function fresh(){return {playerLists:{},fixtures:{},fixtureRounds:{},slots:{},drafts:{},published:{},bookings:{},results:{},profiles:{},pins:{},roles:{},staff:{},weekRanges:{},postponed:{}}}
-function normalizeData(x){const d=x&&typeof x==='object'?x:{};const wr={...(d.weekRanges||{})};if(d.weeks&&typeof d.weeks==='object'){for(const [id,w] of Object.entries(d.weeks)){if(w&&w.start&&w.end&&!wr[id])wr[id]={start:w.start,end:w.end}}}return {playerLists:d.playerLists||{},fixtures:d.fixtures||{},fixtureRounds:d.fixtureRounds||{},slots:d.slots||{},drafts:d.drafts||{},published:d.published||{},bookings:d.reservations||d.bookings||{},results:d.results||{},profiles:d.profiles||{},pins:d.pins||{},roles:{...(d.roles||{}),...(d.adminRoles||{})},staff:d.staff||{},weekRanges:wr,postponed:d.postponed||{}}}
+function normalizeData(x){const d=x&&typeof x==='object'?x:{};const wr={...(d.weekRanges||{})};if(d.weeks&&typeof d.weeks==='object'){for(const [id,w] of Object.entries(d.weeks)){if(w&&w.start&&w.end&&!wr[id])wr[id]={start:w.start,end:w.end}}}return {playerLists:d.playerLists||{},fixtures:d.fixtures||{},fixtureRounds:d.fixtureRounds||{},slots:d.slots||{},drafts:d.drafts||{},published:d.published||{},bookings:d.reservations||d.bookings||{},results:d.results||{},profiles:d.profiles||{},pins:d.pins||{},roles:{...(d.roles||{}),...(d.adminRoles||{})},staff:d.staff||{},accessExcluded:Array.isArray(d.accessExcluded)?d.accessExcluded:[],weekRanges:wr,postponed:d.postponed||{}}}
 let data=normalizeData(JSON.parse(localStorage.getItem(STORAGE_KEY)||"null")||fresh());
 applyWeekRanges();
 if(!data.staff["Adrián Prádanos"])data.staff["Adrián Prádanos"]={name:"Adrián Prádanos"};
@@ -2304,7 +2306,7 @@ const PUSH_SYNC_CACHE_KEY='ctcampeador_push_sync_v3161';
 const PUSH_RESYNC_MS=7*24*60*60*1000;  // revalidación push como máximo una vez por semana
 let lastRefreshAt=0;
 function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(data));if(isAdmin()&&apiToken){clearTimeout(saveTimer);saveTimer=setTimeout(()=>saveStateOnline().catch(console.warn),350)}}
-function publicState(){return {playerLists:data.playerLists,fixtures:data.fixtures,fixtureRounds:data.fixtureRounds,slots:data.slots,drafts:data.drafts,published:data.published,bookings:data.bookings,reservations:data.bookings,results:data.results,staff:data.staff,adminRoles:Object.fromEntries(Object.entries(data.roles||{}).filter(([,r])=>r==='admin')),weekRanges:data.weekRanges||{},postponed:data.postponed||{},weeks:Object.fromEntries(weeks.map(w=>[w.id,w])),updatedAt:new Date().toISOString()}}
+function publicState(){return {playerLists:data.playerLists,fixtures:data.fixtures,fixtureRounds:data.fixtureRounds,slots:data.slots,drafts:data.drafts,published:data.published,bookings:data.bookings,reservations:data.bookings,results:data.results,staff:data.staff,accessExcluded:data.accessExcluded||[],adminRoles:Object.fromEntries(Object.entries(data.roles||{}).filter(([,r])=>r==='admin')),weekRanges:data.weekRanges||{},postponed:data.postponed||{},weeks:Object.fromEntries(weeks.map(w=>[w.id,w])),updatedAt:new Date().toISOString()}}
 async function apiRequest(payload,{auth=true}={}){const headers={'Content-Type':'application/json'};if(auth&&apiToken)headers.Authorization='Bearer '+apiToken;const r=await fetch(API_URL,{method:'POST',headers,body:JSON.stringify(payload)});let j={};try{j=await r.json()}catch(e){}if(!r.ok||j.ok===false)throw new Error(j.error||('HTTP '+r.status));return j}
 async function restoreSession(){
   if(!apiToken)return false;
@@ -2318,10 +2320,10 @@ async function restoreSession(){
       data.playerLists=remote.playerLists;data.fixtures=remote.fixtures;data.fixtureRounds=remote.fixtureRounds;
       data.slots=remote.slots;data.drafts=remote.drafts;data.published=remote.published;data.bookings=remote.bookings;
       data.results=remote.results;data.profiles=remote.profiles||{};data.weekRanges=remote.weekRanges||{};
-      data.postponed=remote.postponed||{};data.staff={...(data.staff||{}),...(remote.staff||{})};
+      data.postponed=remote.postponed||{};data.accessExcluded=remote.accessExcluded||data.accessExcluded||[];data.staff={...(data.staff||{}),...(remote.staff||{})};
       data.roles={...(data.roles||{}),...(remote.roles||{})};applyWeekRanges();
     }
-    data.roles[state.player]=j.user.role==='admin'?'admin':'jugador';
+    data.roles[state.player]=localRoleFromApi(j.user.role);
     data.roles["Adrián Prádanos"]='admin';
     lastRefreshAt=Date.now();
     localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
@@ -2343,15 +2345,20 @@ function adminEditorActive(){
   return !!(el && el.closest && el.closest('#adminView') && /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName));
 }
 
-async function refreshOnline({silent=false,force=false}={}){if((fixtureEditorDirty||playerEditorDirty||adminEditorActive())&&!force){setOnline(true,'✏️ Editando · actualización pausada');return false}try{const j=await apiRequest({action:'read'},{auth:false});const remote=normalizeData(j.state);data.playerLists=remote.playerLists;data.fixtures=remote.fixtures;data.fixtureRounds=remote.fixtureRounds;data.slots=remote.slots;data.drafts=remote.drafts;data.published=remote.published;data.bookings=remote.bookings;data.results=remote.results;data.profiles=remote.profiles||data.profiles||{};data.weekRanges=remote.weekRanges||data.weekRanges||{};data.postponed=remote.postponed||{};applyWeekRanges();data.staff={...(data.staff||{}),...(remote.staff||{})};data.roles={...(data.roles||{}),...(remote.roles||{})};data.roles["Adrián Prádanos"]="admin";localStorage.setItem(STORAGE_KEY,JSON.stringify(data));lastRefreshAt=Date.now();setOnline(true,'☁️ Online');renderAll();return true}catch(e){setOnline(false,'⚠️ Offline');if(!silent)alert('No se ha podido actualizar desde Cloudflare.\n\n'+e.message);return false}}
+async function refreshOnline({silent=false,force=false}={}){if((fixtureEditorDirty||playerEditorDirty||adminEditorActive())&&!force){setOnline(true,'✏️ Editando · actualización pausada');return false}try{const j=await apiRequest({action:'read'},{auth:false});const remote=normalizeData(j.state);data.playerLists=remote.playerLists;data.fixtures=remote.fixtures;data.fixtureRounds=remote.fixtureRounds;data.slots=remote.slots;data.drafts=remote.drafts;data.published=remote.published;data.bookings=remote.bookings;data.results=remote.results;data.profiles=remote.profiles||data.profiles||{};data.weekRanges=remote.weekRanges||data.weekRanges||{};data.postponed=remote.postponed||{};data.accessExcluded=remote.accessExcluded||data.accessExcluded||[];applyWeekRanges();data.staff={...(data.staff||{}),...(remote.staff||{})};data.roles={...(data.roles||{}),...(remote.roles||{})};data.roles["Adrián Prádanos"]="admin";localStorage.setItem(STORAGE_KEY,JSON.stringify(data));lastRefreshAt=Date.now();setOnline(true,'☁️ Online');renderAll();return true}catch(e){setOnline(false,'⚠️ Offline');if(!silent)alert('No se ha podido actualizar desde Cloudflare.\n\n'+e.message);return false}}
 async function saveStateOnline(){
   if(!apiToken||!isAdmin())return;
   if(saveTimer){clearTimeout(saveTimer);saveTimer=null}
   await apiRequest({action:'saveState',state:publicState()});
   setOnline(true,'☁️ Guardado')
 }
-async function saveUsersOnline(){if(!apiToken||!isAdmin())return;const users=allIdentities().map(name=>({name,pin:String(data.pins[name]||''),role:roleOf(name)==='admin'?'admin':'player',active:true})).filter(u=>/^(?:\d{4}|\d{6})$/.test(u.pin));await apiRequest({action:'saveUsers',users});}
-async function loadAdminUsers(){if(!apiToken||!isAdmin())return;const j=await apiRequest({action:'listUsers'});for(const u of j.users||[]){data.pins[u.name]=String(u.pin||'');data.roles[u.name]=u.role==='admin'?'admin':'jugador';if(!allPlayers().includes(u.name))data.staff[u.name]={name:u.name}}localStorage.setItem(STORAGE_KEY,JSON.stringify(data));}
+function apiRoleFor(name){const r=roleOf(name);return r==='admin'?'admin':r==='miembro'?'member':'player'}
+function localRoleFromApi(role){return role==='admin'?'admin':role==='member'?'miembro':'jugador'}
+function accessIsExcluded(name){return (data.accessExcluded||[]).some(n=>normalizeName(n)===normalizeName(name))}
+function excludeAccess(name){data.accessExcluded=data.accessExcluded||[];if(!accessIsExcluded(name))data.accessExcluded.push(name)}
+function restoreAccess(name){data.accessExcluded=(data.accessExcluded||[]).filter(n=>normalizeName(n)!==normalizeName(name))}
+async function saveUsersOnline(){if(!apiToken||!isAdmin())return;const users=allIdentities().filter(name=>!accessIsExcluded(name)).map(name=>({name,pin:String(data.pins[name]||''),role:apiRoleFor(name),active:true})).filter(u=>/^(?:\d{4}|\d{6})$/.test(u.pin));await apiRequest({action:'saveUsers',users});}
+async function loadAdminUsers(){if(!apiToken||!isAdmin())return;const j=await apiRequest({action:'listUsers'});for(const u of j.users||[]){restoreAccess(u.name);data.pins[u.name]=String(u.pin||'');data.roles[u.name]=localRoleFromApi(u.role);if(!categorizedPlayers().some(p=>normalizeName(p)===normalizeName(u.name)))data.staff[u.name]={name:u.name}}localStorage.setItem(STORAGE_KEY,JSON.stringify(data));}
 
 function fixtureKey(){return `${state.week}|${state.category}|${state.gender}`}
 function playerListKey(){return `${state.category}|${state.gender}`}
@@ -2458,9 +2465,12 @@ async function offerRemovedUserCleanup(removedNames=[]){
   if(!ok)return {asked:true,removed:[]};
 
   for(const name of candidates){
+    try{await apiRequest({action:'deleteUser',name})}catch(_){}
+    try{await apiRequest({action:'removePushDevices',userName:name})}catch(_){}
+    excludeAccess(name);
     delete data.pins[name];
     delete data.roles[name];
-    if(data.staff?.[name] && roleOf(name)!=='admin') delete data.staff[name];
+    if(data.staff?.[name])delete data.staff[name];
   }
   localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
   return {asked:true,removed:candidates};
@@ -2474,6 +2484,7 @@ function randomPin(exclude=new Set()){let pin='';do{pin=String(Math.floor(100000
 function ensurePins(){
   const used=new Set();
   for(const p of allIdentities()){
+    if(accessIsExcluded(p))continue;
     let pin=String(data.pins[p]||'');
     if(!/^(?:\d{4}|\d{6})$/.test(pin)||used.has(pin)){
       pin=randomPin(used);
@@ -2482,10 +2493,9 @@ function ensurePins(){
     used.add(pin);
     if(!data.roles[p])data.roles[p]='jugador';
   }
-  // Los PIN se suben mediante saveUsersOnline(); aquí solo actualizamos la copia local.
   localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
 }
-function visibleIdentitiesForCategory(){const admins=allIdentities().filter(p=>roleOf(p)==='admin');const category=categoryPlayers();const visible=[...new Set([...category,...admins])].sort((a,b)=>a.localeCompare(b,'es'));if(state.authenticated&&state.player&&!visible.includes(state.player))visible.push(state.player);return visible}
+function visibleIdentitiesForCategory(){const globalUsers=allIdentities().filter(p=>(roleOf(p)==='admin'||roleOf(p)==='miembro')&&!accessIsExcluded(p));const category=categoryPlayers().filter(p=>!accessIsExcluded(p));const visible=[...new Set([...category,...globalUsers])].sort((a,b)=>a.localeCompare(b,'es'));if(state.authenticated&&state.player&&!visible.includes(state.player))visible.push(state.player);return visible}
 
 function showPinWelcome(message='PIN personal de 6 cifras · los PIN antiguos de 4 siguen funcionando',isError=false){
   const ov=$('#pinWelcome'),msg=$('#welcomePinMsg'),inp=$('#welcomePin');
@@ -2575,7 +2585,7 @@ async function loginWithPinOnly(){
     localStorage.setItem(TOKEN_KEY,apiToken);
     state.player=j.user.name;
     state.authenticated=true;
-    data.roles[state.player]=j.user.role==='admin'?'admin':'jugador';
+    data.roles[state.player]=localRoleFromApi(j.user.role);
     await refreshOnline({silent:true,force:true});
     if(isAdmin())await loadAdminUsers();
     routePlayerToOwnCategory(state.player);
@@ -3217,58 +3227,149 @@ function renderAdmin(){
   if(!admin){$('#adminView').classList.add('hidden');return}
   const cps=categoryPlayers();if(!playerEditorDirty)$('#playerPaste').value=cps.join('\n');$('#playerCount').textContent=`${cps.length} jugador${cps.length===1?'':'es'}`;$('#fixturePaste').value='';renderFixtureEditor();const cw=weeks.find(w=>w.id===state.week);if(cw){$('#weekStartDate').value=cw.start;$('#weekEndDate').value=cw.end;$('#weekRangeHint').textContent=`Rango actual: ${dayDateES(cw.start)} → ${dayDateES(cw.end)}. Las pistas del borrador se limitarán a estas fechas.`}renderSlotRows();setDefaultQuickDate();renderAdminMatches();renderPins();renderRoles();renderExternalAdmins();renderWhats();
 }
-function renderRoles(){const tb=$('#roleTable');const ps=allIdentities();tb.innerHTML=ps.map(p=>`<tr><td><b>${p}</b></td><td><select data-role-person="${p.replace(/"/g,'&quot;')}"><option value="jugador" ${roleOf(p)==='jugador'?'selected':''}>Jugador</option><option value="admin" ${roleOf(p)==='admin'?'selected':''}>ADMIN</option></select></td></tr>`).join('');tb.querySelectorAll('[data-role-person]').forEach(s=>s.onchange=()=>{if(!requireAdmin())return;s.disabled=true;data.roles[s.dataset.rolePerson]=s.value;save();saveUsersOnline().catch(e=>alert(e.message));renderAll();alert(`Permiso actualizado: ${s.dataset.rolePerson} → ${s.value.toUpperCase()}`)})}
+function renderRoles(){
+  const tb=$('#roleTable');const ps=allIdentities().filter(p=>!accessIsExcluded(p));
+  tb.innerHTML=ps.map(p=>`<tr><td><b>${p}</b></td><td><select data-role-person="${p.replace(/"/g,'&quot;')}"><option value="jugador" ${roleOf(p)==='jugador'?'selected':''}>Jugador</option><option value="miembro" ${roleOf(p)==='miembro'?'selected':''}>Miembro</option><option value="admin" ${roleOf(p)==='admin'?'selected':''}>ADMIN</option></select></td></tr>`).join('');
+  tb.querySelectorAll('[data-role-person]').forEach(s=>s.onchange=async()=>{
+    if(!requireAdmin())return;
+    const name=s.dataset.rolePerson;
+    s.disabled=true;
+    data.roles[name]=s.value;
+    if(s.value==='miembro'||s.value==='admin')data.staff[name]={name};
+    restoreAccess(name);
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+    try{await saveUsersOnline();await saveStateOnline();renderAll();alert(`Permiso actualizado: ${name} → ${s.value.toUpperCase()}`)}
+    catch(e){alert('No se ha podido guardar el permiso.\n\n'+e.message);await refreshOnline({silent:true,force:true})}
+  })
+}
+function selectedAccessUsers(){
+  return [...document.querySelectorAll('#pinTable [data-user-select]:checked')].map(x=>x.dataset.userSelect).filter(Boolean);
+}
+function updateSelectedUsersUI(){
+  const selected=selectedAccessUsers();
+  const btn=$('#deleteSelectedUsers');
+  const info=$('#selectedUsersInfo');
+  if(btn){btn.disabled=!selected.length;btn.textContent=selected.length?`🗑️ Eliminar seleccionados (${selected.length})`:'🗑️ Eliminar seleccionados'}
+  if(info)info.textContent=selected.length?`${selected.length} usuario${selected.length===1?'':'s'} seleccionado${selected.length===1?'':'s'}.`:'Selecciona uno o varios usuarios para eliminarlos rápidamente.';
+  const all=$('#selectAllUsers');
+  if(all){
+    const selectable=[...document.querySelectorAll('#pinTable [data-user-select]:not(:disabled)')];
+    const checked=selectable.filter(x=>x.checked);
+    all.checked=selectable.length>0&&checked.length===selectable.length;
+    all.indeterminate=checked.length>0&&checked.length<selectable.length;
+  }
+}
 function renderPins(){
-  const tb=$('#pinTable');const ps=allIdentities();
-  if(!ps.length){tb.innerHTML='<tr><td colspan="4">No hay jugadores cargados.</td></tr>';return}
+  const tb=$('#pinTable');
+  const ps=allIdentities().filter(p=>!accessIsExcluded(p));
+  if(!ps.length){tb.innerHTML='<tr><td colspan="5">No hay usuarios cargados.</td></tr>';updateSelectedUsersUI();return}
   tb.innerHTML=ps.map(p=>{
     const pin=data.pins[p]||'—';
-    const shown=state.showPins?pin:'••••';
+    const shown=state.showPins?pin:(pin==='—'?'—':'•'.repeat(String(pin).length));
     const safe=p.replace(/"/g,'&quot;');
-    return `<tr><td><b>${p}</b></td><td><span class="mono">${shown}</span></td><td><button class="btn secondary" data-copy-pin="${safe}">Copiar mensaje</button></td><td><button class="btn danger" data-regenerate-pin="${safe}">♻ Nuevo PIN</button></td></tr>`;
+    const protectedSelf=p===state.player&&roleOf(p)==='admin';
+    const roleBadge=roleOf(p)==='admin'?' <span class="adminBadge">ADMIN</span>':roleOf(p)==='miembro'?' <span class="adminBadge">MIEMBRO</span>':'';
+    return `<tr><td><input type="checkbox" data-user-select="${safe}" ${protectedSelf?'disabled title="No puedes eliminar tu propio usuario administrador"':''}></td><td><b>${p}</b>${roleBadge}</td><td><span class="mono">${shown}</span></td><td><button class="btn secondary" data-copy-pin="${safe}">Copiar mensaje</button></td><td><div class="matchActions"><button class="btn secondary" data-regenerate-pin="${safe}">♻ Nuevo PIN</button><button class="btn dangerBtn" data-delete-user="${safe}" ${protectedSelf?'disabled':''}>Eliminar</button></div></td></tr>`;
   }).join('');
   tb.querySelectorAll('[data-copy-pin]').forEach(b=>b.onclick=()=>copyPinMessage(b.dataset.copyPin));
   tb.querySelectorAll('[data-regenerate-pin]').forEach(b=>b.onclick=()=>regeneratePinFor(b.dataset.regeneratePin));
+  tb.querySelectorAll('[data-delete-user]').forEach(b=>b.onclick=()=>deleteAccessUsers([b.dataset.deleteUser]));
+  tb.querySelectorAll('[data-user-select]').forEach(c=>c.onchange=updateSelectedUsersUI);
+  updateSelectedUsersUI();
 }
+async function deleteAccessUsers(names){
+  if(!requireAdmin())return;
+  const unique=[...new Set((names||[]).filter(Boolean))];
+  if(!unique.length){alert('Selecciona al menos un usuario.');return}
+
+  const currentAdmin=state.player;
+  if(unique.some(n=>normalizeName(n)===normalizeName(currentAdmin)&&roleOf(n)==='admin')){
+    alert('No puedes eliminar el administrador con el que tienes iniciada la sesión.');
+    return;
+  }
+
+  const activeAdmins=allIdentities().filter(p=>roleOf(p)==='admin'&&!accessIsExcluded(p));
+  const deletingAdmins=unique.filter(p=>roleOf(p)==='admin');
+  if(activeAdmins.length-deletingAdmins.length<1){
+    alert('Debe quedar al menos un administrador.');
+    return;
+  }
+
+  const list=unique.map(n=>'• '+n).join('\n');
+  if(!confirm(`¿Eliminar ${unique.length===1?'este usuario':'estos usuarios'}?\n\n${list}\n\nSe eliminarán su acceso y PIN. Los partidos y resultados históricos NO se borrarán.`))return;
+
+  const failed=[];
+  for(const name of unique){
+    try{
+      await apiRequest({action:'deleteUser',name});
+      try{await apiRequest({action:'removePushDevices',userName:name})}catch(_){}
+      excludeAccess(name);
+      delete data.pins[name];
+
+      // Si no es jugador de ninguna categoría, eliminar también su identidad local.
+      if(!playerStillInAnyCategory(name)){
+        delete data.staff[name];
+        delete data.roles[name];
+      }
+    }catch(e){
+      failed.push(`${name}: ${e.message}`);
+    }
+  }
+
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+  try{await saveStateOnline()}catch(_){}
+  renderAll();
+
+  if(failed.length){
+    alert(`Se han eliminado ${unique.length-failed.length} usuario(s).\n\nNo se pudieron eliminar:\n${failed.join('\n')}`);
+  }else{
+    alert(`✅ ${unique.length===1?'Usuario eliminado':'Usuarios eliminados'} correctamente.`);
+  }
+}
+
 function externalAdmins(){
-  return Object.keys(data.staff||{}).filter(p=>roleOf(p)==='admin').sort((a,b)=>a.localeCompare(b,'es'));
+  return Object.keys(data.staff||{}).filter(p=>(roleOf(p)==='admin'||roleOf(p)==='miembro')&&!accessIsExcluded(p)).sort((a,b)=>a.localeCompare(b,'es'));
 }
 function renderExternalAdmins(){
   const tb=$('#externalAdminTable'); if(!tb)return;
-  const admins=externalAdmins();
-  if(!admins.length){tb.innerHTML='<tr><td colspan="3">No hay administradores externos.</td></tr>';return;}
-  tb.innerHTML=admins.map(p=>{
-    const shown=state.showPins?(data.pins[p]||'—'):'••••';
-    const locked=(p===state.player);
-    return `<tr><td><b>${p}</b>${p==='Adrián Prádanos'?' <span class="adminBadge">INICIAL</span>':''}</td><td><span class="mono">${shown}</span></td><td><div class="matchActions"><button class="btn secondary" data-copy-admin="${p.replace(/"/g,'&quot;')}">📋 Copiar</button><button class="btn dangerBtn" data-delete-admin="${p.replace(/"/g,'&quot;')}" ${locked?'disabled':''}>Eliminar</button></div></td></tr>`;
+  const users=externalAdmins();
+  if(!users.length){tb.innerHTML='<tr><td colspan="4">No hay otros usuarios.</td></tr>';return;}
+  tb.innerHTML=users.map(p=>{
+    const pin=data.pins[p]||'—';
+    const shown=state.showPins?pin:(pin==='—'?'—':'•'.repeat(String(pin).length));
+    const locked=(p===state.player&&roleOf(p)==='admin');
+    const type=roleOf(p)==='admin'?'Administrador':'Miembro';
+    return `<tr><td><b>${p}</b>${p==='Adrián Prádanos'?' <span class="adminBadge">INICIAL</span>':''}</td><td>${type}</td><td><span class="mono">${shown}</span></td><td><div class="matchActions"><button class="btn secondary" data-copy-admin="${p.replace(/"/g,'&quot;')}">📋 Copiar</button><button class="btn dangerBtn" data-delete-other="${p.replace(/"/g,'&quot;')}" ${locked?'disabled':''}>Eliminar</button></div></td></tr>`;
   }).join('');
   tb.querySelectorAll('[data-copy-admin]').forEach(b=>b.onclick=()=>copyPinMessage(b.dataset.copyAdmin));
-  tb.querySelectorAll('[data-delete-admin]').forEach(b=>b.onclick=async()=>{
-    if(!requireAdmin())return; const name=b.dataset.deleteAdmin;
-    if(name===state.player){alert('No puedes eliminar el administrador con el que tienes iniciada la sesión.');return;}
-    const remaining=allIdentities().filter(p=>roleOf(p)==='admin'&&p!==name);
-    if(!remaining.length){alert('Debe quedar al menos un administrador.');return;}
-    if(!confirm(`¿Eliminar el acceso ADMIN de ${name}?\n\nNo se borrará ningún jugador ni partido.`))return;
-    delete data.staff[name]; delete data.roles[name]; delete data.pins[name];
-    localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
-    try{await saveUsersOnline();await saveStateOnline();renderAll();alert('✅ Administrador eliminado.');}
-    catch(e){alert('No se ha podido guardar el cambio.\n\n'+e.message);await refreshOnline({silent:true,force:true});}
-  });
+  tb.querySelectorAll('[data-delete-other]').forEach(b=>b.onclick=()=>deleteAccessUsers([b.dataset.deleteOther]));
 }
 async function createExternalAdmin(){
   if(!requireAdmin())return;
   const name=$('#newAdminName').value.trim();
   let pin=$('#newAdminPin').value.trim();
-  if(!name){alert('Escribe el nombre del administrador.');return;}
-  if(allPlayers().some(p=>normalizeName(p)===normalizeName(name))){alert('Ese nombre ya pertenece a un jugador. Para hacerlo ADMIN usa la tabla de permisos.');return;}
-  const existing=allIdentities().find(p=>normalizeName(p)===normalizeName(name));
-  if(existing&&existing!==name){alert(`Ya existe una persona con un nombre equivalente: ${existing}`);return;}
+  const selectedRole=$('#newUserRole')?.value==='admin'?'admin':'miembro';
+  if(!name){alert('Escribe el nombre del usuario.');return;}
+  if(categorizedPlayers().some(p=>normalizeName(p)===normalizeName(name))){
+    alert('Ese nombre ya pertenece a un jugador. Para cambiar su permiso usa "Permisos de acceso".');return;
+  }
+  const existing=allIdentities().find(p=>normalizeName(p)===normalizeName(name)&&!accessIsExcluded(p));
+  if(existing){alert(`Ya existe un usuario con ese nombre: ${existing}`);return;}
   if(!pin)pin=randomPin();
   if(!/^\d{6}$/.test(pin)){alert('El PIN debe tener 6 cifras o dejarse vacío para generarlo automáticamente.');return;}
-  data.staff[name]={name}; data.roles[name]='admin'; data.pins[name]=pin;
+  data.staff[name]={name};data.roles[name]=selectedRole;data.pins[name]=pin;restoreAccess(name);
   localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
-  try{await saveUsersOnline();await saveStateOnline();$('#newAdminName').value='';$('#newAdminPin').value='';renderAll();alert(`✅ Administrador creado.\n\n${name}\nPIN: ${pin}`);}
-  catch(e){delete data.staff[name];delete data.roles[name];delete data.pins[name];localStorage.setItem(STORAGE_KEY,JSON.stringify(data));renderAll();alert('No se ha podido crear el administrador.\n\n'+e.message);}
+  try{
+    await saveUsersOnline();await saveStateOnline();
+    $('#newAdminName').value='';$('#newAdminPin').value='';
+    if($('#newUserRole'))$('#newUserRole').value='miembro';
+    renderAll();
+    alert(`✅ Usuario creado.\n\n${name}\nTipo: ${selectedRole==='admin'?'Administrador':'Miembro'}\nPIN: ${pin}`);
+  }catch(e){
+    delete data.staff[name];delete data.roles[name];delete data.pins[name];
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(data));renderAll();
+    alert('No se ha podido crear el usuario.\n\n'+e.message);
+  }
 }
 async function copyTextRobust(text){
   try{
@@ -4186,7 +4287,7 @@ $('#welcomePin').addEventListener('input',e=>{
 $('#welcomePin').addEventListener('keydown',e=>{if(e.key==='Enter')loginWithPinOnly()});
 
 $('#playerIdentity').onchange=e=>{if(!state.authenticated)state.player=e.target.value;$('#playerPin').value='';renderIdentity()};
-$('#loginBtn').onclick=async()=>{const player=$('#playerIdentity').value,pin=$('#playerPin').value.trim();if(!player){alert('Selecciona tu nombre.');return}if(!/^(?:\d{4}|\d{6})$/.test(pin)){alert('Introduce un PIN válido de 6 cifras. Los PIN antiguos de 4 siguen funcionando.');return}try{$('#loginBtn').disabled=true;const j=await apiRequest({action:'login',name:player,pin},{auth:false});apiToken=j.token;localStorage.setItem(TOKEN_KEY,apiToken);state.player=j.user.name;state.authenticated=true;data.roles[state.player]=j.user.role==='admin'?'admin':'jugador';if(isAdmin())await loadAdminUsers();routePlayerToOwnCategory(state.player);$('#playerPin').value='';setOnline(true,'☁️ Online');await refreshOnline({silent:true,force:true});renderAll()}catch(e){alert('No se ha podido iniciar sesión.\n\n'+e.message)}finally{$('#loginBtn').disabled=false}};
+$('#loginBtn').onclick=async()=>{const player=$('#playerIdentity').value,pin=$('#playerPin').value.trim();if(!player){alert('Selecciona tu nombre.');return}if(!/^(?:\d{4}|\d{6})$/.test(pin)){alert('Introduce un PIN válido de 6 cifras. Los PIN antiguos de 4 siguen funcionando.');return}try{$('#loginBtn').disabled=true;const j=await apiRequest({action:'login',name:player,pin},{auth:false});apiToken=j.token;localStorage.setItem(TOKEN_KEY,apiToken);state.player=j.user.name;state.authenticated=true;data.roles[state.player]=localRoleFromApi(j.user.role);if(isAdmin())await loadAdminUsers();routePlayerToOwnCategory(state.player);$('#playerPin').value='';setOnline(true,'☁️ Online');await refreshOnline({silent:true,force:true});renderAll()}catch(e){alert('No se ha podido iniciar sesión.\n\n'+e.message)}finally{$('#loginBtn').disabled=false}};
 $('#playerPin').addEventListener('keydown',e=>{if(e.key==='Enter')$('#loginBtn').click()});
 $('#clearIdentity').onclick=async()=>{try{if(apiToken)await apiRequest({action:'logout'})}catch(e){}apiToken='';localStorage.removeItem(TOKEN_KEY);state.player='';state.authenticated=false;$('#playerPin').value='';renderAll();showPinWelcome('Introduce tu PIN para cambiar de usuario.',false)};
 $$('.gender').forEach(b=>b.onclick=()=>{state.gender=b.dataset.gender;renderAll()});
@@ -4384,6 +4485,12 @@ $('#closeSlots').onclick=async()=>{
   }finally{btn.disabled=false;btn.textContent=old}
 };
 $('#refreshPushDevices').onclick=loadPushDevices;
+$('#selectAllUsers').onchange=e=>{
+  document.querySelectorAll('#pinTable [data-user-select]:not(:disabled)').forEach(c=>c.checked=e.target.checked);
+  updateSelectedUsersUI();
+};
+$('#deleteSelectedUsers').onclick=()=>deleteAccessUsers(selectedAccessUsers());
+
 $('#generatePins').onclick=()=>{if(!requireAdmin())return;ensurePins();saveUsersOnline().catch(e=>alert(e.message));renderAll();alert('🔐 PIN generados para todos los jugadores que no tenían uno.')}
 $('#showPins').onclick=()=>{if(!requireAdmin())return;state.showPins=!state.showPins;renderPins()};
 $('#resetPins').onclick=async()=>{if(!requireAdmin())return;if(!confirm('¿Regenerar TODOS los PIN? Los PIN anteriores dejarán de funcionar.'))return;const admins=Object.entries(data.roles||{}).filter(([,r])=>r==='admin').map(([p])=>p);data.pins={};ensurePins();admins.forEach(p=>{if(!data.pins[p])data.pins[p]=randomPin()});save();try{await saveUsersOnline();alert('♻ PIN regenerados y guardados online. Revisa los nuevos PIN de administradores.')}catch(e){alert(e.message)}renderAll()};
