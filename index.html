@@ -2371,7 +2371,7 @@ const API_URL="https://ct-campeador-api.ligasdetenis.workers.dev/";
 const PUSH_URL="https://ct-campeador-push-v1.ligasdetenis.workers.dev";
 let PUSH_VAPID_PUBLIC_KEY="";
 const PUSH_SW_URL="/ct-campeador-liga/push-sw.js";
-const APP_BUILD="20261012-tournament-name-welcome-1";
+const APP_BUILD="20261012-public-tournament-name-1";
 const weeks=[
  {id:"W1",label:"Semana 1 · 17–25 octubre",start:"2026-10-17",end:"2026-10-25"},
  {id:"W2",label:"Semana 2 · 26 octubre–1 noviembre",start:"2026-10-26",end:"2026-11-01"},
@@ -2431,6 +2431,24 @@ let lastRefreshAt=0;
 function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(data));if(isAdmin()&&apiToken){clearTimeout(saveTimer);saveTimer=setTimeout(()=>saveStateOnline().catch(console.warn),350)}}
 function publicState(){return {tournamentName:data.tournamentName||'II Liga Federada',playerLists:data.playerLists,fixtures:data.fixtures,fixtureRounds:data.fixtureRounds,slots:data.slots,drafts:data.drafts,published:data.published,bookings:data.bookings,reservations:data.bookings,results:data.results,staff:data.staff,accessExcluded:data.accessExcluded||[],adminRoles:Object.fromEntries(Object.entries(data.roles||{}).filter(([,r])=>r==='admin')),weekRanges:data.weekRanges||{},postponed:data.postponed||{},weeks:Object.fromEntries(weeks.map(w=>[w.id,w])),updatedAt:new Date().toISOString()}}
 async function apiRequest(payload,{auth=true}={}){const headers={'Content-Type':'application/json'};if(auth&&apiToken)headers.Authorization='Bearer '+apiToken;const r=await fetch(API_URL,{method:'POST',headers,body:JSON.stringify(payload)});let j={};try{j=await r.json()}catch(e){}if(!r.ok||j.ok===false)throw new Error(j.error||('HTTP '+r.status));return j}
+
+async function loadPublicTournamentName(){
+  try{
+    const j=await apiRequest({action:'readPublicConfig'},{auth:false});
+    const name=String(j?.config?.tournamentName||'').trim();
+    if(name){
+      data.tournamentName=name;
+      localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+      renderModernHeader();
+      renderTournamentNameEditor();
+    }
+    return name;
+  }catch(e){
+    console.warn('No se pudo cargar el nombre público del torneo',e);
+    return data.tournamentName||'II Liga Federada';
+  }
+}
+
 async function restoreSession(){
   if(!apiToken)return false;
   try{
@@ -4954,24 +4972,27 @@ $('#saveTournamentName').onclick=async()=>{
   const input=$('#tournamentNameInput');
   const name=String(input?.value||'').trim().replace(/\s+/g,' ').slice(0,60);
   if(!name){alert('Escribe el nombre del torneo.');return}
-  data.tournamentName=name;
-  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
-  renderModernHeader();
   try{
-    await saveStateOnline();
-    alert('✅ Nombre del torneo guardado.');
+    const r=await apiRequest({action:'saveTournamentName',tournamentName:name});
+    data.tournamentName=String(r.tournamentName||name);
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+    renderModernHeader();
+    renderTournamentNameEditor();
+    alert('✅ Nombre del torneo guardado y sincronizado.');
   }catch(e){
-    alert('Se ha guardado en este dispositivo, pero no se pudo sincronizar con Cloudflare.\n\n'+e.message);
+    alert('No se ha podido guardar el nombre en Cloudflare.\n\n'+e.message);
   }
 };
 $('#resetTournamentName').onclick=async()=>{
   if(!requireAdmin())return;
   if(!confirm('¿Restablecer el nombre a “II Liga Federada”?'))return;
-  data.tournamentName='II Liga Federada';
-  const input=$('#tournamentNameInput');if(input)input.value=data.tournamentName;
-  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
-  renderModernHeader();
-  try{await saveStateOnline()}catch(e){alert(e.message)}
+  try{
+    const r=await apiRequest({action:'saveTournamentName',tournamentName:'II Liga Federada'});
+    data.tournamentName=String(r.tournamentName||'II Liga Federada');
+    const input=$('#tournamentNameInput');if(input)input.value=data.tournamentName;
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+    renderModernHeader();
+  }catch(e){alert('No se ha podido restablecer.\n\n'+e.message)}
 };
 
 $('#copyWhats').onclick=async()=>{if(!requireAdmin())return;renderWhats();const text=$('#whatsPreview').value;const ok=await copyTextRobust(text);if(ok){alert('📋 Mensaje copiado.');return}$('#whatsPreview').focus();$('#whatsPreview').select();alert('No se ha podido copiar automáticamente. El texto queda seleccionado para copiarlo manualmente.');};
@@ -4986,8 +5007,9 @@ $$('.navBtn[data-go]').forEach(b=>b.onclick=()=>{const go=b.dataset.go;$$('.navB
 $('#refreshBtn').onclick=()=>refreshOnline();
 async function bootstrapApp(){
   try{
-    renderAll();
     setOnline(false,'☁️ Conectando…');
+    await loadPublicTournamentName();
+    renderAll();
     const restored=await restoreSession();
     if(restored){
       routePlayerToOwnCategory(state.player);
@@ -5004,7 +5026,9 @@ async function bootstrapApp(){
       }
     },AUTO_REFRESH_MS);
     document.addEventListener('visibilitychange',()=>{
-      if(document.visibilityState==='visible'&&state.authenticated&&!fixtureEditorDirty&&!playerEditorDirty&&!adminEditorActive()&&Date.now()-lastRefreshAt>MIN_VISIBLE_REFRESH_MS){
+      if(document.visibilityState!=='visible')return;
+      loadPublicTournamentName();
+      if(state.authenticated&&!fixtureEditorDirty&&!playerEditorDirty&&!adminEditorActive()&&Date.now()-lastRefreshAt>MIN_VISIBLE_REFRESH_MS){
         refreshOnline({silent:true});
       }
     });
