@@ -2089,7 +2089,7 @@ Pablo Ruiz"></textarea>
     <div class="adminSubsection">
       <div class="adminSubsectionHead"><span>PIN de jugadores</span><span id="adminMeta_pins_sub">Abrir</span></div>
       <div class="adminSubsectionBody"><div class="tiny">Genera PIN de 4 cifras automáticamente para todos los jugadores cargados. Puedes regenerar uno concreto si fuera necesario. Los PIN se guardan online en Cloudflare junto con los usuarios.</div>
-<div class="quickActions"><button class="btn gold" id="generatePins">Generar PIN que falten</button><button class="btn secondary" id="showPins">Mostrar / ocultar PIN</button><button class="btn danger" id="resetPins">Regenerar todos</button><button class="btn dangerBtn" id="deleteSelectedUsers" disabled>🗑️ Eliminar seleccionados</button></div>
+<div class="quickActions"><button class="btn gold" id="generatePins">Generar PIN que falten</button><button class="btn secondary" id="showPins">Mostrar / ocultar PIN</button><button class="btn danger" id="resetPins">Regenerar todos</button><button class="btn dangerBtn" id="deleteSelectedUsers" disabled>🗑️ Eliminar seleccionados</button><button class="btn secondary" id="syncAccessUsers" type="button">🔄 Sincronizar usuarios</button></div>
 <div class="tiny" id="selectedUsersInfo" style="margin-top:7px">Selecciona uno o varios usuarios para eliminarlos rápidamente.</div>
 <div class="schedule" style="margin-top:10px"><table><thead><tr><th style="width:42px"><input id="selectAllUsers" type="checkbox" aria-label="Seleccionar todos"></th><th>Usuario</th><th>PIN</th><th>Mensaje</th><th>Acciones</th></tr></thead><tbody id="pinTable"></tbody></table></div></div>
     </div>
@@ -2358,7 +2358,51 @@ function accessIsExcluded(name){return (data.accessExcluded||[]).some(n=>normali
 function excludeAccess(name){data.accessExcluded=data.accessExcluded||[];if(!accessIsExcluded(name))data.accessExcluded.push(name)}
 function restoreAccess(name){data.accessExcluded=(data.accessExcluded||[]).filter(n=>normalizeName(n)!==normalizeName(name))}
 async function saveUsersOnline(){if(!apiToken||!isAdmin())return;const users=allIdentities().filter(name=>!accessIsExcluded(name)).map(name=>({name,pin:String(data.pins[name]||''),role:apiRoleFor(name),active:true})).filter(u=>/^(?:\d{4}|\d{6})$/.test(u.pin));await apiRequest({action:'saveUsers',users});}
-async function loadAdminUsers(){if(!apiToken||!isAdmin())return;const j=await apiRequest({action:'listUsers'});for(const u of j.users||[]){restoreAccess(u.name);data.pins[u.name]=String(u.pin||'');data.roles[u.name]=localRoleFromApi(u.role);if(!categorizedPlayers().some(p=>normalizeName(p)===normalizeName(u.name)))data.staff[u.name]={name:u.name}}localStorage.setItem(STORAGE_KEY,JSON.stringify(data));}
+async function loadAdminUsers(){
+  if(!apiToken||!isAdmin())return;
+  const j=await apiRequest({action:'listUsers'});
+  const remoteUsers=Array.isArray(j.users)?j.users:[];
+  const remoteByName=new Map(remoteUsers.map(u=>[normalizeName(u.name),u]));
+  const categorized=categorizedPlayers();
+
+  // 1) La API es la fuente de verdad para accesos/PIN/roles.
+  for(const u of remoteUsers){
+    restoreAccess(u.name);
+    data.pins[u.name]=String(u.pin||'');
+    data.roles[u.name]=localRoleFromApi(u.role);
+    if(!categorized.some(p=>normalizeName(p)===normalizeName(u.name))){
+      data.staff[u.name]={name:u.name};
+    }
+  }
+
+  // 2) Quitar de ESTE dispositivo usuarios antiguos que ya no existen en la API.
+  //    Si siguen siendo jugadores de una categoría, conservamos al jugador pero sin acceso.
+  for(const name of [...allIdentities()]){
+    const key=normalizeName(name);
+    if(remoteByName.has(key))continue;
+
+    const stillPlayer=categorized.some(p=>normalizeName(p)===key);
+    excludeAccess(name);
+    delete data.pins[name];
+
+    if(!stillPlayer){
+      delete data.staff[name];
+      delete data.roles[name];
+    }
+  }
+
+  // 3) Limpiar staff fantasma que pueda haber quedado en localStorage.
+  for(const name of Object.keys(data.staff||{})){
+    if(!remoteByName.has(normalizeName(name)) &&
+       !categorized.some(p=>normalizeName(p)===normalizeName(name))){
+      delete data.staff[name];
+      delete data.roles[name];
+      delete data.pins[name];
+    }
+  }
+
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+}
 
 function fixtureKey(){return `${state.week}|${state.category}|${state.gender}`}
 function playerListKey(){return `${state.category}|${state.gender}`}
@@ -4490,6 +4534,20 @@ $('#selectAllUsers').onchange=e=>{
   updateSelectedUsersUI();
 };
 $('#deleteSelectedUsers').onclick=()=>deleteAccessUsers(selectedAccessUsers());
+$('#syncAccessUsers').onclick=async()=>{
+  if(!requireAdmin())return;
+  const btn=$('#syncAccessUsers'),old=btn.textContent;
+  try{
+    btn.disabled=true;btn.textContent='⏳ Sincronizando…';
+    await loadAdminUsers();
+    renderAll();
+    alert('✅ Usuarios sincronizados con Cloudflare.');
+  }catch(e){
+    alert('No se han podido sincronizar los usuarios.\n\n'+e.message);
+  }finally{
+    btn.disabled=false;btn.textContent=old;
+  }
+};
 
 $('#generatePins').onclick=()=>{if(!requireAdmin())return;ensurePins();saveUsersOnline().catch(e=>alert(e.message));renderAll();alert('🔐 PIN generados para todos los jugadores que no tenían uno.')}
 $('#showPins').onclick=()=>{if(!requireAdmin())return;state.showPins=!state.showPins;renderPins()};
