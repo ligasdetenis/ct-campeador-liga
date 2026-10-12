@@ -2371,7 +2371,7 @@ const API_URL="https://ct-campeador-api.ligasdetenis.workers.dev/";
 const PUSH_URL="https://ct-campeador-push-v1.ligasdetenis.workers.dev";
 let PUSH_VAPID_PUBLIC_KEY="";
 const PUSH_SW_URL="/ct-campeador-liga/push-sw.js";
-const APP_BUILD="20261012-public-tournament-name-1";
+const APP_BUILD="20261012-admin-player-fix-1";
 const weeks=[
  {id:"W1",label:"Semana 1 · 17–25 octubre",start:"2026-10-17",end:"2026-10-25"},
  {id:"W2",label:"Semana 2 · 26 octubre–1 noviembre",start:"2026-10-26",end:"2026-11-01"},
@@ -2738,7 +2738,7 @@ function playerCategoryMemberships(player){
 }
 
 function routePlayerToOwnCategory(player){
-  if(!player||roleOf(player)==='admin')return null;
+  if(!player)return null;
 
   const memberships=playerCategoryMemberships(player);
   if(!memberships.length)return null;
@@ -4113,7 +4113,7 @@ function mappResultPlayer(name){
  return `<div class="mapp-result-player-name"><div class="mapp-result-avatar ${ph?'has-photo':''}"${style}>${ph?'':mappEsc(mappInitials(name))}</div><div class="mapp-result-name">${mappEsc(name)}</div></div>`;
 }
 function mappOwnMatches(){
- if(!state.authenticated||!state.player||isAdmin())return [];
+ if(!state.authenticated||!state.player)return [];
  return viewFixtures().filter(m=>m.a===state.player||m.b===state.player)
 }
 function mappPrimaryMatch(){return mappOwnMatches()[0]||null}
@@ -4392,13 +4392,7 @@ function renderModernHome(){
  const box=$('#modernHomeContent'); if(!box)return;
  const m=mappPrimaryMatch(), frees=mappFreeSlots().slice(0,3);
  let hero='';
- if(isAdmin()){
-   hero=`<div class="mapp-card"><div class="mapp-card-pad">
-      <div class="mapp-section-title"><div class="left"><span class="mapp-title-icon">${mappIcon('gear')}</span>Administración</div></div>
-      <div class="mapp-status good"><div><strong>Sesión de administrador</strong>Gestiona la jornada, las pistas y los jugadores desde Mi perfil.</div></div>
-      <button class="mapp-primary" data-mapp-profile>Ir a Mi perfil <span class="chev">${mappIcon('chevron')}</span></button>
-   </div></div>`;
- }else if(m){
+ if(m){
    const opp=mappOpponent(m),bk=bookingFor(m.id), can=isOpen()&&isReservableInCurrentWeek(m.id);
    hero=`<div class="mapp-card"><div class="mapp-card-pad">
       <div class="mapp-section-title"><div class="left"><span class="mapp-title-icon">${mappIcon('trophy')}</span>Tu partido</div><span class="mapp-round">${mappEsc(mappCurrentRound())}</span></div>
@@ -4419,7 +4413,12 @@ function renderModernHome(){
     <div class="mapp-slot-date">${mappEsc(shortDateES(s.date))}</div><div class="mapp-slot-time">${mappEsc(s.time)}</div>
     <div class="mapp-slot-court">${mappEsc(s.court)}</div><div class="mapp-free">LIBRE</div><div class="mapp-chevron">${mappIcon('chevron')}</div>
   </div>`).join(''):`<div class="mapp-empty">No hay pistas libres publicadas.</div>`;
- box.innerHTML=hero+`<div class="mapp-card"><div class="mapp-list-header"><div class="mapp-list-title">${mappIcon('court')} Próximas pistas libres</div><button class="mapp-link" data-mapp-all-courts>Ver todas ›</button></div>${rows}</div>`;
+ const adminCard=isAdmin()?`<div class="mapp-card"><div class="mapp-card-pad">
+   <div class="mapp-section-title"><div class="left"><span class="mapp-title-icon">${mappIcon('gear')}</span>Administración</div></div>
+   <div class="mapp-status good"><div><strong>Sesión de administrador</strong>Puedes gestionar la liga desde Mi perfil sin perder tu vista como jugador.</div></div>
+   <button class="mapp-primary" data-mapp-profile>Ir a Mi perfil <span class="chev">${mappIcon('chevron')}</span></button>
+ </div></div>`:'';
+ box.innerHTML=hero+adminCard+`<div class="mapp-card"><div class="mapp-list-header"><div class="mapp-list-title">${mappIcon('court')} Próximas pistas libres</div><button class="mapp-link" data-mapp-all-courts>Ver todas ›</button></div>${rows}</div>`;
  box.querySelectorAll('[data-mapp-reserve]').forEach(b=>b.onclick=()=>openReserve(b.dataset.mappReserve));
  box.querySelectorAll('[data-mapp-slot]').forEach(r=>r.onclick=()=>reserveFromOccupancy(r.dataset.mappSlot));
  box.querySelector('[data-mapp-all-courts]')?.addEventListener('click',()=>mappShow('courts'));
@@ -4477,7 +4476,6 @@ function renderModernCourts(){
 function renderModernMatch(){
  const box=$('#modernMatchContent');if(!box)return;
  const matches=mappOwnMatches();
- if(isAdmin()){box.innerHTML='<div class="mapp-card"><div class="mapp-empty">La vista “Mi partido” está destinada a jugadores. Usa Administración desde Mi perfil.</div></div>';return}
  if(!matches.length){box.innerHTML='<div class="mapp-card"><div class="mapp-empty">No tienes partido en esta semana.</div></div>';return}
  box.innerHTML=matches.map(m=>{
    const opp=mappOpponent(m),bk=bookingFor(m.id),r=resultFor(m.id),p=postponedInfo(m.id);
@@ -4580,7 +4578,7 @@ async function renderModernProfile(){
  box.innerHTML=`<div class="mapp-card">
    <div class="mapp-profile-head">
      ${mappAvatar(state.player,'mapp-profile-avatar')}
-     <div><div class="mapp-profile-name">${mappEsc(state.player)}</div><div class="mapp-profile-role">${isAdmin()?'Administrador':'Jugador · '+mappEsc(state.category)+' '+mappEsc(state.gender)}</div>${!isAdmin()&&playerCategoryMemberships(state.player).length>1?`<div class="mapp-menu-sub">Inscrito en ${playerCategoryMemberships(state.player).length} categorías · acceso inicial a la inferior</div>`:`<div class="mapp-menu-sub">Toca la foto para cambiarla · sincronizada en Cloudflare</div>`}</div>
+     <div><div class="mapp-profile-name">${mappEsc(state.player)}</div><div class="mapp-profile-role">${isAdmin()?(playerCategoryMemberships(state.player).length?`Administrador · Jugador · ${mappEsc(state.category)} ${mappEsc(state.gender)}`:'Administrador'):'Jugador · '+mappEsc(state.category)+' '+mappEsc(state.gender)}</div>${!isAdmin()&&playerCategoryMemberships(state.player).length>1?`<div class="mapp-menu-sub">Inscrito en ${playerCategoryMemberships(state.player).length} categorías · acceso inicial a la inferior</div>`:`<div class="mapp-menu-sub">Toca la foto para cambiarla · sincronizada en Cloudflare</div>`}</div>
    </div>
    <div class="mapp-menu-row" id="mappPushRow"><div class="mapp-menu-icon">${mappIcon('bell')}</div><div><div class="mapp-menu-title">Avisos</div><div class="mapp-menu-sub ${pushCls}">${mappEsc(pushText)}</div></div><div>${mappIcon('chevron')}</div></div>
    <div class="mapp-menu-row" id="mappMessagesRow"><div class="mapp-menu-icon">${mappIcon('mail')}</div><div><div class="mapp-menu-title">Mensajes</div><div class="mapp-menu-sub">${mappUserMessages().length?`${mappUserMessages().length} mensaje${mappUserMessages().length===1?'':'s'} recibido${mappUserMessages().length===1?'':'s'}`:'No tienes mensajes'}</div></div>${mappUnreadMessages().length?`<div class="mapp-msg-badge">${mappUnreadMessages().length}</div>`:`<div>${mappIcon('chevron')}</div>`}</div>
