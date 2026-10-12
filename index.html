@@ -1913,6 +1913,102 @@ body.modern-admin #adminView #resendPushNotice{
     width:100%!important;
   }
 }
+
+
+/* =========================================================
+   HOTFIX 2026-10-12 · SCROLL REAL EN VENTANAS EMERGENTES
+   ========================================================= */
+
+/* El overlay también puede desplazarse si el teclado o una pantalla pequeña
+   reduce mucho la altura disponible. */
+body.modern-ui .modal{
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior-y:contain;
+}
+
+/* La hoja pasa a ser un contenedor vertical real. Antes `overflow:hidden`
+   impedía llegar al contenido inferior en varios móviles/tablets. */
+body.modern-ui .modal .sheet{
+  display:flex!important;
+  flex-direction:column!important;
+  max-height:calc(100dvh - 20px)!important;
+  overflow:hidden!important;
+  min-height:0!important;
+}
+
+/* Cabecera siempre visible. */
+body.modern-ui .modal .sheetHead{
+  flex:0 0 auto!important;
+  position:sticky!important;
+  top:0!important;
+  z-index:5!important;
+}
+
+/* El contenido del popup ES la zona que hace scroll. */
+body.modern-ui .modal .sheetBody{
+  flex:1 1 auto!important;
+  min-height:0!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior-y:contain;
+  touch-action:pan-y;
+  padding-bottom:max(24px,calc(18px + env(safe-area-inset-bottom)))!important;
+}
+
+/* Formularios y contenidos largos no pueden forzar una altura infinita. */
+body.modern-ui .modal .sheetBody > *,
+body.modern-ui .modal .reserveForm,
+body.modern-ui .modal .resultActions,
+body.modern-ui .modal .reserveActions{
+  min-height:0;
+  max-width:100%;
+}
+
+/* Buzón de mensajes: misma protección en iPhone/iPad. */
+.mapp-msg-modal{
+  overflow-y:auto!important;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior-y:contain;
+}
+.mapp-msg-sheet{
+  display:flex!important;
+  flex-direction:column!important;
+  max-height:calc(100dvh - 24px)!important;
+  overflow:hidden!important;
+  min-height:0!important;
+}
+.mapp-msg-head{flex:0 0 auto!important;}
+.mapp-msg-list{
+  flex:1 1 auto!important;
+  min-height:0!important;
+  overflow-y:auto!important;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior-y:contain;
+  touch-action:pan-y;
+  padding-bottom:max(18px,env(safe-area-inset-bottom))!important;
+}
+
+/* Fallback para Safari/iOS antiguos sin dvh. */
+@supports not (height:100dvh){
+  body.modern-ui .modal .sheet{max-height:calc(100vh - 20px)!important;}
+  .mapp-msg-sheet{max-height:calc(100vh - 24px)!important;}
+}
+
+/* En móviles dejamos algo de aire arriba para que se vea claramente
+   que la ventana es una hoja desplazable. */
+@media(max-width:520px){
+  body.modern-ui .modal{
+    align-items:flex-end!important;
+    padding-top:max(8px,env(safe-area-inset-top))!important;
+  }
+  body.modern-ui .modal .sheet{
+    max-height:calc(100dvh - max(16px,env(safe-area-inset-top)) - max(10px,env(safe-area-inset-bottom)))!important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -2347,10 +2443,11 @@ Pablo Ruiz"></textarea>
 <div class="tiny" id="resultModalCat"></div>
 <div class="reserveField"><label>Tipo de resultado</label><select id="resultType"><option value="normal">Partido completado</option><option value="retirement">Retirada</option><option value="wo">WO / No presentado</option><option value="not_played">Partido no disputado</option></select></div>
 <div id="scoreFields">
-<div class="resultHint" style="margin-bottom:7px">Introduce el tanteo desde el punto de vista del jugador que aparece a la izquierda. El tercer set / supertiebreak es opcional.</div>
+<div class="resultHint" style="margin-bottom:7px"><b>Sets 1 y 2:</b> solo 6-0…6-4, 7-5 o 7-6. <b>Set 3:</b> super tie-break a 10 con diferencia de 2; solo se usa si cada jugador gana un set.</div>
+<div class="resultHint" id="resultValidation" style="margin-bottom:9px"></div>
 <div class="resultGrid three">
-<div><div class="tiny" style="margin-bottom:5px">SET 1</div><div class="scorePair"><input id="rS1A" inputmode="numeric" max="99" min="0" placeholder="A" type="number"/><input id="rS1B" inputmode="numeric" max="99" min="0" placeholder="B" type="number"/></div></div>
-<div><div class="tiny" style="margin-bottom:5px">SET 2</div><div class="scorePair"><input id="rS2A" inputmode="numeric" max="99" min="0" placeholder="A" type="number"/><input id="rS2B" inputmode="numeric" max="99" min="0" placeholder="B" type="number"/></div></div>
+<div><div class="tiny" style="margin-bottom:5px">SET 1</div><div class="scorePair"><input id="rS1A" inputmode="numeric" max="7" min="0" placeholder="A" type="number"/><input id="rS1B" inputmode="numeric" max="7" min="0" placeholder="B" type="number"/></div></div>
+<div><div class="tiny" style="margin-bottom:5px">SET 2</div><div class="scorePair"><input id="rS2A" inputmode="numeric" max="7" min="0" placeholder="A" type="number"/><input id="rS2B" inputmode="numeric" max="7" min="0" placeholder="B" type="number"/></div></div>
 <div><div class="tiny" style="margin-bottom:5px">SET 3 / STB</div><div class="scorePair"><input id="rS3A" inputmode="numeric" max="99" min="0" placeholder="A" type="number"/><input id="rS3B" inputmode="numeric" max="99" min="0" placeholder="B" type="number"/></div></div>
 </div>
 </div>
@@ -2371,7 +2468,7 @@ const API_URL="https://ct-campeador-api.ligasdetenis.workers.dev/";
 const PUSH_URL="https://ct-campeador-push-v1.ligasdetenis.workers.dev";
 let PUSH_VAPID_PUBLIC_KEY="";
 const PUSH_SW_URL="/ct-campeador-liga/push-sw.js";
-const APP_BUILD="20261012-own-pin-fix-1";
+const APP_BUILD="20261012-realtime-tennis-1";
 const weeks=[
  {id:"W1",label:"Semana 1 · 17–25 octubre",start:"2026-10-17",end:"2026-10-25"},
  {id:"W2",label:"Semana 2 · 26 octubre–1 noviembre",start:"2026-10-26",end:"2026-11-01"},
@@ -2414,6 +2511,9 @@ if(!data.staff["Adrián Prádanos"])data.staff["Adrián Prádanos"]={name:"Adri�
 // Administrador inicial: debe estar visible en TODAS las categorías incluso antes del primer login.
 data.roles["Adrián Prádanos"]="admin";
 let apiToken=localStorage.getItem(TOKEN_KEY)||"";
+let realtimeSocket=null;
+let realtimeRetryTimer=null;
+let realtimePingTimer=null;
 let state={category:"Infantil",gender:"Masculino",week:"W1",reserveMatchId:null,resultMatchId:null,delayMatchId:null,player:"",authenticated:false,showPins:false};
 let fixtureEditorDirty=false;
 let playerEditorDirty=false;
@@ -2431,6 +2531,85 @@ let lastRefreshAt=0;
 function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(data));if(isAdmin()&&apiToken){clearTimeout(saveTimer);saveTimer=setTimeout(()=>saveStateOnline().catch(console.warn),350)}}
 function publicState(){return {tournamentName:data.tournamentName||'II Liga Federada',playerLists:data.playerLists,fixtures:data.fixtures,fixtureRounds:data.fixtureRounds,slots:data.slots,drafts:data.drafts,published:data.published,bookings:data.bookings,reservations:data.bookings,results:data.results,staff:data.staff,accessExcluded:data.accessExcluded||[],adminRoles:Object.fromEntries(Object.entries(data.roles||{}).filter(([,r])=>r==='admin')),weekRanges:data.weekRanges||{},postponed:data.postponed||{},weeks:Object.fromEntries(weeks.map(w=>[w.id,w])),updatedAt:new Date().toISOString()}}
 async function apiRequest(payload,{auth=true}={}){const headers={'Content-Type':'application/json'};if(auth&&apiToken)headers.Authorization='Bearer '+apiToken;const r=await fetch(API_URL,{method:'POST',headers,body:JSON.stringify(payload)});let j={};try{j=await r.json()}catch(e){}if(!r.ok||j.ok===false)throw new Error(j.error||('HTTP '+r.status));return j}
+
+function realtimeUrl(){
+  return API_URL.replace(/^https:/,'wss:').replace(/^http:/,'ws:').replace(/\/$/,'')+'/realtime';
+}
+function stopRealtime(){
+  if(realtimeRetryTimer){clearTimeout(realtimeRetryTimer);realtimeRetryTimer=null}
+  if(realtimePingTimer){clearInterval(realtimePingTimer);realtimePingTimer=null}
+  if(realtimeSocket){
+    try{realtimeSocket.onclose=null;realtimeSocket.close()}catch(_){}
+    realtimeSocket=null;
+  }
+}
+function scheduleRealtimeReconnect(){
+  if(!state.authenticated||!apiToken||realtimeRetryTimer)return;
+  realtimeRetryTimer=setTimeout(()=>{realtimeRetryTimer=null;connectRealtime()},2500);
+}
+function applyRealtimeEvent(ev){
+  if(!ev||typeof ev!=='object')return;
+
+  if(ev.type==='reservationChanged'){
+    data.bookings=data.bookings||{};
+    if(ev.reservation)data.bookings[ev.matchId]=ev.reservation;
+    else delete data.bookings[ev.matchId];
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+    renderAll();
+    return;
+  }
+
+  if(ev.type==='resultChanged'){
+    data.results=data.results||{};
+    if(ev.result)data.results[ev.matchId]=ev.result;
+    else delete data.results[ev.matchId];
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+    renderAll();
+    if(state.resultMatchId===ev.matchId && $('#resultModal')?.classList.contains('show')){
+      openResultModal(ev.matchId);
+    }
+    return;
+  }
+
+  if(ev.type==='stateChanged'){
+    if(!fixtureEditorDirty&&!playerEditorDirty&&!adminEditorActive()){
+      refreshOnline({silent:true,force:true});
+    }
+  }
+}
+function connectRealtime(){
+  if(!state.authenticated||!apiToken)return;
+  if(realtimeSocket && (realtimeSocket.readyState===WebSocket.OPEN||realtimeSocket.readyState===WebSocket.CONNECTING))return;
+  stopRealtime();
+
+  try{
+    const ws=new WebSocket(realtimeUrl());
+    realtimeSocket=ws;
+    ws.onopen=()=>ws.send(JSON.stringify({type:'auth',token:apiToken}));
+    ws.onmessage=e=>{
+      let msg={};try{msg=JSON.parse(e.data)}catch(_){return}
+      if(msg.type==='ready'){
+        if(realtimePingTimer)clearInterval(realtimePingTimer);
+        realtimePingTimer=setInterval(()=>{
+          if(realtimeSocket?.readyState===WebSocket.OPEN){
+            try{realtimeSocket.send(JSON.stringify({type:'ping'}))}catch(_){}
+          }
+        },45000);
+        return;
+      }
+      if(msg.type==='event')applyRealtimeEvent(msg.event);
+    };
+    ws.onclose=()=>{
+      if(realtimeSocket===ws)realtimeSocket=null;
+      if(realtimePingTimer){clearInterval(realtimePingTimer);realtimePingTimer=null}
+      scheduleRealtimeReconnect();
+    };
+    ws.onerror=()=>{};
+  }catch(_){
+    scheduleRealtimeReconnect();
+  }
+}
+
 
 async function loadPublicTournamentName(){
   try{
@@ -2776,6 +2955,7 @@ async function loginWithPinOnly(){
     routePlayerToOwnCategory(state.player);
     hidePinWelcome();
     setOnline(true,'☁️ Online');
+    connectRealtime();
     renderAll();
   }catch(e){
     showPinWelcome(e.message||'PIN incorrecto.',true);
@@ -3078,7 +3258,7 @@ function renderMatches(){const fs=viewFixtures(), box=$('#matches');const offici
    let resultActions='';
    if(state.authenticated&&(mine||admin)){if(!r) resultActions=`<button class="btn gold" data-result-mid="${m.id}">Subir resultado</button>`;else if(r.status==='pending'&&!admin&&r.submittedBy!==state.player) resultActions=`<button class="btn green" data-confirm-result="${m.id}">Confirmar resultado</button>`;else if(r.status==='pending') resultActions=`<button class="btn gold" data-result-mid="${m.id}">Editar resultado</button>`;else if(admin) resultActions=`<button class="btn gold" data-result-mid="${m.id}">Corregir resultado</button>`}
    const delayAction=admin?`<button class="btn secondary" data-delay-mid="${m.id}">${p?'🔄 Gestionar retraso':'🔄 Retrasar'}</button>`:'';
-   const resultHtml=r?`<div class="resultLine ${r.status==='confirmed'?'resultConfirmed':'resultPending'}"><b>Resultado:</b> ${resultLabel(r)} <span class="resultBadge ${r.status==='confirmed'?'confirmed':'pending'}">${r.status==='confirmed'?'CONFIRMADO':'PENDIENTE DE CONFIRMAR'}</span>${r.status==='pending'?`<div class="tiny" style="margin-top:4px">Enviado por ${r.submittedBy}</div>`:''}</div>`:'';
+   const resultHtml=r?`<div class="resultLine ${r.status==='confirmed'?'resultConfirmed':'resultPending'}"><b>Resultado:</b> ${resultLabel(r)} <span class="resultBadge ${r.status==='confirmed'?'confirmed':'pending'}">${r.status==='confirmed'?'CONFIRMADO':'PENDIENTE DEL RIVAL'}</span>${r.status==='pending'?`<div class="tiny" style="margin-top:4px">Enviado por ${r.submittedBy}</div>`:''}</div>`:'';
    const pBadge=p?`<div class="postponedBadge ${p.targetWeek?'reprogrammedBadge':''}">${p.targetWeek?`➡️ Reprogramado a ${weeks.find(w=>w.id===p.targetWeek)?.label||p.targetWeek}`:'🔄 Partido retrasado · pendiente de nueva semana'}</div>`:'';
    return `<div class="match ${mine?'mineMatch':'notMine'} ${p?'postponedMatch':''}"><div><div class="cat">${state.category} · ${state.gender}${mine?' · TU PARTIDO':''}</div><div class="players">${m.a} <span style="color:var(--muted);font-weight:700">vs</span> ${m.b}</div><div class="booking">${detail}</div>${pBadge}<div style="margin-top:7px"><span class="status ${st}">${label}</span></div>${resultHtml}</div><div class="matchActions">${reserveActions}${resultActions}${delayAction}</div></div>`
  };
@@ -3093,10 +3273,84 @@ async function cancelBooking(mid){const m=findFixtureById(mid);const bk=bookingF
 function openDelayModal(mid){if(!isAdmin())return;const rec=fixtureRecord(mid);if(!rec)return;state.delayMatchId=mid;const p=postponedInfo(mid);$('#delayMatch').textContent=`${rec.m.a} vs ${rec.m.b}`;$('#delayOrigin').textContent=`Jornada oficial: ${weeks.find(w=>w.id===rec.week)?.label||rec.week} · ${rec.category} ${rec.gender}`;const originIdx=weeks.findIndex(w=>w.id===rec.week);const options=['<option value="">Retrasado · todavía sin nueva semana</option>'];weeks.forEach((w,i)=>{if(i>originIdx)options.push(`<option value="${w.id}">${w.label}</option>`)});$('#delayTargetWeek').innerHTML=options.join('');$('#delayTargetWeek').value=p?.targetWeek||'';$('#restoreDelayBtn').classList.toggle('hidden',!p);$('#delayModal').classList.add('show')}
 async function saveDelay(){if(!isAdmin())return;const mid=state.delayMatchId,rec=fixtureRecord(mid);if(!rec)return;const target=$('#delayTargetWeek').value;data.postponed=data.postponed||{};data.postponed[mid]={originalWeek:rec.week,targetWeek:target||'',status:target?'reprogrammed':'delayed',updatedAt:new Date().toISOString(),updatedBy:state.player};localStorage.setItem(STORAGE_KEY,JSON.stringify(data));$('#delayModal').classList.remove('show');renderAll();try{await saveStateOnline();setOnline(true,'☁️ Guardado');alert(target?`✅ Partido reprogramado a ${weeks.find(w=>w.id===target)?.label||target}.`:'✅ Partido marcado como retrasado. Queda pendiente de asignar una nueva semana.')}catch(e){alert('El cambio se ha guardado localmente, pero no se pudo guardar online.\n\n'+e.message)}}
 async function restoreDelay(){if(!isAdmin())return;const mid=state.delayMatchId,rec=fixtureRecord(mid);if(!rec)return;if(!confirm(`¿Devolver ${rec.m.a} vs ${rec.m.b} a su jornada oficial?`))return;delete data.postponed[mid];localStorage.setItem(STORAGE_KEY,JSON.stringify(data));$('#delayModal').classList.remove('show');renderAll();try{await saveStateOnline();setOnline(true,'☁️ Guardado');alert('✅ Partido devuelto a su jornada oficial.')}catch(e){alert(e.message)}}
-function readSet(aId,bId){const av=$(aId).value,bv=$(bId).value;if(av===''&&bv==='')return null;if(av===''||bv==='')throw new Error('Completa los dos tanteos del set.');const a=Number(av),b=Number(bv);if(!Number.isInteger(a)||!Number.isInteger(b)||a<0||b<0||a>99||b>99||a===b)throw new Error('Revisa el tanteo de los sets.');return {a,b}}
-function syncResultType(){const type=$('#resultType').value;$('#scoreFields').classList.toggle('hidden',type==='wo'||type==='not_played');$('#winnerField').classList.toggle('hidden',!(type==='wo'||type==='retirement'))}
-function openResultModal(mid){state.resultMatchId=mid;const m=findFixtureById(mid);if(!m)return;if(!isAdmin()&&!canPlayerReserve(m)){alert('Solo los jugadores del partido o un administrador pueden gestionar el resultado.');return}const r=resultFor(mid);$('#resultModalMatch').textContent=`${m.a} vs ${m.b}`;const rec=fixtureRecord(mid);$('#resultModalCat').textContent=rec?`${rec.category} · ${rec.gender} · ${weeks.find(w=>w.id===rec.week)?.label||rec.week}`:`${state.category} · ${state.gender}`;$('#resultWinner').innerHTML=`<option value="">Selecciona ganador</option><option value="${m.a.replace(/"/g,'&quot;')}">${m.a}</option><option value="${m.b.replace(/"/g,'&quot;')}">${m.b}</option>`;$('#resultType').value=r?.type||'normal';const sets=r?.sets||[];[['#rS1A','#rS1B'],['#rS2A','#rS2B'],['#rS3A','#rS3B']].forEach((ids,i)=>{$(ids[0]).value=sets[i]?.a??'';$(ids[1]).value=sets[i]?.b??''});$('#resultWinner').value=r?.winner||'';$('#resultModalMode').textContent=r?'EDITAR RESULTADO':'SUBIR RESULTADO';$('#resultExisting').classList.toggle('hidden',!r);if(r)$('#resultExisting').innerHTML=`<b>Estado actual:</b> ${resultLabel(r)} · ${r.status==='confirmed'?'Confirmado':'Pendiente de confirmar'}`;const canConfirm=!!r&&r.status==='pending'&&!isAdmin()&&r.submittedBy!==state.player&&canPlayerReserve(m);$('#confirmResultBtn').classList.toggle('hidden',!canConfirm);$('#saveResultBtn').classList.toggle('hidden',canConfirm||(!isAdmin()&&r?.status==='confirmed'));$('#saveResultBtn').textContent=isAdmin()?(r?'💾 Guardar corrección':'✅ Guardar resultado'):(r?'📤 Actualizar resultado':'📤 Enviar resultado');$('#deleteResultBtn').classList.toggle('hidden',!(isAdmin()&&r));syncResultType();$('#resultModal').classList.add('show')}
-async function saveResult(){const mid=state.resultMatchId,m=findFixtureById(mid);if(!m)return;try{const type=$('#resultType').value;let sets=[];if(type!=='wo'&&type!=='not_played'){for(const [a,b] of [['#rS1A','#rS1B'],['#rS2A','#rS2B'],['#rS3A','#rS3B']]){const set=readSet(a,b);if(set)sets.push(set)}if(type==='normal'&&sets.length<2)throw new Error('Introduce al menos los dos primeros sets.')}const winner=(type==='wo'||type==='retirement')?$('#resultWinner').value:'';if((type==='wo'||type==='retirement')&&!winner)throw new Error('Selecciona el ganador.');const btn=$('#saveResultBtn'),old=btn.textContent;btn.disabled=true;btn.textContent='⏳ Guardando…';try{const j=await apiRequest({action:'submitResult',matchId:mid,result:{type,sets,winner}});data.results[mid]=j.result;localStorage.setItem(STORAGE_KEY,JSON.stringify(data));$('#resultModal').classList.remove('show');renderAll();alert(j.result.status==='confirmed'?'✅ Resultado guardado y confirmado.':'✅ Resultado enviado. Queda pendiente de confirmación del rival.')}finally{btn.disabled=false;btn.textContent=old}}catch(e){alert(e.message)}}
+function readSet(aId,bId){
+ const av=$(aId).value,bv=$(bId).value;
+ if(av===''&&bv==='')return null;
+ if(av===''||bv==='')throw new Error('Completa los dos tanteos del set.');
+ const a=Number(av),b=Number(bv);
+ if(!Number.isInteger(a)||!Number.isInteger(b)||a<0||b<0||a>99||b>99||a===b)throw new Error('Revisa el tanteo de los sets.');
+ return {a,b}
+}
+function standardSetValid(a,b){
+ const w=Math.max(a,b),l=Math.min(a,b);
+ return Number.isInteger(a)&&Number.isInteger(b)&&a>=0&&b>=0&&a!==b&&((w===6&&l<=4)||(w===7&&(l===5||l===6)));
+}
+function superTiebreakValid(a,b){
+ return Number.isInteger(a)&&Number.isInteger(b)&&a>=0&&b>=0&&a!==b&&Math.max(a,b)>=10&&Math.abs(a-b)>=2;
+}
+function validateNormalResultLive(){
+ const type=$('#resultType')?.value;
+ const hint=$('#resultValidation');
+ const saveBtn=$('#saveResultBtn');
+
+ if(type!=='normal'){
+   if(hint)hint.textContent='';
+   if(saveBtn)saveBtn.disabled=false;
+   return {ok:true,sets:[]};
+ }
+
+ let s1=null,s2=null,s3=null;
+ try{s1=readSet('#rS1A','#rS1B')}catch(e){if(hint)hint.textContent=e.message;if(saveBtn)saveBtn.disabled=true;return {ok:false,error:e.message}}
+ try{s2=readSet('#rS2A','#rS2B')}catch(e){if(hint)hint.textContent=e.message;if(saveBtn)saveBtn.disabled=true;return {ok:false,error:e.message}}
+
+ if(!s1||!s2){
+   const msg='Completa los dos primeros sets.';
+   if(hint)hint.textContent=msg;if(saveBtn)saveBtn.disabled=true;
+   return {ok:false,error:msg};
+ }
+ if(!standardSetValid(s1.a,s1.b)){
+   const msg='El primer set no es válido.';
+   if(hint)hint.textContent=msg;if(saveBtn)saveBtn.disabled=true;
+   return {ok:false,error:msg};
+ }
+ if(!standardSetValid(s2.a,s2.b)){
+   const msg='El segundo set no es válido.';
+   if(hint)hint.textContent=msg;if(saveBtn)saveBtn.disabled=true;
+   return {ok:false,error:msg};
+ }
+
+ const w1=s1.a>s1.b?'a':'b',w2=s2.a>s2.b?'a':'b';
+ if(w1===w2){
+   $('#rS3A').value='';$('#rS3B').value='';
+   if(hint)hint.textContent='✅ Partido terminado en dos sets.';
+   if(saveBtn)saveBtn.disabled=false;
+   return {ok:true,sets:[s1,s2]};
+ }
+
+ try{s3=readSet('#rS3A','#rS3B')}catch(e){if(hint)hint.textContent=e.message;if(saveBtn)saveBtn.disabled=true;return {ok:false,error:e.message}}
+ if(!s3){
+   const msg='Un set para cada jugador: falta el super tie-break.';
+   if(hint)hint.textContent=msg;if(saveBtn)saveBtn.disabled=true;
+   return {ok:false,error:msg};
+ }
+ if(!superTiebreakValid(s3.a,s3.b)){
+   const msg='Super tie-break no válido: mínimo 10 puntos y diferencia de 2.';
+   if(hint)hint.textContent=msg;if(saveBtn)saveBtn.disabled=true;
+   return {ok:false,error:msg};
+ }
+
+ if(hint)hint.textContent='✅ Resultado válido.';
+ if(saveBtn)saveBtn.disabled=false;
+ return {ok:true,sets:[s1,s2,s3]};
+}
+function syncResultType(){
+ const type=$('#resultType').value;
+ $('#scoreFields').classList.toggle('hidden',type==='wo'||type==='not_played');
+ $('#winnerField').classList.toggle('hidden',!(type==='wo'||type==='retirement'));
+ validateNormalResultLive();
+}
+function openResultModal(mid){state.resultMatchId=mid;const m=findFixtureById(mid);if(!m)return;if(!isAdmin()&&!canPlayerReserve(m)){alert('Solo los jugadores del partido o un administrador pueden gestionar el resultado.');return}const r=resultFor(mid);$('#resultModalMatch').textContent=`${m.a} vs ${m.b}`;const rec=fixtureRecord(mid);$('#resultModalCat').textContent=rec?`${rec.category} · ${rec.gender} · ${weeks.find(w=>w.id===rec.week)?.label||rec.week}`:`${state.category} · ${state.gender}`;$('#resultWinner').innerHTML=`<option value="">Selecciona ganador</option><option value="${m.a.replace(/"/g,'&quot;')}">${m.a}</option><option value="${m.b.replace(/"/g,'&quot;')}">${m.b}</option>`;$('#resultType').value=r?.type||'normal';const sets=r?.sets||[];[['#rS1A','#rS1B'],['#rS2A','#rS2B'],['#rS3A','#rS3B']].forEach((ids,i)=>{$(ids[0]).value=sets[i]?.a??'';$(ids[1]).value=sets[i]?.b??''});$('#resultWinner').value=r?.winner||'';$('#resultModalMode').textContent=r?'EDITAR RESULTADO':'SUBIR RESULTADO';$('#resultExisting').classList.toggle('hidden',!r);if(r)$('#resultExisting').innerHTML=`<b>Estado actual:</b> ${resultLabel(r)} · ${r.status==='confirmed'?'Confirmado':'Pendiente de confirmar'}`;const canConfirm=!!r&&r.status==='pending'&&!isAdmin()&&r.submittedBy!==state.player&&canPlayerReserve(m);$('#confirmResultBtn').classList.toggle('hidden',!canConfirm);$('#saveResultBtn').classList.toggle('hidden',canConfirm||(!isAdmin()&&r?.status==='confirmed'));$('#saveResultBtn').textContent=isAdmin()?(r?'💾 Guardar corrección':'✅ Guardar resultado'):(r?'📤 Actualizar resultado':'📤 Enviar resultado');$('#deleteResultBtn').classList.toggle('hidden',!(isAdmin()&&r));syncResultType();$('#resultModal').classList.add('show');validateNormalResultLive()}
+async function saveResult(){const mid=state.resultMatchId,m=findFixtureById(mid);if(!m)return;try{const type=$('#resultType').value;let sets=[];if(type==='normal'){const check=validateNormalResultLive();if(!check.ok)throw new Error(check.error||'Revisa el resultado.');sets=check.sets}else if(type!=='wo'&&type!=='not_played'){for(const [a,b] of [['#rS1A','#rS1B'],['#rS2A','#rS2B'],['#rS3A','#rS3B']]){const set=readSet(a,b);if(set)sets.push(set)}}const winner=(type==='wo'||type==='retirement')?$('#resultWinner').value:'';if((type==='wo'||type==='retirement')&&!winner)throw new Error('Selecciona el ganador.');const btn=$('#saveResultBtn'),old=btn.textContent;btn.disabled=true;btn.textContent='⏳ Guardando…';try{const j=await apiRequest({action:'submitResult',matchId:mid,result:{type,sets,winner}});data.results[mid]=j.result;localStorage.setItem(STORAGE_KEY,JSON.stringify(data));$('#resultModal').classList.remove('show');renderAll();alert(j.result.status==='confirmed'?'✅ Resultado guardado y confirmado.':'✅ Resultado enviado. Queda pendiente de confirmación del rival.')}finally{btn.disabled=false;btn.textContent=old}}catch(e){alert(e.message)}}
 async function confirmResult(mid){const m=findFixtureById(mid),r=resultFor(mid);if(!m||!r)return;const ok=confirm(`¿Confirmas este resultado?\n\n${m.a} vs ${m.b}\n${resultLabel(r)}\n\nUna vez confirmado, solo un administrador podrá corregirlo.`);if(!ok)return;try{const j=await apiRequest({action:'confirmResult',matchId:mid});data.results[mid]=j.result;localStorage.setItem(STORAGE_KEY,JSON.stringify(data));renderAll();alert('✅ Resultado confirmado.')}catch(e){alert(e.message);await refreshOnline({silent:true})}}
 async function deleteResult(mid){if(!isAdmin())return;const m=findFixtureById(mid);if(!m)return;if(!confirm(`¿Borrar el resultado de ${m.a} vs ${m.b}?`))return;try{await apiRequest({action:'deleteResult',matchId:mid});delete data.results[mid];localStorage.setItem(STORAGE_KEY,JSON.stringify(data));$('#resultModal').classList.remove('show');renderAll();alert('🗑️ Resultado borrado.')}catch(e){alert(e.message)}}
 function renderKpis(){
@@ -4754,9 +5008,9 @@ $('#welcomePin').addEventListener('input',e=>{
 $('#welcomePin').addEventListener('keydown',e=>{if(e.key==='Enter')loginWithPinOnly()});
 
 $('#playerIdentity').onchange=e=>{if(!state.authenticated)state.player=e.target.value;$('#playerPin').value='';renderIdentity()};
-$('#loginBtn').onclick=async()=>{const player=$('#playerIdentity').value,pin=$('#playerPin').value.trim();if(!player){alert('Selecciona tu nombre.');return}if(!/^(?:\d{4}|\d{6})$/.test(pin)){alert('Introduce un PIN válido de 6 cifras. Los PIN antiguos de 4 siguen funcionando.');return}try{$('#loginBtn').disabled=true;const j=await apiRequest({action:'login',name:player,pin},{auth:false});apiToken=j.token;localStorage.setItem(TOKEN_KEY,apiToken);state.player=j.user.name;state.authenticated=true;data.roles[state.player]=localRoleFromApi(j.user.role);if(isAdmin())await loadAdminUsers();routePlayerToOwnCategory(state.player);$('#playerPin').value='';setOnline(true,'☁️ Online');await refreshOnline({silent:true,force:true});renderAll()}catch(e){alert('No se ha podido iniciar sesión.\n\n'+e.message)}finally{$('#loginBtn').disabled=false}};
+$('#loginBtn').onclick=async()=>{const player=$('#playerIdentity').value,pin=$('#playerPin').value.trim();if(!player){alert('Selecciona tu nombre.');return}if(!/^(?:\d{4}|\d{6})$/.test(pin)){alert('Introduce un PIN válido de 6 cifras. Los PIN antiguos de 4 siguen funcionando.');return}try{$('#loginBtn').disabled=true;const j=await apiRequest({action:'login',name:player,pin},{auth:false});apiToken=j.token;localStorage.setItem(TOKEN_KEY,apiToken);state.player=j.user.name;state.authenticated=true;data.roles[state.player]=localRoleFromApi(j.user.role);if(isAdmin())await loadAdminUsers();routePlayerToOwnCategory(state.player);$('#playerPin').value='';setOnline(true,'☁️ Online');await refreshOnline({silent:true,force:true});connectRealtime();renderAll()}catch(e){alert('No se ha podido iniciar sesión.\n\n'+e.message)}finally{$('#loginBtn').disabled=false}};
 $('#playerPin').addEventListener('keydown',e=>{if(e.key==='Enter')$('#loginBtn').click()});
-$('#clearIdentity').onclick=async()=>{try{if(apiToken)await apiRequest({action:'logout'})}catch(e){}apiToken='';localStorage.removeItem(TOKEN_KEY);state.player='';state.authenticated=false;$('#playerPin').value='';renderAll();showPinWelcome('Introduce tu PIN para cambiar de usuario.',false)};
+$('#clearIdentity').onclick=async()=>{stopRealtime();try{if(apiToken)await apiRequest({action:'logout'})}catch(e){}apiToken='';localStorage.removeItem(TOKEN_KEY);state.player='';state.authenticated=false;$('#playerPin').value='';renderAll();showPinWelcome('Introduce tu PIN para cambiar de usuario.',false)};
 $$('.gender').forEach(b=>b.onclick=()=>{state.gender=b.dataset.gender;renderAll()});
 $('#weekSelect').onchange=e=>{state.week=e.target.value;renderAll()};
 function openNativeDatePicker(inputId){
@@ -5023,6 +5277,14 @@ $('#confirmReserve').onclick=()=>{if(reservationPending)return;const sid=$('#res
 $('#cancelReserveModal').onclick=()=>{const mid=state.reserveMatchId;$('#reserveModal').classList.remove('show');cancelBooking(mid)};
 $('#closeModal').onclick=()=>$('#reserveModal').classList.remove('show');$('#reserveModal').onclick=e=>{if(e.target===$('#reserveModal'))$('#reserveModal').classList.remove('show')};
 $('#saveDelayBtn').onclick=saveDelay;$('#restoreDelayBtn').onclick=restoreDelay;$('#closeDelayModal').onclick=()=>$('#delayModal').classList.remove('show');$('#delayModal').onclick=e=>{if(e.target===$('#delayModal'))$('#delayModal').classList.remove('show')};
+['#rS1A','#rS1B','#rS2A','#rS2B','#rS3A','#rS3B'].forEach(id=>{
+  $(id)?.addEventListener('input',()=>{
+    const max=Number($(id).max||99);
+    if($(id).value!==''&&Number($(id).value)>max)$(id).value=String(max);
+    if($(id).value!==''&&Number($(id).value)<0)$(id).value='0';
+    validateNormalResultLive();
+  });
+});
 $('#resultType').onchange=syncResultType;$('#saveResultBtn').onclick=saveResult;$('#confirmResultBtn').onclick=()=>confirmResult(state.resultMatchId);$('#deleteResultBtn').onclick=()=>deleteResult(state.resultMatchId);$('#closeResultModal').onclick=()=>$('#resultModal').classList.remove('show');$('#resultModal').onclick=e=>{if(e.target===$('#resultModal'))$('#resultModal').classList.remove('show')};
 $$('.navBtn[data-go]').forEach(b=>b.onclick=()=>{const go=b.dataset.go;$$('.navBtn').forEach(x=>x.classList.remove('active'));b.classList.add('active');if(go==='home')$('#homeView').scrollIntoView({behavior:'smooth',block:'start'});if(go==='courts')$('#courtsView').scrollIntoView({behavior:'smooth',block:'start'});if(go==='admin'){if(!isAdmin()){alert('Acceso restringido a administradores.');return;}$('#adminView').classList.remove('hidden');$('#adminView').scrollIntoView({behavior:'smooth',block:'start'})}});
 $('#refreshBtn').onclick=()=>refreshOnline();
@@ -5035,6 +5297,7 @@ async function bootstrapApp(){
     if(restored){
       routePlayerToOwnCategory(state.player);
       hidePinWelcome();
+      connectRealtime();
     }else{
       showPinWelcome('PIN personal de 6 cifras · los PIN antiguos de 4 siguen funcionando',false);
     }
