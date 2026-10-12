@@ -2156,7 +2156,7 @@ Pablo Ruiz"></textarea>
       </div>
       <div class="mapp-context-item">
         <span class="mapp-context-icon" id="modernCalendarIcon"></span>
-        <div><div class="mapp-context-label">Semana</div><div class="mapp-context-value" id="modernWeek">—</div></div>
+        <div><div class="mapp-context-label">Jornada</div><div class="mapp-context-value" id="modernWeek">—</div></div>
       </div>
       <div class="mapp-context-item">
         <span class="mapp-context-icon" id="modernChartIcon"></span>
@@ -2263,7 +2263,7 @@ const weeks=[
  {id:"W9",label:"Semana 9 · 14–20 diciembre",start:"2026-12-14",end:"2026-12-20"}
 ];
 function shortDateES(dateStr){const d=new Date(dateStr+'T12:00:00');return d.toLocaleDateString('es-ES',{day:'numeric',month:'short'}).replace(/\./g,'')}
-function makeWeekLabel(w){const n=Number(String(w.id).replace(/\D/g,''))||'';return `Semana ${n} · ${shortDateES(w.start)}–${shortDateES(w.end)}`}
+function makeWeekLabel(w){const n=Number(String(w.id).replace(/\D/g,''))||'';return `Jornada ${n} · ${shortDateES(w.start)}–${shortDateES(w.end)}`}
 function applyWeekRanges(){for(const w of weeks){const r=data?.weekRanges?.[w.id];if(r&&/^\d{4}-\d{2}-\d{2}$/.test(r.start||'')&&/^\d{4}-\d{2}-\d{2}$/.test(r.end||'')&&r.start<=r.end){w.start=r.start;w.end=r.end}w.label=makeWeekLabel(w)}}
 function setWeekRangeLocal(start,end){
   if(!start||!end)return false;
@@ -3786,7 +3786,7 @@ function mappOwnMatches(){
 function mappPrimaryMatch(){return mappOwnMatches()[0]||null}
 function mappOpponent(m){if(!m)return'';return m.a===state.player?m.b:m.a}
 function mappFreeSlots(){return slots().filter(s=>!slotBooking(s.id))}
-function mappWeekShort(){const w=weeks.find(x=>x.id===state.week);const n=String(w?.id||'').replace(/\D/g,'');return n?`Semana ${n}`:(w?.label||state.week)}
+function mappWeekShort(){const w=weeks.find(x=>x.id===state.week);const n=String(w?.id||'').replace(/\D/g,'');return n?`Jornada ${n}`:(w?.label||state.week)}
 function mappCurrentRound(){return fixtureRound()||'Jornada'}
 
 const resultsViewState={category:null,gender:null,week:'all'};
