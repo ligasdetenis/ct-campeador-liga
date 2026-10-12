@@ -2099,7 +2099,68 @@ Pablo Ruiz"></textarea>
 <div class="quickActions"><button class="btn secondary" id="refreshPushDevices" type="button">Actualizar dispositivos</button></div>
 <div class="schedule" style="margin-top:10px"><table><thead><tr><th>Jugador</th><th>Dispositivos</th><th>Última alta</th><th>Acción</th></tr></thead><tbody id="pushDevicesTable"><tr><td colspan="4">Pulsa “Actualizar dispositivos”.</td></tr></tbody></table></div></div>
     </div>
-    <div class="adminSubsection">
+    
+<div class="adminSubsection">
+  <div class="adminSubsectionHead"><span>🔔 Mensajes y avisos</span><span id="adminMeta_messages_sub">Abrir</span></div>
+  <div class="adminSubsectionBody">
+    <div class="tiny">Envía una notificación a todos los usuarios, a una categoría, por tipo de usuario o a personas concretas. Solo la recibirán los dispositivos con avisos activados.</div>
+
+    <div class="generator" style="margin-top:10px">
+      <div>
+        <label>Destinatarios</label>
+        <select id="msgAudience">
+          <option value="all">Todos los usuarios</option>
+          <option value="category">Por categoría</option>
+          <option value="role">Por tipo de usuario</option>
+          <option value="manual">Seleccionar usuarios</option>
+        </select>
+      </div>
+      <div id="msgCategoryWrap" class="hidden">
+        <label>Categoría</label>
+        <select id="msgCategory"></select>
+      </div>
+      <div id="msgRoleWrap" class="hidden">
+        <label>Tipo</label>
+        <select id="msgRole">
+          <option value="jugador">Jugadores</option>
+          <option value="miembro">Miembros</option>
+          <option value="admin">Administradores</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="msgManualWrap" class="hidden" style="margin-top:10px">
+      <div class="quickActions">
+        <button class="btn secondary" id="msgSelectAll" type="button">Seleccionar todos</button>
+        <button class="btn secondary" id="msgSelectNone" type="button">Quitar selección</button>
+      </div>
+      <div id="msgManualUsers" class="schedule" style="margin-top:8px;padding:10px;max-height:240px;overflow:auto"></div>
+    </div>
+
+    <div style="margin-top:12px">
+      <label>Título</label>
+      <input id="msgTitle" maxlength="80" placeholder="Ej. Cambio de horario" type="text"/>
+    </div>
+    <div style="margin-top:10px">
+      <label>Mensaje</label>
+      <textarea id="msgBody" maxlength="220" rows="4" placeholder="Escribe aquí el aviso que recibirán los usuarios..."></textarea>
+    </div>
+
+    <div class="authNote" id="msgDeliveryInfo" style="margin-top:10px">Pulsa “Comprobar destinatarios” para saber cuántos usuarios tienen avisos activos.</div>
+
+    <div class="quickActions" style="margin-top:10px">
+      <button class="btn secondary" id="msgCheckRecipients" type="button">📱 Comprobar destinatarios</button>
+      <button class="btn gold" id="msgSend" type="button">🔔 Enviar mensaje</button>
+    </div>
+
+    <div id="msgHistoryWrap" style="margin-top:12px">
+      <div class="tiny"><b>Últimos envíos desde este dispositivo</b></div>
+      <div id="msgHistory" class="schedule" style="margin-top:7px"></div>
+    </div>
+  </div>
+</div>
+
+<div class="adminSubsection">
       <div class="adminSubsectionHead"><span>Otros usuarios</span><span id="adminMeta_admins_sub">Abrir</span></div>
       <div class="adminSubsectionBody"><div class="tiny">Crea usuarios que <b>no tienen que ser jugadores</b>. Puedes asignarlos como <b>Miembro</b> o <b>Administrador</b>. Los Miembros pueden entrar en la app sin pertenecer a una categoría deportiva.</div>
 <div class="generator" style="margin-top:10px">
@@ -2286,7 +2347,7 @@ function setWeekRangeLocal(start,end){
 }
 
 function fresh(){return {playerLists:{},fixtures:{},fixtureRounds:{},slots:{},drafts:{},published:{},bookings:{},results:{},profiles:{},pins:{},roles:{},staff:{},weekRanges:{},postponed:{}}}
-function normalizeData(x){const d=x&&typeof x==='object'?x:{};const wr={...(d.weekRanges||{})};if(d.weeks&&typeof d.weeks==='object'){for(const [id,w] of Object.entries(d.weeks)){if(w&&w.start&&w.end&&!wr[id])wr[id]={start:w.start,end:w.end}}}return {playerLists:d.playerLists||{},fixtures:d.fixtures||{},fixtureRounds:d.fixtureRounds||{},slots:d.slots||{},drafts:d.drafts||{},published:d.published||{},bookings:d.reservations||d.bookings||{},results:d.results||{},profiles:d.profiles||{},pins:d.pins||{},roles:{...(d.roles||{}),...(d.adminRoles||{})},staff:d.staff||{},accessExcluded:Array.isArray(d.accessExcluded)?d.accessExcluded:[],weekRanges:wr,postponed:d.postponed||{}}}
+function normalizeData(x){const d=x&&typeof x==='object'?x:{};const wr={...(d.weekRanges||{})};if(d.weeks&&typeof d.weeks==='object'){for(const [id,w] of Object.entries(d.weeks)){if(w&&w.start&&w.end&&!wr[id])wr[id]={start:w.start,end:w.end}}}return {playerLists:d.playerLists||{},fixtures:d.fixtures||{},fixtureRounds:d.fixtureRounds||{},slots:d.slots||{},drafts:d.drafts||{},published:d.published||{},bookings:d.reservations||d.bookings||{},results:d.results||{},profiles:d.profiles||{},pins:d.pins||{},roles:{...(d.roles||{}),...(d.adminRoles||{})},staff:d.staff||{},accessExcluded:Array.isArray(d.accessExcluded)?d.accessExcluded:[],messageHistory:Array.isArray(d.messageHistory)?d.messageHistory:[],weekRanges:wr,postponed:d.postponed||{}}}
 let data=normalizeData(JSON.parse(localStorage.getItem(STORAGE_KEY)||"null")||fresh());
 applyWeekRanges();
 if(!data.staff["Adrián Prádanos"])data.staff["Adrián Prádanos"]={name:"Adrián Prádanos"};
@@ -2306,7 +2367,7 @@ const PUSH_SYNC_CACHE_KEY='ctcampeador_push_sync_v3161';
 const PUSH_RESYNC_MS=7*24*60*60*1000;  // revalidación push como máximo una vez por semana
 let lastRefreshAt=0;
 function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(data));if(isAdmin()&&apiToken){clearTimeout(saveTimer);saveTimer=setTimeout(()=>saveStateOnline().catch(console.warn),350)}}
-function publicState(){return {playerLists:data.playerLists,fixtures:data.fixtures,fixtureRounds:data.fixtureRounds,slots:data.slots,drafts:data.drafts,published:data.published,bookings:data.bookings,reservations:data.bookings,results:data.results,staff:data.staff,accessExcluded:data.accessExcluded||[],adminRoles:Object.fromEntries(Object.entries(data.roles||{}).filter(([,r])=>r==='admin')),weekRanges:data.weekRanges||{},postponed:data.postponed||{},weeks:Object.fromEntries(weeks.map(w=>[w.id,w])),updatedAt:new Date().toISOString()}}
+function publicState(){return {playerLists:data.playerLists,fixtures:data.fixtures,fixtureRounds:data.fixtureRounds,slots:data.slots,drafts:data.drafts,published:data.published,bookings:data.bookings,reservations:data.bookings,results:data.results,staff:data.staff,accessExcluded:data.accessExcluded||[],messageHistory:data.messageHistory||[],adminRoles:Object.fromEntries(Object.entries(data.roles||{}).filter(([,r])=>r==='admin')),weekRanges:data.weekRanges||{},postponed:data.postponed||{},weeks:Object.fromEntries(weeks.map(w=>[w.id,w])),updatedAt:new Date().toISOString()}}
 async function apiRequest(payload,{auth=true}={}){const headers={'Content-Type':'application/json'};if(auth&&apiToken)headers.Authorization='Bearer '+apiToken;const r=await fetch(API_URL,{method:'POST',headers,body:JSON.stringify(payload)});let j={};try{j=await r.json()}catch(e){}if(!r.ok||j.ok===false)throw new Error(j.error||('HTTP '+r.status));return j}
 async function restoreSession(){
   if(!apiToken)return false;
@@ -2320,7 +2381,7 @@ async function restoreSession(){
       data.playerLists=remote.playerLists;data.fixtures=remote.fixtures;data.fixtureRounds=remote.fixtureRounds;
       data.slots=remote.slots;data.drafts=remote.drafts;data.published=remote.published;data.bookings=remote.bookings;
       data.results=remote.results;data.profiles=remote.profiles||{};data.weekRanges=remote.weekRanges||{};
-      data.postponed=remote.postponed||{};data.accessExcluded=remote.accessExcluded||data.accessExcluded||[];data.staff={...(data.staff||{}),...(remote.staff||{})};
+      data.postponed=remote.postponed||{};data.accessExcluded=remote.accessExcluded||data.accessExcluded||[];data.messageHistory=remote.messageHistory||data.messageHistory||[];data.staff={...(data.staff||{}),...(remote.staff||{})};
       data.roles={...(data.roles||{}),...(remote.roles||{})};applyWeekRanges();
     }
     data.roles[state.player]=localRoleFromApi(j.user.role);
@@ -2345,7 +2406,7 @@ function adminEditorActive(){
   return !!(el && el.closest && el.closest('#adminView') && /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName));
 }
 
-async function refreshOnline({silent=false,force=false}={}){if((fixtureEditorDirty||playerEditorDirty||adminEditorActive())&&!force){setOnline(true,'✏️ Editando · actualización pausada');return false}try{const j=await apiRequest({action:'read'},{auth:false});const remote=normalizeData(j.state);data.playerLists=remote.playerLists;data.fixtures=remote.fixtures;data.fixtureRounds=remote.fixtureRounds;data.slots=remote.slots;data.drafts=remote.drafts;data.published=remote.published;data.bookings=remote.bookings;data.results=remote.results;data.profiles=remote.profiles||data.profiles||{};data.weekRanges=remote.weekRanges||data.weekRanges||{};data.postponed=remote.postponed||{};data.accessExcluded=remote.accessExcluded||data.accessExcluded||[];applyWeekRanges();data.staff={...(data.staff||{}),...(remote.staff||{})};data.roles={...(data.roles||{}),...(remote.roles||{})};data.roles["Adrián Prádanos"]="admin";localStorage.setItem(STORAGE_KEY,JSON.stringify(data));lastRefreshAt=Date.now();setOnline(true,'☁️ Online');renderAll();return true}catch(e){setOnline(false,'⚠️ Offline');if(!silent)alert('No se ha podido actualizar desde Cloudflare.\n\n'+e.message);return false}}
+async function refreshOnline({silent=false,force=false}={}){if((fixtureEditorDirty||playerEditorDirty||adminEditorActive())&&!force){setOnline(true,'✏️ Editando · actualización pausada');return false}try{const j=await apiRequest({action:'read'},{auth:false});const remote=normalizeData(j.state);data.playerLists=remote.playerLists;data.fixtures=remote.fixtures;data.fixtureRounds=remote.fixtureRounds;data.slots=remote.slots;data.drafts=remote.drafts;data.published=remote.published;data.bookings=remote.bookings;data.results=remote.results;data.profiles=remote.profiles||data.profiles||{};data.weekRanges=remote.weekRanges||data.weekRanges||{};data.postponed=remote.postponed||{};data.accessExcluded=remote.accessExcluded||data.accessExcluded||[];data.messageHistory=remote.messageHistory||data.messageHistory||[];applyWeekRanges();data.staff={...(data.staff||{}),...(remote.staff||{})};data.roles={...(data.roles||{}),...(remote.roles||{})};data.roles["Adrián Prádanos"]="admin";localStorage.setItem(STORAGE_KEY,JSON.stringify(data));lastRefreshAt=Date.now();setOnline(true,'☁️ Online');renderAll();return true}catch(e){setOnline(false,'⚠️ Offline');if(!silent)alert('No se ha podido actualizar desde Cloudflare.\n\n'+e.message);return false}}
 async function saveStateOnline(){
   if(!apiToken||!isAdmin())return;
   if(saveTimer){clearTimeout(saveTimer);saveTimer=null}
@@ -3464,6 +3525,146 @@ async function regeneratePinFor(player){
   }
 }
 
+
+function messageCategoryOptions(){
+  const entries=[];
+  for(const [key,list] of Object.entries(data.playerLists||{})){
+    if(!Array.isArray(list)||!list.length)continue;
+    const parts=key.split('|');
+    const cat=(parts[0]||key).trim();
+    const gender=(parts[1]||'').trim();
+    const label=gender?`${cat} · ${gender}`:cat;
+    entries.push({key,label,players:[...new Set(list.filter(Boolean))]});
+  }
+  return entries.sort((a,b)=>a.label.localeCompare(b.label,'es'));
+}
+function activeMessageUsers(){
+  return allIdentities().filter(name=>!accessIsExcluded(name));
+}
+function selectedMessageRecipients(){
+  const mode=$('#msgAudience')?.value||'all';
+  if(mode==='all')return activeMessageUsers();
+  if(mode==='category'){
+    const key=$('#msgCategory')?.value||'';
+    const hit=messageCategoryOptions().find(x=>x.key===key);
+    return hit?hit.players.filter(n=>!accessIsExcluded(n)):[];
+  }
+  if(mode==='role'){
+    const role=$('#msgRole')?.value||'jugador';
+    return activeMessageUsers().filter(n=>roleOf(n)===role);
+  }
+  if(mode==='manual'){
+    return [...document.querySelectorAll('#msgManualUsers [data-msg-user]:checked')]
+      .map(x=>x.dataset.msgUser).filter(Boolean);
+  }
+  return [];
+}
+function renderMessageAudience(){
+  const mode=$('#msgAudience')?.value||'all';
+  $('#msgCategoryWrap')?.classList.toggle('hidden',mode!=='category');
+  $('#msgRoleWrap')?.classList.toggle('hidden',mode!=='role');
+  $('#msgManualWrap')?.classList.toggle('hidden',mode!=='manual');
+
+  const catSel=$('#msgCategory');
+  if(catSel){
+    const current=catSel.value;
+    const opts=messageCategoryOptions();
+    catSel.innerHTML=opts.map(x=>`<option value="${x.key.replace(/"/g,'&quot;')}">${x.label}</option>`).join('');
+    if(opts.some(x=>x.key===current))catSel.value=current;
+  }
+
+  const manual=$('#msgManualUsers');
+  if(manual){
+    const users=activeMessageUsers();
+    manual.innerHTML=users.length
+      ? users.map(n=>`<label style="display:flex;align-items:center;gap:8px;padding:7px 4px;border-bottom:1px solid rgba(127,127,127,.12)"><input type="checkbox" data-msg-user="${n.replace(/"/g,'&quot;')}"><span><b>${n}</b> · ${roleOf(n)==='admin'?'Administrador':roleOf(n)==='miembro'?'Miembro':'Jugador'}</span></label>`).join('')
+      : '<div class="tiny">No hay usuarios.</div>';
+  }
+  updateMessageDeliveryText();
+}
+function updateMessageDeliveryText(deviceGroups=null){
+  const recipients=selectedMessageRecipients();
+  const info=$('#msgDeliveryInfo');
+  if(!info)return;
+  if(!recipients.length){
+    info.textContent='No hay destinatarios seleccionados.';
+    return;
+  }
+  if(!deviceGroups){
+    info.textContent=`${recipients.length} usuario${recipients.length===1?'':'s'} seleccionado${recipients.length===1?'':'s'}. Pulsa “Comprobar destinatarios” para ver cuántos tienen avisos activos.`;
+    return;
+  }
+  const map=new Map((deviceGroups||[]).map(g=>[normalizeName(g.userName),Number(g.count||0)]));
+  const withPush=recipients.filter(n=>(map.get(normalizeName(n))||0)>0);
+  const devices=withPush.reduce((sum,n)=>sum+(map.get(normalizeName(n))||0),0);
+  info.innerHTML=`<b>${recipients.length}</b> usuarios seleccionados · <b>${withPush.length}</b> con avisos activos · <b>${devices}</b> dispositivo${devices===1?'':'s'}`;
+}
+async function checkMessageRecipients(){
+  if(!requireAdmin())return;
+  const btn=$('#msgCheckRecipients'),old=btn?.textContent;
+  try{
+    if(btn){btn.disabled=true;btn.textContent='⏳ Comprobando…'}
+    const r=await apiRequest({action:'listPushDevices'});
+    window.__messagePushGroups=Array.isArray(r.users)?r.users:[];
+    updateMessageDeliveryText(window.__messagePushGroups);
+  }catch(e){
+    const info=$('#msgDeliveryInfo');if(info)info.textContent='⚠️ '+e.message;
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent=old}
+  }
+}
+function renderMessageHistory(){
+  const box=$('#msgHistory');if(!box)return;
+  const history=(data.messageHistory||[]).slice(0,8);
+  if(!history.length){box.innerHTML='<div class="tiny" style="padding:8px">Todavía no hay envíos registrados.</div>';return}
+  box.innerHTML=`<table><thead><tr><th>Fecha</th><th>Mensaje</th><th>Enviados</th></tr></thead><tbody>${history.map(h=>{
+    const d=h.at?new Date(h.at).toLocaleString('es-ES'):'—';
+    return `<tr><td>${d}</td><td><b>${h.title||''}</b><div class="tiny">${h.body||''}</div></td><td>${Number(h.sent||0)}</td></tr>`;
+  }).join('')}</tbody></table>`;
+}
+async function sendAdminMessage(){
+  if(!requireAdmin())return;
+  const recipients=selectedMessageRecipients();
+  const title=$('#msgTitle')?.value.trim()||'';
+  const body=$('#msgBody')?.value.trim()||'';
+  if(!recipients.length){alert('Selecciona al menos un destinatario.');return}
+  if(!title){alert('Escribe un título para el mensaje.');return}
+  if(!body){alert('Escribe el mensaje.');return}
+
+  const preview=`${recipients.length} usuario${recipients.length===1?'':'s'} seleccionado${recipients.length===1?'':'s'}.\n\nTítulo: ${title}\n\n${body}\n\n¿Enviar ahora?`;
+  if(!confirm(preview))return;
+
+  const btn=$('#msgSend'),old=btn?.textContent;
+  try{
+    if(btn){btn.disabled=true;btn.textContent='⏳ Enviando…'}
+    const r=await apiRequest({
+      action:'sendCustomPush',
+      recipients,
+      title,
+      message:body,
+      url:'https://ligasdetenis.github.io/ct-campeador-liga/'
+    });
+    data.messageHistory=data.messageHistory||[];
+    data.messageHistory.unshift({
+      at:new Date().toISOString(),
+      title,body,
+      recipients:recipients.length,
+      sent:Number(r.sent||0)
+    });
+    data.messageHistory=data.messageHistory.slice(0,20);
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+    try{await saveStateOnline()}catch(_){}
+    renderMessageHistory();
+    await checkMessageRecipients();
+    const failed=Array.isArray(r.failed)?r.failed.length:0;
+    alert(`✅ Mensaje enviado.\n\nDispositivos alcanzados: ${Number(r.sent||0)}\nSuscripciones eliminadas: ${Number(r.removed||0)}${failed?`\nFallos: ${failed}`:''}`);
+  }catch(e){
+    alert('No se ha podido enviar el mensaje.\n\n'+e.message);
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent=old}
+  }
+}
+
 async function loadPushDevices(){
   if(!requireAdmin())return;
   const tb=$('#pushDevicesTable');
@@ -4292,7 +4493,7 @@ function renderModernUI(){
  renderModernProfile();
 }
 
-function renderAll(){renderTabs();renderWeeks();renderIdentity();renderState();renderMatches();renderSchedule();renderKpis();renderAdmin();updateAdminSummaries();wireAdminCompact();renderPushUI();renderModernUI();renderModernAdminContext()}
+function renderAll(){renderMessageAudience();renderMessageHistory();renderTabs();renderWeeks();renderIdentity();renderState();renderMatches();renderSchedule();renderKpis();renderAdmin();updateAdminSummaries();wireAdminCompact();renderPushUI();renderModernUI();renderModernAdminContext()}
 
 
 document.querySelectorAll('[data-icon]').forEach(el=>el.innerHTML=mappIcon(el.dataset.icon));
@@ -4529,6 +4730,16 @@ $('#closeSlots').onclick=async()=>{
   }finally{btn.disabled=false;btn.textContent=old}
 };
 $('#refreshPushDevices').onclick=loadPushDevices;
+
+$('#msgAudience').onchange=()=>renderMessageAudience();
+$('#msgCategory').onchange=()=>updateMessageDeliveryText(window.__messagePushGroups||null);
+$('#msgRole').onchange=()=>updateMessageDeliveryText(window.__messagePushGroups||null);
+$('#msgManualUsers').addEventListener('change',()=>updateMessageDeliveryText(window.__messagePushGroups||null));
+$('#msgSelectAll').onclick=()=>{document.querySelectorAll('#msgManualUsers [data-msg-user]').forEach(c=>c.checked=true);updateMessageDeliveryText(window.__messagePushGroups||null)};
+$('#msgSelectNone').onclick=()=>{document.querySelectorAll('#msgManualUsers [data-msg-user]').forEach(c=>c.checked=false);updateMessageDeliveryText(window.__messagePushGroups||null)};
+$('#msgCheckRecipients').onclick=checkMessageRecipients;
+$('#msgSend').onclick=sendAdminMessage;
+
 $('#selectAllUsers').onchange=e=>{
   document.querySelectorAll('#pinTable [data-user-select]:not(:disabled)').forEach(c=>c.checked=e.target.checked);
   updateSelectedUsersUI();
