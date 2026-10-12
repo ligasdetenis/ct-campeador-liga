@@ -2437,7 +2437,33 @@ function resultFor(mid){return data.results[mid]||null}
 function slotBooking(slotId){return Object.entries(data.bookings).find(([,b])=>b.week===state.week&&b.slotId===slotId)?.[1]||null}
 function allWeekFixtures(){const officialPrefix=state.week+"|";const official=Object.entries(data.fixtures).filter(([k])=>k.startsWith(officialPrefix)).flatMap(([k,arr])=>arr.map(x=>({...x,key:k,_originalWeek:state.week,_carried:false})));const carried=[];for(const [k,arr] of Object.entries(data.fixtures||{})){const originalWeek=k.split('|')[0];if(originalWeek===state.week)continue;for(const m of arr||[]){const p=postponedInfo(m.id);if(p&&p.targetWeek===state.week)carried.push({...m,key:k,_originalWeek:originalWeek,_carried:true})}}return [...official,...carried]}
 function allPlayers(){return [...new Set([...[].concat(...Object.values(data.playerLists||{})),...Object.values(data.fixtures).flat().flatMap(m=>[m.a,m.b])])].filter(Boolean).sort((a,b)=>a.localeCompare(b,'es'))}
-function allIdentities(){return [...new Set([...allPlayers(),...Object.keys(data.staff||{}),...Object.keys(data.roles||{})])].sort((a,b)=>a.localeCompare(b,'es'))}
+function categorizedPlayers(){return [...new Set([].concat(...Object.values(data.playerLists||{})).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es'))}
+function allIdentities(){return [...new Set([...categorizedPlayers(),...Object.keys(data.staff||{}),...Object.keys(data.roles||{})])].sort((a,b)=>a.localeCompare(b,'es'))}
+function playerStillInAnyCategory(name){return categorizedPlayers().some(p=>normalizeName(p)===normalizeName(name))}
+async function offerRemovedUserCleanup(removedNames=[]){
+  const candidates=[...new Set(removedNames)]
+    .filter(Boolean)
+    .filter(name=>!playerStillInAnyCategory(name))
+    .filter(name=>roleOf(name)!=='admin');
+  if(!candidates.length)return {asked:false,removed:[]};
+
+  const listado=candidates.map(n=>'• '+n).join('\n');
+  const plural=candidates.length>1;
+  const ok=confirm(
+    `${plural?'Estos jugadores ya no pertenecen':'Este jugador ya no pertenece'} a ninguna categoría:\n\n${listado}\n\n`+
+    `¿Quieres eliminar también ${plural?'sus usuarios y PIN':'su usuario y PIN'}?\n\n`+
+    `Los partidos o resultados ya cargados no se borrarán.`
+  );
+  if(!ok)return {asked:true,removed:[]};
+
+  for(const name of candidates){
+    delete data.pins[name];
+    delete data.roles[name];
+    if(data.staff?.[name] && roleOf(name)!=='admin') delete data.staff[name];
+  }
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+  return {asked:true,removed:candidates};
+}
 function roleOf(person){return data.roles?.[person]||"jugador"}
 function isAdmin(){return !!state.authenticated&&roleOf(state.player)==="admin"}
 function requireAdmin(){if(isAdmin())return true;alert("Acceso restringido a administradores.");return false}
@@ -4192,31 +4218,68 @@ $('#savePlayers').onclick=async()=>{
   if(!requireAdmin())return;
   const btn=$('#savePlayers');
   const list=parsePlayerLines();
-  if(!list.length){alert('No hay jugadores válidos para guardar.');return}
+  if(!list.length){alert('No hay jugadores válidos para guardar. Usa "Vaciar lista" si quieres quitar a todos.');return}
   const key=playerListKey();
+  const previous=[...(data.playerLists[key]||[])];
+  const nextNorm=new Set(list.map(normalizeName));
+  const removedFromThisCategory=previous.filter(p=>!nextNorm.has(normalizeName(p)));
+
   btn.disabled=true;
   const oldText=btn.textContent; btn.textContent='Guardando…';
   try{
     data.playerLists[key]=list;
-    // Crear PIN/rol en memoria sin esperar a la sincronización automática.
+
+    // Crear PIN/rol de los jugadores que siguen o entran en la categoría.
     for(const p of list){
       if(!/^\d{4}$/.test(String(data.pins[p]||''))) data.pins[p]=randomPin();
       if(!data.roles[p]) data.roles[p]='jugador';
     }
+
+    // Si alguien acaba de quedarse sin ninguna categoría, ofrecer borrar también su acceso.
+    const cleanup=await offerRemovedUserCleanup(removedFromThisCategory);
+
     localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
     renderIdentity(); renderAdmin();
-    // Guardado online explícito y secuencial para evitar que el refresco de 10 s pise la lista recién cargada.
+
+    // Estado y usuarios se guardan de forma explícita para evitar usuarios fantasma.
     await saveStateOnline();
     await saveUsersOnline();
     playerEditorDirty=false;
     await refreshOnline({silent:true,force:true});
     renderAll();
-    alert(`✅ ${list.length} jugador${list.length===1?'':'es'} guardado${list.length===1?'':'s'} en ${state.category} ${state.gender}.\n\nYa aparecen en el desplegable de acceso.`);
+
+    let extra='';
+    if(cleanup.removed.length){
+      extra=`\n\n🗑️ También se ${cleanup.removed.length===1?'ha eliminado su usuario y PIN':'han eliminado '+cleanup.removed.length+' usuarios y sus PIN'}.`;
+    }
+    alert(`✅ ${list.length} jugador${list.length===1?'':'es'} guardado${list.length===1?'':'s'} en ${state.category} ${state.gender}.${extra}`);
   }catch(e){
     alert('No se ha podido guardar la lista online.\n\n'+e.message);
   }finally{btn.disabled=false;btn.textContent=oldText}
 };
-$('#clearPlayers').onclick=async()=>{if(!requireAdmin())return;if(confirm(`¿Vaciar la lista de jugadores de ${state.category} ${state.gender}?\n\nLos enfrentamientos ya cargados no se borrarán.`)){delete data.playerLists[playerListKey()];playerEditorDirty=false;localStorage.setItem(STORAGE_KEY,JSON.stringify(data));renderAll();try{await saveStateOnline();await refreshOnline({silent:true,force:true})}catch(e){alert(e.message)}}};
+$('#clearPlayers').onclick=async()=>{
+  if(!requireAdmin())return;
+  const key=playerListKey();
+  const previous=[...(data.playerLists[key]||[])];
+  if(!confirm(`¿Vaciar la lista de jugadores de ${state.category} ${state.gender}?\n\nLos enfrentamientos ya cargados no se borrarán.`))return;
+
+  delete data.playerLists[key];
+  const cleanup=await offerRemovedUserCleanup(previous);
+  playerEditorDirty=false;
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+  renderAll();
+
+  try{
+    await saveStateOnline();
+    await saveUsersOnline();
+    await refreshOnline({silent:true,force:true});
+    if(cleanup.removed.length){
+      alert(`✅ Lista vaciada.\n\nTambién se han eliminado ${cleanup.removed.length} usuario${cleanup.removed.length===1?'':'s'} y sus PIN porque ya no pertenecían a ninguna categoría.`);
+    }
+  }catch(e){
+    alert('No se ha podido guardar el cambio online.\n\n'+e.message);
+  }
+};
 $('#addFixture').onclick=()=>{if(!requireAdmin())return;const a=$('#fixturePlayerA').value,b=$('#fixturePlayerB').value;if(addFixturePair(a,b)){renderFixtureEditor();renderMatches();$('#fixturePlayerA').value='';$('#fixturePlayerB').value=''}};
 $('#importFixtures').onclick=()=>{if(!requireAdmin())return;const {pairs,unknown}=parseFixtureText($('#fixturePaste').value);if(!pairs.length){alert('No he encontrado enfrentamientos válidos en el texto.');return}let added=0;for(const [a,b] of pairs)if(addFixturePair(a,b,{silent:true}))added++;renderFixtureEditor();renderMatches();$('#fixtureImportStatus').textContent=`${added} partido${added===1?'':'s'} añadido${added===1?'':'s'}.`+(unknown.length?` ⚠ Nombres no encontrados exactamente en la lista: ${unknown.join(', ')}`:' Todos los nombres coinciden con la categoría.');};
 $('#saveFixtures').onclick=async()=>{if(!requireAdmin())return;const start=$('#weekStartDate').value,end=$('#weekEndDate').value;if(!start||!end){alert('Indica el inicio y el fin de la semana.');return}if(start>end){alert('La fecha de inicio no puede ser posterior a la fecha final.');return}data.weekRanges=data.weekRanges||{};data.weekRanges[state.week]={start,end};applyWeekRanges();trimDraftToCurrentWeek({persist:false});trimStoredAvailabilityToCurrentWeek();persistDraft();const round=$('#externalRound').value.trim();if(round)data.fixtureRounds[fixtureKey()]=round;else delete data.fixtureRounds[fixtureKey()];ensurePins();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));const btn=$('#saveFixtures'),oldTxt=btn.textContent;btn.disabled=true;btn.textContent='⏳ Guardando…';try{await saveStateOnline();await saveUsersOnline();fixtureEditorDirty=false;setOnline(true,'☁️ Guardado');await refreshOnline({silent:true,force:true});alert(`✅ Jornada guardada online.\n\n${round||weeks.find(w=>w.id===state.week).label}\n${fixtures().length} partido${fixtures().length===1?'':'s'}.`)}catch(e){fixtureEditorDirty=true;setOnline(true,'✏️ Sin guardar');alert('No se ha podido guardar la jornada online.\n\n'+e.message)}finally{btn.disabled=false;btn.textContent=oldTxt}};
