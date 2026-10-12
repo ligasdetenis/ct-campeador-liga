@@ -624,6 +624,47 @@ body:not(.modern-ui) #modernApp{display:none}
 .mapp-menu-sub{font-size:12px;color:var(--app-muted);margin-top:3px}
 .mapp-menu-sub.good{color:#0a963e}
 .mapp-pin-show{border:0;border-radius:9px;background:#f0f0f2;padding:8px 12px;font-weight:850;cursor:pointer}
+.mapp-msg-badge{
+  min-width:24px;height:24px;padding:0 7px;border-radius:999px;
+  display:grid;place-items:center;background:#d5001f;color:#fff;
+  font-size:11px;font-weight:900;
+}
+.mapp-msg-modal{
+  position:fixed;z-index:6000;inset:0;background:rgba(21,8,10,.48);
+  display:flex;align-items:flex-end;justify-content:center;
+  padding:14px 10px calc(14px + env(safe-area-inset-bottom));
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)
+}
+.mapp-msg-sheet{
+  width:min(100%,720px);max-height:min(88vh,820px);overflow:auto;
+  background:#fff;border-radius:22px 22px 18px 18px;
+  box-shadow:0 24px 70px rgba(0,0,0,.28);color:#1a1a1d
+}
+.mapp-msg-head{
+  position:sticky;top:0;z-index:2;display:flex;align-items:center;
+  justify-content:space-between;gap:12px;padding:17px 18px;
+  background:#fff;border-bottom:1px solid #ececef
+}
+.mapp-msg-head h3{margin:0;font-size:20px;font-weight:950}
+.mapp-msg-close{
+  width:36px;height:36px;border:0;border-radius:50%;background:#f1f2f4;
+  font-size:20px;cursor:pointer
+}
+.mapp-msg-list{padding:12px}
+.mapp-msg-card{
+  padding:14px 15px;border:1px solid #ececef;border-radius:15px;
+  margin-bottom:10px;background:#fff
+}
+.mapp-msg-card.unread{border-color:#f1b6bf;background:#fffafb}
+.mapp-msg-title{font-size:15px;font-weight:950;margin-bottom:5px}
+.mapp-msg-body{font-size:13px;line-height:1.45;color:#555b64;white-space:pre-wrap}
+.mapp-msg-date{font-size:10px;color:#969aa2;margin-top:9px}
+.mapp-msg-empty{padding:32px 18px;text-align:center;color:#8a8f98;font-size:13px}
+.msgDeleteBtn{
+  border:1px solid #efc6cb;background:#fff5f6;color:#b7001a;
+  border-radius:9px;padding:6px 9px;font-weight:850;cursor:pointer;font-size:11px
+}
+
 .mapp-nav{
   position:fixed;z-index:3000;left:50%;transform:translateX(-50%);bottom:0;
   width:min(100%,760px);height:74px;background:rgba(255,255,255,.97);
@@ -3615,12 +3656,34 @@ async function checkMessageRecipients(){
 }
 function renderMessageHistory(){
   const box=$('#msgHistory');if(!box)return;
-  const history=(data.messageHistory||[]).slice(0,8);
+  const history=(data.messageHistory||[]).slice(0,20);
   if(!history.length){box.innerHTML='<div class="tiny" style="padding:8px">Todavía no hay envíos registrados.</div>';return}
-  box.innerHTML=`<table><thead><tr><th>Fecha</th><th>Mensaje</th><th>Enviados</th></tr></thead><tbody>${history.map(h=>{
+  box.innerHTML=`<div style="display:flex;justify-content:flex-end;margin:0 0 8px"><button class="msgDeleteBtn" id="msgDeleteAll" type="button">🗑️ Eliminar todos</button></div>
+  <table><thead><tr><th>Fecha</th><th>Mensaje</th><th>Enviados</th><th></th></tr></thead><tbody>${history.map((h,i)=>{
     const d=h.at?new Date(h.at).toLocaleString('es-ES'):'—';
-    return `<tr><td>${d}</td><td><b>${h.title||''}</b><div class="tiny">${h.body||''}</div></td><td>${Number(h.sent||0)}</td></tr>`;
+    return `<tr><td>${d}</td><td><b>${mappEsc(h.title||'')}</b><div class="tiny">${mappEsc(h.body||'')}</div></td><td>${Number(h.sent||0)}</td><td><button class="msgDeleteBtn" data-msg-delete="${i}" type="button">Eliminar</button></td></tr>`;
   }).join('')}</tbody></table>`;
+
+  box.querySelectorAll('[data-msg-delete]').forEach(btn=>btn.addEventListener('click',async()=>{
+    const i=Number(btn.dataset.msgDelete);
+    const h=(data.messageHistory||[])[i];
+    if(!h)return;
+    if(!confirm(`¿Eliminar este mensaje?\n\n${h.title||'Mensaje'}`))return;
+    data.messageHistory.splice(i,1);
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+    try{await saveStateOnline()}catch(e){alert('Se ha eliminado localmente, pero no se pudo sincronizar.\n\n'+e.message)}
+    renderMessageHistory();
+    renderModernProfile();
+  }));
+
+  $('#msgDeleteAll')?.addEventListener('click',async()=>{
+    if(!confirm('¿Eliminar TODOS los mensajes enviados?\n\nTambién desaparecerán del apartado Mensajes de los usuarios.'))return;
+    data.messageHistory=[];
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+    try{await saveStateOnline()}catch(e){alert('Se han eliminado localmente, pero no se pudo sincronizar.\n\n'+e.message)}
+    renderMessageHistory();
+    renderModernProfile();
+  });
 }
 async function sendAdminMessage(){
   if(!requireAdmin())return;
@@ -3646,8 +3709,10 @@ async function sendAdminMessage(){
     });
     data.messageHistory=data.messageHistory||[];
     data.messageHistory.unshift({
+      id:`msg-${Date.now()}-${Math.random().toString(36).slice(2,8)}`,
       at:new Date().toISOString(),
       title,body,
+      recipientNames:[...recipients],
       recipients:recipients.length,
       sent:Number(r.sent||0)
     });
@@ -3944,7 +4009,8 @@ const MAPP_ICONS={
  lock:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>`,
  logout:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M10 17l5-5-5-5M15 12H3"/><path d="M14 3h6v18h-6"/></svg>`,
  gear:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6V21h-4v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H3v-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3A1.7 1.7 0 0 0 10 3h4a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.1v4H21a1.7 1.7 0 0 0-1.6 1Z"/></svg>`,
- camera:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M4 8h3l1.5-2h7L17 8h3v11H4Z"/><circle cx="12" cy="13" r="3"/></svg>`
+ camera:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M4 8h3l1.5-2h7L17 8h3v11H4Z"/><circle cx="12" cy="13" r="3"/></svg>`,
+ mail:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m4 7 8 6 8-6"/></svg>`
 };
 function mappIcon(name){return MAPP_ICONS[name]||''}
 function mappEsc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
@@ -4372,6 +4438,60 @@ function mappInstallText(){
  if(isAndroidDevice())return deferredInstallPrompt?['Disponible para instalar','']:['Abrir en Chrome para instalar',''];
  return['Disponible según navegador',''];
 }
+
+function mappMessageId(m){
+  return String(m?.id || `${m?.at||''}|${m?.title||''}|${m?.body||''}`);
+}
+function mappReadKey(){
+  return `ctcampeador_read_messages_${normalizeName(state.player||'')}`;
+}
+function mappReadMessages(){
+  try{
+    const v=JSON.parse(localStorage.getItem(mappReadKey())||'[]');
+    return Array.isArray(v)?v:[];
+  }catch(_){return []}
+}
+function mappUserMessages(){
+  if(!state.player)return [];
+  const me=normalizeName(state.player);
+  return (data.messageHistory||[])
+    .filter(m=>Array.isArray(m.recipientNames)&&m.recipientNames.some(n=>normalizeName(n)===me))
+    .sort((a,b)=>String(b.at||'').localeCompare(String(a.at||'')));
+}
+function mappUnreadMessages(){
+  const read=new Set(mappReadMessages());
+  return mappUserMessages().filter(m=>!read.has(mappMessageId(m)));
+}
+function mappMarkMessagesRead(){
+  if(!state.player)return;
+  const ids=mappUserMessages().map(mappMessageId);
+  try{localStorage.setItem(mappReadKey(),JSON.stringify(ids.slice(0,200)))}catch(_){}
+}
+function openMessagesInbox(){
+  document.querySelector('.mapp-msg-modal')?.remove();
+  const messages=mappUserMessages();
+  const read=new Set(mappReadMessages());
+  const modal=document.createElement('div');
+  modal.className='mapp-msg-modal';
+  modal.innerHTML=`<div class="mapp-msg-sheet">
+    <div class="mapp-msg-head"><h3>Mensajes</h3><button class="mapp-msg-close" type="button" aria-label="Cerrar">×</button></div>
+    <div class="mapp-msg-list">${
+      messages.length
+        ? messages.map(m=>`<div class="mapp-msg-card ${read.has(mappMessageId(m))?'':'unread'}">
+            <div class="mapp-msg-title">${mappEsc(m.title||'Aviso')}</div>
+            <div class="mapp-msg-body">${mappEsc(m.body||'')}</div>
+            <div class="mapp-msg-date">${m.at?new Date(m.at).toLocaleString('es-ES'):'—'}</div>
+          </div>`).join('')
+        : '<div class="mapp-msg-empty">No tienes mensajes.</div>'
+    }</div>
+  </div>`;
+  document.body.appendChild(modal);
+  const close=()=>{modal.remove();renderModernProfile()};
+  modal.querySelector('.mapp-msg-close')?.addEventListener('click',close);
+  modal.addEventListener('click',e=>{if(e.target===modal)close()});
+  mappMarkMessagesRead();
+}
+
 async function renderModernProfile(){
  const box=$('#modernProfileContent');if(!box)return;
  if(state.player)mappMaybeMigrateLegacyPhoto(state.player);
@@ -4384,6 +4504,7 @@ async function renderModernProfile(){
      <div><div class="mapp-profile-name">${mappEsc(state.player)}</div><div class="mapp-profile-role">${isAdmin()?'Administrador':'Jugador · '+mappEsc(state.category)+' '+mappEsc(state.gender)}</div>${!isAdmin()&&playerCategoryMemberships(state.player).length>1?`<div class="mapp-menu-sub">Inscrito en ${playerCategoryMemberships(state.player).length} categorías · acceso inicial a la inferior</div>`:`<div class="mapp-menu-sub">Toca la foto para cambiarla · sincronizada en Cloudflare</div>`}</div>
    </div>
    <div class="mapp-menu-row" id="mappPushRow"><div class="mapp-menu-icon">${mappIcon('bell')}</div><div><div class="mapp-menu-title">Avisos</div><div class="mapp-menu-sub ${pushCls}">${mappEsc(pushText)}</div></div><div>${mappIcon('chevron')}</div></div>
+   <div class="mapp-menu-row" id="mappMessagesRow"><div class="mapp-menu-icon">${mappIcon('mail')}</div><div><div class="mapp-menu-title">Mensajes</div><div class="mapp-menu-sub">${mappUserMessages().length?`${mappUserMessages().length} mensaje${mappUserMessages().length===1?'':'s'} recibido${mappUserMessages().length===1?'':'s'}`:'No tienes mensajes'}</div></div>${mappUnreadMessages().length?`<div class="mapp-msg-badge">${mappUnreadMessages().length}</div>`:`<div>${mappIcon('chevron')}</div>`}</div>
    <div class="mapp-menu-row" id="mappInstallRow"><div class="mapp-menu-icon">${mappIcon('phone')}</div><div><div class="mapp-menu-title">Aplicación</div><div class="mapp-menu-sub ${installCls}">${mappEsc(installText)}</div></div><div>${mappIcon('chevron')}</div></div>
    <div class="mapp-menu-row"><div class="mapp-menu-icon">${mappIcon('lock')}</div><div><div class="mapp-menu-title">Mi PIN</div><div class="mapp-menu-sub" id="mappPinValue">••••</div></div><button class="mapp-pin-show" id="mappShowPin">Mostrar</button></div>
    <div class="mapp-menu-row" id="mappLogoutRow"><div class="mapp-menu-icon">${mappIcon('logout')}</div><div><div class="mapp-menu-title">Sesión</div><div class="mapp-menu-sub">Cerrar sesión / Cambiar jugador</div></div><div>${mappIcon('chevron')}</div></div>
@@ -4396,6 +4517,7 @@ async function renderModernProfile(){
  avatar?.addEventListener('click',()=>$('#mappPhotoInput').click());
  $('#mappPhotoInput')?.addEventListener('change',mappSavePhoto);
  $('#mappPushRow')?.addEventListener('click',async()=>{await activateNativePush();await renderModernProfile();renderModernHeader();mappRefreshBellState()});
+ $('#mappMessagesRow')?.addEventListener('click',openMessagesInbox);
  $('#mappInstallRow')?.addEventListener('click',installAppNow);
  $('#mappShowPin')?.addEventListener('click',e=>{
    const v=$('#mappPinValue');const shown=v.textContent!=='••••';v.textContent=shown?'••••':(pin||'No disponible');e.currentTarget.textContent=shown?'Mostrar':'Ocultar'
