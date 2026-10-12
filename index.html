@@ -2215,7 +2215,7 @@ Pablo Ruiz"></textarea>
     </div>
     <div class="adminSubsection">
       <div class="adminSubsectionHead"><span>Permisos de acceso</span><span id="adminMeta_roles_sub">Abrir</span></div>
-      <div class="adminSubsectionBody"><div class="tiny">Los <b>Jugadores</b> participan en su categoría, los <b>Miembros</b> pueden acceder sin ser jugadores y solo los <b>ADMIN</b> ven ⚙️ Configuración.</div>
+      <div class="adminSubsectionBody"><div class="tiny">Los <b>Jugadores</b> participan en su categoría, los <b>Miembros</b> pueden acceder sin ser jugadores y solo los <b>ADMIN</b> ven ⚙️ Configuración.</div><div class="authNote" style="margin-top:8px">Cambiar el rol <b>no cambia el PIN</b>. Por seguridad, las sesiones abiertas de ese usuario se cerrarán y deberá volver a entrar con su mismo PIN.</div>
 <div class="schedule" style="margin-top:10px"><table><thead><tr><th>Persona</th><th>Rol</th></tr></thead><tbody id="roleTable"></tbody></table></div>
 <div class="authNote">Administrador inicial de prueba: <b>Adrián Prádanos</b> · PIN <b>2020</b>. Puedes dar permiso ADMIN a otros usuarios desde esta tabla.</div></div>
     </div>
@@ -2371,7 +2371,7 @@ const API_URL="https://ct-campeador-api.ligasdetenis.workers.dev/";
 const PUSH_URL="https://ct-campeador-push-v1.ligasdetenis.workers.dev";
 let PUSH_VAPID_PUBLIC_KEY="";
 const PUSH_SW_URL="/ct-campeador-liga/push-sw.js";
-const APP_BUILD="20261012-tournament-name-1";
+const APP_BUILD="20261012-role-pin-fix-1";
 const weeks=[
  {id:"W1",label:"Semana 1 · 17–25 octubre",start:"2026-10-17",end:"2026-10-25"},
  {id:"W2",label:"Semana 2 · 26 octubre–1 noviembre",start:"2026-10-26",end:"2026-11-01"},
@@ -3430,8 +3430,17 @@ function renderRoles(){
     if(s.value==='miembro'||s.value==='admin')data.staff[name]={name};
     restoreAccess(name);
     localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
-    try{await saveUsersOnline();await saveStateOnline();renderAll();alert(`Permiso actualizado: ${name} → ${s.value.toUpperCase()}`)}
-    catch(e){alert('No se ha podido guardar el permiso.\n\n'+e.message);await refreshOnline({silent:true,force:true})}
+    try{
+      const apiRole=s.value==='admin'?'admin':s.value==='miembro'?'member':'player';
+      const r=await apiRequest({action:'updateUserRole',name,role:apiRole});
+      if(r?.user?.pin)data.pins[name]=String(r.user.pin);
+      data.roles[name]=localRoleFromApi(r?.user?.role||apiRole);
+      await saveStateOnline();
+      await loadAdminUsers();
+      renderAll();
+      alert(`Permiso actualizado: ${name} → ${s.value.toUpperCase()}\n\nEl PIN se ha conservado.`);
+    }
+    catch(e){alert('No se ha podido guardar el permiso.\n\n'+e.message);await loadAdminUsers().catch(()=>{});renderAll()}
   })
 }
 function selectedAccessUsers(){
