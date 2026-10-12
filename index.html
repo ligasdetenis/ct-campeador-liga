@@ -2353,6 +2353,7 @@ const API_URL="https://ct-campeador-api.ligasdetenis.workers.dev/";
 const PUSH_URL="https://ct-campeador-push-v1.ligasdetenis.workers.dev";
 let PUSH_VAPID_PUBLIC_KEY="";
 const PUSH_SW_URL="/ct-campeador-liga/push-sw.js";
+const APP_BUILD="20261012-msg-cloud-2";
 const weeks=[
  {id:"W1",label:"Semana 1 · 17–25 octubre",start:"2026-10-17",end:"2026-10-25"},
  {id:"W2",label:"Semana 2 · 26 octubre–1 noviembre",start:"2026-10-26",end:"2026-11-01"},
@@ -2401,6 +2402,8 @@ let playerEditorDirty=false;
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 let saveTimer=null;
 let reservationPending=false;
+let cloudMessages=[];
+let cloudMessagesLoaded=false;
 // V3.16.1 · consumo optimizado
 const AUTO_REFRESH_MS=5*60*1000;       // 5 min con la app visible
 const MIN_VISIBLE_REFRESH_MS=2*60*1000; // al volver a la app, mínimo 2 min desde la última lectura
@@ -2408,7 +2411,7 @@ const PUSH_SYNC_CACHE_KEY='ctcampeador_push_sync_v3161';
 const PUSH_RESYNC_MS=7*24*60*60*1000;  // revalidación push como máximo una vez por semana
 let lastRefreshAt=0;
 function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(data));if(isAdmin()&&apiToken){clearTimeout(saveTimer);saveTimer=setTimeout(()=>saveStateOnline().catch(console.warn),350)}}
-function publicState(){return {playerLists:data.playerLists,fixtures:data.fixtures,fixtureRounds:data.fixtureRounds,slots:data.slots,drafts:data.drafts,published:data.published,bookings:data.bookings,reservations:data.bookings,results:data.results,staff:data.staff,accessExcluded:data.accessExcluded||[],messageHistory:data.messageHistory||[],adminRoles:Object.fromEntries(Object.entries(data.roles||{}).filter(([,r])=>r==='admin')),weekRanges:data.weekRanges||{},postponed:data.postponed||{},weeks:Object.fromEntries(weeks.map(w=>[w.id,w])),updatedAt:new Date().toISOString()}}
+function publicState(){return {playerLists:data.playerLists,fixtures:data.fixtures,fixtureRounds:data.fixtureRounds,slots:data.slots,drafts:data.drafts,published:data.published,bookings:data.bookings,reservations:data.bookings,results:data.results,staff:data.staff,accessExcluded:data.accessExcluded||[],adminRoles:Object.fromEntries(Object.entries(data.roles||{}).filter(([,r])=>r==='admin')),weekRanges:data.weekRanges||{},postponed:data.postponed||{},weeks:Object.fromEntries(weeks.map(w=>[w.id,w])),updatedAt:new Date().toISOString()}}
 async function apiRequest(payload,{auth=true}={}){const headers={'Content-Type':'application/json'};if(auth&&apiToken)headers.Authorization='Bearer '+apiToken;const r=await fetch(API_URL,{method:'POST',headers,body:JSON.stringify(payload)});let j={};try{j=await r.json()}catch(e){}if(!r.ok||j.ok===false)throw new Error(j.error||('HTTP '+r.status));return j}
 async function restoreSession(){
   if(!apiToken)return false;
@@ -2422,7 +2425,7 @@ async function restoreSession(){
       data.playerLists=remote.playerLists;data.fixtures=remote.fixtures;data.fixtureRounds=remote.fixtureRounds;
       data.slots=remote.slots;data.drafts=remote.drafts;data.published=remote.published;data.bookings=remote.bookings;
       data.results=remote.results;data.profiles=remote.profiles||{};data.weekRanges=remote.weekRanges||{};
-      data.postponed=remote.postponed||{};data.accessExcluded=remote.accessExcluded||data.accessExcluded||[];data.messageHistory=remote.messageHistory||data.messageHistory||[];data.staff={...(data.staff||{}),...(remote.staff||{})};
+      data.postponed=remote.postponed||{};data.accessExcluded=remote.accessExcluded||data.accessExcluded||[];data.staff={...(data.staff||{}),...(remote.staff||{})};
       data.roles={...(data.roles||{}),...(remote.roles||{})};applyWeekRanges();
     }
     data.roles[state.player]=localRoleFromApi(j.user.role);
@@ -2447,7 +2450,7 @@ function adminEditorActive(){
   return !!(el && el.closest && el.closest('#adminView') && /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName));
 }
 
-async function refreshOnline({silent=false,force=false}={}){if((fixtureEditorDirty||playerEditorDirty||adminEditorActive())&&!force){setOnline(true,'✏️ Editando · actualización pausada');return false}try{const j=await apiRequest({action:'read'},{auth:false});const remote=normalizeData(j.state);data.playerLists=remote.playerLists;data.fixtures=remote.fixtures;data.fixtureRounds=remote.fixtureRounds;data.slots=remote.slots;data.drafts=remote.drafts;data.published=remote.published;data.bookings=remote.bookings;data.results=remote.results;data.profiles=remote.profiles||data.profiles||{};data.weekRanges=remote.weekRanges||data.weekRanges||{};data.postponed=remote.postponed||{};data.accessExcluded=remote.accessExcluded||data.accessExcluded||[];data.messageHistory=remote.messageHistory||data.messageHistory||[];applyWeekRanges();data.staff={...(data.staff||{}),...(remote.staff||{})};data.roles={...(data.roles||{}),...(remote.roles||{})};data.roles["Adrián Prádanos"]="admin";localStorage.setItem(STORAGE_KEY,JSON.stringify(data));lastRefreshAt=Date.now();setOnline(true,'☁️ Online');renderAll();return true}catch(e){setOnline(false,'⚠️ Offline');if(!silent)alert('No se ha podido actualizar desde Cloudflare.\n\n'+e.message);return false}}
+async function refreshOnline({silent=false,force=false}={}){if((fixtureEditorDirty||playerEditorDirty||adminEditorActive())&&!force){setOnline(true,'✏️ Editando · actualización pausada');return false}try{const j=await apiRequest({action:'read'});const remote=normalizeData(j.state);data.playerLists=remote.playerLists;data.fixtures=remote.fixtures;data.fixtureRounds=remote.fixtureRounds;data.slots=remote.slots;data.drafts=remote.drafts;data.published=remote.published;data.bookings=remote.bookings;data.results=remote.results;data.profiles=remote.profiles||data.profiles||{};data.weekRanges=remote.weekRanges||data.weekRanges||{};data.postponed=remote.postponed||{};data.accessExcluded=remote.accessExcluded||data.accessExcluded||[];applyWeekRanges();data.staff={...(data.staff||{}),...(remote.staff||{})};data.roles={...(data.roles||{}),...(remote.roles||{})};data.roles["Adrián Prádanos"]="admin";localStorage.setItem(STORAGE_KEY,JSON.stringify(data));lastRefreshAt=Date.now();setOnline(true,'☁️ Online');renderAll();return true}catch(e){setOnline(false,'⚠️ Offline');if(!silent)alert('No se ha podido actualizar desde Cloudflare.\n\n'+e.message);return false}}
 async function saveStateOnline(){
   if(!apiToken||!isAdmin())return;
   if(saveTimer){clearTimeout(saveTimer);saveTimer=null}
@@ -2818,6 +2821,27 @@ function isIOSPushDevice(){
   return /iphone|ipad|ipod/i.test(navigator.userAgent) ||
          (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
 }
+
+async function checkInstalledAppVersion(){
+  // Safari y la PWA de iOS pueden mantener documentos principales separados.
+  // Consultamos un archivo diminuto con no-store para saber si hay una versión nueva.
+  try{
+    const standalone = window.matchMedia?.('(display-mode: standalone)')?.matches || window.navigator.standalone === true;
+    if(!standalone)return;
+    const r = await fetch(`/ct-campeador-liga/app-version.json?t=${Date.now()}`,{cache:'no-store'});
+    if(!r.ok)return;
+    const j = await r.json();
+    const remote = String(j?.build||'').trim();
+    if(!remote || remote===APP_BUILD)return;
+
+    const u = new URL(location.href);
+    u.searchParams.set('v',remote);
+    location.replace(u.toString());
+  }catch(e){
+    console.warn('Comprobación de versión PWA',e);
+  }
+}
+
 function isStandalonePWA(){
   return window.matchMedia?.('(display-mode: standalone)').matches ||
          navigator.standalone===true;
@@ -2855,6 +2879,10 @@ function updateInstallBanner(){
 
   box.classList.remove('show');
 }
+window.addEventListener('pageshow',()=>{checkInstalledAppVersion()});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')checkInstalledAppVersion()});
+checkInstalledAppVersion();
+
 window.addEventListener('beforeinstallprompt',e=>{
   e.preventDefault();
   deferredInstallPrompt=e;
@@ -3654,35 +3682,47 @@ async function checkMessageRecipients(){
     if(btn){btn.disabled=false;btn.textContent=old}
   }
 }
-function renderMessageHistory(){
+async function renderMessageHistory(){
   const box=$('#msgHistory');if(!box)return;
-  const history=(data.messageHistory||[]).slice(0,20);
-  if(!history.length){box.innerHTML='<div class="tiny" style="padding:8px">Todavía no hay envíos registrados.</div>';return}
+  if(!isAdmin()||!apiToken){
+    box.innerHTML='<div class="tiny" style="padding:8px">Inicia sesión como administrador.</div>';
+    return;
+  }
+  box.innerHTML='<div class="tiny" style="padding:8px">⏳ Cargando mensajes…</div>';
+  await loadCloudMessages({silent:true});
+  const history=cloudMessages.slice(0,100);
+  if(!history.length){
+    box.innerHTML='<div class="tiny" style="padding:8px">Todavía no hay envíos registrados.</div>';
+    return;
+  }
   box.innerHTML=`<div style="display:flex;justify-content:flex-end;margin:0 0 8px"><button class="msgDeleteBtn" id="msgDeleteAll" type="button">🗑️ Eliminar todos</button></div>
-  <table><thead><tr><th>Fecha</th><th>Mensaje</th><th>Enviados</th><th></th></tr></thead><tbody>${history.map((h,i)=>{
+  <table><thead><tr><th>Fecha</th><th>Mensaje</th><th>Dest.</th><th>Enviados</th><th></th></tr></thead><tbody>${history.map(h=>{
     const d=h.at?new Date(h.at).toLocaleString('es-ES'):'—';
-    return `<tr><td>${d}</td><td><b>${mappEsc(h.title||'')}</b><div class="tiny">${mappEsc(h.body||'')}</div></td><td>${Number(h.sent||0)}</td><td><button class="msgDeleteBtn" data-msg-delete="${i}" type="button">Eliminar</button></td></tr>`;
+    return `<tr><td>${d}</td><td><b>${mappEsc(h.title||'')}</b><div class="tiny">${mappEsc(h.body||'')}</div></td><td>${Number(h.recipients||0)}</td><td>${Number(h.sent||0)}</td><td><button class="msgDeleteBtn" data-msg-delete="${mappEsc(h.id||'')}" type="button">Eliminar</button></td></tr>`;
   }).join('')}</tbody></table>`;
 
   box.querySelectorAll('[data-msg-delete]').forEach(btn=>btn.addEventListener('click',async()=>{
-    const i=Number(btn.dataset.msgDelete);
-    const h=(data.messageHistory||[])[i];
+    const id=btn.dataset.msgDelete;
+    const h=cloudMessages.find(x=>x.id===id);
     if(!h)return;
-    if(!confirm(`¿Eliminar este mensaje?\n\n${h.title||'Mensaje'}`))return;
-    data.messageHistory.splice(i,1);
-    localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
-    try{await saveStateOnline()}catch(e){alert('Se ha eliminado localmente, pero no se pudo sincronizar.\n\n'+e.message)}
-    renderMessageHistory();
-    renderModernProfile();
+    if(!confirm(`¿Eliminar este mensaje?\n\n${h.title||'Mensaje'}\n\nDesaparecerá también del buzón de sus destinatarios.`))return;
+    try{
+      btn.disabled=true;
+      await apiRequest({action:'deleteMessage',id});
+      await loadCloudMessages({silent:false});
+      renderMessageHistory();
+      renderModernProfile();
+    }catch(e){alert('No se ha podido eliminar.\n\n'+e.message)}
   }));
 
   $('#msgDeleteAll')?.addEventListener('click',async()=>{
-    if(!confirm('¿Eliminar TODOS los mensajes enviados?\n\nTambién desaparecerán del apartado Mensajes de los usuarios.'))return;
-    data.messageHistory=[];
-    localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
-    try{await saveStateOnline()}catch(e){alert('Se han eliminado localmente, pero no se pudo sincronizar.\n\n'+e.message)}
-    renderMessageHistory();
-    renderModernProfile();
+    if(!confirm('¿Eliminar TODOS los mensajes?\n\nDesaparecerán también de los buzones de los usuarios.'))return;
+    try{
+      await apiRequest({action:'deleteAllMessages'});
+      cloudMessages=[];
+      renderMessageHistory();
+      renderModernProfile();
+    }catch(e){alert('No se han podido eliminar.\n\n'+e.message)}
   });
 }
 async function sendAdminMessage(){
@@ -3707,19 +3747,9 @@ async function sendAdminMessage(){
       message:body,
       url:'https://ligasdetenis.github.io/ct-campeador-liga/'
     });
-    data.messageHistory=data.messageHistory||[];
-    data.messageHistory.unshift({
-      id:`msg-${Date.now()}-${Math.random().toString(36).slice(2,8)}`,
-      at:new Date().toISOString(),
-      title,body,
-      recipientNames:[...recipients],
-      recipients:recipients.length,
-      sent:Number(r.sent||0)
-    });
-    data.messageHistory=data.messageHistory.slice(0,20);
-    localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
-    try{await saveStateOnline()}catch(_){}
+    await loadCloudMessages({silent:false});
     renderMessageHistory();
+    renderModernProfile();
     await checkMessageRecipients();
     const failed=Array.isArray(r.failed)?r.failed.length:0;
     alert(`✅ Mensaje enviado.\n\nDispositivos alcanzados: ${Number(r.sent||0)}\nSuscripciones eliminadas: ${Number(r.removed||0)}${failed?`\nFallos: ${failed}`:''}`);
@@ -4439,48 +4469,43 @@ function mappInstallText(){
  return['Disponible según navegador',''];
 }
 
-function mappMessageId(m){
-  return String(m?.id || `${m?.at||''}|${m?.title||''}|${m?.body||''}`);
-}
-function mappReadKey(){
-  return `ctcampeador_read_messages_${normalizeName(state.player||'')}`;
-}
-function mappReadMessages(){
+async function loadCloudMessages({silent=true}={}){
+  if(!apiToken||!state.authenticated){cloudMessages=[];cloudMessagesLoaded=false;return []}
   try{
-    const v=JSON.parse(localStorage.getItem(mappReadKey())||'[]');
-    return Array.isArray(v)?v:[];
-  }catch(_){return []}
+    const r=await apiRequest({action:'listMessages'});
+    cloudMessages=Array.isArray(r.messages)?r.messages:[];
+    cloudMessagesLoaded=true;
+    return cloudMessages;
+  }catch(e){
+    if(!silent)alert('No se han podido cargar los mensajes.\n\n'+e.message);
+    return cloudMessages;
+  }
 }
 function mappUserMessages(){
   if(!state.player)return [];
-  const me=normalizeName(state.player);
-  return (data.messageHistory||[])
-    .filter(m=>Array.isArray(m.recipientNames)&&m.recipientNames.some(n=>normalizeName(n)===me))
-    .sort((a,b)=>String(b.at||'').localeCompare(String(a.at||'')));
+  if(isAdmin()){
+    const me=normalizeName(state.player);
+    return cloudMessages.filter(m=>Array.isArray(m.recipientNames)&&m.recipientNames.some(n=>normalizeName(n)===me));
+  }
+  return cloudMessages;
 }
 function mappUnreadMessages(){
-  const read=new Set(mappReadMessages());
-  return mappUserMessages().filter(m=>!read.has(mappMessageId(m)));
+  return mappUserMessages().filter(m=>!m.read);
 }
-function mappMarkMessagesRead(){
-  if(!state.player)return;
-  const ids=mappUserMessages().map(mappMessageId);
-  try{localStorage.setItem(mappReadKey(),JSON.stringify(ids.slice(0,200)))}catch(_){}
-}
-function openMessagesInbox(){
+async function openMessagesInbox(){
   document.querySelector('.mapp-msg-modal')?.remove();
+  await loadCloudMessages({silent:false});
   const messages=mappUserMessages();
-  const read=new Set(mappReadMessages());
   const modal=document.createElement('div');
   modal.className='mapp-msg-modal';
   modal.innerHTML=`<div class="mapp-msg-sheet">
     <div class="mapp-msg-head"><h3>Mensajes</h3><button class="mapp-msg-close" type="button" aria-label="Cerrar">×</button></div>
     <div class="mapp-msg-list">${
       messages.length
-        ? messages.map(m=>`<div class="mapp-msg-card ${read.has(mappMessageId(m))?'':'unread'}">
+        ? messages.map(m=>`<div class="mapp-msg-card ${m.read?'':'unread'}">
             <div class="mapp-msg-title">${mappEsc(m.title||'Aviso')}</div>
             <div class="mapp-msg-body">${mappEsc(m.body||'')}</div>
-            <div class="mapp-msg-date">${m.at?new Date(m.at).toLocaleString('es-ES'):'—'}</div>
+            <div class="mapp-msg-date">${m.at?new Date(m.at).toLocaleString('es-ES'):'—'} · ${mappEsc(m.sentBy||'Administrador')}</div>
           </div>`).join('')
         : '<div class="mapp-msg-empty">No tienes mensajes.</div>'
     }</div>
@@ -4489,11 +4514,19 @@ function openMessagesInbox(){
   const close=()=>{modal.remove();renderModernProfile()};
   modal.querySelector('.mapp-msg-close')?.addEventListener('click',close);
   modal.addEventListener('click',e=>{if(e.target===modal)close()});
-  mappMarkMessagesRead();
+
+  const unread=messages.filter(m=>!m.read).map(m=>m.id).filter(Boolean);
+  if(unread.length){
+    try{
+      await apiRequest({action:'markMessagesRead',ids:unread});
+      for(const m of cloudMessages)if(unread.includes(m.id))m.read=true;
+    }catch(e){console.warn(e)}
+  }
 }
 
 async function renderModernProfile(){
  const box=$('#modernProfileContent');if(!box)return;
+ await loadCloudMessages({silent:true});
  if(state.player)mappMaybeMigrateLegacyPhoto(state.player);
  const [pushText,pushCls]=await mappPushStatusText();
  const [installText,installCls]=mappInstallText();
