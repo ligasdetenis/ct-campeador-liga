@@ -2371,7 +2371,7 @@ const API_URL="https://ct-campeador-api.ligasdetenis.workers.dev/";
 const PUSH_URL="https://ct-campeador-push-v1.ligasdetenis.workers.dev";
 let PUSH_VAPID_PUBLIC_KEY="";
 const PUSH_SW_URL="/ct-campeador-liga/push-sw.js";
-const APP_BUILD="20261012-admin-player-fix-1";
+const APP_BUILD="20261012-own-pin-fix-1";
 const weeks=[
  {id:"W1",label:"Semana 1 · 17–25 octubre",start:"2026-10-17",end:"2026-10-25"},
  {id:"W2",label:"Semana 2 · 26 octubre–1 noviembre",start:"2026-10-26",end:"2026-11-01"},
@@ -4574,7 +4574,7 @@ async function renderModernProfile(){
  if(state.player)mappMaybeMigrateLegacyPhoto(state.player);
  const [pushText,pushCls]=await mappPushStatusText();
  const [installText,installCls]=mappInstallText();
- const pin=String(data.pins?.[state.player]||'');
+ let ownPin='';
  box.innerHTML=`<div class="mapp-card">
    <div class="mapp-profile-head">
      ${mappAvatar(state.player,'mapp-profile-avatar')}
@@ -4596,8 +4596,31 @@ async function renderModernProfile(){
  $('#mappPushRow')?.addEventListener('click',async()=>{await activateNativePush();await renderModernProfile();renderModernHeader();mappRefreshBellState()});
  $('#mappMessagesRow')?.addEventListener('click',openMessagesInbox);
  $('#mappInstallRow')?.addEventListener('click',installAppNow);
- $('#mappShowPin')?.addEventListener('click',e=>{
-   const v=$('#mappPinValue');const shown=v.textContent!=='••••';v.textContent=shown?'••••':(pin||'No disponible');e.currentTarget.textContent=shown?'Mostrar':'Ocultar'
+ $('#mappShowPin')?.addEventListener('click',async e=>{
+   const v=$('#mappPinValue');
+   const btn=e.currentTarget;
+   const shown=v.textContent!=='••••';
+   if(shown){
+     v.textContent='••••';
+     btn.textContent='Mostrar';
+     return;
+   }
+   try{
+     btn.disabled=true;
+     btn.textContent='Cargando…';
+     if(!ownPin){
+       const r=await apiRequest({action:'getOwnPin'});
+       ownPin=String(r?.pin||'');
+     }
+     v.textContent=ownPin||'No disponible';
+     btn.textContent=ownPin?'Ocultar':'Mostrar';
+   }catch(err){
+     v.textContent='No disponible';
+     btn.textContent='Mostrar';
+     alert('No se ha podido consultar tu PIN.\n\n'+err.message);
+   }finally{
+     btn.disabled=false;
+   }
  });
  $('#mappLogoutRow')?.addEventListener('click',()=>$('#clearIdentity').click());
  $('#mappAdminRow')?.addEventListener('click',openModernAdmin);
