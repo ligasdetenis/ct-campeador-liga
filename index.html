@@ -2711,7 +2711,7 @@ const API_URL="https://ct-campeador-api.ligasdetenis.workers.dev/";
 const PUSH_URL="https://ct-campeador-push-v1.ligasdetenis.workers.dev";
 let PUSH_VAPID_PUBLIC_KEY="";
 const PUSH_SW_URL="/ct-campeador-liga/push-sw.js";
-const APP_BUILD="20261013-admin-drag-order-1";
+const APP_BUILD="20261013-admin-order-cloud-1";
 const weeks=[
  {id:"W1",label:"Semana 1 · 17–25 octubre",start:"2026-10-17",end:"2026-10-25"},
  {id:"W2",label:"Semana 2 · 26 octubre–1 noviembre",start:"2026-10-26",end:"2026-11-01"},
@@ -3919,54 +3919,99 @@ function adminOrderStorageKey(){
   if(!state.player)return '';
   return 'ctcampeador_admin_block_order_'+normalizeName(state.player);
 }
+let adminCloudOrderLoadedFor='';
+let adminOrderSaveTimer=null;
+
 function currentAdminBlocks(){
   const manager=document.querySelector('#adminView .adminManager');
   if(!manager)return [];
   return [...manager.querySelectorAll(':scope > details[data-admin-section]')];
 }
-function saveAdminBlockOrder(){
-  if(!isAdmin())return;
-  const key=adminOrderStorageKey();
-  if(!key)return;
-  const order=currentAdminBlocks().map(x=>x.dataset.adminSection).filter(Boolean);
-  try{localStorage.setItem(key,JSON.stringify(order))}catch(_){}
-}
-function applyAdminBlockOrder(){
-  if(!isAdmin())return;
-  const manager=document.querySelector('#adminView .adminManager');
-  if(!manager)return;
-
+function normalizeAdminOrder(order){
   const blocks=currentAdminBlocks();
-  const byId=new Map(blocks.map(x=>[x.dataset.adminSection,x]));
-  let stored=[];
-  try{
-    const raw=localStorage.getItem(adminOrderStorageKey());
-    stored=raw?JSON.parse(raw):[];
-    if(!Array.isArray(stored))stored=[];
-  }catch(_){stored=[]}
-
-  const order=[
-    ...stored.filter(id=>byId.has(id)),
-    ...ADMIN_DEFAULT_ORDER.filter(id=>byId.has(id)&&!stored.includes(id)),
-    ...blocks.map(x=>x.dataset.adminSection).filter(id=>!stored.includes(id)&&!ADMIN_DEFAULT_ORDER.includes(id))
+  const available=blocks.map(x=>x.dataset.adminSection).filter(Boolean);
+  const src=Array.isArray(order)?order:[];
+  return [
+    ...src.filter((id,i)=>available.includes(id)&&src.indexOf(id)===i),
+    ...ADMIN_DEFAULT_ORDER.filter(id=>available.includes(id)&&!src.includes(id)),
+    ...available.filter(id=>!src.includes(id)&&!ADMIN_DEFAULT_ORDER.includes(id))
   ];
-
-  for(const id of order){
-    const block=byId.get(id);
-    if(block)manager.appendChild(block);
-  }
 }
-function resetAdminBlockOrder(){
-  if(!isAdmin())return;
-  try{localStorage.removeItem(adminOrderStorageKey())}catch(_){}
+function applyAdminOrderArray(order){
   const manager=document.querySelector('#adminView .adminManager');
   if(!manager)return;
   const byId=new Map(currentAdminBlocks().map(x=>[x.dataset.adminSection,x]));
-  for(const id of ADMIN_DEFAULT_ORDER){
+  for(const id of normalizeAdminOrder(order)){
     const block=byId.get(id);
     if(block)manager.appendChild(block);
   }
-  // Cualquier bloque futuro no contemplado permanece al final.
+}
+function saveAdminOrderLocal(order){
+  const key=adminOrderStorageKey();
+  if(!key)return;
+  try{localStorage.setItem(key,JSON.stringify(order))}catch(_){}
+}
+function readAdminOrderLocal(){
+  const key=adminOrderStorageKey();
+  if(!key)return [];
+  try{
+    const raw=localStorage.getItem(key);
+    const parsed=raw?JSON.parse(raw):[];
+    return Array.isArray(parsed)?parsed:[];
+  }catch(_){return []}
+}
+function saveAdminBlockOrder(){
+  if(!isAdmin())return;
+  const order=currentAdminBlocks().map(x=>x.dataset.adminSection).filter(Boolean);
+  saveAdminOrderLocal(order);
+
+  // Una sola escritura Cloudflare al terminar el arrastre.
+  clearTimeout(adminOrderSaveTimer);
+  adminOrderSaveTimer=setTimeout(async()=>{
+    try{
+      await apiRequest({action:'saveAdminOrder',order});
+      adminCloudOrderLoadedFor=normalizeName(state.player);
+    }catch(e){
+      console.warn('No se pudo sincronizar el orden del panel',e);
+    }
+  },250);
+}
+function applyAdminBlockOrder(){
+  if(!isAdmin())return;
+  applyAdminOrderArray(readAdminOrderLocal());
+}
+async function loadAdminBlockOrderFromCloud({force=false}={}){
+  if(!isAdmin()||!apiToken)return;
+  const who=normalizeName(state.player);
+  if(!force && adminCloudOrderLoadedFor===who)return;
+  try{
+    const j=await apiRequest({action:'getAdminPreferences'});
+    const order=Array.isArray(j?.preferences?.adminOrder)?j.preferences.adminOrder:[];
+    if(order.length){
+      const normalized=normalizeAdminOrder(order);
+      saveAdminOrderLocal(normalized);
+      applyAdminOrderArray(normalized);
+    }else{
+      try{localStorage.removeItem(adminOrderStorageKey())}catch(_){}
+      applyAdminOrderArray(ADMIN_DEFAULT_ORDER);
+    }
+    adminCloudOrderLoadedFor=who;
+  }catch(e){
+    console.warn('No se pudo cargar el orden personal desde Cloudflare',e);
+    // Si no hay conexión, conservamos el orden local como respaldo.
+    applyAdminBlockOrder();
+  }
+}
+async function resetAdminBlockOrder(){
+  if(!isAdmin())return;
+  try{localStorage.removeItem(adminOrderStorageKey())}catch(_){}
+  applyAdminOrderArray(ADMIN_DEFAULT_ORDER);
+  adminCloudOrderLoadedFor=normalizeName(state.player);
+  try{
+    await apiRequest({action:'resetAdminOrder'});
+  }catch(e){
+    console.warn('No se pudo restablecer el orden en Cloudflare',e);
+  }
   setupAdminBlockOrdering();
 }
 function setupAdminBlockOrdering(){
@@ -5331,11 +5376,13 @@ function applyModernAdminContext(){
   renderAll();
   renderModernAdminContext();
 }
-function openModernAdmin(){
+async function openModernAdmin(){
   document.body.classList.add('modern-admin');
   document.body.classList.remove('modern-ui');
   $('#adminView')?.classList.remove('hidden');
   renderAdmin();updateAdminSummaries();wireAdminCompact();renderModernAdminContext();setupAdminBlockOrdering();
+  await loadAdminBlockOrderFromCloud();
+  setupAdminBlockOrdering();
   window.scrollTo({top:0});
 }
 function closeModernAdmin(){
@@ -5401,7 +5448,7 @@ $('#welcomePin').addEventListener('keydown',e=>{if(e.key==='Enter')loginWithPinO
 $('#playerIdentity').onchange=e=>{if(!state.authenticated)state.player=e.target.value;$('#playerPin').value='';renderIdentity()};
 $('#loginBtn').onclick=async()=>{const player=$('#playerIdentity').value,pin=$('#playerPin').value.trim();if(!player){alert('Selecciona tu nombre.');return}if(!/^(?:\d{4}|\d{6})$/.test(pin)){alert('Introduce un PIN válido de 6 cifras. Los PIN antiguos de 4 siguen funcionando.');return}try{$('#loginBtn').disabled=true;const j=await apiRequest({action:'login',name:player,pin},{auth:false});apiToken=j.token;localStorage.setItem(TOKEN_KEY,apiToken);state.player=j.user.name;state.authenticated=true;data.roles[state.player]=localRoleFromApi(j.user.role);if(isAdmin())await loadAdminUsers();routePlayerToOwnCategory(state.player);$('#playerPin').value='';setOnline(true,'☁️ Online');await refreshOnline({silent:true,force:true});connectRealtime();renderAll()}catch(e){alert('No se ha podido iniciar sesión.\n\n'+e.message)}finally{$('#loginBtn').disabled=false}};
 $('#playerPin').addEventListener('keydown',e=>{if(e.key==='Enter')$('#loginBtn').click()});
-$('#clearIdentity').onclick=async()=>{stopRealtime();try{if(apiToken)await apiRequest({action:'logout'})}catch(e){}apiToken='';localStorage.removeItem(TOKEN_KEY);state.player='';state.authenticated=false;$('#playerPin').value='';renderAll();showPinWelcome('Introduce tu PIN para cambiar de usuario.',false)};
+$('#clearIdentity').onclick=async()=>{stopRealtime();try{if(apiToken)await apiRequest({action:'logout'})}catch(e){}apiToken='';localStorage.removeItem(TOKEN_KEY);adminCloudOrderLoadedFor='';state.player='';state.authenticated=false;$('#playerPin').value='';renderAll();showPinWelcome('Introduce tu PIN para cambiar de usuario.',false)};
 $$('.gender').forEach(b=>b.onclick=()=>{state.gender=b.dataset.gender;renderAll()});
 $('#weekSelect').onchange=e=>{state.week=e.target.value;renderAll()};
 function openNativeDatePicker(inputId){
