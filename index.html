@@ -2554,6 +2554,11 @@ body.resultModalOpen{overflow:hidden}
   .adminOrderActions{width:100%;justify-content:flex-start}
 }
 
+
+.mapp-admin-entry-card{
+  margin-bottom:12px;
+}
+
 </style>
 </head>
 <body>
@@ -3041,7 +3046,7 @@ const API_URL="https://ct-campeador-api.ligasdetenis.workers.dev/";
 const PUSH_URL="https://ct-campeador-push-v1.ligasdetenis.workers.dev";
 let PUSH_VAPID_PUBLIC_KEY="";
 const PUSH_SW_URL="/ct-campeador-liga/push-sw.js";
-const APP_BUILD="20261013-admin-order-persist-1";
+const APP_BUILD="20261013-admin-entry-top-1";
 const weeks=[
  {id:"W1",label:"Semana 1 · 17–25 octubre",start:"2026-10-17",end:"2026-10-25"},
  {id:"W2",label:"Semana 2 · 26 octubre–1 noviembre",start:"2026-10-26",end:"2026-11-01"},
@@ -6062,7 +6067,10 @@ async function renderModernProfile({skipMessageLoad=false}={}){
  const [pushText,pushCls]=await mappPushStatusText();
  const [installText,installCls]=mappInstallText();
  let ownPin='';
- box.innerHTML=`<div class="mapp-card">
+ box.innerHTML=`${isAdmin()?`<div class="mapp-card mapp-admin-entry-card"><div class="mapp-list-header"><div class="mapp-list-title">ADMINISTRACIÓN</div></div>
+   <div class="mapp-menu-row" id="mappAdminRow"><div class="mapp-menu-icon gray">${mappIcon('gear')}</div><div><div class="mapp-menu-title">Administración</div><div class="mapp-menu-sub">Opciones avanzadas</div></div><div>${mappIcon('chevron')}</div></div>
+ </div>`:''}
+ <div class="mapp-card">
    <div class="mapp-profile-head">
      ${mappAvatar(state.player,'mapp-profile-avatar')}
      <div><div class="mapp-profile-name">${mappEsc(state.player)}</div><div class="mapp-profile-role">${isAdmin()?(playerCategoryMemberships(state.player).length?`Administrador · Jugador · ${mappEsc(state.category)} ${mappEsc(state.gender)}`:'Administrador'):'Jugador · '+mappEsc(state.category)+' '+mappEsc(state.gender)}</div>${!isAdmin()&&playerCategoryMemberships(state.player).length>1?`<div class="mapp-menu-sub">Inscrito en ${playerCategoryMemberships(state.player).length} categorías · acceso inicial a la inferior</div>`:`<div class="mapp-menu-sub">Toca la foto para cambiarla · sincronizada en Cloudflare</div>`}</div>
@@ -6073,9 +6081,6 @@ async function renderModernProfile({skipMessageLoad=false}={}){
    <div class="mapp-menu-row"><div class="mapp-menu-icon">${mappIcon('lock')}</div><div><div class="mapp-menu-title">Mi PIN</div><div class="mapp-menu-sub" id="mappPinValue">••••</div></div><button class="mapp-pin-show" id="mappShowPin">Mostrar</button></div>
    <div class="mapp-menu-row" id="mappLogoutRow"><div class="mapp-menu-icon">${mappIcon('logout')}</div><div><div class="mapp-menu-title">Sesión</div><div class="mapp-menu-sub">Cerrar sesión / Cambiar jugador</div></div><div>${mappIcon('chevron')}</div></div>
  </div>
- ${isAdmin()?`<div class="mapp-card"><div class="mapp-list-header"><div class="mapp-list-title">ADMINISTRACIÓN</div></div>
-   <div class="mapp-menu-row" id="mappAdminRow"><div class="mapp-menu-icon gray">${mappIcon('gear')}</div><div><div class="mapp-menu-title">Administración</div><div class="mapp-menu-sub">Opciones avanzadas</div></div><div>${mappIcon('chevron')}</div></div>
- </div>`:''}
  <input type="file" accept="image/*" id="mappPhotoInput" style="display:none">`;
  const avatar=box.querySelector('.mapp-profile-avatar');
  avatar?.addEventListener('click',()=>$('#mappPhotoInput').click());
