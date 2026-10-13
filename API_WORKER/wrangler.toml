@@ -1,0 +1,19 @@
+name = "ct-campeador-api"
+main = "src/index.js"
+compatibility_date = "2026-10-11"
+
+[[kv_namespaces]]
+binding = "DATA"
+id = "cd8d040962b7432180e0bb3141fed1f5"
+
+[[durable_objects.bindings]]
+name = "BOOKINGS"
+class_name = "BookingCoordinator"
+
+[exports.BookingCoordinator]
+type = "durable-object"
+storage = "sqlite"
+
+[[services]]
+binding = "PUSH_SERVICE"
+service = "ct-campeador-push-v1"

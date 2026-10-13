@@ -1,0 +1,13 @@
+{
+  "name": "ct-campeador-api",
+  "version": "2.5.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev"
+  },
+  "devDependencies": {
+    "wrangler": "^4.149.0"
+  }
+}
