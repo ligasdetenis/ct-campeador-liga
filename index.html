@@ -2629,7 +2629,7 @@ const API_URL="https://ct-campeador-api.ligasdetenis.workers.dev/";
 const PUSH_URL="https://ct-campeador-push-v1.ligasdetenis.workers.dev";
 let PUSH_VAPID_PUBLIC_KEY="";
 const PUSH_SW_URL="/ct-campeador-liga/push-sw.js";
-const APP_BUILD="20261013-message-cloud-avatar-1";
+const APP_BUILD="20261013-users-delete-admin-only-1";
 const weeks=[
  {id:"W1",label:"Semana 1 · 17–25 octubre",start:"2026-10-17",end:"2026-10-25"},
  {id:"W2",label:"Semana 2 · 26 octubre–1 noviembre",start:"2026-10-26",end:"2026-11-01"},
@@ -2973,33 +2973,6 @@ function allPlayers(){return [...new Set([...[].concat(...Object.values(data.pla
 function categorizedPlayers(){return [...new Set([].concat(...Object.values(data.playerLists||{})).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es'))}
 function allIdentities(){return [...new Set([...categorizedPlayers(),...Object.keys(data.staff||{}),...Object.keys(data.roles||{})])].sort((a,b)=>a.localeCompare(b,'es'))}
 function playerStillInAnyCategory(name){return categorizedPlayers().some(p=>normalizeName(p)===normalizeName(name))}
-async function offerRemovedUserCleanup(removedNames=[]){
-  const candidates=[...new Set(removedNames)]
-    .filter(Boolean)
-    .filter(name=>!playerStillInAnyCategory(name))
-    .filter(name=>roleOf(name)!=='admin');
-  if(!candidates.length)return {asked:false,removed:[]};
-
-  const listado=candidates.map(n=>'• '+n).join('\n');
-  const plural=candidates.length>1;
-  const ok=confirm(
-    `${plural?'Estos jugadores ya no pertenecen':'Este jugador ya no pertenece'} a ninguna categoría:\n\n${listado}\n\n`+
-    `¿Quieres eliminar también ${plural?'sus usuarios y PIN':'su usuario y PIN'}?\n\n`+
-    `Los partidos o resultados ya cargados no se borrarán.`
-  );
-  if(!ok)return {asked:true,removed:[]};
-
-  for(const name of candidates){
-    try{await apiRequest({action:'deleteUser',name})}catch(_){}
-    try{await apiRequest({action:'removePushDevices',userName:name})}catch(_){}
-    excludeAccess(name);
-    delete data.pins[name];
-    delete data.roles[name];
-    if(data.staff?.[name])delete data.staff[name];
-  }
-  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
-  return {asked:true,removed:candidates};
-}
 function roleOf(person){return data.roles?.[person]||"jugador"}
 function isAdmin(){return !!state.authenticated&&roleOf(state.player)==="admin"}
 function requireAdmin(){if(isAdmin())return true;alert("Acceso restringido a administradores.");return false}
@@ -5235,9 +5208,8 @@ $('#savePlayers').onclick=async()=>{
       if(!data.roles[p]) data.roles[p]='jugador';
     }
 
-    // Si alguien acaba de quedarse sin ninguna categoría, ofrecer borrar también su acceso.
-    const cleanup=await offerRemovedUserCleanup(removedFromThisCategory);
-
+    // Quitar a un jugador de una categoría NO elimina su usuario ni su PIN.
+    // Los accesos se gestionan exclusivamente desde Administración.
     localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
     renderIdentity(); renderAdmin();
 
@@ -5248,11 +5220,7 @@ $('#savePlayers').onclick=async()=>{
     await refreshOnline({silent:true,force:true});
     renderAll();
 
-    let extra='';
-    if(cleanup.removed.length){
-      extra=`\n\n🗑️ También se ${cleanup.removed.length===1?'ha eliminado su usuario y PIN':'han eliminado '+cleanup.removed.length+' usuarios y sus PIN'}.`;
-    }
-    alert(`✅ ${list.length} jugador${list.length===1?'':'es'} guardado${list.length===1?'':'s'} en ${state.category} ${state.gender}.${extra}`);
+    alert(`✅ ${list.length} jugador${list.length===1?'':'es'} guardado${list.length===1?'':'s'}.`);
   }catch(e){
     alert('No se ha podido guardar la lista online.\n\n'+e.message);
   }finally{btn.disabled=false;btn.textContent=oldText}
@@ -5261,10 +5229,11 @@ $('#clearPlayers').onclick=async()=>{
   if(!requireAdmin())return;
   const key=playerListKey();
   const previous=[...(data.playerLists[key]||[])];
-  if(!confirm(`¿Vaciar la lista de jugadores de ${state.category} ${state.gender}?\n\nLos enfrentamientos ya cargados no se borrarán.`))return;
+  if(!confirm(`¿Vaciar la lista de jugadores de ${state.category} ${state.gender}?\n\nLos enfrentamientos ya cargados no se borrarán.\nLos usuarios y sus PIN tampoco se eliminarán.`))return;
 
   delete data.playerLists[key];
-  const cleanup=await offerRemovedUserCleanup(previous);
+  // Vaciar una categoría solo elimina la pertenencia deportiva.
+  // El usuario, su PIN y sus avisos se conservan hasta borrarlos expresamente desde Administración.
   playerEditorDirty=false;
   localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
   renderAll();
@@ -5273,9 +5242,7 @@ $('#clearPlayers').onclick=async()=>{
     await saveStateOnline();
     await saveUsersOnline();
     await refreshOnline({silent:true,force:true});
-    if(cleanup.removed.length){
-      alert(`✅ Lista vaciada.\n\nTambién se han eliminado ${cleanup.removed.length} usuario${cleanup.removed.length===1?'':'s'} y sus PIN porque ya no pertenecían a ninguna categoría.`);
-    }
+    alert('✅ Lista vaciada.\n\nLos usuarios y sus PIN se conservan. Si quieres eliminar un acceso, hazlo desde Administración > Accesos y dispositivos.');
   }catch(e){
     alert('No se ha podido guardar el cambio online.\n\n'+e.message);
   }
