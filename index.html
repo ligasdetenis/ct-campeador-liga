@@ -2629,7 +2629,7 @@ const API_URL="https://ct-campeador-api.ligasdetenis.workers.dev/";
 const PUSH_URL="https://ct-campeador-push-v1.ligasdetenis.workers.dev";
 let PUSH_VAPID_PUBLIC_KEY="";
 const PUSH_SW_URL="/ct-campeador-liga/push-sw.js";
-const APP_BUILD="20261013-admin-player-pin-preserve-1";
+const APP_BUILD="20261013-player-user-sync-1";
 const weeks=[
  {id:"W1",label:"Semana 1 · 17–25 octubre",start:"2026-10-17",end:"2026-10-25"},
  {id:"W2",label:"Semana 2 · 26 octubre–1 noviembre",start:"2026-10-26",end:"2026-11-01"},
@@ -5206,45 +5206,58 @@ $('#savePlayers').onclick=async()=>{
 
   const key=playerListKey();
   const previous=[...(data.playerLists[key]||[])];
+  const previousNorm=new Set(previous.map(normalizeName));
   const nextNorm=new Set(list.map(normalizeName));
   const removedFromThisCategory=previous.filter(p=>!nextNorm.has(normalizeName(p)));
+  const addedToThisCategory=list.filter(p=>!previousNorm.has(normalizeName(p)));
 
   btn.disabled=true;
   const oldText=btn.textContent; btn.textContent='Guardando…';
   try{
     data.playerLists[key]=list;
 
-    // Crear PIN solo para una identidad que realmente no tenga uno válido.
-    // Los PIN existentes de 4 O 6 cifras se conservan siempre.
-    // Y si el usuario ya es ADMIN/MIEMBRO, su rol tampoco se modifica.
-    const usedPins=new Set(
-      Object.values(data.pins||{})
-        .map(x=>String(x||''))
-        .filter(x=>/^(?:\d{4}|\d{6})$/.test(x))
-    );
-    for(const p of list){
-      let pin=String(data.pins[p]||'');
-      if(!/^(?:\d{4}|\d{6})$/.test(pin)){
-        pin=randomPin(usedPins);
-        data.pins[p]=pin;
-        usedPins.add(pin);
-      }
-      if(!data.roles[p]) data.roles[p]='jugador';
-    }
-
-    // Quitar a un jugador de una categoría NO elimina su usuario ni su PIN.
-    // Los accesos se gestionan exclusivamente desde Administración.
+    // Guardamos primero la pertenencia deportiva.
     localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
     renderIdentity(); renderAdmin();
-
-    // Estado y usuarios se guardan de forma explícita para evitar usuarios fantasma.
     await saveStateOnline();
-    await saveUsersOnline();
+
+    // SOLO quienes acaban de incorporarse a esta categoría necesitan comprobar acceso.
+    // La API crea usuario+PIN si no existe.
+    // Si ya existía (ADMIN, MIEMBRO o jugador), conserva exactamente PIN y rol.
+    let createdUsers=0;
+    if(addedToThisCategory.length){
+      const ensured=await apiRequest({action:'ensurePlayerUsers',names:addedToThisCategory});
+      const ensuredUsers=Array.isArray(ensured.users)?ensured.users:[];
+      createdUsers=Number(ensured.created||0);
+
+      for(const u of ensuredUsers){
+        const canonicalName=String(u.name||'').trim();
+        if(!canonicalName)continue;
+
+        // Si Cloudflare devuelve una forma canónica distinta del nombre,
+        // la usamos también en la lista deportiva.
+        const idx=data.playerLists[key].findIndex(x=>normalizeName(x)===normalizeName(canonicalName));
+        if(idx>=0)data.playerLists[key][idx]=canonicalName;
+
+        restoreAccess(canonicalName);
+        data.pins[canonicalName]=String(u.pin||'');
+        data.roles[canonicalName]=localRoleFromApi(u.role);
+      }
+
+      localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+      await saveStateOnline();
+    }
+
+    // Refrescamos desde la fuente de verdad para que Administración muestre inmediatamente
+    // los nuevos usuarios y sus PIN.
+    await loadAdminUsers();
     playerEditorDirty=false;
     await refreshOnline({silent:true,force:true});
     renderAll();
 
-    alert(`✅ ${list.length} jugador${list.length===1?'':'es'} guardado${list.length===1?'':'s'}.\n\nLos usuarios que ya existían conservan su PIN y su rol.`);
+    alert(`✅ ${list.length} jugador${list.length===1?'':'es'} guardado${list.length===1?'':'s'}.`+
+      (createdUsers?`\n\n🔑 Se ${createdUsers===1?'ha creado 1 usuario con su PIN':'han creado '+createdUsers+' usuarios con sus PIN'}.`:'')+
+      `\n\nLos usuarios que ya existían conservan su PIN y su rol.`);
   }catch(e){
     alert('No se ha podido guardar la lista online.\n\n'+e.message);
   }finally{btn.disabled=false;btn.textContent=oldText}
