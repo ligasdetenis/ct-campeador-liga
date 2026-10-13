@@ -2508,14 +2508,15 @@ body.resultModalOpen{overflow:hidden}
 
 
 
-/* Pistas: icono rojo cuando la pestaña está activa */
-[data-modern-go="courts"].active svg,
-[data-modern-go="courts"].active svg *,
-[data-modern-go="courts"].active .mapp-nav-icon,
-[data-modern-go="courts"].active .mapp-nav-icon *{
+/* Pistas: icono rojo cuando la pestaña está activa.
+   El icono "court" es una imagen PNG negra, no un SVG. */
+[data-modern-go="courts"].active{
   color:#d10b2f!important;
-  fill:#d10b2f!important;
-  stroke:#d10b2f!important;
+}
+[data-modern-go="courts"].active [data-icon="court"] .mapp-court-icon,
+[data-modern-go="courts"].active .mapp-court-icon{
+  filter:brightness(0) saturate(100%) invert(14%) sepia(95%) saturate(5777%) hue-rotate(344deg) brightness(87%) contrast(100%)!important;
+  opacity:1!important;
 }
 
 </style>
@@ -3005,7 +3006,7 @@ const API_URL="https://ct-campeador-api.ligasdetenis.workers.dev/";
 const PUSH_URL="https://ct-campeador-push-v1.ligasdetenis.workers.dev";
 let PUSH_VAPID_PUBLIC_KEY="";
 const PUSH_SW_URL="/ct-campeador-liga/push-sw.js";
-const APP_BUILD="20261013-courts-icon-red-1";
+const APP_BUILD="20261013-courts-icon-red-img-fix-1";
 const weeks=[
  {id:"W1",label:"Semana 1 · 17–25 octubre",start:"2026-10-17",end:"2026-10-25"},
  {id:"W2",label:"Semana 2 · 26 octubre–1 noviembre",start:"2026-10-26",end:"2026-11-01"},
