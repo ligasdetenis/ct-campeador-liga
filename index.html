@@ -2629,7 +2629,7 @@ const API_URL="https://ct-campeador-api.ligasdetenis.workers.dev/";
 const PUSH_URL="https://ct-campeador-push-v1.ligasdetenis.workers.dev";
 let PUSH_VAPID_PUBLIC_KEY="";
 const PUSH_SW_URL="/ct-campeador-liga/push-sw.js";
-const APP_BUILD="20261013-player-user-sync-1";
+const APP_BUILD="20261013-player-order-ab-1";
 const weeks=[
  {id:"W1",label:"Semana 1 · 17–25 octubre",start:"2026-10-17",end:"2026-10-25"},
  {id:"W2",label:"Semana 2 · 26 octubre–1 noviembre",start:"2026-10-26",end:"2026-11-01"},
@@ -4795,13 +4795,13 @@ function renderModernHome(){
  const m=mappPrimaryMatch(), frees=mappFreeSlots().slice(0,3);
  let hero='';
  if(m){
-   const opp=mappOpponent(m),bk=bookingFor(m.id), can=isOpen()&&isReservableInCurrentWeek(m.id);
+   const bk=bookingFor(m.id), can=isOpen()&&isReservableInCurrentWeek(m.id);
    hero=`<div class="mapp-card"><div class="mapp-card-pad">
       <div class="mapp-section-title"><div class="left"><span class="mapp-title-icon">${mappIcon('trophy')}</span>Tu partido</div><span class="mapp-round">${mappEsc(mappCurrentRound())}</span></div>
       <div class="mapp-match-grid">
-        <div>${mappAvatar(state.player)}<div class="mapp-player-name">${mappEsc(state.player)}</div></div>
+        <div>${mappAvatar(m.a)}<div class="mapp-player-name">${mappEsc(m.a)}</div></div>
         <div class="mapp-vs">VS</div>
-        <div>${mappAvatar(opp)}<div class="mapp-player-name">${mappEsc(opp)}</div></div>
+        <div>${mappAvatar(m.b)}<div class="mapp-player-name">${mappEsc(m.b)}</div></div>
       </div>
       ${bk?`<div class="mapp-status good"><div><strong>✓ Pista reservada</strong>${mappEsc(dayDateES(bk.date))} · ${mappEsc(bk.time)} · ${mappEsc(bk.court)}</div></div>`:
       can?`<div class="mapp-status good"><div><strong>Reserva disponible</strong>Puedes reservar una pista para este partido.</div></div>`:
@@ -4886,13 +4886,13 @@ function renderModernMatch(){
  const matches=mappOwnMatches();
  if(!matches.length){box.innerHTML='<div class="mapp-card"><div class="mapp-empty">No tienes partido en esta semana.</div></div>';return}
  box.innerHTML=matches.map(m=>{
-   const opp=mappOpponent(m),bk=bookingFor(m.id),r=resultFor(m.id),p=postponedInfo(m.id);
+   const bk=bookingFor(m.id),r=resultFor(m.id),p=postponedInfo(m.id);
    return `<div class="mapp-card"><div class="mapp-card-pad">
     <div class="mapp-section-title"><div class="left"><span class="mapp-title-icon">${mappIcon('trophy')}</span>Mi partido</div><span class="mapp-round">${mappEsc(mappCurrentRound())}</span></div>
     <div class="mapp-match-grid">
-      <div>${mappAvatar(state.player)}<div class="mapp-player-name">${mappEsc(state.player)}</div></div>
+      <div>${mappAvatar(m.a)}<div class="mapp-player-name">${mappEsc(m.a)}</div></div>
       <div class="mapp-vs">VS</div>
-      <div>${mappAvatar(opp)}<div class="mapp-player-name">${mappEsc(opp)}</div></div>
+      <div>${mappAvatar(m.b)}<div class="mapp-player-name">${mappEsc(m.b)}</div></div>
     </div>
     <div style="margin-top:17px;border-top:1px solid var(--app-line)">
       <div class="mapp-day-slot"><div class="court">Categoría</div><div style="grid-column:2/5;font-weight:800">${mappEsc(state.category)} · ${mappEsc(state.gender)}</div></div>
