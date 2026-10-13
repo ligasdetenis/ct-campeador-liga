@@ -2629,7 +2629,7 @@ const API_URL="https://ct-campeador-api.ligasdetenis.workers.dev/";
 const PUSH_URL="https://ct-campeador-push-v1.ligasdetenis.workers.dev";
 let PUSH_VAPID_PUBLIC_KEY="";
 const PUSH_SW_URL="/ct-campeador-liga/push-sw.js";
-const APP_BUILD="20261013-users-delete-admin-only-1";
+const APP_BUILD="20261013-admin-player-pin-preserve-1";
 const weeks=[
  {id:"W1",label:"Semana 1 · 17–25 octubre",start:"2026-10-17",end:"2026-10-25"},
  {id:"W2",label:"Semana 2 · 26 octubre–1 noviembre",start:"2026-10-26",end:"2026-11-01"},
@@ -2891,6 +2891,10 @@ function categoryPlayers(){return data.playerLists[playerListKey()]||[]}
 function fixtureRound(){return data.fixtureRounds?.[fixtureKey()]||''}
 function normalizeName(s){return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('es').replace(/\s+/g,' ').trim()}
 function canonicalPlayer(name){const n=normalizeName(name);return categoryPlayers().find(p=>normalizeName(p)===n)||String(name||'').trim()}
+function canonicalIdentity(name){
+  const n=normalizeName(name);
+  return allIdentities().find(p=>normalizeName(p)===n)||String(name||'').trim();
+}
 function fixtureId(a,b){return `${fixtureKey()}|${slug(a)}|${slug(b)}`}
 function makeFixture(a,b){a=canonicalPlayer(a);b=canonicalPlayer(b);return {id:fixtureId(a,b),a,b}}
 function fixturePairKey(a,b){return [normalizeName(a),normalizeName(b)].sort().join('|')}
@@ -5190,8 +5194,16 @@ $('#adminMatchesWeek').onchange=e=>{adminMatchesState.week=e.target.value;render
 $('#savePlayers').onclick=async()=>{
   if(!requireAdmin())return;
   const btn=$('#savePlayers');
-  const list=parsePlayerLines();
+  let list=parsePlayerLines();
   if(!list.length){alert('No hay jugadores válidos para guardar. Usa "Vaciar lista" si quieres quitar a todos.');return}
+
+  // Antes de tocar una lista deportiva, recuperar los PIN/roles actuales de Cloudflare.
+  // Así un ADMIN o MIEMBRO que también entra como jugador conserva exactamente su acceso.
+  try{await loadAdminUsers()}catch(e){console.warn('No se pudieron refrescar usuarios antes de guardar jugadores',e)}
+
+  // Si el nombre ya existe como usuario, reutilizamos ESA identidad en lugar de crear otra.
+  list=list.map(canonicalIdentity);
+
   const key=playerListKey();
   const previous=[...(data.playerLists[key]||[])];
   const nextNorm=new Set(list.map(normalizeName));
@@ -5202,9 +5214,21 @@ $('#savePlayers').onclick=async()=>{
   try{
     data.playerLists[key]=list;
 
-    // Crear PIN/rol de los jugadores que siguen o entran en la categoría.
+    // Crear PIN solo para una identidad que realmente no tenga uno válido.
+    // Los PIN existentes de 4 O 6 cifras se conservan siempre.
+    // Y si el usuario ya es ADMIN/MIEMBRO, su rol tampoco se modifica.
+    const usedPins=new Set(
+      Object.values(data.pins||{})
+        .map(x=>String(x||''))
+        .filter(x=>/^(?:\d{4}|\d{6})$/.test(x))
+    );
     for(const p of list){
-      if(!/^\d{4}$/.test(String(data.pins[p]||''))) data.pins[p]=randomPin();
+      let pin=String(data.pins[p]||'');
+      if(!/^(?:\d{4}|\d{6})$/.test(pin)){
+        pin=randomPin(usedPins);
+        data.pins[p]=pin;
+        usedPins.add(pin);
+      }
       if(!data.roles[p]) data.roles[p]='jugador';
     }
 
@@ -5220,7 +5244,7 @@ $('#savePlayers').onclick=async()=>{
     await refreshOnline({silent:true,force:true});
     renderAll();
 
-    alert(`✅ ${list.length} jugador${list.length===1?'':'es'} guardado${list.length===1?'':'s'}.`);
+    alert(`✅ ${list.length} jugador${list.length===1?'':'es'} guardado${list.length===1?'':'s'}.\n\nLos usuarios que ya existían conservan su PIN y su rol.`);
   }catch(e){
     alert('No se ha podido guardar la lista online.\n\n'+e.message);
   }finally{btn.disabled=false;btn.textContent=oldText}
