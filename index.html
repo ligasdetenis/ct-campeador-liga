@@ -2739,7 +2739,7 @@ const API_URL="https://ct-campeador-api.ligasdetenis.workers.dev/";
 const PUSH_URL="https://ct-campeador-push-v1.ligasdetenis.workers.dev";
 let PUSH_VAPID_PUBLIC_KEY="";
 const PUSH_SW_URL="/ct-campeador-liga/push-sw.js";
-const APP_BUILD="20261013-admin-order-cloud-fix-2";
+const APP_BUILD="20261013-admin-order-index-fix-1";
 const weeks=[
  {id:"W1",label:"Semana 1 · 17–25 octubre",start:"2026-10-17",end:"2026-10-25"},
  {id:"W2",label:"Semana 2 · 26 octubre–1 noviembre",start:"2026-10-26",end:"2026-11-01"},
@@ -3948,7 +3948,7 @@ function adminOrderStorageKey(){
   return 'ctcampeador_admin_block_order_'+normalizeName(state.player);
 }
 let adminCloudOrderLoadedFor='';
-let adminOrderSavePromise=Promise.resolve();
+let adminOrderWriteChain=Promise.resolve();
 let adminOrderDragging=false;
 
 function currentAdminBlocks(){
@@ -3957,14 +3957,17 @@ function currentAdminBlocks(){
   return [...manager.querySelectorAll(':scope > details[data-admin-section]')];
 }
 function normalizeAdminOrder(order){
-  const blocks=currentAdminBlocks();
-  const available=blocks.map(x=>x.dataset.adminSection).filter(Boolean);
+  const available=currentAdminBlocks().map(x=>x.dataset.adminSection).filter(Boolean);
   const src=Array.isArray(order)?order:[];
+  const unique=src.filter((id,i)=>available.includes(id)&&src.indexOf(id)===i);
   return [
-    ...src.filter((id,i)=>available.includes(id)&&src.indexOf(id)===i),
-    ...ADMIN_DEFAULT_ORDER.filter(id=>available.includes(id)&&!src.includes(id)),
-    ...available.filter(id=>!src.includes(id)&&!ADMIN_DEFAULT_ORDER.includes(id))
+    ...unique,
+    ...ADMIN_DEFAULT_ORDER.filter(id=>available.includes(id)&&!unique.includes(id)),
+    ...available.filter(id=>!unique.includes(id)&&!ADMIN_DEFAULT_ORDER.includes(id))
   ];
+}
+function getCurrentAdminOrder(){
+  return currentAdminBlocks().map(x=>x.dataset.adminSection).filter(Boolean);
 }
 function applyAdminOrderArray(order){
   if(adminOrderDragging)return;
@@ -3979,7 +3982,7 @@ function applyAdminOrderArray(order){
 function saveAdminOrderLocal(order){
   const key=adminOrderStorageKey();
   if(!key)return;
-  try{localStorage.setItem(key,JSON.stringify(order))}catch(_){}
+  try{localStorage.setItem(key,JSON.stringify(normalizeAdminOrder(order)))}catch(_){}
 }
 function readAdminOrderLocal(){
   const key=adminOrderStorageKey();
@@ -3996,36 +3999,41 @@ function setAdminOrderStatus(text,stateName=''){
   el.textContent=text;
   el.dataset.state=stateName;
 }
-function getCurrentAdminOrder(){
-  return currentAdminBlocks().map(x=>x.dataset.adminSection).filter(Boolean);
-}
-async function saveAdminBlockOrder(){
+async function persistAdminOrder({showAlert=false}={}){
   if(!isAdmin())return false;
-  const order=getCurrentAdminOrder();
-  saveAdminOrderLocal(order);
+  const requested=normalizeAdminOrder(getCurrentAdminOrder());
+  saveAdminOrderLocal(requested);
   setAdminOrderStatus('Guardando…','saving');
 
-  // Encadenamos guardados para que una segunda reordenación nunca pueda
-  // ser sobrescrita por una petición anterior que termine más tarde.
-  adminOrderSavePromise=adminOrderSavePromise
-    .catch(()=>{})
-    .then(async()=>{
-      const latest=getCurrentAdminOrder();
-      saveAdminOrderLocal(latest);
-      const j=await apiRequest({action:'saveAdminOrder',order:latest});
-      const confirmed=Array.isArray(j?.adminOrder)?j.adminOrder:latest;
-      saveAdminOrderLocal(confirmed);
-      adminCloudOrderLoadedFor=normalizeName(state.player);
-      setAdminOrderStatus('✓ Orden guardado','saved');
-      return true;
-    })
-    .catch(e=>{
-      console.warn('No se pudo sincronizar el orden del panel',e);
-      setAdminOrderStatus('⚠ Guardado solo en este dispositivo','error');
-      return false;
-    });
+  adminOrderWriteChain=adminOrderWriteChain.catch(()=>{}).then(async()=>{
+    const order=normalizeAdminOrder(getCurrentAdminOrder());
+    saveAdminOrderLocal(order);
 
-  return adminOrderSavePromise;
+    const j=await apiRequest({action:'saveAdminOrder',order});
+    const confirmed=normalizeAdminOrder(j?.adminOrder||order);
+    if(JSON.stringify(confirmed)!==JSON.stringify(order)){
+      throw new Error('El servidor devolvió un orden distinto.');
+    }
+
+    const verify=await apiRequest({action:'getAdminPreferences'});
+    const remote=normalizeAdminOrder(verify?.preferences?.adminOrder||[]);
+    if(JSON.stringify(remote)!==JSON.stringify(order)){
+      throw new Error('El orden no quedó guardado correctamente.');
+    }
+
+    saveAdminOrderLocal(remote);
+    adminCloudOrderLoadedFor=normalizeName(state.player);
+    setAdminOrderStatus('✓ Orden guardado','saved');
+    if(showAlert)alert('✅ Orden guardado.');
+    return true;
+  }).catch(e=>{
+    console.warn('No se pudo guardar el orden del panel',e);
+    setAdminOrderStatus('⚠ No guardado','error');
+    if(showAlert)alert('No se ha podido guardar el orden.\n\n'+e.message);
+    return false;
+  });
+
+  return adminOrderWriteChain;
 }
 function applyAdminBlockOrder(){
   if(!isAdmin()||adminOrderDragging)return;
@@ -4036,6 +4044,7 @@ async function loadAdminBlockOrderFromCloud({force=false}={}){
   if(!isAdmin()||!apiToken||adminOrderDragging)return;
   const who=normalizeName(state.player);
   if(!force && adminCloudOrderLoadedFor===who)return;
+
   setAdminOrderStatus('Sincronizando…','saving');
   try{
     const j=await apiRequest({action:'getAdminPreferences'});
@@ -4052,9 +4061,9 @@ async function loadAdminBlockOrderFromCloud({force=false}={}){
     }
     adminCloudOrderLoadedFor=who;
   }catch(e){
-    console.warn('No se pudo cargar el orden personal desde Cloudflare',e);
+    console.warn('No se pudo cargar el orden',e);
     applyAdminBlockOrder();
-    setAdminOrderStatus('⚠ Sin conexión · orden local','error');
+    setAdminOrderStatus('⚠ Orden local','error');
   }
 }
 async function resetAdminBlockOrder(){
@@ -4068,7 +4077,7 @@ async function resetAdminBlockOrder(){
     adminCloudOrderLoadedFor=normalizeName(state.player);
     setAdminOrderStatus('✓ Orden restablecido','saved');
   }catch(e){
-    console.warn('No se pudo restablecer el orden en Cloudflare',e);
+    console.warn('No se pudo restablecer el orden',e);
     setAdminOrderStatus('⚠ Restablecido solo aquí','error');
   }
 }
@@ -4084,7 +4093,7 @@ function setupAdminBlockOrdering(){
   if(!tools){
     tools=document.createElement('div');
     tools.className='adminOrderTools';
-    tools.innerHTML=`<div class="adminOrderHint">↕️ <span>Mantén ⋮⋮ y arrastra el bloque a su nueva posición</span></div>
+    tools.innerHTML=`<div class="adminOrderHint">↕️ <span>Arrastra desde ⋮⋮ y suelta en la posición exacta</span></div>
       <div class="adminOrderActions">
         <span class="adminOrderStatus">Orden personal</span>
         <button class="adminOrderReset" type="button">Restablecer</button>
@@ -4111,14 +4120,16 @@ function setupAdminBlockOrdering(){
       handle.type='button';
       handle.className='adminDragHandle';
       handle.setAttribute('aria-label','Mover bloque');
-      handle.setAttribute('title','Mantén pulsado y arrastra');
+      handle.setAttribute('title','Arrastrar para mover');
       handle.textContent='⋮⋮';
       summary.insertBefore(handle,summary.firstChild);
+
       handle.addEventListener('click',e=>{
         e.preventDefault();
         e.stopPropagation();
       });
     }
+
     if(handle.dataset.dragReady==='1')return;
     handle.dataset.dragReady='1';
 
@@ -4128,63 +4139,53 @@ function setupAdminBlockOrdering(){
       e.stopPropagation();
 
       const dragged=block;
+      const originalOrder=getCurrentAdminOrder();
       const wasOpen=dragged.open;
-      const startOrder=getCurrentAdminOrder();
-      let moved=false;
-      let lastY=e.clientY;
-      let autoScrollRaf=0;
-
       adminOrderDragging=true;
       manager.classList.add('adminSorting');
       dragged.classList.add('adminDragging');
-
-      // Cerrar temporalmente el bloque hace el arrastre mucho más preciso:
-      // todos los elementos tienen una altura comparable.
       dragged.open=false;
 
       try{handle.setPointerCapture(e.pointerId)}catch(_){}
 
-      const autoScroll=()=>{
-        const edge=85;
-        const y=lastY;
-        let dy=0;
-        if(y<edge)dy=-Math.max(4,Math.round((edge-y)/6));
-        else if(y>window.innerHeight-edge)dy=Math.max(4,Math.round((y-(window.innerHeight-edge))/6));
-        if(dy)window.scrollBy(0,dy);
-        autoScrollRaf=requestAnimationFrame(autoScroll);
+      let currentIndex=originalOrder.indexOf(dragged.dataset.adminSection);
+      let lastY=e.clientY;
+      let raf=0;
+
+      const autoscroll=()=>{
+        const edge=80;
+        if(lastY<edge)window.scrollBy(0,-10);
+        else if(lastY>window.innerHeight-edge)window.scrollBy(0,10);
+        raf=requestAnimationFrame(autoscroll);
       };
-      autoScrollRaf=requestAnimationFrame(autoScroll);
+      raf=requestAnimationFrame(autoscroll);
 
       const move=ev=>{
         ev.preventDefault();
         lastY=ev.clientY;
 
-        // No usamos elementFromPoint: con pointer capture suele devolver el
-        // propio bloque arrastrado. Comparamos directamente con los centros
-        // de los demás encabezados.
-        const others=currentAdminBlocks().filter(x=>x!==dragged);
-        let before=null;
-        for(const other of others){
-          const head=other.querySelector(':scope > summary')||other;
+        const blocks=currentAdminBlocks().filter(x=>x!==dragged);
+        if(!blocks.length)return;
+
+        // Compute destination index by comparing Y against center of EVERY other summary.
+        let insertIndex=blocks.length; // default: at end
+        for(let i=0;i<blocks.length;i++){
+          const head=blocks[i].querySelector(':scope > summary') || blocks[i];
           const r=head.getBoundingClientRect();
           if(ev.clientY < r.top + r.height/2){
-            before=other;
+            insertIndex=i;
             break;
           }
         }
 
-        const currentNext=dragged.nextElementSibling;
-        if(before){
-          if(before!==currentNext){
-            manager.insertBefore(dragged,before);
-            moved=true;
-          }
-        }else{
-          const lastBlock=others[others.length-1];
-          if(lastBlock && dragged!==lastBlock.nextElementSibling){
-            manager.appendChild(dragged);
-            moved=true;
-          }
+        // Rebuild exact order deterministically.
+        const beforeIds=blocks.map(x=>x.dataset.adminSection);
+        beforeIds.splice(insertIndex,0,dragged.dataset.adminSection);
+
+        const byId=new Map(currentAdminBlocks().map(x=>[x.dataset.adminSection,x]));
+        for(const id of beforeIds){
+          const el=byId.get(id);
+          if(el)manager.appendChild(el);
         }
       };
 
@@ -4193,7 +4194,7 @@ function setupAdminBlockOrdering(){
         handle.removeEventListener('pointermove',move);
         handle.removeEventListener('pointerup',finish);
         handle.removeEventListener('pointercancel',cancel);
-        if(autoScrollRaf)cancelAnimationFrame(autoScrollRaf);
+        if(raf)cancelAnimationFrame(raf);
         try{handle.releasePointerCapture(e.pointerId)}catch(_){}
 
         dragged.classList.remove('adminDragging');
@@ -4201,10 +4202,9 @@ function setupAdminBlockOrdering(){
         dragged.open=wasOpen;
         adminOrderDragging=false;
 
-        const endOrder=getCurrentAdminOrder();
-        const changed=endOrder.join('|')!==startOrder.join('|');
-        if(changed||moved){
-          await saveAdminBlockOrder();
+        const finalOrder=getCurrentAdminOrder();
+        if(JSON.stringify(finalOrder)!==JSON.stringify(originalOrder)){
+          await persistAdminOrder({showAlert:false});
         }else{
           setAdminOrderStatus('Sin cambios','');
         }
@@ -4215,13 +4215,13 @@ function setupAdminBlockOrdering(){
         handle.removeEventListener('pointermove',move);
         handle.removeEventListener('pointerup',finish);
         handle.removeEventListener('pointercancel',cancel);
-        if(autoScrollRaf)cancelAnimationFrame(autoScrollRaf);
+        if(raf)cancelAnimationFrame(raf);
         try{handle.releasePointerCapture(e.pointerId)}catch(_){}
         dragged.classList.remove('adminDragging');
         manager.classList.remove('adminSorting');
         dragged.open=wasOpen;
         adminOrderDragging=false;
-        applyAdminOrderArray(startOrder);
+        applyAdminOrderArray(originalOrder);
         setAdminOrderStatus('Movimiento cancelado','');
       };
 
