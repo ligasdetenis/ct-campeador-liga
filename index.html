@@ -2009,6 +2009,138 @@ body.modern-ui .modal .reserveActions{
   }
 }
 
+
+
+/* =========================================================
+   ADMIN 2026-10-13 · IDENTIDAD PRIMERO + MENSAJES INDEPENDIENTES
+   ========================================================= */
+body.modern-admin .adminTournamentPanel{
+  border:1px solid rgba(197,0,29,.24)!important;
+  box-shadow:0 8px 24px rgba(126,0,18,.08)!important;
+}
+body.modern-admin .adminTournamentPanel>.adminSummary{
+  background:linear-gradient(90deg,#fff 0%,#fff8f9 100%)!important;
+}
+body.modern-admin .adminTournamentPanel .adminSummaryTitle:before{
+  content:"🏷️"; margin-right:8px;
+}
+body.modern-admin .adminTournamentPanel .field{
+  max-width:620px;
+}
+body.modern-admin .adminTournamentPanel input{
+  font-size:16px!important;
+  font-weight:850!important;
+  min-height:48px;
+}
+
+body.modern-admin .adminMessagesPanel{
+  border:1px solid rgba(197,0,29,.16)!important;
+}
+body.modern-admin .adminMessagesPanel>.adminSummary{
+  background:linear-gradient(90deg,#fff 0%,#fbfbfc 100%)!important;
+}
+.adminMessagesIntro{
+  display:flex;
+  align-items:center;
+  gap:11px;
+  padding:12px 13px;
+  margin:12px 0 14px;
+  border-radius:13px;
+  background:#f7f7f9;
+  border:1px solid #e8e8ec;
+}
+.adminMessagesIcon{
+  width:38px;height:38px;border-radius:11px;
+  display:grid;place-items:center;
+  background:#fff0f2;font-size:18px;flex:0 0 auto;
+}
+.adminMessagesIntro b{display:block;font-size:13px;color:#1d1e22}
+.adminMessagesIntro span{display:block;margin-top:2px;font-size:10px;line-height:1.4;color:#7b7e86}
+.adminMessagesContent>div:first-child{margin-top:0!important}
+
+#msgManualWrap{
+  padding:12px!important;
+  border:1px solid #e4e5e9;
+  border-radius:14px;
+  background:#f8f8fa;
+}
+#msgManualUsers.schedule{
+  padding:0!important;
+  max-height:340px!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  background:transparent!important;
+  border:0!important;
+}
+.msgUserGrid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+  padding:3px;
+}
+.msgUserCard{
+  position:relative;
+  display:grid;
+  grid-template-columns:22px 38px minmax(0,1fr) 24px;
+  align-items:center;
+  gap:9px;
+  min-width:0;
+  padding:10px;
+  border:1px solid #e1e2e6;
+  border-radius:12px;
+  background:#fff;
+  cursor:pointer;
+  transition:.15s ease;
+}
+.msgUserCard:hover{border-color:#c9cbd1;box-shadow:0 3px 10px rgba(0,0,0,.04)}
+.msgUserCheck{
+  width:18px!important;height:18px!important;margin:0!important;
+  accent-color:#c5001d;
+}
+.msgUserAvatar{
+  width:36px;height:36px;border-radius:50%;
+  display:grid;place-items:center;
+  background:#f1f1f3;color:#5d6067;
+  font-size:11px;font-weight:950;
+}
+.msgUserText{min-width:0}
+.msgUserText b{
+  display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  font-size:11.5px;color:#202126;
+}
+.msgUserText small{
+  display:block;margin-top:2px;font-size:9.5px;color:#8b8e95;
+}
+.msgUserTick{
+  width:22px;height:22px;border-radius:50%;
+  display:grid;place-items:center;
+  background:#f0f0f2;color:transparent;font-size:12px;font-weight:950;
+}
+.msgUserCard:has(.msgUserCheck:checked){
+  border-color:rgba(197,0,29,.38);
+  background:#fff8f9;
+  box-shadow:0 0 0 2px rgba(197,0,29,.05);
+}
+.msgUserCard:has(.msgUserCheck:checked) .msgUserAvatar{
+  background:#c5001d;color:#fff;
+}
+.msgUserCard:has(.msgUserCheck:checked) .msgUserTick{
+  background:#c5001d;color:#fff;
+}
+#msgManualWrap .quickActions{
+  margin-bottom:10px;
+}
+#msgDeliveryInfo{
+  border-radius:12px!important;
+  background:#f7f7f9!important;
+  border:1px solid #e4e5e9!important;
+  color:#5c6068!important;
+}
+@media(max-width:640px){
+  .msgUserGrid{grid-template-columns:1fr}
+  .msgUserCard{grid-template-columns:22px 36px minmax(0,1fr) 22px}
+}
+
 </style>
 </head>
 <body>
@@ -2125,7 +2257,100 @@ body.modern-ui .modal .reserveActions{
 <div class="head"><h2>⚙️ Gestión semanal <span class="adminBadge">ADMIN</span></h2><small>V3.11.6 · semanas configurables</small></div>
 <div class="pad adminGrid adminManager">
 
-<details class="adminBlock adminAccordion adminPrimary" data-admin-section="matchesAdmin" open>
+<details class="adminBlock adminAccordion adminPrimary adminTournamentPanel" data-admin-section="tournamentIdentity" open>
+  <summary class="adminSummary">
+    <span class="adminSummaryTitle">Nombre del torneo</span>
+    <span class="adminSummaryMeta" id="adminMeta_tournamentIdentity">Editar</span>
+  </summary>
+  <div class="adminAccordionBody">
+    <div class="authNote">Este texto aparece bajo <b>CT CAMPEADOR</b> en el encabezado de la app.</div>
+    <div class="field" style="margin-top:10px">
+      <label>Nombre visible</label>
+      <input id="tournamentNameInput" maxlength="60" placeholder="Ej. Ranking Primavera" type="text"/>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+      <button class="btn gold" id="saveTournamentName" type="button">Guardar nombre</button>
+      <button class="btn secondary" id="resetTournamentName" type="button">Restablecer</button>
+    </div>
+  </div>
+</details>
+
+
+<details class="adminBlock adminAccordion adminPrimary adminMessagesPanel" data-admin-section="messages">
+  <summary class="adminSummary">
+    <span class="adminSummaryTitle">💬 Mensajes</span>
+    <span class="adminSummaryMeta" id="adminMeta_messages">Enviar avisos</span>
+  </summary>
+  <div class="adminAccordionBody">
+    <div class="adminMessagesIntro">
+      <div class="adminMessagesIcon">🔔</div>
+      <div><b>Mensajes y avisos</b><span>Envía una notificación a todos, por categoría, por tipo o a personas concretas.</span></div>
+    </div>
+<div class="adminMessagesContent">
+  
+  <div>
+    <div class="tiny">Envía una notificación a todos los usuarios, a una categoría, por tipo de usuario o a personas concretas. Solo la recibirán los dispositivos con avisos activados.</div>
+
+    <div class="generator" style="margin-top:10px">
+      <div>
+        <label>Destinatarios</label>
+        <select id="msgAudience">
+          <option value="all">Todos los usuarios</option>
+          <option value="category">Por categoría</option>
+          <option value="role">Por tipo de usuario</option>
+          <option value="manual">Seleccionar usuarios</option>
+        </select>
+      </div>
+      <div id="msgCategoryWrap" class="hidden">
+        <label>Categoría</label>
+        <select id="msgCategory"></select>
+      </div>
+      <div id="msgRoleWrap" class="hidden">
+        <label>Tipo</label>
+        <select id="msgRole">
+          <option value="jugador">Jugadores</option>
+          <option value="miembro">Miembros</option>
+          <option value="admin">Administradores</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="msgManualWrap" class="hidden" style="margin-top:10px">
+      <div class="quickActions">
+        <button class="btn secondary" id="msgSelectAll" type="button">Seleccionar todos</button>
+        <button class="btn secondary" id="msgSelectNone" type="button">Quitar selección</button>
+      </div>
+      <div id="msgManualUsers" class="schedule" style="margin-top:8px;padding:10px;max-height:240px;overflow:auto"></div>
+    </div>
+
+    <div style="margin-top:12px">
+      <label>Título</label>
+      <input id="msgTitle" maxlength="80" placeholder="Ej. Cambio de horario" type="text"/>
+    </div>
+    <div style="margin-top:10px">
+      <label>Mensaje</label>
+      <textarea id="msgBody" maxlength="220" rows="4" placeholder="Escribe aquí el aviso que recibirán los usuarios..."></textarea>
+    </div>
+
+    <div class="authNote" id="msgDeliveryInfo" style="margin-top:10px">Pulsa “Comprobar destinatarios” para saber cuántos usuarios tienen avisos activos.</div>
+
+    <div class="quickActions" style="margin-top:10px">
+      <button class="btn secondary" id="msgCheckRecipients" type="button">📱 Comprobar destinatarios</button>
+      <button class="btn gold" id="msgSend" type="button">🔔 Enviar mensaje</button>
+    </div>
+
+    <div id="msgHistoryWrap" style="margin-top:12px">
+      <div class="tiny"><b>Historial de mensajes enviados</b></div>
+      <div id="msgHistory" class="schedule" style="margin-top:7px"></div>
+    </div>
+  </div>
+</div>
+  </div>
+</details>
+
+
+
+<details class="adminBlock adminAccordion adminPrimary" data-admin-section="matchesAdmin">
   <summary class="adminSummary">
     <span class="adminSummaryTitle">Partidos</span>
     <span class="adminSummaryMeta" id="adminMeta_matchesAdmin">Todos los enfrentamientos</span>
@@ -2237,65 +2462,7 @@ Pablo Ruiz"></textarea>
 <div class="schedule" style="margin-top:10px"><table><thead><tr><th>Jugador</th><th>Dispositivos</th><th>Última alta</th><th>Acción</th></tr></thead><tbody id="pushDevicesTable"><tr><td colspan="4">Pulsa “Actualizar dispositivos”.</td></tr></tbody></table></div></div>
     </div>
     
-<div class="adminSubsection">
-  <div class="adminSubsectionHead"><span>🔔 Mensajes y avisos</span><span id="adminMeta_messages_sub">Abrir</span></div>
-  <div class="adminSubsectionBody">
-    <div class="tiny">Envía una notificación a todos los usuarios, a una categoría, por tipo de usuario o a personas concretas. Solo la recibirán los dispositivos con avisos activados.</div>
 
-    <div class="generator" style="margin-top:10px">
-      <div>
-        <label>Destinatarios</label>
-        <select id="msgAudience">
-          <option value="all">Todos los usuarios</option>
-          <option value="category">Por categoría</option>
-          <option value="role">Por tipo de usuario</option>
-          <option value="manual">Seleccionar usuarios</option>
-        </select>
-      </div>
-      <div id="msgCategoryWrap" class="hidden">
-        <label>Categoría</label>
-        <select id="msgCategory"></select>
-      </div>
-      <div id="msgRoleWrap" class="hidden">
-        <label>Tipo</label>
-        <select id="msgRole">
-          <option value="jugador">Jugadores</option>
-          <option value="miembro">Miembros</option>
-          <option value="admin">Administradores</option>
-        </select>
-      </div>
-    </div>
-
-    <div id="msgManualWrap" class="hidden" style="margin-top:10px">
-      <div class="quickActions">
-        <button class="btn secondary" id="msgSelectAll" type="button">Seleccionar todos</button>
-        <button class="btn secondary" id="msgSelectNone" type="button">Quitar selección</button>
-      </div>
-      <div id="msgManualUsers" class="schedule" style="margin-top:8px;padding:10px;max-height:240px;overflow:auto"></div>
-    </div>
-
-    <div style="margin-top:12px">
-      <label>Título</label>
-      <input id="msgTitle" maxlength="80" placeholder="Ej. Cambio de horario" type="text"/>
-    </div>
-    <div style="margin-top:10px">
-      <label>Mensaje</label>
-      <textarea id="msgBody" maxlength="220" rows="4" placeholder="Escribe aquí el aviso que recibirán los usuarios..."></textarea>
-    </div>
-
-    <div class="authNote" id="msgDeliveryInfo" style="margin-top:10px">Pulsa “Comprobar destinatarios” para saber cuántos usuarios tienen avisos activos.</div>
-
-    <div class="quickActions" style="margin-top:10px">
-      <button class="btn secondary" id="msgCheckRecipients" type="button">📱 Comprobar destinatarios</button>
-      <button class="btn gold" id="msgSend" type="button">🔔 Enviar mensaje</button>
-    </div>
-
-    <div id="msgHistoryWrap" style="margin-top:12px">
-      <div class="tiny"><b>Últimos envíos desde este dispositivo</b></div>
-      <div id="msgHistory" class="schedule" style="margin-top:7px"></div>
-    </div>
-  </div>
-</div>
 
 <div class="adminSubsection">
       <div class="adminSubsectionHead"><span>Otros usuarios</span><span id="adminMeta_admins_sub">Abrir</span></div>
@@ -2318,23 +2485,7 @@ Pablo Ruiz"></textarea>
   </div>
 </details>
 
-<details class="adminBlock adminAccordion adminPrimary" data-admin-section="tournamentIdentity">
-  <summary class="adminSummary">
-    <span class="adminSummaryTitle">Nombre del torneo</span>
-    <span class="adminSummaryMeta" id="adminMeta_tournamentIdentity">Editar</span>
-  </summary>
-  <div class="adminAccordionBody">
-    <div class="authNote">Este texto aparece bajo <b>CT CAMPEADOR</b> en el encabezado de la app.</div>
-    <div class="field" style="margin-top:10px">
-      <label>Nombre visible</label>
-      <input id="tournamentNameInput" maxlength="60" placeholder="Ej. Ranking Primavera" type="text"/>
-    </div>
-    <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
-      <button class="btn gold" id="saveTournamentName" type="button">Guardar nombre</button>
-      <button class="btn secondary" id="resetTournamentName" type="button">Restablecer</button>
-    </div>
-  </div>
-</details>
+
 
 <details class="adminBlock adminAccordion adminPrimary" data-admin-section="whats">
   <summary class="adminSummary">
@@ -2468,7 +2619,7 @@ const API_URL="https://ct-campeador-api.ligasdetenis.workers.dev/";
 const PUSH_URL="https://ct-campeador-push-v1.ligasdetenis.workers.dev";
 let PUSH_VAPID_PUBLIC_KEY="";
 const PUSH_SW_URL="/ct-campeador-liga/push-sw.js";
-const APP_BUILD="20261013-unpublished-slots-fix-1";
+const APP_BUILD="20261013-admin-messages-redesign-1";
 const weeks=[
  {id:"W1",label:"Semana 1 · 17–25 octubre",start:"2026-10-17",end:"2026-10-25"},
  {id:"W2",label:"Semana 2 · 26 octubre–1 noviembre",start:"2026-10-26",end:"2026-11-01"},
@@ -3936,7 +4087,17 @@ function renderMessageAudience(){
   if(manual){
     const users=activeMessageUsers();
     manual.innerHTML=users.length
-      ? users.map(n=>`<label style="display:flex;align-items:center;gap:8px;padding:7px 4px;border-bottom:1px solid rgba(127,127,127,.12)"><input type="checkbox" data-msg-user="${n.replace(/"/g,'&quot;')}"><span><b>${n}</b> · ${roleOf(n)==='admin'?'Administrador':roleOf(n)==='miembro'?'Miembro':'Jugador'}</span></label>`).join('')
+      ? `<div class="msgUserGrid">${users.map(n=>{
+          const role=roleOf(n);
+          const roleLabel=role==='admin'?'Administrador':role==='miembro'?'Miembro':'Jugador';
+          const initials=mappInitials(n);
+          return `<label class="msgUserCard">
+            <input class="msgUserCheck" type="checkbox" data-msg-user="${n.replace(/"/g,'&quot;')}">
+            <span class="msgUserAvatar">${mappEsc(initials)}</span>
+            <span class="msgUserText"><b>${mappEsc(n)}</b><small>${roleLabel}</small></span>
+            <span class="msgUserTick">✓</span>
+          </label>`;
+        }).join('')}</div>`
       : '<div class="tiny">No hay usuarios.</div>';
   }
   updateMessageDeliveryText();
@@ -4291,6 +4452,7 @@ function updateAdminSummaries(){
  const subDev=$('#adminMeta_devices_sub'); if(subDev){const n=Number(window.__pushDeviceCount||0);subDev.textContent=`${n} dispositivo${n===1?'':'s'}`;}
  const subAdm=$('#adminMeta_admins_sub'); if(subAdm){const n=externalAdmins().length;subAdm.textContent=`${n} externo${n===1?'':'s'}`;}
  const subRoles=$('#adminMeta_roles_sub'); if(subRoles){const n=allIdentities().length;subRoles.textContent=`${n} usuario${n===1?'':'s'}`;}
+ const msgMeta=$('#adminMeta_messages'); if(msgMeta){const n=cloudMessages.length;msgMeta.textContent=n?`${n} mensaje${n===1?'':'s'} en historial`:'Enviar avisos';}
 
 }
 function wireAdminCompact(){
