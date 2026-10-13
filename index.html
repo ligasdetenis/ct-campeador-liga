@@ -2519,6 +2519,41 @@ body.resultModalOpen{overflow:hidden}
   opacity:1!important;
 }
 
+
+/* Orden del panel Admin · persistencia visible y robusta */
+.adminOrderActions{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  flex-wrap:wrap;
+  gap:7px;
+}
+.adminOrderStatus{
+  min-height:18px;
+  font-size:9px;
+  font-weight:850;
+  color:#767b82;
+}
+.adminOrderStatus.ok{color:#237245}
+.adminOrderStatus.error{color:#a23a4b}
+.adminOrderSave,
+.adminOrderReset{
+  min-height:34px;
+  border-radius:9px;
+  padding:0 11px;
+  font-size:10px;
+  font-weight:900;
+}
+.adminOrderSave{
+  border:1px solid #6d0010;
+  background:#6d0010;
+  color:#fff;
+}
+@media(max-width:560px){
+  .adminOrderTools{align-items:flex-start!important}
+  .adminOrderActions{width:100%;justify-content:flex-start}
+}
+
 </style>
 </head>
 <body>
@@ -3006,7 +3041,7 @@ const API_URL="https://ct-campeador-api.ligasdetenis.workers.dev/";
 const PUSH_URL="https://ct-campeador-push-v1.ligasdetenis.workers.dev";
 let PUSH_VAPID_PUBLIC_KEY="";
 const PUSH_SW_URL="/ct-campeador-liga/push-sw.js";
-const APP_BUILD="20261013-courts-icon-red-img-fix-1";
+const APP_BUILD="20261013-admin-order-persist-1";
 const weeks=[
  {id:"W1",label:"Semana 1 · 17–25 octubre",start:"2026-10-17",end:"2026-10-25"},
  {id:"W2",label:"Semana 2 · 26 octubre–1 noviembre",start:"2026-10-26",end:"2026-11-01"},
@@ -4502,19 +4537,57 @@ function readAdminOrderLocal(){
     return Array.isArray(parsed)?parsed:[];
   }catch(_){return []}
 }
+let adminOrderDirty=false;
+let adminOrderSaving=false;
+
+function setAdminOrderStatus(text,kind=''){
+  const el=document.querySelector('.adminOrderStatus');
+  if(!el)return;
+  el.textContent=text||'';
+  el.classList.toggle('ok',kind==='ok');
+  el.classList.toggle('error',kind==='error');
+}
+
+async function persistAdminBlockOrder({silent=false}={}){
+  if(!isAdmin()||!apiToken)return false;
+  if(adminOrderSaving)return false;
+
+  const order=currentAdminBlocks().map(x=>x.dataset.adminSection).filter(Boolean);
+  saveAdminOrderLocal(order);
+  adminOrderDirty=true;
+  adminOrderSaving=true;
+  if(!silent)setAdminOrderStatus('Guardando…');
+
+  try{
+    const j=await apiRequest({action:'saveAdminOrder',order});
+    const saved=Array.isArray(j?.adminOrder)?j.adminOrder:[];
+    const normalized=normalizeAdminOrder(saved.length?saved:order);
+    saveAdminOrderLocal(normalized);
+    applyAdminOrderArray(normalized);
+    adminCloudOrderLoadedFor=normalizeName(state.player);
+    adminOrderDirty=false;
+    setAdminOrderStatus('✓ Orden guardado','ok');
+    return true;
+  }catch(e){
+    console.warn('No se pudo sincronizar el orden del panel',e);
+    setAdminOrderStatus('⚠ No se pudo guardar','error');
+    return false;
+  }finally{
+    adminOrderSaving=false;
+  }
+}
+
 function saveAdminBlockOrder(){
   if(!isAdmin())return;
   const order=currentAdminBlocks().map(x=>x.dataset.adminSection).filter(Boolean);
   saveAdminOrderLocal(order);
+  adminOrderDirty=true;
+  setAdminOrderStatus('Cambios sin guardar');
+
   clearTimeout(adminOrderSaveTimer);
-  adminOrderSaveTimer=setTimeout(async()=>{
-    try{
-      await apiRequest({action:'saveAdminOrder',order});
-      adminCloudOrderLoadedFor=normalizeName(state.player);
-    }catch(e){
-      console.warn('No se pudo sincronizar el orden del panel',e);
-    }
-  },180);
+  adminOrderSaveTimer=setTimeout(()=>{
+    persistAdminBlockOrder({silent:true});
+  },350);
 }
 function applyAdminBlockOrder(){
   if(!isAdmin())return;
@@ -4536,9 +4609,12 @@ async function loadAdminBlockOrderFromCloud({force=false}={}){
       applyAdminOrderArray(ADMIN_DEFAULT_ORDER);
     }
     adminCloudOrderLoadedFor=who;
+    adminOrderDirty=false;
+    setAdminOrderStatus('✓ Orden sincronizado','ok');
   }catch(e){
     console.warn('No se pudo cargar el orden personal desde Cloudflare',e);
     applyAdminBlockOrder();
+    setAdminOrderStatus('Usando orden de este dispositivo','error');
   }
 }
 async function resetAdminBlockOrder(){
@@ -4675,17 +4751,45 @@ function setupAdminBlockOrdering(){
     tools=document.createElement('div');
     tools.className='adminOrderTools';
     tools.innerHTML=`<div class="adminOrderHint">↕️ <span>Arrastra desde ⋮⋮ o usa ↑ ↓</span></div>
-      <button class="adminOrderReset" type="button">Restablecer orden</button>`;
+      <div class="adminOrderActions">
+        <span class="adminOrderStatus" aria-live="polite"></span>
+        <button class="adminOrderSave" type="button">Guardar orden</button>
+        <button class="adminOrderReset" type="button">Restablecer orden</button>
+      </div>`;
     manager.insertBefore(tools,manager.firstChild);
+    tools.querySelector('.adminOrderSave').onclick=async e=>{
+      e.preventDefault();
+      e.stopPropagation();
+      const ok=await persistAdminBlockOrder();
+      if(ok)setAdminOrderStatus('✓ Orden guardado','ok');
+    };
     tools.querySelector('.adminOrderReset').onclick=async e=>{
       e.preventDefault();
       e.stopPropagation();
       if(confirm('¿Restablecer el orden predeterminado de tu panel de administración?')){
         await resetAdminBlockOrder();
+        setAdminOrderStatus('✓ Orden restablecido','ok');
       }
     };
-  }else if(manager.firstElementChild!==tools){
-    manager.insertBefore(tools,manager.firstChild);
+  }else{
+    if(!tools.querySelector('.adminOrderSave')){
+      const actions=tools.querySelector('.adminOrderActions')||document.createElement('div');
+      actions.className='adminOrderActions';
+      if(!actions.parentNode)tools.appendChild(actions);
+      actions.innerHTML=`<span class="adminOrderStatus" aria-live="polite"></span><button class="adminOrderSave" type="button">Guardar orden</button><button class="adminOrderReset" type="button">Restablecer orden</button>`;
+    }
+    tools.querySelector('.adminOrderSave').onclick=async e=>{
+      e.preventDefault();e.stopPropagation();
+      await persistAdminBlockOrder();
+    };
+    tools.querySelector('.adminOrderReset').onclick=async e=>{
+      e.preventDefault();e.stopPropagation();
+      if(confirm('¿Restablecer el orden predeterminado de tu panel de administración?')){
+        await resetAdminBlockOrder();
+        setAdminOrderStatus('✓ Orden restablecido','ok');
+      }
+    };
+    if(manager.firstElementChild!==tools)manager.insertBefore(tools,manager.firstChild);
   }
 
   currentAdminBlocks().forEach(block=>{
@@ -6074,7 +6178,7 @@ async function openModernAdmin(){
   document.body.classList.remove('modern-ui');
   $('#adminView')?.classList.remove('hidden');
   renderAdmin();updateAdminSummaries();wireAdminCompact();renderModernAdminContext();setupAdminBlockOrdering();
-  await loadAdminBlockOrderFromCloud();
+  await loadAdminBlockOrderFromCloud({force:true});
   setupAdminBlockOrdering();
   window.scrollTo({top:0});
 }
