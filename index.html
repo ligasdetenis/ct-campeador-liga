@@ -2468,7 +2468,7 @@ const API_URL="https://ct-campeador-api.ligasdetenis.workers.dev/";
 const PUSH_URL="https://ct-campeador-push-v1.ligasdetenis.workers.dev";
 let PUSH_VAPID_PUBLIC_KEY="";
 const PUSH_SW_URL="/ct-campeador-liga/push-sw.js";
-const APP_BUILD="20261013-result-counterproposal-1";
+const APP_BUILD="20261013-unpublished-slots-fix-1";
 const weeks=[
  {id:"W1",label:"Semana 1 · 17–25 octubre",start:"2026-10-17",end:"2026-10-25"},
  {id:"W2",label:"Semana 2 · 26 octubre–1 noviembre",start:"2026-10-26",end:"2026-11-01"},
@@ -4372,7 +4372,7 @@ function mappOwnMatches(){
 }
 function mappPrimaryMatch(){return mappOwnMatches()[0]||null}
 function mappOpponent(m){if(!m)return'';return m.a===state.player?m.b:m.a}
-function mappFreeSlots(){return slots().filter(s=>!slotBooking(s.id))}
+function mappFreeSlots(){return isOpen()?slots().filter(s=>!slotBooking(s.id)):[]}
 function mappWeekShort(){const w=weeks.find(x=>x.id===state.week);const n=String(w?.id||'').replace(/\D/g,'');return n?`Jornada ${n}`:(w?.label||state.week)}
 function mappCurrentRound(){return fixtureRound()||'Jornada'}
 
@@ -4663,7 +4663,9 @@ function renderModernHome(){
  }else{
    hero=`<div class="mapp-card"><div class="mapp-empty">No tienes ningún partido asignado en esta semana.</div></div>`;
  }
- const rows=frees.length?frees.map(s=>`<div class="mapp-slot-row" data-mapp-slot="${mappEsc(s.id)}">
+ const rows=!isOpen()
+   ? `<div class="mapp-empty">🔒 La disponibilidad de pistas está despublicada.</div>`
+   : frees.length?frees.map(s=>`<div class="mapp-slot-row" data-mapp-slot="${mappEsc(s.id)}">
     <div class="mapp-slot-date">${mappEsc(shortDateES(s.date))}</div><div class="mapp-slot-time">${mappEsc(s.time)}</div>
     <div class="mapp-slot-court">${mappEsc(s.court)}</div><div class="mapp-free">LIBRE</div><div class="mapp-chevron">${mappIcon('chevron')}</div>
   </div>`).join(''):`<div class="mapp-empty">No hay pistas libres publicadas.</div>`;
@@ -4680,6 +4682,10 @@ function renderModernHome(){
 }
 function renderModernCourts(){
  const box=$('#modernCourtsContent');if(!box)return;
+ if(!isOpen()){
+   box.innerHTML='<div class="mapp-card"><div class="mapp-empty">🔒 La disponibilidad de pistas está despublicada. El club todavía no ha abierto las reservas de esta jornada.</div></div>';
+   return
+ }
  const ss=slots().slice().sort((a,b)=>(a.date+a.court+a.time).localeCompare(b.date+b.court+b.time));
  if(!ss.length){
    box.innerHTML='<div class="mapp-card"><div class="mapp-empty">No hay disponibilidad publicada para esta semana.</div></div>';
