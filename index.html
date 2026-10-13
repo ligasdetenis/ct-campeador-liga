@@ -2308,6 +2308,41 @@ body.modern-admin .adminMessagesPanel>.adminSummary{
   }
 }
 
+
+/* =========================================================
+   RESULTADOS · modal de introducir / editar resultado
+   ========================================================= */
+body.resultModalOpen{overflow:hidden}
+#resultModal{display:none;align-items:flex-end;justify-content:center;padding:0;z-index:160;background:rgba(8,10,14,.60);backdrop-filter:blur(5px)}
+#resultModal.show{display:flex}
+#resultModal .sheet{width:min(720px,100%);max-height:min(92dvh,920px);margin:0;background:#f8f9fb;color:#1f2329;border:none;border-radius:28px 28px 0 0;box-shadow:0 -18px 60px rgba(0,0,0,.28);overflow:hidden;display:flex;flex-direction:column}
+#resultModal .sheetHead{flex:0 0 auto;position:sticky;top:0;z-index:2;padding:18px 18px 14px;background:#fff;border-bottom:1px solid #e8ebef}
+#resultModal .sheetHead .tiny{color:#8c9199!important;font-size:11px!important;font-weight:900!important;letter-spacing:.06em;text-transform:uppercase}
+#resultModal .sheetHead h3{margin:4px 0 0;color:#16181d;font-size:24px;line-height:1.07;font-weight:950;letter-spacing:-.03em}
+#resultModal .sheetHead .close{width:52px;height:52px;min-width:52px;border-radius:16px;border:1px solid #e1e4e8;background:#fff;color:#7f848c;font-size:24px;box-shadow:0 4px 16px rgba(20,25,35,.06)}
+#resultModal .sheetBody{flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 16px calc(16px + env(safe-area-inset-bottom));display:grid;gap:14px;background:#f8f9fb}
+#resultModal #resultModalCat{padding:2px 0 0;color:#8b9098!important;font-size:10px!important;line-height:1.35;font-weight:950!important;letter-spacing:.07em;text-transform:uppercase}
+#resultModal .reserveField{display:grid;gap:7px}
+#resultModal .reserveField label{color:#71767d;font-size:11px;font-weight:900;letter-spacing:.06em;text-transform:uppercase}
+#resultModal .reserveField select,#resultModal .scorePair input{background:#fff;color:#181b20;border:1px solid #d7dce2;border-radius:18px;min-height:56px;box-shadow:0 2px 8px rgba(20,25,35,.03)}
+#resultModal .reserveField select{padding:0 18px;font-size:17px;font-weight:850}
+#resultModal #scoreFields{display:grid;gap:12px}
+#resultModal .resultHint{margin:0!important;padding:15px 16px;border:1px solid #ebedf0;border-radius:18px;background:#f1f3f6;color:#676c74;font-size:12px;line-height:1.45}
+#resultModal .resultHint b{color:#25282d}
+#resultModal #resultValidation{background:#fff7d6;border-color:#f0df97;color:#7e6722}
+#resultModal .resultGrid.three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+#resultModal .resultGrid.three>div{min-width:0}
+#resultModal .resultGrid.three .tiny{margin-bottom:6px!important;color:#6f747b!important;font-size:11px!important;font-weight:950!important;letter-spacing:.06em;text-transform:uppercase}
+#resultModal .scorePair{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+#resultModal .scorePair input{padding:0 12px;text-align:center;font-size:18px;font-weight:900}
+#resultModal .reserveCurrent{padding:12px 14px;border-radius:16px;border:1px solid #e4e7eb;background:#fff;color:#5f646c;font-size:12px;line-height:1.45}
+#resultModal .resultBottomNote{margin-top:2px!important;background:#fff;border-color:#e8ebef}
+#resultModal .resultActions{position:sticky;bottom:0;z-index:2;display:grid;gap:8px;margin-top:-2px;padding:12px 0 0;background:linear-gradient(to top,#f8f9fb 74%,rgba(248,249,251,0))}
+#resultModal .resultActions .btn{width:100%;min-height:54px;border-radius:18px;font-size:16px;font-weight:900;box-shadow:0 8px 24px rgba(24,28,36,.08)}
+#resultModal .resultActions .btn.hidden{display:none!important}
+@media(min-width:721px){#resultModal{align-items:center;padding:22px}#resultModal .sheet{border-radius:28px;max-height:min(90dvh,900px)}}
+@media(max-width:640px){#resultModal .sheetHead{padding:16px 16px 12px}#resultModal .sheetHead h3{font-size:22px}#resultModal .resultGrid.three{grid-template-columns:1fr}#resultModal .scorePair input{min-height:54px}}
+
 </style>
 </head>
 <body>
@@ -2531,13 +2566,13 @@ body.modern-admin .adminMessagesPanel>.adminSummary{
     <div id="adminMatchesList" class="adminMatchGroups"></div></div>
 </details>
 
-<details class="adminBlock adminAccordion adminPrimary" data-admin-section="journeyCourts">
+<details class="adminBlock adminAccordion adminPrimary" data-admin-section="journey">
   <summary class="adminSummary">
-    <span class="adminSummaryTitle">Jornada y pistas</span>
-    <span class="adminSummaryMeta" id="adminMeta_journeyCourts">Jornada actual</span>
+    <span class="adminSummaryTitle">Jornada</span>
+    <span class="adminSummaryMeta" id="adminMeta_journey">Enfrentamientos</span>
   </summary>
   <div class="adminAccordionBody">
-    <div class="adminSubsection">
+<div class="adminSubsection">
       <div class="adminSubsectionHead"><span>Enfrentamientos oficiales</span><span id="adminMeta_fixtures_sub">Abrir</span></div>
       <div class="adminSubsectionBody"><div class="authNote">La jornada viene marcada desde iSquad u otra fuente externa. Selecciona la semana de arriba, escribe la <b>jornada oficial</b> y carga exactamente los enfrentamientos que correspondan.</div>
 <div class="roundBox">
@@ -2561,7 +2596,16 @@ body.modern-admin .adminMessagesPanel>.adminSummary{
 <div class="fixtureImportStatus" id="fixtureImportStatus">La lista pegada se añadirá a los partidos que ya hayas introducido arriba, evitando duplicados.</div>
 <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"><button class="btn secondary" id="importFixtures" type="button">Importar lista</button><button class="btn gold" id="saveFixtures">Guardar jornada</button><button class="btn danger" id="clearFixtures">Vaciar jornada</button></div></div>
     </div>
-    <div class="adminSubsection">
+  </div>
+</details>
+
+<details class="adminBlock adminAccordion adminPrimary" data-admin-section="courts">
+  <summary class="adminSummary">
+    <span class="adminSummaryTitle">Pistas</span>
+    <span class="adminSummaryMeta" id="adminMeta_courts">Disponibilidad</span>
+  </summary>
+  <div class="adminAccordionBody">
+<div class="adminSubsection">
       <div class="adminSubsectionHead"><span>Disponibilidad de pistas</span><span id="adminMeta_slots_sub">Abrir</span></div>
       <div class="adminSubsectionBody"><div class="tiny">Cada turno dura <b>1 h 30 min</b>. La mañana usa siempre <b>10:00–11:30 · 11:30–13:00 · 13:00–14:30</b> y la tarde <b>16:00–17:30 · 17:30–19:00 · 19:00–20:30</b>. Prepara el borrador, elimina los tramos que no estén disponibles y publícalo cuando esté listo.</div>
 <div class="draftToolbar">
@@ -2771,12 +2815,11 @@ Pablo Ruiz"></textarea>
 </div>
 <div class="reserveField hidden" id="winnerField"><label>Ganador</label><select id="resultWinner"></select></div>
 <div class="reserveCurrent hidden" id="resultExisting"></div>
-<div class="resultActions">
+<div class="resultHint resultBottomNote">Los jugadores pueden enviar el resultado. El rival puede <b>confirmarlo</b> o <b>editarlo</b>. Si lo edita, la nueva versión queda pendiente de confirmación del otro jugador. Un ADMIN puede introducir o corregir un resultado y queda confirmado directamente.</div><div class="resultActions">
 <button class="btn gold" id="saveResultBtn">📤 Enviar resultado</button>
 <button class="btn green hidden" id="confirmResultBtn">✅ Confirmar resultado del rival</button>
 <button class="btn dangerBtn hidden" id="deleteResultBtn">🗑️ Borrar resultado (ADMIN)</button>
 </div>
-<div class="resultHint">Los jugadores pueden enviar el resultado. El rival puede <b>confirmarlo</b> o <b>editarlo</b>. Si lo edita, la nueva versión queda pendiente de confirmación del otro jugador. Un ADMIN puede introducir o corregir un resultado y queda confirmado directamente.</div>
 </div></div></div>
 <script>
 const CATEGORIES=["Benjamín","Alevín","Infantil","Cadete","Junior","Absoluto"];
@@ -2786,7 +2829,7 @@ const API_URL="https://ct-campeador-api.ligasdetenis.workers.dev/";
 const PUSH_URL="https://ct-campeador-push-v1.ligasdetenis.workers.dev";
 let PUSH_VAPID_PUBLIC_KEY="";
 const PUSH_SW_URL="/ct-campeador-liga/push-sw.js";
-const APP_BUILD="20261013-admin-order-v2-1";
+const APP_BUILD="20261013-result-modal-clean-scroll-1";
 const weeks=[
  {id:"W1",label:"Semana 1 · 17–25 octubre",start:"2026-10-17",end:"2026-10-25"},
  {id:"W2",label:"Semana 2 · 26 octubre–1 noviembre",start:"2026-10-26",end:"2026-11-01"},
@@ -3655,10 +3698,21 @@ function syncResultType(){
  $('#winnerField').classList.toggle('hidden',!(type==='wo'||type==='retirement'));
  validateNormalResultLive();
 }
-function openResultModal(mid){state.resultMatchId=mid;const m=findFixtureById(mid);if(!m)return;if(!isAdmin()&&!canPlayerReserve(m)){alert('Solo los jugadores del partido o un administrador pueden gestionar el resultado.');return}const r=resultFor(mid);$('#resultModalMatch').textContent=`${m.a} vs ${m.b}`;const rec=fixtureRecord(mid);$('#resultModalCat').textContent=rec?`${rec.category} · ${rec.gender} · ${weeks.find(w=>w.id===rec.week)?.label||rec.week}`:`${state.category} · ${state.gender}`;$('#resultWinner').innerHTML=`<option value="">Selecciona ganador</option><option value="${m.a.replace(/"/g,'&quot;')}">${m.a}</option><option value="${m.b.replace(/"/g,'&quot;')}">${m.b}</option>`;$('#resultType').value=r?.type||'normal';const sets=r?.sets||[];[['#rS1A','#rS1B'],['#rS2A','#rS2B'],['#rS3A','#rS3B']].forEach((ids,i)=>{$(ids[0]).value=sets[i]?.a??'';$(ids[1]).value=sets[i]?.b??''});$('#resultWinner').value=r?.winner||'';$('#resultModalMode').textContent=r?'EDITAR RESULTADO':'SUBIR RESULTADO';$('#resultExisting').classList.toggle('hidden',!r);if(r)$('#resultExisting').innerHTML=`<b>Estado actual:</b> ${resultLabel(r)} · ${r.status==='confirmed'?'Confirmado':(r.revisedFrom?`Modificado por ${mappEsc(r.submittedBy)} · pendiente de ${mappEsc(r.revisedFrom)}`:'Pendiente de confirmar')}`;const canConfirm=!!r&&r.status==='pending'&&!isAdmin()&&r.submittedBy!==state.player&&canPlayerReserve(m);$('#confirmResultBtn').classList.toggle('hidden',!canConfirm);$('#saveResultBtn').classList.toggle('hidden',(!isAdmin()&&r?.status==='confirmed'));$('#saveResultBtn').textContent=isAdmin()?(r?'💾 Guardar corrección':'✅ Guardar resultado'):(canConfirm?'✏️ Editar y pedir nueva confirmación':(r?'📤 Actualizar resultado':'📤 Enviar resultado'));$('#deleteResultBtn').classList.toggle('hidden',!(isAdmin()&&r));syncResultType();$('#resultModal').classList.add('show');validateNormalResultLive()}
-async function saveResult(){const mid=state.resultMatchId,m=findFixtureById(mid);if(!m)return;try{const type=$('#resultType').value;let sets=[];if(type==='normal'){const check=validateNormalResultLive();if(!check.ok)throw new Error(check.error||'Revisa el resultado.');sets=check.sets}else if(type!=='wo'&&type!=='not_played'){for(const [a,b] of [['#rS1A','#rS1B'],['#rS2A','#rS2B'],['#rS3A','#rS3B']]){const set=readSet(a,b);if(set)sets.push(set)}}const winner=(type==='wo'||type==='retirement')?$('#resultWinner').value:'';if((type==='wo'||type==='retirement')&&!winner)throw new Error('Selecciona el ganador.');const btn=$('#saveResultBtn'),old=btn.textContent;btn.disabled=true;btn.textContent='⏳ Guardando…';try{const j=await apiRequest({action:'submitResult',matchId:mid,result:{type,sets,winner}});data.results[mid]=j.result;localStorage.setItem(STORAGE_KEY,JSON.stringify(data));$('#resultModal').classList.remove('show');renderAll();alert(j.result.status==='confirmed'?'✅ Resultado guardado y confirmado.':(j.result.revisedFrom?'✏️ Resultado modificado. Ahora debe confirmarlo de nuevo tu rival.':'✅ Resultado enviado. Queda pendiente de confirmación del rival.'))}finally{btn.disabled=false;btn.textContent=old}}catch(e){alert(e.message)}}
+
+function closeResultModalUI(){
+  document.body.classList.remove('resultModalOpen');
+  closeResultModalUI();
+}
+function showResultModalUI(){
+  const box=document.querySelector('#resultModal .sheetBody');
+  if(box)box.scrollTop=0;
+  document.body.classList.add('resultModalOpen');
+  $('#resultModal').classList.add('show');
+}
+function openResultModal(mid){state.resultMatchId=mid;const m=findFixtureById(mid);if(!m)return;if(!isAdmin()&&!canPlayerReserve(m)){alert('Solo los jugadores del partido o un administrador pueden gestionar el resultado.');return}const r=resultFor(mid);$('#resultModalMatch').textContent=`${m.a} vs ${m.b}`;const rec=fixtureRecord(mid);$('#resultModalCat').textContent=rec?`${rec.category} · ${rec.gender} · ${weeks.find(w=>w.id===rec.week)?.label||rec.week}`:`${state.category} · ${state.gender}`;$('#resultWinner').innerHTML=`<option value="">Selecciona ganador</option><option value="${m.a.replace(/"/g,'&quot;')}">${m.a}</option><option value="${m.b.replace(/"/g,'&quot;')}">${m.b}</option>`;$('#resultType').value=r?.type||'normal';const sets=r?.sets||[];[['#rS1A','#rS1B'],['#rS2A','#rS2B'],['#rS3A','#rS3B']].forEach((ids,i)=>{$(ids[0]).value=sets[i]?.a??'';$(ids[1]).value=sets[i]?.b??''});$('#resultWinner').value=r?.winner||'';$('#resultModalMode').textContent=r?'EDITAR RESULTADO':'SUBIR RESULTADO';$('#resultExisting').classList.toggle('hidden',!r);if(r)$('#resultExisting').innerHTML=`<b>Estado actual:</b> ${resultLabel(r)} · ${r.status==='confirmed'?'Confirmado':(r.revisedFrom?`Modificado por ${mappEsc(r.submittedBy)} · pendiente de ${mappEsc(r.revisedFrom)}`:'Pendiente de confirmar')}`;const canConfirm=!!r&&r.status==='pending'&&!isAdmin()&&r.submittedBy!==state.player&&canPlayerReserve(m);$('#confirmResultBtn').classList.toggle('hidden',!canConfirm);$('#saveResultBtn').classList.toggle('hidden',(!isAdmin()&&r?.status==='confirmed'));$('#saveResultBtn').textContent=isAdmin()?(r?'💾 Guardar corrección':'✅ Guardar resultado'):(canConfirm?'✏️ Editar y pedir nueva confirmación':(r?'📤 Actualizar resultado':'📤 Enviar resultado'));$('#deleteResultBtn').classList.toggle('hidden',!(isAdmin()&&r));syncResultType();showResultModalUI();validateNormalResultLive()}
+async function saveResult(){const mid=state.resultMatchId,m=findFixtureById(mid);if(!m)return;try{const type=$('#resultType').value;let sets=[];if(type==='normal'){const check=validateNormalResultLive();if(!check.ok)throw new Error(check.error||'Revisa el resultado.');sets=check.sets}else if(type!=='wo'&&type!=='not_played'){for(const [a,b] of [['#rS1A','#rS1B'],['#rS2A','#rS2B'],['#rS3A','#rS3B']]){const set=readSet(a,b);if(set)sets.push(set)}}const winner=(type==='wo'||type==='retirement')?$('#resultWinner').value:'';if((type==='wo'||type==='retirement')&&!winner)throw new Error('Selecciona el ganador.');const btn=$('#saveResultBtn'),old=btn.textContent;btn.disabled=true;btn.textContent='⏳ Guardando…';try{const j=await apiRequest({action:'submitResult',matchId:mid,result:{type,sets,winner}});data.results[mid]=j.result;localStorage.setItem(STORAGE_KEY,JSON.stringify(data));closeResultModalUI();renderAll();alert(j.result.status==='confirmed'?'✅ Resultado guardado y confirmado.':(j.result.revisedFrom?'✏️ Resultado modificado. Ahora debe confirmarlo de nuevo tu rival.':'✅ Resultado enviado. Queda pendiente de confirmación del rival.'))}finally{btn.disabled=false;btn.textContent=old}}catch(e){alert(e.message)}}
 async function confirmResult(mid){const m=findFixtureById(mid),r=resultFor(mid);if(!m||!r)return;const ok=confirm(`¿Confirmas este resultado?\n\n${m.a} vs ${m.b}\n${resultLabel(r)}\n\nUna vez confirmado, solo un administrador podrá corregirlo.`);if(!ok)return;try{const j=await apiRequest({action:'confirmResult',matchId:mid});data.results[mid]=j.result;localStorage.setItem(STORAGE_KEY,JSON.stringify(data));renderAll();alert('✅ Resultado confirmado.')}catch(e){alert(e.message);await refreshOnline({silent:true})}}
-async function deleteResult(mid){if(!isAdmin())return;const m=findFixtureById(mid);if(!m)return;if(!confirm(`¿Borrar el resultado de ${m.a} vs ${m.b}?`))return;try{await apiRequest({action:'deleteResult',matchId:mid});delete data.results[mid];localStorage.setItem(STORAGE_KEY,JSON.stringify(data));$('#resultModal').classList.remove('show');renderAll();alert('🗑️ Resultado borrado.')}catch(e){alert(e.message)}}
+async function deleteResult(mid){if(!isAdmin())return;const m=findFixtureById(mid);if(!m)return;if(!confirm(`¿Borrar el resultado de ${m.a} vs ${m.b}?`))return;try{await apiRequest({action:'deleteResult',matchId:mid});delete data.results[mid];localStorage.setItem(STORAGE_KEY,JSON.stringify(data));closeResultModalUI();renderAll();alert('🗑️ Resultado borrado.')}catch(e){alert(e.message)}}
 function renderKpis(){
  const all=allWeekFixtures();
  const booked=all.filter(m=>bookingFor(m.id)).length;
@@ -3996,6 +4050,8 @@ const ADMIN_DEFAULT_ORDER=[
   'tournamentIdentity',
   'messages',
   'matchesAdmin',
+  'journey',
+  'courts',
   'players',
   'accessDevices',
   'whats'
@@ -4019,7 +4075,22 @@ function currentAdminBlocks(){
 function normalizeAdminOrder(order){
   const blocks=currentAdminBlocks();
   const available=blocks.map(x=>x.dataset.adminSection).filter(Boolean);
-  const src=Array.isArray(order)?order:[];
+  let src=Array.isArray(order)?order.slice():[];
+
+  // Migración transparente del antiguo bloque combinado.
+  if(src.includes('journeyCourts')){
+    const migrated=[];
+    for(const id of src){
+      if(id==='journeyCourts'){
+        if(!migrated.includes('journey'))migrated.push('journey');
+        if(!migrated.includes('courts'))migrated.push('courts');
+      }else if(!migrated.includes(id)){
+        migrated.push(id);
+      }
+    }
+    src=migrated;
+  }
+
   return [
     ...src.filter((id,i)=>available.includes(id)&&src.indexOf(id)===i),
     ...ADMIN_DEFAULT_ORDER.filter(id=>available.includes(id)&&!src.includes(id)),
@@ -4924,10 +4995,16 @@ function updateAdminSummaries(){
   set('adminMeta_admins',`${ac} externo${ac===1?'':'s'}`);
   set('adminMeta_roles',`${allIdentities().length} usuarios`);
   set('adminMeta_whats','Mensaje semanal');
- const jm=$('#adminMeta_journeyCourts');
+ const jm=$('#adminMeta_journey');
  if(jm){
-   const fx=(fixtures()||[]).length, sl=(slots()||[]).length;
-   jm.textContent=`${weeks.find(w=>w.id===state.week)?.label||state.week} · ${fx} partido${fx===1?'':'s'} · ${sl} franja${sl===1?'':'s'}`;
+   const fx=(fixtures()||[]).length;
+   jm.textContent=`${weeks.find(w=>w.id===state.week)?.label||state.week} · ${fx} partido${fx===1?'':'s'}`;
+ }
+ const cm=$('#adminMeta_courts');
+ if(cm){
+   const sl=(slots()||[]).length;
+   const published=!!data.published?.[state.week];
+   cm.textContent=`${sl} franja${sl===1?'':'s'} · ${published?'PUBLICADO':'borrador'}`;
  }
  const am=$('#adminMeta_accessDevices');
  if(am){
@@ -5984,7 +6061,7 @@ $('#saveDelayBtn').onclick=saveDelay;$('#restoreDelayBtn').onclick=restoreDelay;
     validateNormalResultLive();
   });
 });
-$('#resultType').onchange=syncResultType;$('#saveResultBtn').onclick=saveResult;$('#confirmResultBtn').onclick=()=>confirmResult(state.resultMatchId);$('#deleteResultBtn').onclick=()=>deleteResult(state.resultMatchId);$('#closeResultModal').onclick=()=>$('#resultModal').classList.remove('show');$('#resultModal').onclick=e=>{if(e.target===$('#resultModal'))$('#resultModal').classList.remove('show')};
+$('#resultType').onchange=syncResultType;$('#saveResultBtn').onclick=saveResult;$('#confirmResultBtn').onclick=()=>confirmResult(state.resultMatchId);$('#deleteResultBtn').onclick=()=>deleteResult(state.resultMatchId);$('#closeResultModal').onclick=()=>closeResultModalUI();$('#resultModal').onclick=e=>{if(e.target===$('#resultModal'))closeResultModalUI()};
 $$('.navBtn[data-go]').forEach(b=>b.onclick=()=>{const go=b.dataset.go;$$('.navBtn').forEach(x=>x.classList.remove('active'));b.classList.add('active');if(go==='home')$('#homeView').scrollIntoView({behavior:'smooth',block:'start'});if(go==='courts')$('#courtsView').scrollIntoView({behavior:'smooth',block:'start'});if(go==='admin'){if(!isAdmin()){alert('Acceso restringido a administradores.');return;}$('#adminView').classList.remove('hidden');$('#adminView').scrollIntoView({behavior:'smooth',block:'start'})}});
 $('#refreshBtn').onclick=()=>refreshOnline();
 async function bootstrapApp(){
