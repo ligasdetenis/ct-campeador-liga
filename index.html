@@ -2141,6 +2141,16 @@ body.modern-admin .adminMessagesPanel>.adminSummary{
   .msgUserCard{grid-template-columns:22px 36px minmax(0,1fr) 22px}
 }
 
+
+
+/* Mensajes · usar foto de perfil Cloudflare cuando exista */
+.msgUserAvatar{
+  background-position:center!important;
+  background-size:cover!important;
+  background-repeat:no-repeat!important;
+  overflow:hidden;
+}
+
 </style>
 </head>
 <body>
@@ -2619,7 +2629,7 @@ const API_URL="https://ct-campeador-api.ligasdetenis.workers.dev/";
 const PUSH_URL="https://ct-campeador-push-v1.ligasdetenis.workers.dev";
 let PUSH_VAPID_PUBLIC_KEY="";
 const PUSH_SW_URL="/ct-campeador-liga/push-sw.js";
-const APP_BUILD="20261013-admin-messages-redesign-1";
+const APP_BUILD="20261013-message-cloud-avatar-1";
 const weeks=[
  {id:"W1",label:"Semana 1 · 17–25 octubre",start:"2026-10-17",end:"2026-10-25"},
  {id:"W2",label:"Semana 2 · 26 octubre–1 noviembre",start:"2026-10-26",end:"2026-11-01"},
@@ -4090,10 +4100,9 @@ function renderMessageAudience(){
       ? `<div class="msgUserGrid">${users.map(n=>{
           const role=roleOf(n);
           const roleLabel=role==='admin'?'Administrador':role==='miembro'?'Miembro':'Jugador';
-          const initials=mappInitials(n);
           return `<label class="msgUserCard">
             <input class="msgUserCheck" type="checkbox" data-msg-user="${n.replace(/"/g,'&quot;')}">
-            <span class="msgUserAvatar">${mappEsc(initials)}</span>
+            ${mappAvatar(n,'msgUserAvatar')}
             <span class="msgUserText"><b>${mappEsc(n)}</b><small>${roleLabel}</small></span>
             <span class="msgUserTick">✓</span>
           </label>`;
