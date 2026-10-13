@@ -5,7 +5,7 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1,maximum-scale=1" name="viewport"/>
 <meta content="#b40012" name="theme-color"/>
-<title>CT Campeador · Reservas V3.11.10 · Inter</title>
+<title>CT Campeador</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -43,7 +43,7 @@ html.app-booting body::before{
   text-align:center;
 }
 html.app-booting body::after{
-  content:"II Liga Federada";
+  content:"Liga de tenis";
   position:fixed;
   z-index:1000000;
   left:0;right:0;
@@ -2204,6 +2204,9 @@ body.modern-admin .adminMessagesPanel>.adminSummary{
   font-weight:900!important;
   line-height:1!important;
   touch-action:none;
+  -webkit-user-drag:none;
+  user-select:none;
+  -webkit-user-select:none;
   user-select:none;
   -webkit-user-select:none;
   -webkit-touch-callout:none;
@@ -2231,34 +2234,6 @@ body.modern-admin .adminMessagesPanel>.adminSummary{
   .adminDragHandle{width:28px;height:32px}
   .adminOrderTools{padding:2px 0 0}
   .adminOrderHint span:last-child{display:none}
-}
-
-
-
-.adminOrderActions{display:flex;align-items:center;gap:7px;flex:0 0 auto}
-.adminOrderStatus{
-  font-size:9px;
-  font-weight:850;
-  color:#858991;
-  white-space:nowrap;
-}
-.adminOrderStatus[data-state="saved"]{color:#28764d}
-.adminOrderStatus[data-state="saving"]{color:#8a6513}
-.adminOrderStatus[data-state="error"]{color:#b4232f}
-.adminPrimary.adminDragging{
-  position:relative;
-  opacity:.98!important;
-  border-color:#7a0d19!important;
-  box-shadow:0 12px 28px rgba(31,34,39,.18)!important;
-  z-index:80!important;
-}
-.adminManager.adminSorting .adminPrimary:not(.adminDragging){
-  transition:transform .12s ease;
-}
-@media(max-width:520px){
-  .adminOrderTools{align-items:flex-start}
-  .adminOrderActions{flex-direction:column;align-items:flex-end;gap:2px}
-  .adminOrderStatus{font-size:8px}
 }
 
 </style>
@@ -2739,7 +2714,7 @@ const API_URL="https://ct-campeador-api.ligasdetenis.workers.dev/";
 const PUSH_URL="https://ct-campeador-push-v1.ligasdetenis.workers.dev";
 let PUSH_VAPID_PUBLIC_KEY="";
 const PUSH_SW_URL="/ct-campeador-liga/push-sw.js";
-const APP_BUILD="20261013-admin-order-index-fix-1";
+const APP_BUILD="20261013-mejoras-realtime-pwa-1";
 const weeks=[
  {id:"W1",label:"Semana 1 · 17–25 octubre",start:"2026-10-17",end:"2026-10-25"},
  {id:"W2",label:"Semana 2 · 26 octubre–1 noviembre",start:"2026-10-26",end:"2026-11-01"},
@@ -2839,6 +2814,17 @@ function applyRealtimeEvent(ev){
     if(state.resultMatchId===ev.matchId && $('#resultModal')?.classList.contains('show')){
       openResultModal(ev.matchId);
     }
+    return;
+  }
+
+  if(ev.type==='messageChanged'){
+    loadCloudMessages({silent:true}).then(()=>{
+      renderOpenMessagesInboxFromCache();
+      renderModernProfile({skipMessageLoad:true});
+      if(isAdmin() && document.body.classList.contains('modern-admin')){
+        renderMessageHistory({skipLoad:true});
+      }
+    }).catch(()=>{});
     return;
   }
 
@@ -3948,8 +3934,7 @@ function adminOrderStorageKey(){
   return 'ctcampeador_admin_block_order_'+normalizeName(state.player);
 }
 let adminCloudOrderLoadedFor='';
-let adminOrderWriteChain=Promise.resolve();
-let adminOrderDragging=false;
+let adminOrderSaveTimer=null;
 
 function currentAdminBlocks(){
   const manager=document.querySelector('#adminView .adminManager');
@@ -3957,20 +3942,16 @@ function currentAdminBlocks(){
   return [...manager.querySelectorAll(':scope > details[data-admin-section]')];
 }
 function normalizeAdminOrder(order){
-  const available=currentAdminBlocks().map(x=>x.dataset.adminSection).filter(Boolean);
+  const blocks=currentAdminBlocks();
+  const available=blocks.map(x=>x.dataset.adminSection).filter(Boolean);
   const src=Array.isArray(order)?order:[];
-  const unique=src.filter((id,i)=>available.includes(id)&&src.indexOf(id)===i);
   return [
-    ...unique,
-    ...ADMIN_DEFAULT_ORDER.filter(id=>available.includes(id)&&!unique.includes(id)),
-    ...available.filter(id=>!unique.includes(id)&&!ADMIN_DEFAULT_ORDER.includes(id))
+    ...src.filter((id,i)=>available.includes(id)&&src.indexOf(id)===i),
+    ...ADMIN_DEFAULT_ORDER.filter(id=>available.includes(id)&&!src.includes(id)),
+    ...available.filter(id=>!src.includes(id)&&!ADMIN_DEFAULT_ORDER.includes(id))
   ];
 }
-function getCurrentAdminOrder(){
-  return currentAdminBlocks().map(x=>x.dataset.adminSection).filter(Boolean);
-}
 function applyAdminOrderArray(order){
-  if(adminOrderDragging)return;
   const manager=document.querySelector('#adminView .adminManager');
   if(!manager)return;
   const byId=new Map(currentAdminBlocks().map(x=>[x.dataset.adminSection,x]));
@@ -3982,7 +3963,7 @@ function applyAdminOrderArray(order){
 function saveAdminOrderLocal(order){
   const key=adminOrderStorageKey();
   if(!key)return;
-  try{localStorage.setItem(key,JSON.stringify(normalizeAdminOrder(order)))}catch(_){}
+  try{localStorage.setItem(key,JSON.stringify(order))}catch(_){}
 }
 function readAdminOrderLocal(){
   const key=adminOrderStorageKey();
@@ -3993,59 +3974,30 @@ function readAdminOrderLocal(){
     return Array.isArray(parsed)?parsed:[];
   }catch(_){return []}
 }
-function setAdminOrderStatus(text,stateName=''){
-  const el=document.querySelector('.adminOrderStatus');
-  if(!el)return;
-  el.textContent=text;
-  el.dataset.state=stateName;
-}
-async function persistAdminOrder({showAlert=false}={}){
-  if(!isAdmin())return false;
-  const requested=normalizeAdminOrder(getCurrentAdminOrder());
-  saveAdminOrderLocal(requested);
-  setAdminOrderStatus('Guardando…','saving');
+function saveAdminBlockOrder(){
+  if(!isAdmin())return;
+  const order=currentAdminBlocks().map(x=>x.dataset.adminSection).filter(Boolean);
+  saveAdminOrderLocal(order);
 
-  adminOrderWriteChain=adminOrderWriteChain.catch(()=>{}).then(async()=>{
-    const order=normalizeAdminOrder(getCurrentAdminOrder());
-    saveAdminOrderLocal(order);
-
-    const j=await apiRequest({action:'saveAdminOrder',order});
-    const confirmed=normalizeAdminOrder(j?.adminOrder||order);
-    if(JSON.stringify(confirmed)!==JSON.stringify(order)){
-      throw new Error('El servidor devolvió un orden distinto.');
+  // Una sola escritura Cloudflare al terminar el arrastre.
+  clearTimeout(adminOrderSaveTimer);
+  adminOrderSaveTimer=setTimeout(async()=>{
+    try{
+      await apiRequest({action:'saveAdminOrder',order});
+      adminCloudOrderLoadedFor=normalizeName(state.player);
+    }catch(e){
+      console.warn('No se pudo sincronizar el orden del panel',e);
     }
-
-    const verify=await apiRequest({action:'getAdminPreferences'});
-    const remote=normalizeAdminOrder(verify?.preferences?.adminOrder||[]);
-    if(JSON.stringify(remote)!==JSON.stringify(order)){
-      throw new Error('El orden no quedó guardado correctamente.');
-    }
-
-    saveAdminOrderLocal(remote);
-    adminCloudOrderLoadedFor=normalizeName(state.player);
-    setAdminOrderStatus('✓ Orden guardado','saved');
-    if(showAlert)alert('✅ Orden guardado.');
-    return true;
-  }).catch(e=>{
-    console.warn('No se pudo guardar el orden del panel',e);
-    setAdminOrderStatus('⚠ No guardado','error');
-    if(showAlert)alert('No se ha podido guardar el orden.\n\n'+e.message);
-    return false;
-  });
-
-  return adminOrderWriteChain;
+  },250);
 }
 function applyAdminBlockOrder(){
-  if(!isAdmin()||adminOrderDragging)return;
-  const local=readAdminOrderLocal();
-  applyAdminOrderArray(local.length?local:ADMIN_DEFAULT_ORDER);
+  if(!isAdmin())return;
+  applyAdminOrderArray(readAdminOrderLocal());
 }
 async function loadAdminBlockOrderFromCloud({force=false}={}){
-  if(!isAdmin()||!apiToken||adminOrderDragging)return;
+  if(!isAdmin()||!apiToken)return;
   const who=normalizeName(state.player);
   if(!force && adminCloudOrderLoadedFor===who)return;
-
-  setAdminOrderStatus('Sincronizando…','saving');
   try{
     const j=await apiRequest({action:'getAdminPreferences'});
     const order=Array.isArray(j?.preferences?.adminOrder)?j.preferences.adminOrder:[];
@@ -4053,57 +4005,48 @@ async function loadAdminBlockOrderFromCloud({force=false}={}){
       const normalized=normalizeAdminOrder(order);
       saveAdminOrderLocal(normalized);
       applyAdminOrderArray(normalized);
-      setAdminOrderStatus('✓ Sincronizado','saved');
     }else{
       try{localStorage.removeItem(adminOrderStorageKey())}catch(_){}
       applyAdminOrderArray(ADMIN_DEFAULT_ORDER);
-      setAdminOrderStatus('Orden predeterminado','');
     }
     adminCloudOrderLoadedFor=who;
   }catch(e){
-    console.warn('No se pudo cargar el orden',e);
+    console.warn('No se pudo cargar el orden personal desde Cloudflare',e);
+    // Si no hay conexión, conservamos el orden local como respaldo.
     applyAdminBlockOrder();
-    setAdminOrderStatus('⚠ Orden local','error');
   }
 }
 async function resetAdminBlockOrder(){
   if(!isAdmin())return;
   try{localStorage.removeItem(adminOrderStorageKey())}catch(_){}
   applyAdminOrderArray(ADMIN_DEFAULT_ORDER);
-  saveAdminOrderLocal(ADMIN_DEFAULT_ORDER);
-  setAdminOrderStatus('Restableciendo…','saving');
+  adminCloudOrderLoadedFor=normalizeName(state.player);
   try{
     await apiRequest({action:'resetAdminOrder'});
-    adminCloudOrderLoadedFor=normalizeName(state.player);
-    setAdminOrderStatus('✓ Orden restablecido','saved');
   }catch(e){
-    console.warn('No se pudo restablecer el orden',e);
-    setAdminOrderStatus('⚠ Restablecido solo aquí','error');
+    console.warn('No se pudo restablecer el orden en Cloudflare',e);
   }
+  setupAdminBlockOrdering();
 }
-
 function setupAdminBlockOrdering(){
   if(!isAdmin())return;
   const manager=document.querySelector('#adminView .adminManager');
   if(!manager)return;
 
-  if(!adminOrderDragging)applyAdminBlockOrder();
+  applyAdminBlockOrder();
 
   let tools=manager.querySelector(':scope > .adminOrderTools');
   if(!tools){
     tools=document.createElement('div');
     tools.className='adminOrderTools';
-    tools.innerHTML=`<div class="adminOrderHint">↕️ <span>Arrastra desde ⋮⋮ y suelta en la posición exacta</span></div>
-      <div class="adminOrderActions">
-        <span class="adminOrderStatus">Orden personal</span>
-        <button class="adminOrderReset" type="button">Restablecer</button>
-      </div>`;
+    tools.innerHTML=`<div class="adminOrderHint">↕️ <span>Mantén pulsado ⋮⋮ y arrastra para ordenar</span></div>
+      <button class="adminOrderReset" type="button">Restablecer orden</button>`;
     manager.insertBefore(tools,manager.firstChild);
-    tools.querySelector('.adminOrderReset').addEventListener('click',async e=>{
+    tools.querySelector('.adminOrderReset').addEventListener('click',e=>{
       e.preventDefault();
       e.stopPropagation();
       if(confirm('¿Restablecer el orden predeterminado de tu panel de administración?')){
-        await resetAdminBlockOrder();
+        resetAdminBlockOrder();
       }
     });
   }else if(manager.firstElementChild!==tools){
@@ -4116,118 +4059,147 @@ function setupAdminBlockOrdering(){
 
     let handle=summary.querySelector('.adminDragHandle');
     if(!handle){
-      handle=document.createElement('button');
-      handle.type='button';
+      handle=document.createElement('span');
       handle.className='adminDragHandle';
+      handle.setAttribute('role','button');
+      handle.setAttribute('tabindex','0');
       handle.setAttribute('aria-label','Mover bloque');
-      handle.setAttribute('title','Arrastrar para mover');
+      handle.setAttribute('title','Mantén pulsado y arrastra');
       handle.textContent='⋮⋮';
       summary.insertBefore(handle,summary.firstChild);
-
-      handle.addEventListener('click',e=>{
-        e.preventDefault();
-        e.stopPropagation();
-      });
     }
 
     if(handle.dataset.dragReady==='1')return;
     handle.dataset.dragReady='1';
 
-    handle.addEventListener('pointerdown',e=>{
-      if(e.pointerType==='mouse' && e.button!==0)return;
-      e.preventDefault();
-      e.stopPropagation();
-
+    const beginDrag=(clientY, eventType)=>{
       const dragged=block;
-      const originalOrder=getCurrentAdminOrder();
-      const wasOpen=dragged.open;
-      adminOrderDragging=true;
+      let lastTarget=null;
+      let lastY=clientY;
       manager.classList.add('adminSorting');
       dragged.classList.add('adminDragging');
-      dragged.open=false;
 
-      try{handle.setPointerCapture(e.pointerId)}catch(_){}
-
-      let currentIndex=originalOrder.indexOf(dragged.dataset.adminSection);
-      let lastY=e.clientY;
-      let raf=0;
-
-      const autoscroll=()=>{
-        const edge=80;
-        if(lastY<edge)window.scrollBy(0,-10);
-        else if(lastY>window.innerHeight-edge)window.scrollBy(0,10);
-        raf=requestAnimationFrame(autoscroll);
-      };
-      raf=requestAnimationFrame(autoscroll);
-
-      const move=ev=>{
+      // Evita que <summary> se abra/cierre mientras movemos.
+      const preventSummaryClick=ev=>{
         ev.preventDefault();
-        lastY=ev.clientY;
+        ev.stopPropagation();
+      };
+      summary.addEventListener('click',preventSummaryClick,true);
 
+      const autoScroll=y=>{
+        const margin=90;
+        const speed=12;
+        if(y<margin) window.scrollBy(0,-speed);
+        else if(y>window.innerHeight-margin) window.scrollBy(0,speed);
+      };
+
+      const moveTo=(y)=>{
+        lastY=y;
+        autoScroll(y);
         const blocks=currentAdminBlocks().filter(x=>x!==dragged);
-        if(!blocks.length)return;
+        let target=null;
 
-        // Compute destination index by comparing Y against center of EVERY other summary.
-        let insertIndex=blocks.length; // default: at end
-        for(let i=0;i<blocks.length;i++){
-          const head=blocks[i].querySelector(':scope > summary') || blocks[i];
-          const r=head.getBoundingClientRect();
-          if(ev.clientY < r.top + r.height/2){
-            insertIndex=i;
+        // Buscar el bloque cuyo centro esté más próximo verticalmente.
+        for(const candidate of blocks){
+          const r=candidate.getBoundingClientRect();
+          if(y>=r.top && y<=r.bottom){
+            target=candidate;
             break;
           }
         }
 
-        // Rebuild exact order deterministically.
-        const beforeIds=blocks.map(x=>x.dataset.adminSection);
-        beforeIds.splice(insertIndex,0,dragged.dataset.adminSection);
-
-        const byId=new Map(currentAdminBlocks().map(x=>[x.dataset.adminSection,x]));
-        for(const id of beforeIds){
-          const el=byId.get(id);
-          if(el)manager.appendChild(el);
+        // Si estamos entre dos bloques, usar el más cercano.
+        if(!target && blocks.length){
+          let best=null, bestDist=Infinity;
+          for(const candidate of blocks){
+            const r=candidate.getBoundingClientRect();
+            const c=r.top+r.height/2;
+            const d=Math.abs(y-c);
+            if(d<bestDist){bestDist=d;best=candidate}
+          }
+          target=best;
         }
-      };
 
-      const finish=async ev=>{
-        if(ev){ev.preventDefault();ev.stopPropagation()}
-        handle.removeEventListener('pointermove',move);
-        handle.removeEventListener('pointerup',finish);
-        handle.removeEventListener('pointercancel',cancel);
-        if(raf)cancelAnimationFrame(raf);
-        try{handle.releasePointerCapture(e.pointerId)}catch(_){}
+        if(!target)return;
 
-        dragged.classList.remove('adminDragging');
-        manager.classList.remove('adminSorting');
-        dragged.open=wasOpen;
-        adminOrderDragging=false;
+        if(lastTarget && lastTarget!==target)lastTarget.classList.remove('adminDragTarget');
+        lastTarget=target;
+        target.classList.add('adminDragTarget');
 
-        const finalOrder=getCurrentAdminOrder();
-        if(JSON.stringify(finalOrder)!==JSON.stringify(originalOrder)){
-          await persistAdminOrder({showAlert:false});
+        const r=target.getBoundingClientRect();
+        if(y < r.top+r.height/2){
+          target.before(dragged);
         }else{
-          setAdminOrderStatus('Sin cambios','');
+          target.after(dragged);
         }
       };
 
-      const cancel=ev=>{
-        if(ev){ev.preventDefault();ev.stopPropagation()}
-        handle.removeEventListener('pointermove',move);
-        handle.removeEventListener('pointerup',finish);
-        handle.removeEventListener('pointercancel',cancel);
-        if(raf)cancelAnimationFrame(raf);
-        try{handle.releasePointerCapture(e.pointerId)}catch(_){}
+      const cleanup=()=>{
         dragged.classList.remove('adminDragging');
         manager.classList.remove('adminSorting');
-        dragged.open=wasOpen;
-        adminOrderDragging=false;
-        applyAdminOrderArray(originalOrder);
-        setAdminOrderStatus('Movimiento cancelado','');
+        if(lastTarget)lastTarget.classList.remove('adminDragTarget');
+        setTimeout(()=>summary.removeEventListener('click',preventSummaryClick,true),80);
+        saveAdminBlockOrder();
       };
 
-      handle.addEventListener('pointermove',move,{passive:false});
-      handle.addEventListener('pointerup',finish,{once:true});
-      handle.addEventListener('pointercancel',cancel,{once:true});
+      if(eventType==='touch'){
+        const onTouchMove=ev=>{
+          if(!ev.touches?.length)return;
+          ev.preventDefault();
+          moveTo(ev.touches[0].clientY);
+        };
+        const onTouchEnd=ev=>{
+          ev.preventDefault();
+          document.removeEventListener('touchmove',onTouchMove,{passive:false});
+          document.removeEventListener('touchend',onTouchEnd,false);
+          document.removeEventListener('touchcancel',onTouchEnd,false);
+          cleanup();
+        };
+        document.addEventListener('touchmove',onTouchMove,{passive:false});
+        document.addEventListener('touchend',onTouchEnd,false);
+        document.addEventListener('touchcancel',onTouchEnd,false);
+      }else{
+        const onMouseMove=ev=>{
+          ev.preventDefault();
+          moveTo(ev.clientY);
+        };
+        const onMouseUp=ev=>{
+          ev.preventDefault();
+          document.removeEventListener('mousemove',onMouseMove,false);
+          document.removeEventListener('mouseup',onMouseUp,false);
+          cleanup();
+        };
+        document.addEventListener('mousemove',onMouseMove,false);
+        document.addEventListener('mouseup',onMouseUp,false);
+      }
+    };
+
+    // iPhone/iPad: Touch Events son más fiables que Pointer Capture para este caso.
+    handle.addEventListener('touchstart',ev=>{
+      if(!ev.touches?.length)return;
+      ev.preventDefault();
+      ev.stopPropagation();
+      beginDrag(ev.touches[0].clientY,'touch');
+    },{passive:false});
+
+    // Escritorio / ratón.
+    handle.addEventListener('mousedown',ev=>{
+      if(ev.button!==0)return;
+      ev.preventDefault();
+      ev.stopPropagation();
+      beginDrag(ev.clientY,'mouse');
+    });
+
+    // Teclado: accesibilidad básica para mover arriba/abajo.
+    handle.addEventListener('keydown',ev=>{
+      if(ev.key!=='ArrowUp'&&ev.key!=='ArrowDown')return;
+      ev.preventDefault();
+      ev.stopPropagation();
+      const blocks=currentAdminBlocks();
+      const i=blocks.indexOf(block);
+      if(ev.key==='ArrowUp'&&i>0)blocks[i-1].before(block);
+      if(ev.key==='ArrowDown'&&i<blocks.length-1)blocks[i+1].after(block);
+      saveAdminBlockOrder();
     });
   });
 }
@@ -4528,14 +4500,14 @@ async function checkMessageRecipients(){
     if(btn){btn.disabled=false;btn.textContent=old}
   }
 }
-async function renderMessageHistory(){
+async function renderMessageHistory({skipLoad=false}={}){
   const box=$('#msgHistory');if(!box)return;
   if(!isAdmin()||!apiToken){
     box.innerHTML='<div class="tiny" style="padding:8px">Inicia sesión como administrador.</div>';
     return;
   }
-  box.innerHTML='<div class="tiny" style="padding:8px">⏳ Cargando mensajes…</div>';
-  await loadCloudMessages({silent:true});
+  if(!skipLoad)box.innerHTML='<div class="tiny" style="padding:8px">⏳ Cargando mensajes…</div>';
+  if(!skipLoad)await loadCloudMessages({silent:true});
   const history=cloudMessages.slice(0,100);
   if(!history.length){
     box.innerHTML='<div class="tiny" style="padding:8px">Todavía no hay envíos registrados.</div>';
@@ -5353,6 +5325,20 @@ function mappUserMessages(){
 function mappUnreadMessages(){
   return mappUserMessages().filter(m=>!m.read);
 }
+
+function renderOpenMessagesInboxFromCache(){
+  const modal=document.querySelector('.mapp-msg-modal');
+  const list=modal?.querySelector('.mapp-msg-list');
+  if(!list)return;
+  const messages=mappUserMessages();
+  list.innerHTML=messages.length
+    ? messages.map(m=>`<div class="mapp-msg-card ${m.read?'':'unread'}">
+        <div class="mapp-msg-title">${mappEsc(m.title||'Aviso')}</div>
+        <div class="mapp-msg-body">${mappEsc(m.body||'')}</div>
+        <div class="mapp-msg-date">${m.at?new Date(m.at).toLocaleString('es-ES'):'—'} · ${mappEsc(m.sentBy||'Administrador')}</div>
+      </div>`).join('')
+    : '<div class="mapp-msg-empty">No tienes mensajes.</div>';
+}
 async function openMessagesInbox(){
   document.querySelector('.mapp-msg-modal')?.remove();
   await loadCloudMessages({silent:false});
@@ -5385,9 +5371,9 @@ async function openMessagesInbox(){
   }
 }
 
-async function renderModernProfile(){
+async function renderModernProfile({skipMessageLoad=false}={}){
  const box=$('#modernProfileContent');if(!box)return;
- await loadCloudMessages({silent:true});
+ if(!skipMessageLoad)await loadCloudMessages({silent:true});
  if(state.player)mappMaybeMigrateLegacyPhoto(state.player);
  const [pushText,pushCls]=await mappPushStatusText();
  const [installText,installCls]=mappInstallText();
@@ -5508,7 +5494,7 @@ async function openModernAdmin(){
   document.body.classList.remove('modern-ui');
   $('#adminView')?.classList.remove('hidden');
   renderAdmin();updateAdminSummaries();wireAdminCompact();renderModernAdminContext();setupAdminBlockOrdering();
-  await loadAdminBlockOrderFromCloud({force:true});
+  await loadAdminBlockOrderFromCloud();
   setupAdminBlockOrdering();
   window.scrollTo({top:0});
 }
