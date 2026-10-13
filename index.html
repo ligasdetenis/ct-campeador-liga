@@ -2151,6 +2151,88 @@ body.modern-admin .adminMessagesPanel>.adminSummary{
   overflow:hidden;
 }
 
+
+
+/* =========================================================
+   ADMIN · ORDEN PERSONAL DE BLOQUES (drag & drop)
+   ========================================================= */
+.adminOrderTools{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:4px 2px 2px;
+  margin:0 0 2px;
+  color:#81858d;
+  font-size:10px;
+  font-weight:750;
+}
+.adminOrderTools .adminOrderHint{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  min-width:0;
+}
+.adminOrderReset{
+  flex:0 0 auto;
+  border:0!important;
+  background:transparent!important;
+  color:#7a0d19!important;
+  padding:6px 8px!important;
+  font-size:10px!important;
+  font-weight:850!important;
+  box-shadow:none!important;
+  cursor:pointer;
+}
+.adminPrimary>.adminSummary{
+  grid-template-columns:32px minmax(0,1fr) auto auto!important;
+}
+.adminDragHandle{
+  width:30px;
+  height:34px;
+  display:grid;
+  place-items:center;
+  border:0!important;
+  background:transparent!important;
+  color:#9a9da4!important;
+  padding:0!important;
+  margin:0!important;
+  border-radius:8px!important;
+  box-shadow:none!important;
+  cursor:grab!important;
+  font-size:17px!important;
+  font-weight:900!important;
+  line-height:1!important;
+  touch-action:none;
+  user-select:none;
+  -webkit-user-select:none;
+  -webkit-touch-callout:none;
+}
+.adminDragHandle:active{cursor:grabbing!important}
+.adminPrimary.adminDragging{
+  opacity:.93;
+  box-shadow:0 14px 34px rgba(31,34,39,.18)!important;
+  transform:scale(.997);
+  z-index:40;
+}
+.adminPrimary.adminDragTarget{
+  outline:2px solid rgba(122,13,25,.28)!important;
+  outline-offset:2px;
+}
+.adminManager.adminSorting{
+  user-select:none;
+  -webkit-user-select:none;
+}
+@media(max-width:640px){
+  .adminPrimary>.adminSummary{
+    grid-template-columns:30px minmax(0,1fr) auto auto!important;
+    gap:7px!important;
+  }
+  .adminDragHandle{width:28px;height:32px}
+  .adminOrderTools{padding:2px 0 0}
+  .adminOrderHint span:last-child{display:none}
+}
+
 </style>
 </head>
 <body>
@@ -2629,7 +2711,7 @@ const API_URL="https://ct-campeador-api.ligasdetenis.workers.dev/";
 const PUSH_URL="https://ct-campeador-push-v1.ligasdetenis.workers.dev";
 let PUSH_VAPID_PUBLIC_KEY="";
 const PUSH_SW_URL="/ct-campeador-liga/push-sw.js";
-const APP_BUILD="20261013-player-order-ab-1";
+const APP_BUILD="20261013-admin-drag-order-1";
 const weeks=[
  {id:"W1",label:"Semana 1 · 17–25 octubre",start:"2026-10-17",end:"2026-10-25"},
  {id:"W2",label:"Semana 2 · 26 octubre–1 noviembre",start:"2026-10-26",end:"2026-11-01"},
@@ -3823,11 +3905,166 @@ async function adminDeleteMatchCompletely(m){
   }
 }
 
+
+const ADMIN_DEFAULT_ORDER=[
+  'tournamentIdentity',
+  'messages',
+  'matchesAdmin',
+  'players',
+  'accessDevices',
+  'whats'
+];
+
+function adminOrderStorageKey(){
+  if(!state.player)return '';
+  return 'ctcampeador_admin_block_order_'+normalizeName(state.player);
+}
+function currentAdminBlocks(){
+  const manager=document.querySelector('#adminView .adminManager');
+  if(!manager)return [];
+  return [...manager.querySelectorAll(':scope > details[data-admin-section]')];
+}
+function saveAdminBlockOrder(){
+  if(!isAdmin())return;
+  const key=adminOrderStorageKey();
+  if(!key)return;
+  const order=currentAdminBlocks().map(x=>x.dataset.adminSection).filter(Boolean);
+  try{localStorage.setItem(key,JSON.stringify(order))}catch(_){}
+}
+function applyAdminBlockOrder(){
+  if(!isAdmin())return;
+  const manager=document.querySelector('#adminView .adminManager');
+  if(!manager)return;
+
+  const blocks=currentAdminBlocks();
+  const byId=new Map(blocks.map(x=>[x.dataset.adminSection,x]));
+  let stored=[];
+  try{
+    const raw=localStorage.getItem(adminOrderStorageKey());
+    stored=raw?JSON.parse(raw):[];
+    if(!Array.isArray(stored))stored=[];
+  }catch(_){stored=[]}
+
+  const order=[
+    ...stored.filter(id=>byId.has(id)),
+    ...ADMIN_DEFAULT_ORDER.filter(id=>byId.has(id)&&!stored.includes(id)),
+    ...blocks.map(x=>x.dataset.adminSection).filter(id=>!stored.includes(id)&&!ADMIN_DEFAULT_ORDER.includes(id))
+  ];
+
+  for(const id of order){
+    const block=byId.get(id);
+    if(block)manager.appendChild(block);
+  }
+}
+function resetAdminBlockOrder(){
+  if(!isAdmin())return;
+  try{localStorage.removeItem(adminOrderStorageKey())}catch(_){}
+  const manager=document.querySelector('#adminView .adminManager');
+  if(!manager)return;
+  const byId=new Map(currentAdminBlocks().map(x=>[x.dataset.adminSection,x]));
+  for(const id of ADMIN_DEFAULT_ORDER){
+    const block=byId.get(id);
+    if(block)manager.appendChild(block);
+  }
+  // Cualquier bloque futuro no contemplado permanece al final.
+  setupAdminBlockOrdering();
+}
+function setupAdminBlockOrdering(){
+  if(!isAdmin())return;
+  const manager=document.querySelector('#adminView .adminManager');
+  if(!manager)return;
+
+  applyAdminBlockOrder();
+
+  let tools=manager.querySelector(':scope > .adminOrderTools');
+  if(!tools){
+    tools=document.createElement('div');
+    tools.className='adminOrderTools';
+    tools.innerHTML=`<div class="adminOrderHint">↕️ <span>Arrastra los bloques desde ⋮⋮ para ordenar tu panel</span></div>
+      <button class="adminOrderReset" type="button">Restablecer orden</button>`;
+    manager.insertBefore(tools,manager.firstChild);
+    tools.querySelector('.adminOrderReset').addEventListener('click',e=>{
+      e.preventDefault();
+      e.stopPropagation();
+      if(confirm('¿Restablecer el orden predeterminado de tu panel de administración?')){
+        resetAdminBlockOrder();
+      }
+    });
+  }else if(manager.firstElementChild!==tools){
+    manager.insertBefore(tools,manager.firstChild);
+  }
+
+  currentAdminBlocks().forEach(block=>{
+    const summary=block.querySelector(':scope > summary');
+    if(!summary||summary.querySelector('.adminDragHandle'))return;
+
+    const handle=document.createElement('button');
+    handle.type='button';
+    handle.className='adminDragHandle';
+    handle.setAttribute('aria-label','Mover bloque');
+    handle.setAttribute('title','Arrastrar para mover');
+    handle.textContent='⋮⋮';
+    summary.insertBefore(handle,summary.firstChild);
+
+    handle.addEventListener('click',e=>{
+      e.preventDefault();
+      e.stopPropagation();
+    });
+
+    handle.addEventListener('pointerdown',e=>{
+      if(e.button!==undefined && e.button!==0)return;
+      e.preventDefault();
+      e.stopPropagation();
+
+      const dragged=block;
+      let lastTarget=null;
+      manager.classList.add('adminSorting');
+      dragged.classList.add('adminDragging');
+      try{handle.setPointerCapture(e.pointerId)}catch(_){}
+
+      const move=ev=>{
+        ev.preventDefault();
+        const el=document.elementFromPoint(ev.clientX,ev.clientY);
+        const target=el?.closest?.('#adminView .adminManager > details[data-admin-section]');
+        if(!target||target===dragged)return;
+
+        if(lastTarget && lastTarget!==target)lastTarget.classList.remove('adminDragTarget');
+        lastTarget=target;
+        target.classList.add('adminDragTarget');
+
+        const rect=target.getBoundingClientRect();
+        const after=ev.clientY > rect.top + rect.height/2;
+        if(after){
+          if(target.nextElementSibling!==dragged)target.after(dragged);
+        }else{
+          if(target.previousElementSibling!==dragged)target.before(dragged);
+        }
+      };
+
+      const finish=ev=>{
+        if(ev){ev.preventDefault();ev.stopPropagation()}
+        handle.removeEventListener('pointermove',move);
+        handle.removeEventListener('pointerup',finish);
+        handle.removeEventListener('pointercancel',finish);
+        try{handle.releasePointerCapture(e.pointerId)}catch(_){}
+        dragged.classList.remove('adminDragging');
+        manager.classList.remove('adminSorting');
+        if(lastTarget)lastTarget.classList.remove('adminDragTarget');
+        saveAdminBlockOrder();
+      };
+
+      handle.addEventListener('pointermove',move,{passive:false});
+      handle.addEventListener('pointerup',finish,{once:true});
+      handle.addEventListener('pointercancel',finish,{once:true});
+    });
+  });
+}
+
 function renderAdmin(){
   const admin=isAdmin();
   $('#adminNavBtn').classList.toggle('hidden',!admin);
   if(!admin){$('#adminView').classList.add('hidden');return}
-  const cps=categoryPlayers();if(!playerEditorDirty)$('#playerPaste').value=cps.join('\n');$('#playerCount').textContent=`${cps.length} jugador${cps.length===1?'':'es'}`;$('#fixturePaste').value='';renderFixtureEditor();const cw=weeks.find(w=>w.id===state.week);if(cw){$('#weekStartDate').value=cw.start;$('#weekEndDate').value=cw.end;$('#weekRangeHint').textContent=`Rango actual: ${dayDateES(cw.start)} → ${dayDateES(cw.end)}. Las pistas del borrador se limitarán a estas fechas.`}renderSlotRows();setDefaultQuickDate();renderAdminMatches();renderPins();renderRoles();renderExternalAdmins();renderWhats();
+  const cps=categoryPlayers();if(!playerEditorDirty)$('#playerPaste').value=cps.join('\n');$('#playerCount').textContent=`${cps.length} jugador${cps.length===1?'':'es'}`;$('#fixturePaste').value='';renderFixtureEditor();const cw=weeks.find(w=>w.id===state.week);if(cw){$('#weekStartDate').value=cw.start;$('#weekEndDate').value=cw.end;$('#weekRangeHint').textContent=`Rango actual: ${dayDateES(cw.start)} → ${dayDateES(cw.end)}. Las pistas del borrador se limitarán a estas fechas.`}renderSlotRows();setDefaultQuickDate();renderAdminMatches();renderPins();renderRoles();renderExternalAdmins();renderWhats();setupAdminBlockOrdering();
 }
 function renderRoles(){
   const tb=$('#roleTable');const ps=allIdentities().filter(p=>!accessIsExcluded(p));
@@ -5098,7 +5335,7 @@ function openModernAdmin(){
   document.body.classList.add('modern-admin');
   document.body.classList.remove('modern-ui');
   $('#adminView')?.classList.remove('hidden');
-  renderAdmin();updateAdminSummaries();wireAdminCompact();renderModernAdminContext();
+  renderAdmin();updateAdminSummaries();wireAdminCompact();renderModernAdminContext();setupAdminBlockOrdering();
   window.scrollTo({top:0});
 }
 function closeModernAdmin(){
