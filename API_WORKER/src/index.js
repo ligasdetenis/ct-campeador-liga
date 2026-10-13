@@ -303,7 +303,7 @@ var index_default = {
           worker: "online",
           kv,
           durableObject,
-          version: "2.6.4-realtime-messages-pwa",
+          version: "2.6.6-admin-order-persist",
           error
         }, kv === "online" && durableObject === "online" ? 200 : 500, corsHeaders);
       }
@@ -314,7 +314,7 @@ var index_default = {
       const action = String(body.action || "").trim();
       if (action === "ping") {
         const ping = await bookingCall(env, { action: "ping" });
-        return json({ ok: true, message: "CT Campeador conectado", durableObject: ping.durableObject, version: "2.6.4-realtime-messages-pwa" }, 200, corsHeaders);
+        return json({ ok: true, message: "CT Campeador conectado", durableObject: ping.durableObject, version: "2.6.6-admin-order-persist" }, 200, corsHeaders);
       }
       if (action === "login") {
         const gateKey = loginGuardKey(request);
@@ -1428,6 +1428,8 @@ function cleanAdminOrder(value) {
     "tournamentIdentity",
     "messages",
     "matchesAdmin",
+    "journey",
+    "courts",
     "players",
     "accessDevices",
     "whats"
@@ -1435,6 +1437,14 @@ function cleanAdminOrder(value) {
   const out = [];
   for (const id of Array.isArray(value) ? value : []) {
     const key = String(id || "").trim();
+
+    // Compatibilidad con preferencias guardadas antes de separar Jornada y Pistas.
+    if (key === "journeyCourts") {
+      if (!out.includes("journey")) out.push("journey");
+      if (!out.includes("courts")) out.push("courts");
+      continue;
+    }
+
     if (allowed.has(key) && !out.includes(key)) out.push(key);
   }
   return out;
