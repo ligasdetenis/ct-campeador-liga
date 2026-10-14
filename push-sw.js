@@ -23,20 +23,29 @@ self.addEventListener("push", event => {
 
 self.addEventListener("notificationclick", event => {
   event.notification.close();
-  const target = event.notification?.data?.url ||
-    "https://ligasdetenis.github.io/ct-campeador-liga/";
+  const appBase = "https://ligasdetenis.github.io/ct-campeador-liga/";
+  let target = event.notification?.data?.url || appBase;
+  try {
+    const u = new URL(target, appBase);
+    if (u.origin !== new URL(appBase).origin || !u.pathname.startsWith("/ct-campeador-liga/")) target = appBase;
+    else target = u.toString();
+  } catch (_) {
+    target = appBase;
+  }
 
-  event.waitUntil(
-    clients.matchAll({ type: "window", includeUncontrolled: true }).then(list => {
-      for (const client of list) {
-        if (client.url && client.url.startsWith("https://ligasdetenis.github.io/ct-campeador-liga/")) {
-          if ("navigate" in client) {
-            try { client.navigate(target); } catch (_) {}
-          }
-          if ("focus" in client) return client.focus();
-        }
+  event.waitUntil((async () => {
+    const list = await clients.matchAll({ type: "window", includeUncontrolled: true });
+    for (const client of list) {
+      if (!client.url || !client.url.startsWith(appBase)) continue;
+      try {
+        if ("navigate" in client) await client.navigate(target);
+        else client.postMessage({ type:"PUSH_DEEP_LINK", url:target });
+      } catch (_) {
+        try { client.postMessage({ type:"PUSH_DEEP_LINK", url:target }); } catch (_) {}
       }
-      return clients.openWindow ? clients.openWindow(target) : undefined;
-    })
-  );
+      if ("focus" in client) await client.focus();
+      return;
+    }
+    if (clients.openWindow) await clients.openWindow(target);
+  })());
 });

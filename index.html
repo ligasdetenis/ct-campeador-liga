@@ -3304,7 +3304,7 @@ const API_URL="https://ct-campeador-api.ligasdetenis.workers.dev/";
 const PUSH_URL="https://ct-campeador-push-v1.ligasdetenis.workers.dev";
 let PUSH_VAPID_PUBLIC_KEY="";
 const PUSH_SW_URL="/ct-campeador-liga/push-sw.js";
-const APP_BUILD="20261014-admin-sin-iconos-titulos-1";
+const APP_BUILD="20261014-push-deeplinks-1";
 const weeks=[
  {id:"W1",label:"Semana 1 · 17–25 octubre",start:"2026-10-17",end:"2026-10-25"},
  {id:"W2",label:"Semana 2 · 26 octubre–1 noviembre",start:"2026-10-26",end:"2026-11-01"},
@@ -4151,6 +4151,7 @@ async function loginWithPinOnly(){
     setOnline(true,'☁️ Online');
     connectRealtime();
     renderAll();
+    queuePushDeepLink();
   }catch(e){
     showPinWelcome(e.message||'PIN incorrecto.',true);
   }finally{
@@ -6214,6 +6215,95 @@ function renderResultsTicker(){
   ticker.classList.add('show');
 }
 
+
+const PUSH_DEEP_LINK_KEYS=['open','matchId','week','category','gender'];
+let pendingPushDeepLink=null;
+let pushDeepLinkRunning=false;
+
+function readPushDeepLink(){
+  try{
+    const u=new URL(location.href);
+    const open=String(u.searchParams.get('open')||'').trim();
+    if(!open)return null;
+    return {
+      open,
+      matchId:String(u.searchParams.get('matchId')||'').trim(),
+      week:String(u.searchParams.get('week')||'').trim(),
+      category:String(u.searchParams.get('category')||'').trim(),
+      gender:String(u.searchParams.get('gender')||'').trim()
+    };
+  }catch(_){return null}
+}
+function clearPushDeepLinkFromUrl(){
+  try{
+    const u=new URL(location.href);
+    PUSH_DEEP_LINK_KEYS.forEach(k=>u.searchParams.delete(k));
+    history.replaceState(history.state,'',u.pathname+(u.search?u.search:'')+(u.hash||''));
+  }catch(_){}
+}
+function routeContextFromMatch(matchId){
+  const rec=fixtureRecord(matchId);
+  if(!rec)return null;
+  state.week=rec.week||state.week;
+  state.category=rec.category||state.category;
+  state.gender=rec.gender||state.gender;
+  return rec;
+}
+async function processPushDeepLink({force=false}={}){
+  if(pushDeepLinkRunning)return false;
+  const link=pendingPushDeepLink||readPushDeepLink();
+  if(!link)return false;
+  pendingPushDeepLink=link;
+  if(!state.authenticated||!apiToken){return false}
+  pushDeepLinkRunning=true;
+  try{
+    if(link.week && weeks.some(w=>w.id===link.week))state.week=link.week;
+    if(link.category && CATEGORIES.includes(link.category))state.category=link.category;
+    if(link.gender && ['Masculino','Femenino'].includes(link.gender))state.gender=link.gender;
+
+    if(link.matchId)routeContextFromMatch(link.matchId);
+    renderAll();
+
+    if(link.open==='courts'){
+      mappShow('courts');
+    }else if(link.open==='match'){
+      mappShow('match');
+    }else if(link.open==='result'){
+      if(link.matchId && findFixtureById(link.matchId)){
+        mappShow('match');
+        setTimeout(()=>openResultModal(link.matchId),120);
+      }else{
+        mappShow('match');
+      }
+    }else if(link.open==='reservation'){
+      if(link.matchId && findFixtureById(link.matchId)){
+        mappShow('match');
+        setTimeout(()=>openReserve(link.matchId),120);
+      }else{
+        mappShow('courts');
+      }
+    }else if(link.open==='messages'){
+      mappShow('profile');
+      setTimeout(()=>openMessagesInbox(),120);
+    }else if(link.open==='results'){
+      mappShow('results');
+    }else if(link.open==='profile'){
+      mappShow('profile');
+    }else{
+      mappShow('home');
+    }
+    clearPushDeepLinkFromUrl();
+    pendingPushDeepLink=null;
+    return true;
+  }finally{
+    pushDeepLinkRunning=false;
+  }
+}
+function queuePushDeepLink(){
+  pendingPushDeepLink=readPushDeepLink()||pendingPushDeepLink;
+  if(state.authenticated&&apiToken)setTimeout(()=>processPushDeepLink(),80);
+}
+
 function mappShow(view){
  const map={home:'modernHome',courts:'modernCourts',match:'modernMatch',results:'modernResults',profile:'modernProfile'};
  Object.values(map).forEach(id=>$('#'+id)?.classList.remove('active'));
@@ -6681,7 +6771,7 @@ $('#welcomePin').addEventListener('input',e=>{
 $('#welcomePin').addEventListener('keydown',e=>{if(e.key==='Enter')loginWithPinOnly()});
 
 $('#playerIdentity').onchange=e=>{if(!state.authenticated)state.player=e.target.value;$('#playerPin').value='';renderIdentity()};
-$('#loginBtn').onclick=async()=>{const player=$('#playerIdentity').value,pin=$('#playerPin').value.trim();if(!player){alert('Selecciona tu nombre.');return}if(!/^(?:\d{4}|\d{6})$/.test(pin)){alert('Introduce un PIN válido de 6 cifras. Los PIN antiguos de 4 siguen funcionando.');return}try{$('#loginBtn').disabled=true;const j=await apiRequest({action:'login',name:player,pin},{auth:false});apiToken=j.token;localStorage.setItem(TOKEN_KEY,apiToken);state.player=j.user.name;state.authenticated=true;data.roles[state.player]=localRoleFromApi(j.user.role);if(isAdmin())await loadAdminUsers();routePlayerToOwnCategory(state.player);$('#playerPin').value='';setOnline(true,'☁️ Online');await refreshOnline({silent:true,force:true});connectRealtime();renderAll()}catch(e){alert('No se ha podido iniciar sesión.\n\n'+e.message)}finally{$('#loginBtn').disabled=false}};
+$('#loginBtn').onclick=async()=>{const player=$('#playerIdentity').value,pin=$('#playerPin').value.trim();if(!player){alert('Selecciona tu nombre.');return}if(!/^(?:\d{4}|\d{6})$/.test(pin)){alert('Introduce un PIN válido de 6 cifras. Los PIN antiguos de 4 siguen funcionando.');return}try{$('#loginBtn').disabled=true;const j=await apiRequest({action:'login',name:player,pin},{auth:false});apiToken=j.token;localStorage.setItem(TOKEN_KEY,apiToken);state.player=j.user.name;state.authenticated=true;data.roles[state.player]=localRoleFromApi(j.user.role);if(isAdmin())await loadAdminUsers();routePlayerToOwnCategory(state.player);$('#playerPin').value='';setOnline(true,'☁️ Online');await refreshOnline({silent:true,force:true});connectRealtime();renderAll();queuePushDeepLink()}catch(e){alert('No se ha podido iniciar sesión.\n\n'+e.message)}finally{$('#loginBtn').disabled=false}};
 $('#playerPin').addEventListener('keydown',e=>{if(e.key==='Enter')$('#loginBtn').click()});
 $('#clearIdentity').onclick=async()=>{stopRealtime();try{if(apiToken)await apiRequest({action:'logout'})}catch(e){}apiToken='';localStorage.removeItem(TOKEN_KEY);adminCloudOrderLoadedFor='';state.player='';state.authenticated=false;$('#playerPin').value='';renderAll();showPinWelcome('Introduce tu PIN para cambiar de usuario.',false)};
 $$('.gender').forEach(b=>b.onclick=()=>{state.gender=b.dataset.gender;renderAll()});
@@ -7033,6 +7123,7 @@ async function bootstrapApp(){
       showPinWelcome('PIN personal de 6 cifras · los PIN antiguos de 4 siguen funcionando',false);
     }
     renderAll();
+    queuePushDeepLink();
     document.documentElement.classList.remove('app-booting');
     document.documentElement.classList.add('app-ready');
     setInterval(()=>{
@@ -7056,6 +7147,20 @@ async function bootstrapApp(){
     alert('Error de arranque del index V3.16.1.\n\n'+(e?.message||String(e)));
   }
 }
+
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.addEventListener('message',event=>{
+    const url=event.data?.url;
+    if(!url)return;
+    try{
+      const u=new URL(url,location.origin);
+      if(u.origin!==location.origin||!u.pathname.startsWith('/ct-campeador-liga/'))return;
+      history.replaceState(history.state,'',u.pathname+u.search+u.hash);
+      queuePushDeepLink();
+    }catch(_){}
+  });
+}
+
 bootstrapApp();
 
 window.addEventListener('scroll',()=>{const a=document.getElementById('adminView');if(a)a.classList.toggle('adminScrolled',window.scrollY>(a.offsetTop+280));},{passive:true});
