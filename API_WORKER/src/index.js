@@ -303,7 +303,7 @@ var index_default = {
           worker: "online",
           kv,
           durableObject,
-          version: "2.6.6-admin-order-persist",
+          version: "2.6.7-push-deeplinks",
           error
         }, kv === "online" && durableObject === "online" ? 200 : 500, corsHeaders);
       }
@@ -314,7 +314,7 @@ var index_default = {
       const action = String(body.action || "").trim();
       if (action === "ping") {
         const ping = await bookingCall(env, { action: "ping" });
-        return json({ ok: true, message: "CT Campeador conectado", durableObject: ping.durableObject, version: "2.6.6-admin-order-persist" }, 200, corsHeaders);
+        return json({ ok: true, message: "CT Campeador conectado", durableObject: ping.durableObject, version: "2.6.7-push-deeplinks" }, 200, corsHeaders);
       }
       if (action === "login") {
         const gateKey = loginGuardKey(request);
@@ -578,7 +578,7 @@ var index_default = {
           return json({ ok: false, error: "Falta configurar PUSH_SERVICE_TOKEN en Cloudflare." }, 500, corsHeaders);
         }
         const weekLabel = String(body.weekLabel || body.weekId || "esta semana");
-        const launchUrl = String(body.url || "https://ligasdetenis.github.io/ct-campeador-liga/");
+        const launchUrl = makeAppDeepLink({ open: "courts", week: String(body.weekId || "") });
         if (!env.PUSH_SERVICE) {
           return json({ ok: false, error: "Falta el Service Binding PUSH_SERVICE." }, 500, corsHeaders);
         }
@@ -756,7 +756,8 @@ var index_default = {
             editedPendingFromRival ? "✏️ Resultado modificado por tu rival" : "🎾 Resultado pendiente de confirmar",
             editedPendingFromRival
               ? `${auth.session.name} ha modificado el resultado propuesto. Revísalo y confírmalo o vuelve a editarlo.`
-              : `${auth.session.name} ha comunicado el resultado de vuestro partido. Revísalo y confírmalo.`
+              : `${auth.session.name} ha comunicado el resultado de vuestro partido. Revísalo y confírmalo.`,
+            { open: "result", matchId, week, category, gender }
           );
         } else {
           await broadcastRealtime(env, { type: "resultChanged", matchId, result });
@@ -795,7 +796,8 @@ var index_default = {
             env,
             [result.submittedBy],
             "✅ Resultado confirmado",
-            `${auth.session.name} ha confirmado el resultado de vuestro partido.`
+            `${auth.session.name} ha confirmado el resultado de vuestro partido.`,
+            { open: "result", matchId, week: result.week, category: result.category, gender: result.gender }
           );
         }
         return json({ ok: true, result }, 200, corsHeaders);
@@ -928,7 +930,7 @@ var index_default = {
 
         const title = String(body.title || "").trim().slice(0, 80);
         const message = String(body.message || "").trim().slice(0, 220);
-        const launchUrl = String(body.url || "https://ligasdetenis.github.io/ct-campeador-liga/").trim();
+        const launchUrl = makeAppDeepLink({ open: "messages" });
         const recipients = Array.isArray(body.recipients)
           ? [...new Set(body.recipients.map((x) => String(x || "").trim()).filter(Boolean))].slice(0, 250)
           : [];
@@ -1289,7 +1291,18 @@ async function broadcastRealtime(env, event, options = {}) {
 }
 __name(broadcastRealtime, "broadcastRealtime");
 
-async function sendTargetedPush(env, recipients, title, body) {
+const APP_BASE_URL = "https://ligasdetenis.github.io/ct-campeador-liga/";
+function makeAppDeepLink(params = {}) {
+  const u = new URL(APP_BASE_URL);
+  for (const [key, value] of Object.entries(params || {})) {
+    const v = String(value ?? "").trim();
+    if (v) u.searchParams.set(key, v.slice(0, 240));
+  }
+  return u.toString();
+}
+__name(makeAppDeepLink, "makeAppDeepLink");
+
+async function sendTargetedPush(env, recipients, title, body, deepLink = {}) {
   if (!env.PUSH_SERVICE || !env.PUSH_SERVICE_TOKEN) return;
   const safeRecipients = [...new Set((recipients || []).map((x) => String(x || "").trim()).filter(Boolean))];
   if (!safeRecipients.length) return;
@@ -1304,8 +1317,8 @@ async function sendTargetedPush(env, recipients, title, body) {
         recipients: safeRecipients,
         title: String(title || "CT Campeador").slice(0, 80),
         body: String(body || "").slice(0, 220),
-        url: "https://ligasdetenis.github.io/ct-campeador-liga/",
-        tag: `ctc-result-${Date.now()}`
+        url: makeAppDeepLink(deepLink),
+        tag: `ctc-${String(deepLink?.open || "notice").slice(0,30)}-${Date.now()}`
       })
     });
   } catch (_) {}
