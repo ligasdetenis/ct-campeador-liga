@@ -303,7 +303,7 @@ var index_default = {
           worker: "online",
           kv,
           durableObject,
-          version: "2.6.7-push-deeplinks",
+          version: "2.6.8-realtime-deeplink-fix",
           error
         }, kv === "online" && durableObject === "online" ? 200 : 500, corsHeaders);
       }
@@ -314,7 +314,7 @@ var index_default = {
       const action = String(body.action || "").trim();
       if (action === "ping") {
         const ping = await bookingCall(env, { action: "ping" });
-        return json({ ok: true, message: "CT Campeador conectado", durableObject: ping.durableObject, version: "2.6.7-push-deeplinks" }, 200, corsHeaders);
+        return json({ ok: true, message: "CT Campeador conectado", durableObject: ping.durableObject, version: "2.6.8-realtime-deeplink-fix" }, 200, corsHeaders);
       }
       if (action === "login") {
         const gateKey = loginGuardKey(request);
@@ -924,9 +924,6 @@ var index_default = {
       if (action === "sendCustomPush") {
         const admin = await requireAdmin(request, body, env);
         if (!admin.ok) return json({ ok: false, error: admin.error }, admin.status, corsHeaders);
-        if (!env.PUSH_SERVICE || !env.PUSH_SERVICE_TOKEN) {
-          return json({ ok: false, error: "El servicio Push no está configurado." }, 500, corsHeaders);
-        }
 
         const title = String(body.title || "").trim().slice(0, 80);
         const message = String(body.message || "").trim().slice(0, 220);
@@ -939,40 +936,12 @@ var index_default = {
         if (!message) return json({ ok: false, error: "Falta el mensaje." }, 400, corsHeaders);
         if (!recipients.length) return json({ ok: false, error: "No hay destinatarios." }, 400, corsHeaders);
 
-        // Solo permitimos enviar a usuarios activos conocidos por la API.
         const users = await getUsers(env);
         const allowed = new Map(users.filter((u) => u.active !== false).map((u) => [normalize(u.name), u.name]));
-        const safeRecipients = recipients
-          .map((name) => allowed.get(normalize(name)))
-          .filter(Boolean);
+        const safeRecipients = recipients.map((name) => allowed.get(normalize(name))).filter(Boolean);
+        if (!safeRecipients.length) return json({ ok: false, error: "Ningún destinatario válido." }, 400, corsHeaders);
 
-        if (!safeRecipients.length) {
-          return json({ ok: false, error: "Ningún destinatario válido." }, 400, corsHeaders);
-        }
-
-        const r = await env.PUSH_SERVICE.fetch("https://push.internal/admin/send", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${env.PUSH_SERVICE_TOKEN}`
-          },
-          body: JSON.stringify({
-            recipients: safeRecipients,
-            title,
-            body: message,
-            url: launchUrl,
-            tag: `ctc-admin-${Date.now()}`
-          })
-        });
-
-        const txt = await r.text();
-        let j = {};
-        try { j = JSON.parse(txt); } catch (_) {}
-
-        if (!r.ok || j.ok === false) {
-          return json({ ok: false, error: j.error || txt || `Push HTTP ${r.status}` }, 502, corsHeaders);
-        }
-
+        // 1) Guardar primero. El mensaje ya existe aunque el proveedor Push tarde o falle.
         const messages = await getMessages(env);
         const storedMessage = {
           id: `msg-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`,
@@ -981,28 +950,88 @@ var index_default = {
           body: message,
           recipientNames: safeRecipients,
           sentBy: admin.session.name,
-          sent: Number(j.sent || 0),
+          sent: 0,
           readBy: []
         };
         messages.unshift(storedMessage);
         await putMessages(env, messages);
 
-        // Actualización inmediata de buzón/badge en dispositivos con la app abierta.
-        // El Push sigue siendo el aviso de fondo cuando la app no está activa.
+        // 2) Realtime INMEDIATO, antes de esperar al servicio Push.
+        // Mandamos el propio mensaje para que el cliente lo pinte sin hacer otra petición.
+        for (const recipient of safeRecipients) {
+          const recipientSession = { name: recipient, role: "player" };
+          await broadcastRealtime(
+            env,
+            {
+              type: "messageChanged",
+              reason: "created",
+              messageId: storedMessage.id,
+              message: messageForSession(storedMessage, recipientSession)
+            },
+            { recipients: [recipient], includeAdmins: false }
+          );
+        }
+        // Los administradores conectados también actualizan su historial al instante.
         await broadcastRealtime(
           env,
-          { type: "messageChanged", reason: "created", messageId: storedMessage.id },
-          { recipients: safeRecipients, includeAdmins: true }
+          {
+            type: "messageChanged",
+            reason: "created",
+            messageId: storedMessage.id,
+            message: messageForSession(storedMessage, admin.session)
+          },
+          { recipients: [], includeAdmins: true }
         );
+
+        // 3) Push de fondo. Ya no bloquea la aparición del mensaje en la app.
+        let pushResult = { ok: true, sent: 0, matchedUsers: 0, total: 0, removed: 0, failed: [] };
+        let pushWarning = "";
+        if (!env.PUSH_SERVICE || !env.PUSH_SERVICE_TOKEN) {
+          pushWarning = "El mensaje se ha guardado y entregado en tiempo real, pero el servicio Push no está configurado.";
+        } else {
+          try {
+            const r = await env.PUSH_SERVICE.fetch("https://push.internal/admin/send", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${env.PUSH_SERVICE_TOKEN}`
+              },
+              body: JSON.stringify({
+                recipients: safeRecipients,
+                title,
+                body: message,
+                url: launchUrl,
+                tag: `ctc-admin-${Date.now()}`
+              })
+            });
+            const txt = await r.text();
+            let j = {};
+            try { j = JSON.parse(txt); } catch (_) {}
+            if (!r.ok || j.ok === false) throw new Error(j.error || txt || `Push HTTP ${r.status}`);
+            pushResult = j;
+          } catch (e) {
+            pushWarning = e?.message || String(e);
+          }
+        }
+
+        storedMessage.sent = Number(pushResult.sent || 0);
+        // Actualizar contador de envíos sin cambiar ID/fecha.
+        const latest = await getMessages(env);
+        const mi = latest.findIndex((m) => String(m.id) === storedMessage.id);
+        if (mi >= 0) {
+          latest[mi].sent = storedMessage.sent;
+          await putMessages(env, latest);
+        }
 
         return json({
           ok: true,
           recipients: safeRecipients.length,
-          matchedUsers: Number(j.matchedUsers || 0),
-          totalDevices: Number(j.total || 0),
-          sent: Number(j.sent || 0),
-          removed: Number(j.removed || 0),
-          failed: Array.isArray(j.failed) ? j.failed : [],
+          matchedUsers: Number(pushResult.matchedUsers || 0),
+          totalDevices: Number(pushResult.total || 0),
+          sent: Number(pushResult.sent || 0),
+          removed: Number(pushResult.removed || 0),
+          failed: Array.isArray(pushResult.failed) ? pushResult.failed : [],
+          pushWarning,
           message: messageForSession(storedMessage, admin.session)
         }, 200, corsHeaders);
       }
