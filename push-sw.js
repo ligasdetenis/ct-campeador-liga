@@ -1,3 +1,5 @@
+self.addEventListener('install',()=>self.skipWaiting());
+self.addEventListener('activate',event=>event.waitUntil(clients.claim()));
 self.addEventListener("push", event => {
   let data = {};
   try {
@@ -37,15 +39,16 @@ self.addEventListener("notificationclick", event => {
     const list = await clients.matchAll({ type: "window", includeUncontrolled: true });
     for (const client of list) {
       if (!client.url || !client.url.startsWith(appBase)) continue;
-      try {
-        if ("navigate" in client) await client.navigate(target);
-        else client.postMessage({ type:"PUSH_DEEP_LINK", url:target });
-      } catch (_) {
-        try { client.postMessage({ type:"PUSH_DEEP_LINK", url:target }); } catch (_) {}
+      // Si la app ya está abierta, NO navegamos: enviamos el destino a la app.
+      // En iOS/PWA la navegación de una ventana existente podía perder la query
+      // y terminar mostrando Inicio.
+      try { client.postMessage({ type:"PUSH_DEEP_LINK", url:target }); } catch (_) {}
+      if ("focus" in client) {
+        try { await client.focus(); } catch (_) {}
       }
-      if ("focus" in client) await client.focus();
       return;
     }
+    // App cerrada: abrir directamente con el deep link completo.
     if (clients.openWindow) await clients.openWindow(target);
   })());
 });

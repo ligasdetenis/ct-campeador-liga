@@ -3304,7 +3304,7 @@ const API_URL="https://ct-campeador-api.ligasdetenis.workers.dev/";
 const PUSH_URL="https://ct-campeador-push-v1.ligasdetenis.workers.dev";
 let PUSH_VAPID_PUBLIC_KEY="";
 const PUSH_SW_URL="/ct-campeador-liga/push-sw.js";
-const APP_BUILD="20261014-push-deeplinks-1";
+const APP_BUILD="20261014-push-realtime-fix-1";
 const weeks=[
  {id:"W1",label:"Semana 1 · 17–25 octubre",start:"2026-10-17",end:"2026-10-25"},
  {id:"W2",label:"Semana 2 · 26 octubre–1 noviembre",start:"2026-10-26",end:"2026-11-01"},
@@ -3408,12 +3408,27 @@ function applyRealtimeEvent(ev){
   }
 
   if(ev.type==='messageChanged'){
+    if(ev.reason==='created' && ev.message && ev.message.id){
+      data.messageHistory=Array.isArray(data.messageHistory)?data.messageHistory:[];
+      const idx=data.messageHistory.findIndex(m=>String(m.id)===String(ev.message.id));
+      if(idx>=0)data.messageHistory[idx]={...data.messageHistory[idx],...ev.message};
+      else data.messageHistory.unshift(ev.message);
+      // Mantener el mismo caché que usa el buzón moderno si existe.
+      if(Array.isArray(window.__cloudMessages)){
+        const ci=window.__cloudMessages.findIndex(m=>String(m.id)===String(ev.message.id));
+        if(ci>=0)window.__cloudMessages[ci]={...window.__cloudMessages[ci],...ev.message};
+        else window.__cloudMessages.unshift(ev.message);
+      }
+      renderOpenMessagesInboxFromCache();
+      renderModernProfile({skipMessageLoad:true});
+      if(isAdmin() && document.body.classList.contains('modern-admin'))renderMessageHistory({skipLoad:true});
+    }
+    // Sincronización de seguridad en segundo plano para lectura/borrado y para
+    // clientes antiguos que no reciban el mensaje embebido.
     loadCloudMessages({silent:true}).then(()=>{
       renderOpenMessagesInboxFromCache();
       renderModernProfile({skipMessageLoad:true});
-      if(isAdmin() && document.body.classList.contains('modern-admin')){
-        renderMessageHistory({skipLoad:true});
-      }
+      if(isAdmin() && document.body.classList.contains('modern-admin'))renderMessageHistory({skipLoad:true});
     }).catch(()=>{});
     return;
   }
@@ -4415,7 +4430,14 @@ async function sendAvailabilityPush(force=false){
     body:JSON.stringify({
       weekId:weekKey(),
       weekLabel:w?.label||weekKey(),
-      url:'https://ligasdetenis.github.io/ct-campeador-liga/',
+      url:(()=>{
+        const u=new URL('https://ligasdetenis.github.io/ct-campeador-liga/');
+        u.searchParams.set('open','courts');
+        u.searchParams.set('week',weekKey());
+        u.searchParams.set('category',state.category);
+        u.searchParams.set('gender',state.gender);
+        return u.toString();
+      })(),
       force:!!force
     })
   });
@@ -6266,6 +6288,9 @@ async function processPushDeepLink({force=false}={}){
 
     if(link.open==='courts'){
       mappShow('courts');
+      // Segundo pase corto: algunos navegadores/PWA terminan un render asíncrono
+      // justo después de recuperar el foco y podían devolver la vista a Inicio.
+      setTimeout(()=>mappShow('courts'),180);
     }else if(link.open==='match'){
       mappShow('match');
     }else if(link.open==='result'){
@@ -7134,6 +7159,15 @@ async function bootstrapApp(){
     document.addEventListener('visibilitychange',()=>{
       if(document.visibilityState!=='visible')return;
       loadPublicTournamentName();
+      if(state.authenticated&&apiToken){
+        connectRealtime();
+        // Los mensajes son ligeros: al volver a primer plano refrescamos el buzón
+        // aunque la actualización general todavía no toque.
+        loadCloudMessages({silent:true}).then(()=>{
+          renderOpenMessagesInboxFromCache();
+          renderModernProfile({skipMessageLoad:true});
+        }).catch(()=>{});
+      }
       if(state.authenticated&&!fixtureEditorDirty&&!playerEditorDirty&&!adminEditorActive()&&Date.now()-lastRefreshAt>MIN_VISIBLE_REFRESH_MS){
         refreshOnline({silent:true});
       }
@@ -7150,13 +7184,23 @@ async function bootstrapApp(){
 
 if('serviceWorker' in navigator){
   navigator.serviceWorker.addEventListener('message',event=>{
+    if(event.data?.type!=='PUSH_DEEP_LINK')return;
     const url=event.data?.url;
     if(!url)return;
     try{
       const u=new URL(url,location.origin);
       if(u.origin!==location.origin||!u.pathname.startsWith('/ct-campeador-liga/'))return;
+      // Conservamos el destino en memoria antes de tocar la URL para evitar
+      // que iOS/PWA lo pierda durante focus/navigation.
+      pendingPushDeepLink={
+        open:String(u.searchParams.get('open')||'').trim(),
+        matchId:String(u.searchParams.get('matchId')||'').trim(),
+        week:String(u.searchParams.get('week')||'').trim(),
+        category:String(u.searchParams.get('category')||'').trim(),
+        gender:String(u.searchParams.get('gender')||'').trim()
+      };
       history.replaceState(history.state,'',u.pathname+u.search+u.hash);
-      queuePushDeepLink();
+      setTimeout(()=>processPushDeepLink({force:true}),30);
     }catch(_){}
   });
 }
