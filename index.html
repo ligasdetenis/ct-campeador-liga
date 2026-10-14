@@ -2021,9 +2021,6 @@ body.modern-admin .adminTournamentPanel{
 body.modern-admin .adminTournamentPanel>.adminSummary{
   background:linear-gradient(90deg,#fff 0%,#fff8f9 100%)!important;
 }
-body.modern-admin .adminTournamentPanel .adminSummaryTitle:before{
-  content:"🏷️"; margin-right:8px;
-}
 body.modern-admin .adminTournamentPanel .field{
   max-width:620px;
 }
@@ -2707,6 +2704,66 @@ body.resultModalOpen{overflow:hidden}
   .journeySaveBtn{width:100%}
 }
 
+
+/* =========================================================
+   LIMPIEZA visual · Accesos y dispositivos / Usuarios
+   ========================================================= */
+.accessUsersTable{table-layout:fixed}
+.accessUsersTable th:nth-child(1){width:42px}
+.accessUsersTable th:nth-child(2){width:33%}
+.accessUsersTable th:nth-child(3){width:14%}
+.accessUsersTable th:nth-child(4){width:18%}
+.accessUsersTable th:nth-child(5){width:35%}
+.accessUsersTable .accessCell{vertical-align:middle}
+.accessUserName{font-weight:900;color:#1f2329;line-height:1.2}
+.accessRolePill{
+  display:inline-flex;align-items:center;justify-content:center;margin-top:5px;padding:2px 8px;
+  min-height:20px;border-radius:999px;font-size:8px;font-weight:950;letter-spacing:.04em;
+  background:#eef0f2;color:#676c73;
+}
+.accessRolePill.admin{background:#fff5cf;color:#b47a00}
+.accessRolePill.member{background:#e9f1ff;color:#3b5ea9}
+.accessRolePill.player{background:#eff6f1;color:#35714d}
+.accessPinValue{font-size:16px;font-weight:900;letter-spacing:1px;color:#16191d}
+.accessActionGrid{display:grid;grid-template-columns:repeat(2,minmax(120px,1fr));gap:8px}
+.accessActionBtn{width:100%;min-height:40px;white-space:normal;line-height:1.15;padding:8px 10px}
+.accessUsersSchedule td,.accessUsersSchedule th{word-break:break-word}
+
+@media(max-width:820px){
+  .accessUsersSchedule{overflow:visible}
+  .accessUsersSchedule table,
+  .accessUsersSchedule thead,
+  .accessUsersSchedule tbody,
+  .accessUsersSchedule tr,
+  .accessUsersSchedule td{display:block;width:100%}
+  .accessUsersSchedule thead{display:none}
+  .accessUsersSchedule tbody{display:grid;gap:12px}
+  .accessUsersSchedule tr.accessUserRow{
+    display:grid;grid-template-columns:44px minmax(0,1fr);grid-template-areas:
+      'check user'
+      'check pin'
+      'check message'
+      'check actions';
+    gap:8px 12px;padding:12px;border:1px solid #e2e5ea;border-radius:14px;background:#fff;
+    box-shadow:0 3px 14px rgba(8,12,20,.04);
+  }
+  .accessUsersSchedule td{border:0;padding:0 !important;background:none !important}
+  .accessUsersSchedule .accessCellCheck{grid-area:check;display:flex;align-items:flex-start;justify-content:center;padding-top:4px !important}
+  .accessUsersSchedule .accessCellUser{grid-area:user}
+  .accessUsersSchedule .accessCellPin{grid-area:pin}
+  .accessUsersSchedule .accessCellMessage{grid-area:message}
+  .accessUsersSchedule .accessCellActions{grid-area:actions}
+  .accessUsersSchedule .accessCell[data-label]:not(.accessCellUser):not(.accessCellCheck)::before{
+    content:attr(data-label);display:block;margin-bottom:4px;font-size:8px;font-weight:950;letter-spacing:.07em;color:#8a8f97;text-transform:uppercase;
+  }
+  .accessActionGrid{grid-template-columns:1fr 1fr}
+  .accessActionBtn{min-height:44px}
+}
+@media(max-width:460px){
+  .accessActionGrid{grid-template-columns:1fr}
+  .accessPinValue{font-size:15px}
+}
+
 </style>
 </head>
 <body>
@@ -2844,7 +2901,7 @@ body.resultModalOpen{overflow:hidden}
 
 <details class="adminBlock adminAccordion adminPrimary adminMessagesPanel" data-admin-section="messages">
   <summary class="adminSummary">
-    <span class="adminSummaryTitle">💬 Mensajes</span>
+    <span class="adminSummaryTitle">Mensajes</span>
     <span class="adminSummaryMeta" id="adminMeta_messages">Enviar avisos</span>
   </summary>
   <div class="adminAccordionBody">
@@ -3082,7 +3139,7 @@ Pablo Ruiz"></textarea>
       <div class="adminSubsectionBody"><div class="tiny">Genera PIN de 4 cifras automáticamente para todos los jugadores cargados. Puedes regenerar uno concreto si fuera necesario. Los PIN se guardan online en Cloudflare junto con los usuarios.</div>
 <div class="quickActions"><button class="btn gold" id="generatePins">Generar PIN que falten</button><button class="btn secondary" id="showPins">Mostrar / ocultar PIN</button><button class="btn danger" id="resetPins">Regenerar todos</button><button class="btn dangerBtn" id="deleteSelectedUsers" disabled>🗑️ Eliminar seleccionados</button><button class="btn secondary" id="syncAccessUsers" type="button">🔄 Sincronizar usuarios</button></div>
 <div class="tiny" id="selectedUsersInfo" style="margin-top:7px">Selecciona uno o varios usuarios para eliminarlos rápidamente.</div>
-<div class="schedule" style="margin-top:10px"><table><thead><tr><th style="width:42px"><input id="selectAllUsers" type="checkbox" aria-label="Seleccionar todos"></th><th>Usuario</th><th>PIN</th><th>Mensaje</th><th>Acciones</th></tr></thead><tbody id="pinTable"></tbody></table></div></div>
+<div class="schedule accessUsersSchedule" style="margin-top:10px"><table class="accessUsersTable"><thead><tr><th style="width:42px"><input id="selectAllUsers" type="checkbox" aria-label="Seleccionar todos"></th><th>Usuario</th><th>PIN</th><th>Mensaje</th><th>Acciones</th></tr></thead><tbody id="pinTable"></tbody></table></div></div>
     </div>
     <div class="adminSubsection">
       <div class="adminSubsectionHead"><span>Dispositivos y avisos</span><span id="adminMeta_devices_sub">Abrir</span></div>
@@ -3247,7 +3304,7 @@ const API_URL="https://ct-campeador-api.ligasdetenis.workers.dev/";
 const PUSH_URL="https://ct-campeador-push-v1.ligasdetenis.workers.dev";
 let PUSH_VAPID_PUBLIC_KEY="";
 const PUSH_SW_URL="/ct-campeador-liga/push-sw.js";
-const APP_BUILD="20261013-journey-manager-pro-1";
+const APP_BUILD="20261014-admin-sin-iconos-titulos-1";
 const weeks=[
  {id:"W1",label:"Semana 1 · 17–25 octubre",start:"2026-10-17",end:"2026-10-25"},
  {id:"W2",label:"Semana 2 · 26 octubre–1 noviembre",start:"2026-10-26",end:"2026-11-01"},
@@ -5300,8 +5357,18 @@ function renderPins(){
     const shown=state.showPins?pin:(pin==='—'?'—':'•'.repeat(String(pin).length));
     const safe=p.replace(/"/g,'&quot;');
     const protectedSelf=p===state.player&&roleOf(p)==='admin';
-    const roleBadge=roleOf(p)==='admin'?' <span class="adminBadge">ADMIN</span>':roleOf(p)==='miembro'?' <span class="adminBadge">MIEMBRO</span>':'';
-    return `<tr><td><input type="checkbox" data-user-select="${safe}" ${protectedSelf?'disabled title="No puedes eliminar tu propio usuario administrador"':''}></td><td><b>${p}</b>${roleBadge}</td><td><span class="mono">${shown}</span></td><td><button class="btn secondary" data-copy-pin="${safe}">Copiar mensaje</button></td><td><div class="matchActions"><button class="btn secondary" data-regenerate-pin="${safe}">♻ Nuevo PIN</button><button class="btn dangerBtn" data-delete-user="${safe}" ${protectedSelf?'disabled':''}>Eliminar</button></div></td></tr>`;
+    const roleLabel=roleOf(p)==='admin'?'ADMIN':roleOf(p)==='miembro'?'MIEMBRO':'JUGADOR';
+    const roleClass=roleOf(p)==='admin'?'admin':roleOf(p)==='miembro'?'member':'player';
+    return `<tr class="accessUserRow">
+      <td class="accessCell accessCellCheck" data-label="Sel."><input type="checkbox" data-user-select="${safe}" ${protectedSelf?'disabled title="No puedes eliminar tu propio usuario administrador"':''}></td>
+      <td class="accessCell accessCellUser" data-label="Usuario">
+        <div class="accessUserName">${mappEsc(p)}</div>
+        <div class="accessRolePill ${roleClass}">${roleLabel}</div>
+      </td>
+      <td class="accessCell accessCellPin" data-label="PIN"><span class="mono accessPinValue">${shown}</span></td>
+      <td class="accessCell accessCellMessage" data-label="Mensaje"><button class="btn secondary accessActionBtn" data-copy-pin="${safe}">Copiar acceso</button></td>
+      <td class="accessCell accessCellActions" data-label="Acciones"><div class="accessActionGrid"><button class="btn secondary accessActionBtn" data-regenerate-pin="${safe}">♻ Nuevo PIN</button><button class="btn dangerBtn accessActionBtn" data-delete-user="${safe}" ${protectedSelf?'disabled':''}>Eliminar</button></div></td>
+    </tr>`;
   }).join('');
   tb.querySelectorAll('[data-copy-pin]').forEach(b=>b.onclick=()=>copyPinMessage(b.dataset.copyPin));
   tb.querySelectorAll('[data-regenerate-pin]').forEach(b=>b.onclick=()=>regeneratePinFor(b.dataset.regeneratePin));
