@@ -2764,6 +2764,91 @@ body.resultModalOpen{overflow:hidden}
   .accessPinValue{font-size:15px}
 }
 
+
+/* =========================================================
+   ADMIN FUNCIONAL · buscador + incidencias + acciones rápidas
+   ========================================================= */
+.adminOps{
+  order:-1000;display:grid;gap:12px;padding:12px;border:1px solid #e2e5e9;border-radius:15px;
+  background:#fff;margin-bottom:2px
+}
+.adminOpsSearchTitle,.adminOpsSectionHead span:first-child{font-size:11px;font-weight:950;color:#25292f}
+.adminOpsSearchRow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin-top:7px}
+.adminOpsSearchRow input{min-width:0;min-height:42px;border:1px solid #d9dde2;border-radius:11px;padding:0 12px;background:#fff;color:#20242a;font-size:14px}
+.adminOpsSearchRow input:focus{outline:2px solid rgba(122,0,20,.15);border-color:#8a1b2d}
+.adminSearchResults{display:grid;gap:6px;margin-top:8px}
+.adminSearchResult{
+  display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:9px 10px;
+  border:1px solid #e5e7eb;border-radius:10px;background:#fafbfc
+}
+.adminSearchResultName{font-size:11px;font-weight:900;color:#25292f}
+.adminSearchResultMeta{font-size:8px;color:#828790;margin-top:2px}
+.adminSearchOpen{min-height:34px;border:1px solid #d9dde2;border-radius:9px;background:#fff;padding:0 10px;font-size:9px;font-weight:900;color:#555b64}
+.adminOpsSection{border-top:1px solid #eef0f2;padding-top:11px}
+.adminOpsSectionHead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+.adminOpsHint{font-size:8px!important;font-weight:700!important;color:#9498a0!important}
+.adminIncidentChips{display:flex;gap:7px;flex-wrap:wrap}
+.adminIncidentChip{
+  display:inline-flex;align-items:center;gap:6px;min-height:34px;border:1px solid #e0e3e7;border-radius:999px;
+  background:#fff;padding:0 10px;color:#4d525a;font-size:9px;font-weight:850
+}
+.adminIncidentChip strong{font-size:11px;color:#20242a}
+.adminIncidentChip.warn{border-color:#efcf9d;background:#fffaf1;color:#8a611b}
+.adminIncidentChip.danger{border-color:#efc4cb;background:#fff7f8;color:#a22d40}
+.adminIncidentChip.good{border-color:#cce6d6;background:#f5fbf7;color:#34704b}
+.adminQuickActionsFunctional{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
+.adminQuickActionsFunctional button{
+  min-height:40px;border:1px solid #dfe2e6;border-radius:10px;background:#fff;color:#4d5259;
+  padding:8px;font-size:9px;font-weight:900;line-height:1.15
+}
+.adminQuickActionsFunctional button:first-child{border-color:#7a0014;color:#7a0014}
+.adminFunctionalModal{position:fixed;inset:0;z-index:10050;background:rgba(12,14,18,.58);display:flex;align-items:flex-end;justify-content:center;padding:12px 10px calc(12px + env(safe-area-inset-bottom));backdrop-filter:blur(5px)}
+.adminFunctionalSheet{width:min(760px,100%);max-height:88dvh;display:flex;flex-direction:column;background:#fff;border-radius:22px;overflow:hidden;box-shadow:0 22px 70px rgba(0,0,0,.28)}
+.adminFunctionalHead{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 16px;border-bottom:1px solid #e6e8eb}
+.adminFunctionalHead h3{margin:1px 0 0;font-size:18px;color:#1e2227}
+.adminFunctionalKicker{font-size:8px;font-weight:950;letter-spacing:.08em;color:#9a9ea5}
+#adminFunctionalClose{width:40px;height:40px;border:1px solid #dfe2e6;border-radius:12px;background:#fff;color:#737880;font-size:22px}
+.adminFunctionalBody{flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:13px}
+.adminIncidentList{display:grid;gap:8px}
+.adminIncidentRow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;padding:11px;border:1px solid #e3e6ea;border-radius:12px;background:#fff}
+.adminIncidentRowTitle{font-size:11px;font-weight:900;color:#24282e}
+.adminIncidentRowMeta{font-size:8px;color:#858a92;margin-top:3px;line-height:1.35}
+.adminIncidentRow button{min-height:34px;border:1px solid #d9dde2;border-radius:9px;background:#fff;color:#555b64;padding:0 10px;font-size:9px;font-weight:900}
+.adminPlayerCardTop{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:start;padding-bottom:12px;border-bottom:1px solid #eceef1}
+.adminPlayerName{font-size:19px;font-weight:950;color:#1f2329}
+.adminPlayerMeta{font-size:9px;color:#7f848c;margin-top:4px;line-height:1.45}
+.adminPlayerStatus{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.adminPlayerStatus span{display:inline-flex;align-items:center;min-height:23px;padding:0 8px;border-radius:999px;background:#f1f3f5;color:#656a72;font-size:8px;font-weight:900}
+.adminPlayerStatus span.ok{background:#eaf6ee;color:#36714c}
+.adminPlayerStatus span.warn{background:#fff6e8;color:#9a6617}
+.adminPlayerPinBox{text-align:right}
+.adminPlayerPinLabel{font-size:8px;color:#8b9097;font-weight:900}
+.adminPlayerPin{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:15px;font-weight:950;color:#20242a;margin-top:3px}
+.adminPlayerPinActions{display:flex;gap:6px;justify-content:flex-end;margin-top:7px}
+.adminPlayerPinActions button{min-height:32px;border:1px solid #dfe2e6;border-radius:8px;background:#fff;padding:0 8px;font-size:8px;font-weight:900}
+.adminPlayerStats{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:12px 0}
+.adminPlayerStat{padding:9px;border:1px solid #e4e7ea;border-radius:10px;background:#fafbfc;text-align:center}
+.adminPlayerStat strong{display:block;font-size:17px;color:#24282e}
+.adminPlayerStat span{font-size:8px;color:#82878f;font-weight:800}
+.adminPlayerSectionTitle{font-size:10px;font-weight:950;color:#51565e;margin:14px 0 7px}
+.adminPlayerHistory{display:grid;gap:7px}
+.adminPlayerMatch{padding:10px;border:1px solid #e3e6ea;border-radius:11px;background:#fff}
+.adminPlayerMatchTop{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.adminPlayerMatchRival{font-size:11px;font-weight:900;color:#272b31}
+.adminPlayerMatchRound{font-size:8px;color:#888d94;margin-top:2px}
+.adminPlayerMatchResult{font-size:10px;font-weight:900;color:#3e434a;text-align:right}
+.adminPlayerMatchMeta{font-size:8px;color:#858a92;margin-top:7px;line-height:1.45}
+.adminPlayerActions{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}
+.adminPlayerActions button{min-height:36px;border:1px solid #dce0e4;border-radius:9px;background:#fff;color:#4d525a;padding:0 10px;font-size:9px;font-weight:900}
+.adminPlayerActions button.primary{border-color:#7a0014;color:#7a0014}
+@media(max-width:650px){
+ .adminQuickActionsFunctional{grid-template-columns:1fr 1fr}
+ .adminPlayerStats{grid-template-columns:1fr 1fr}
+ .adminPlayerCardTop{grid-template-columns:1fr}
+ .adminPlayerPinBox{text-align:left}.adminPlayerPinActions{justify-content:flex-start}
+ .adminIncidentRow{grid-template-columns:1fr}.adminIncidentRow button{width:100%}
+}
+
 </style>
 </head>
 <body>
@@ -2879,6 +2964,32 @@ body.resultModalOpen{overflow:hidden}
 <section class="card hidden" id="adminView">
 <div class="head"><h2>⚙️ Gestión semanal <span class="adminBadge">ADMIN</span></h2><small>V3.11.6 · semanas configurables</small></div>
 <div class="pad adminGrid adminManager">
+
+<div class="adminOps" id="adminOps">
+  <div class="adminOpsSearchWrap">
+    <div class="adminOpsSearchTitle">Buscar en Administración</div>
+    <div class="adminOpsSearchRow">
+      <input id="adminGlobalSearch" type="search" autocomplete="off" placeholder="Buscar jugador o usuario…" aria-label="Buscar jugador o usuario">
+      <button class="btn secondary" id="adminSearchClear" type="button">Limpiar</button>
+    </div>
+    <div class="adminSearchResults hidden" id="adminSearchResults"></div>
+  </div>
+
+  <div class="adminOpsSection">
+    <div class="adminOpsSectionHead"><span>Incidencias</span><span class="adminOpsHint">Pulsa para ver los casos</span></div>
+    <div class="adminIncidentChips" id="adminIncidentChips"></div>
+  </div>
+
+  <div class="adminOpsSection">
+    <div class="adminOpsSectionHead"><span>Acciones rápidas</span></div>
+    <div class="adminQuickActionsFunctional">
+      <button type="button" data-admin-fast="publish">Publicar pistas</button>
+      <button type="button" data-admin-fast="message">Enviar aviso</button>
+      <button type="button" data-admin-fast="pending-results">Resultados pendientes</button>
+      <button type="button" data-admin-fast="unreserved">Partidos sin reservar</button>
+    </div>
+  </div>
+</div>
 
 <details class="adminBlock adminAccordion adminPrimary adminTournamentPanel" data-admin-section="tournamentIdentity" open>
   <summary class="adminSummary">
@@ -3166,7 +3277,7 @@ Pablo Ruiz"></textarea>
       <div class="adminSubsectionHead"><span>Permisos de acceso</span><span id="adminMeta_roles_sub">Abrir</span></div>
       <div class="adminSubsectionBody"><div class="tiny">Los <b>Jugadores</b> participan en su categoría, los <b>Miembros</b> pueden acceder sin ser jugadores y solo los <b>ADMIN</b> ven ⚙️ Configuración.</div>
 <div class="schedule" style="margin-top:10px"><table><thead><tr><th>Persona</th><th>Rol</th></tr></thead><tbody id="roleTable"></tbody></table></div>
-<div class="authNote">Administrador inicial de prueba: <b>Adrián Prádanos</b> · PIN <b>2020</b>. Puedes dar permiso ADMIN a otros usuarios desde esta tabla.</div></div>
+<div class="authNote">Puedes dar permiso ADMIN a otros usuarios desde esta tabla. Debe quedar siempre al menos un administrador activo.</div></div>
     </div>
   </div>
 </details>
@@ -3182,6 +3293,15 @@ Pablo Ruiz"></textarea>
 <button class="btn gold" id="copyWhats" style="margin-top:8px">Copiar mensaje</button></div>
 </details>
 
+</div>
+<div class="adminFunctionalModal hidden" id="adminFunctionalModal" role="dialog" aria-modal="true" aria-labelledby="adminFunctionalTitle">
+  <div class="adminFunctionalSheet">
+    <div class="adminFunctionalHead">
+      <div><div class="adminFunctionalKicker" id="adminFunctionalKicker">ADMIN</div><h3 id="adminFunctionalTitle">Detalle</h3></div>
+      <button type="button" id="adminFunctionalClose" aria-label="Cerrar">×</button>
+    </div>
+    <div class="adminFunctionalBody" id="adminFunctionalBody"></div>
+  </div>
 </div>
 <button class="adminBackTop" id="adminBackTop" type="button">↑ Arriba</button></section>
 </main>
@@ -3304,7 +3424,7 @@ const API_URL="https://ct-campeador-api.ligasdetenis.workers.dev/";
 const PUSH_URL="https://ct-campeador-push-v1.ligasdetenis.workers.dev";
 let PUSH_VAPID_PUBLIC_KEY="";
 const PUSH_SW_URL="/ct-campeador-liga/push-sw.js";
-const APP_BUILD="20261014-push-realtime-fix-1";
+const APP_BUILD="20261014-admin-funcional-piloto-1";
 const weeks=[
  {id:"W1",label:"Semana 1 · 17–25 octubre",start:"2026-10-17",end:"2026-10-25"},
  {id:"W2",label:"Semana 2 · 26 octubre–1 noviembre",start:"2026-10-26",end:"2026-11-01"},
@@ -5337,7 +5457,7 @@ function renderAdmin(){
   const admin=isAdmin();
   $('#adminNavBtn').classList.toggle('hidden',!admin);
   if(!admin){$('#adminView').classList.add('hidden');return}
-  const cps=categoryPlayers();if(!playerEditorDirty)$('#playerPaste').value=cps.join('\n');$('#playerCount').textContent=`${cps.length} jugador${cps.length===1?'':'es'}`;$('#fixturePaste').value='';renderFixtureEditor();const cw=weeks.find(w=>w.id===state.week);if(cw){$('#weekStartDate').value=cw.start;$('#weekEndDate').value=cw.end;$('#weekRangeHint').textContent=`Rango actual: ${dayDateES(cw.start)} → ${dayDateES(cw.end)}. Las pistas del borrador se limitarán a estas fechas.`}renderSlotRows();setDefaultQuickDate();renderAdminMatches();renderPins();renderRoles();renderExternalAdmins();renderWhats();setupAdminBlockOrdering();
+  const cps=categoryPlayers();if(!playerEditorDirty)$('#playerPaste').value=cps.join('\n');$('#playerCount').textContent=`${cps.length} jugador${cps.length===1?'':'es'}`;$('#fixturePaste').value='';renderFixtureEditor();const cw=weeks.find(w=>w.id===state.week);if(cw){$('#weekStartDate').value=cw.start;$('#weekEndDate').value=cw.end;$('#weekRangeHint').textContent=`Rango actual: ${dayDateES(cw.start)} → ${dayDateES(cw.end)}. Las pistas del borrador se limitarán a estas fechas.`}renderSlotRows();setDefaultQuickDate();renderAdminMatches();renderPins();renderRoles();renderExternalAdmins();renderWhats();renderAdminFunctionalTools();wireAdminFunctionalTools();setupAdminBlockOrdering();
 }
 function renderRoles(){
   const tb=$('#roleTable');const ps=allIdentities().filter(p=>!accessIsExcluded(p));
@@ -5734,9 +5854,11 @@ async function loadPushDevices(){
     if(!rr.ok||r.ok===false)throw new Error(r.error||('HTTP '+rr.status));
 
     const groups=Array.isArray(r.users)?r.users:[];
+    window.__pushDeviceGroups=groups;
     if(!groups.length){
       if(tb)tb.innerHTML='<tr><td colspan="4">No hay dispositivos suscritos.</td></tr>';
       window.__pushDeviceCount=0;
+      renderAdminFunctionalTools();
       updateAdminSummaries();
       return;
     }
@@ -5749,6 +5871,7 @@ async function loadPushDevices(){
       tb.querySelectorAll('[data-remove-devices]').forEach(b=>b.onclick=()=>removePushDevicesFor(b.dataset.removeDevices));
     }
     window.__pushDeviceCount=Number(r.total||0);
+    renderAdminFunctionalTools();
     updateAdminSummaries();
   }catch(e){
     if(tb)tb.innerHTML=`<tr><td colspan="4">⚠️ ${e.message}</td></tr>`;
@@ -5926,6 +6049,198 @@ function setDefaultQuickDate(){
   if(!inp.value || inp.value<w.start || inp.value>w.end) inp.value=w.start;
 }
 function renderWhats(){const w=weeks.find(x=>x.id===state.week);const ss=slots().slice().sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));let txt=`🎾 RESERVA DE PISTAS - LIGA CT CAMPEADOR 🎾\n\n📅 ${w.label.toUpperCase()}\n\n`;if(!ss.length)txt+='🔒 Disponibilidad todavía no publicada.';else{const days=[...new Set(ss.map(s=>s.date))];days.forEach(date=>{txt+=`━━━━━━━━━━━━━━━\n📅 ${dayDateES(date).toUpperCase()}\n\n`;ss.filter(s=>s.date===date).forEach(s=>{const bk=slotBooking(s.id);txt+=`${s.time} → ${s.court}: ${bk?`${bk.a} vs ${bk.b} (${bk.category})`:'LIBRE'}\n`});txt+='\n'})}txt+='❗ Los enfrentamientos son los fijados oficialmente para esa semana.';$('#whatsPreview').value=txt}
+
+
+function adminWeekHasEnded(weekId){
+  const w=weeks.find(x=>x.id===weekId);
+  if(!w?.end)return false;
+  const end=parseCalendarDate(w.end);
+  return !!end && new Date()>end;
+}
+function adminResultWinner(m,r){
+  if(!r||r.status!=='confirmed'||r.type==='not_played')return '';
+  if(r.winner)return r.winner;
+  let aw=0,bw=0;
+  for(const s of (r.sets||[])){
+    const a=Number(s.a),b=Number(s.b);
+    if(!Number.isFinite(a)||!Number.isFinite(b)||a===b)continue;
+    if(a>b)aw++; else bw++;
+  }
+  if(aw===bw)return '';
+  return aw>bw?m.a:m.b;
+}
+function adminPushCountFor(name){
+  const groups=Array.isArray(window.__pushDeviceGroups)?window.__pushDeviceGroups:[];
+  const g=groups.find(x=>normalizeName(x.userName)===normalizeName(name));
+  return Number(g?.count||0);
+}
+function adminIncidentData(){
+  const matches=adminAllMatches();
+  const pendingResults=matches.filter(m=>resultFor(m.id)?.status==='pending');
+  const currentUnreserved=matches.filter(m=>effectiveWeekFor(m.id)===state.week&&!bookingFor(m.id)&&!resultFor(m.id));
+  const postponed=matches.filter(m=>!!postponedInfo(m.id));
+  const overdueNoResult=matches.filter(m=>adminWeekHasEnded(effectiveWeekFor(m.id))&&!resultFor(m.id)&&!postponedInfo(m.id)?.targetWeek);
+  const activeUsers=allIdentities().filter(n=>!accessIsExcluded(n));
+  const noPin=activeUsers.filter(n=>!/^(?:\d{4}|\d{6})$/.test(String(data.pins?.[n]||'')));
+  const pushLoaded=Array.isArray(window.__pushDeviceGroups);
+  const noPush=pushLoaded?activeUsers.filter(n=>adminPushCountFor(n)<1):[];
+  return {matches,pendingResults,currentUnreserved,postponed,overdueNoResult,noPin,noPush,pushLoaded};
+}
+function openAdminBlock(section){
+  const d=document.querySelector(`#adminView details[data-admin-section="${section}"]`);
+  if(!d)return;
+  d.open=true;
+  requestAnimationFrame(()=>d.scrollIntoView({behavior:'smooth',block:'start'}));
+}
+function closeAdminFunctionalModal(){
+  $('#adminFunctionalModal')?.classList.add('hidden');
+  document.body.classList.remove('adminFunctionalOpen');
+}
+function showAdminFunctionalModal(title,html,kicker='ADMIN'){
+  const modal=$('#adminFunctionalModal');
+  if(!modal)return;
+  $('#adminFunctionalTitle').textContent=title;
+  $('#adminFunctionalKicker').textContent=kicker;
+  $('#adminFunctionalBody').innerHTML=html;
+  modal.classList.remove('hidden');
+  document.body.classList.add('adminFunctionalOpen');
+  $('#adminFunctionalBody').scrollTop=0;
+}
+function adminMatchShortMeta(m){
+  const bk=bookingFor(m.id);
+  const r=resultFor(m.id);
+  const p=postponedInfo(m.id);
+  const parts=[m._round,`${m._category} · ${m._gender}`];
+  if(bk)parts.push(adminMatchBookingText(bk));
+  else parts.push('Sin reserva');
+  if(r)parts.push(r.status==='confirmed'?'Resultado confirmado':'Resultado pendiente');
+  if(p)parts.push(p.targetWeek?'Reprogramado':'Retrasado');
+  return parts.join(' · ');
+}
+function openAdminIncidentList(type){
+  const d=adminIncidentData();
+  let title='',rows=[];
+  if(type==='pending-results'){title='Resultados pendientes';rows=d.pendingResults.map(m=>({m,label:`${m.a} vs ${m.b}`,meta:adminMatchShortMeta(m),action:'Resultado'}));}
+  if(type==='unreserved'){title='Partidos sin reservar';rows=d.currentUnreserved.map(m=>({m,label:`${m.a} vs ${m.b}`,meta:adminMatchShortMeta(m),action:'Abrir'}));}
+  if(type==='postponed'){title='Partidos retrasados';rows=d.postponed.map(m=>({m,label:`${m.a} vs ${m.b}`,meta:adminMatchShortMeta(m),action:'Gestionar'}));}
+  if(type==='overdue'){title='Sin resultado fuera de plazo';rows=d.overdueNoResult.map(m=>({m,label:`${m.a} vs ${m.b}`,meta:adminMatchShortMeta(m),action:'Abrir'}));}
+  if(type==='no-pin'){
+    title='Usuarios sin PIN';
+    rows=d.noPin.map(name=>({name,label:name,meta:`${roleOf(name)==='admin'?'Administrador':roleOf(name)==='miembro'?'Miembro':'Jugador'} · sin PIN válido`,action:'Ver usuario'}));
+  }
+  if(type==='no-push'){
+    title='Usuarios sin avisos Push';
+    rows=d.noPush.map(name=>({name,label:name,meta:'No tiene ningún dispositivo con avisos activos',action:'Ver usuario'}));
+  }
+  const html=rows.length?`<div class="adminIncidentList">${rows.map((x,idx)=>`<div class="adminIncidentRow"><div><div class="adminIncidentRowTitle">${mappEsc(x.label)}</div><div class="adminIncidentRowMeta">${mappEsc(x.meta)}</div></div><button type="button" data-admin-incident-open="${idx}">${mappEsc(x.action)}</button></div>`).join('')}</div>`:'<div class="tiny" style="padding:18px;text-align:center">No hay casos pendientes.</div>';
+  showAdminFunctionalModal(title,html,'INCIDENCIAS');
+  $('#adminFunctionalBody').querySelectorAll('[data-admin-incident-open]').forEach(btn=>btn.onclick=()=>{
+    const x=rows[Number(btn.dataset.adminIncidentOpen)];if(!x)return;
+    closeAdminFunctionalModal();
+    if(x.name){openAdminPlayerCard(x.name);return;}
+    if(!x.m)return;
+    adminSetMatchContext(x.m,{effective:type==='unreserved'});
+    if(type==='pending-results'){openResultModal(x.m.id);return;}
+    if(type==='postponed'){openDelayModal(x.m.id);return;}
+    adminMatchesState.category=x.m._category;adminMatchesState.gender=x.m._gender;adminMatchesState.week=x.m._week;
+    renderAdminMatches();openAdminBlock('matchesAdmin');
+  });
+}
+function adminPlayerMatches(name){
+  const n=normalizeName(name);
+  return adminAllMatches().filter(m=>normalizeName(m.a)===n||normalizeName(m.b)===n);
+}
+function openAdminPlayerCard(name){
+  const matches=adminPlayerMatches(name);
+  let wins=0,losses=0,played=0,pending=0;
+  const rows=matches.map(m=>{
+    const r=resultFor(m.id),bk=bookingFor(m.id);
+    const winner=adminResultWinner(m,r);
+    if(r?.status==='confirmed'&&r.type!=='not_played'){
+      played++;
+      if(winner){if(normalizeName(winner)===normalizeName(name))wins++;else losses++;}
+    }else if(r?.status==='pending')pending++;
+    const rival=normalizeName(m.a)===normalizeName(name)?m.b:m.a;
+    const resultText=r?(resultLabel(r)+(r.status==='pending'?' · pendiente':'')).trim():'Sin resultado';
+    const court=bk?`${dayDateES(bk.date)} · ${bk.time} · ${bk.court}`:'Sin reserva';
+    return {m,r,bk,rival,resultText,court};
+  });
+  const memberships=playerCategoryMemberships(name);
+  const pin=String(data.pins?.[name]||'');
+  const pinShown=/^(?:\d{4}|\d{6})$/.test(pin)?'•'.repeat(pin.length):'Sin PIN';
+  const pushCount=adminPushCountFor(name);
+  const categories=memberships.length?memberships.map(x=>`${x.category} ${x.gender}`).join(' · '):'Sin categoría deportiva';
+  const role=roleOf(name)==='admin'?'Administrador':roleOf(name)==='miembro'?'Miembro':'Jugador';
+  const html=`<div class="adminPlayerCardTop">
+    <div><div class="adminPlayerName">${mappEsc(name)}</div><div class="adminPlayerMeta">${mappEsc(role)} · ${mappEsc(categories)}</div><div class="adminPlayerStatus"><span class="${pushCount?'ok':'warn'}">${pushCount?`${pushCount} dispositivo${pushCount===1?'':'s'} Push`:'Sin Push'}</span><span class="${pin?'ok':'warn'}">${pin?'PIN activo':'Sin PIN'}</span></div></div>
+    <div class="adminPlayerPinBox"><div class="adminPlayerPinLabel">PIN</div><div class="adminPlayerPin" id="adminPlayerPinValue">${pinShown}</div><div class="adminPlayerPinActions">${pin?'<button type="button" id="adminPlayerShowPin">Mostrar</button><button type="button" id="adminPlayerCopyAccess">Copiar acceso</button>':''}</div></div>
+  </div>
+  <div class="adminPlayerStats"><div class="adminPlayerStat"><strong>${matches.length}</strong><span>Partidos</span></div><div class="adminPlayerStat"><strong>${played}</strong><span>Jugados</span></div><div class="adminPlayerStat"><strong>${wins}</strong><span>Victorias</span></div><div class="adminPlayerStat"><strong>${losses}</strong><span>Derrotas</span></div></div>
+  <div class="adminPlayerActions"><button class="primary" type="button" id="adminPlayerMessage">Enviar mensaje</button><button type="button" id="adminPlayerAccess">Accesos</button>${pending?`<button type="button" id="adminPlayerPending">${pending} resultado${pending===1?'':'s'} pendiente${pending===1?'':'s'}</button>`:''}</div>
+  <div class="adminPlayerSectionTitle">HISTORIAL DE PARTIDOS</div>
+  <div class="adminPlayerHistory">${rows.length?rows.map((x,idx)=>`<div class="adminPlayerMatch"><div class="adminPlayerMatchTop"><div><div class="adminPlayerMatchRival">vs ${mappEsc(x.rival)}</div><div class="adminPlayerMatchRound">${mappEsc(x.m._round)} · ${mappEsc(x.m._category)} · ${mappEsc(x.m._gender)}</div></div><div class="adminPlayerMatchResult">${mappEsc(x.resultText)}</div></div><div class="adminPlayerMatchMeta">${mappEsc(x.court)}</div><div style="margin-top:7px"><button class="adminSearchOpen" type="button" data-player-match-open="${idx}">Abrir partido</button></div></div>`).join(''):'<div class="tiny">No tiene partidos registrados.</div>'}</div>`;
+  showAdminFunctionalModal(name,html,'FICHA DE JUGADOR');
+  const body=$('#adminFunctionalBody');
+  const show=body.querySelector('#adminPlayerShowPin');
+  if(show)show.onclick=()=>{const v=body.querySelector('#adminPlayerPinValue');const hidden=v.textContent!==pin;v.textContent=hidden?pin:'•'.repeat(pin.length);show.textContent=hidden?'Ocultar':'Mostrar'};
+  body.querySelector('#adminPlayerCopyAccess')?.addEventListener('click',()=>copyPinMessage(name));
+  body.querySelector('#adminPlayerMessage')?.addEventListener('click',()=>{
+    closeAdminFunctionalModal();openAdminBlock('messages');
+    const aud=$('#msgAudience');if(aud){aud.value='manual';renderMessageAudience();setTimeout(()=>{const cb=[...document.querySelectorAll('#msgManualUsers [data-msg-user]')].find(x=>normalizeName(x.dataset.msgUser)===normalizeName(name));if(cb){document.querySelectorAll('#msgManualUsers [data-msg-user]').forEach(x=>x.checked=false);cb.checked=true;updateMessageDeliveryText(window.__messagePushGroups||null)}},80)}
+  });
+  body.querySelector('#adminPlayerAccess')?.addEventListener('click',()=>{closeAdminFunctionalModal();openAdminBlock('accessDevices')});
+  body.querySelector('#adminPlayerPending')?.addEventListener('click',()=>{closeAdminFunctionalModal();const first=rows.find(x=>x.r?.status==='pending');if(first){adminSetMatchContext(first.m);openResultModal(first.m.id)}});
+  body.querySelectorAll('[data-player-match-open]').forEach(btn=>btn.onclick=()=>{const x=rows[Number(btn.dataset.playerMatchOpen)];if(!x)return;closeAdminFunctionalModal();adminSetMatchContext(x.m);adminMatchesState.category=x.m._category;adminMatchesState.gender=x.m._gender;adminMatchesState.week=x.m._week;renderAdminMatches();openAdminBlock('matchesAdmin')});
+}
+function renderAdminSearchResults(){
+  const input=$('#adminGlobalSearch'),box=$('#adminSearchResults');if(!input||!box)return;
+  const q=normalizeName(input.value||'');
+  if(!q){box.classList.add('hidden');box.innerHTML='';return;}
+  const rows=allIdentities().filter(n=>!accessIsExcluded(n)&&normalizeName(n).includes(q)).slice(0,8);
+  box.innerHTML=rows.length?rows.map(n=>{const mem=playerCategoryMemberships(n);const meta=[roleOf(n)==='admin'?'Administrador':roleOf(n)==='miembro'?'Miembro':'Jugador',mem.map(x=>x.category).join(', ')||'sin categoría'].join(' · ');return `<div class="adminSearchResult"><div><div class="adminSearchResultName">${mappEsc(n)}</div><div class="adminSearchResultMeta">${mappEsc(meta)}</div></div><button type="button" class="adminSearchOpen" data-admin-player="${mappEsc(n)}">Abrir ficha</button></div>`}).join(''):'<div class="tiny" style="padding:8px">No hay coincidencias.</div>';
+  box.classList.remove('hidden');
+  box.querySelectorAll('[data-admin-player]').forEach(btn=>btn.onclick=()=>openAdminPlayerCard(btn.dataset.adminPlayer));
+}
+function renderAdminFunctionalTools(){
+  if(!isAdmin())return;
+  const d=adminIncidentData();
+  const box=$('#adminIncidentChips');
+  if(box){
+    const chips=[
+      ['pending-results','Por confirmar',d.pendingResults.length,d.pendingResults.length?'danger':'good'],
+      ['unreserved','Sin reserva',d.currentUnreserved.length,d.currentUnreserved.length?'warn':'good'],
+      ['postponed','Retrasados',d.postponed.length,d.postponed.length?'warn':'good'],
+      ['overdue','Fuera de plazo',d.overdueNoResult.length,d.overdueNoResult.length?'danger':'good'],
+      ['no-pin','Sin PIN',d.noPin.length,d.noPin.length?'warn':'good'],
+      ['no-push','Sin Push',d.pushLoaded?d.noPush.length:'…',d.pushLoaded?(d.noPush.length?'warn':'good'):'']
+    ];
+    box.innerHTML=chips.map(([type,label,count,cls])=>`<button type="button" class="adminIncidentChip ${cls}" data-admin-incident="${type}"><strong>${count}</strong>${label}</button>`).join('');
+    box.querySelectorAll('[data-admin-incident]').forEach(btn=>btn.onclick=()=>{
+      if(btn.dataset.adminIncident==='no-push'&&!d.pushLoaded){loadPushDevices();return;}
+      openAdminIncidentList(btn.dataset.adminIncident);
+    });
+  }
+}
+function wireAdminFunctionalTools(){
+  const search=$('#adminGlobalSearch');
+  if(search&&!search.dataset.functionalWired){search.dataset.functionalWired='1';search.addEventListener('input',renderAdminSearchResults);search.addEventListener('keydown',e=>{if(e.key==='Enter'){const first=$('#adminSearchResults [data-admin-player]');if(first){e.preventDefault();openAdminPlayerCard(first.dataset.adminPlayer)}}})}
+  const clear=$('#adminSearchClear');if(clear&&!clear.dataset.functionalWired){clear.dataset.functionalWired='1';clear.onclick=()=>{if(search){search.value='';search.focus()}renderAdminSearchResults()}}
+  document.querySelectorAll('[data-admin-fast]').forEach(btn=>{if(btn.dataset.functionalWired)return;btn.dataset.functionalWired='1';btn.onclick=()=>{
+    const a=btn.dataset.adminFast;
+    if(a==='message'){openAdminBlock('messages');return;}
+    if(a==='pending-results'){openAdminIncidentList('pending-results');return;}
+    if(a==='unreserved'){openAdminIncidentList('unreserved');return;}
+    if(a==='publish'){
+      if(data.published?.[state.week]){openAdminBlock('courts');return;}
+      const available=(data.drafts?.[state.week]||data.slots?.[state.week]||[]).length;
+      if(!available){openAdminBlock('courts');alert('Primero prepara la disponibilidad de pistas.');return;}
+      if(confirm('¿Publicar ahora la disponibilidad de pistas de la jornada seleccionada?'))$('#publishSlots')?.click();
+    }
+  }});
+  const close=$('#adminFunctionalClose');if(close&&!close.dataset.functionalWired){close.dataset.functionalWired='1';close.onclick=closeAdminFunctionalModal}
+  const modal=$('#adminFunctionalModal');if(modal&&!modal.dataset.functionalWired){modal.dataset.functionalWired='1';modal.addEventListener('click',e=>{if(e.target===modal)closeAdminFunctionalModal()})}
+  renderAdminFunctionalTools();
+}
 
 function updateAdminSummaries(){
   const pc=categoryPlayers().length;
@@ -6731,6 +7046,7 @@ async function openModernAdmin(){
   document.body.classList.remove('modern-ui');
   $('#adminView')?.classList.remove('hidden');
   renderAdmin();updateAdminSummaries();wireAdminCompact();renderModernAdminContext();setupAdminBlockOrdering();
+  loadPushDevices().catch(()=>{});
   await loadAdminBlockOrderFromCloud({force:true});
   setupAdminBlockOrdering();
   window.scrollTo({top:0});
