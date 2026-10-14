@@ -2559,6 +2559,154 @@ body.resultModalOpen{overflow:hidden}
   margin-bottom:12px;
 }
 
+
+/* =========================================================
+   JORNADA PRO · gestor visual de jornadas
+   ========================================================= */
+.journeyManager{display:grid;gap:13px}
+.journeyManagerTop{
+  display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;
+  padding:13px;border:1px solid #e2e5e9;border-radius:15px;background:#fff;
+}
+.journeyManagerTitle{min-width:0}
+.journeyEyebrow{font-size:8px;font-weight:950;letter-spacing:.09em;color:#9a9ea5}
+.journeyName{font-size:20px;font-weight:950;color:#1d2025;line-height:1.15;margin-top:2px}
+.journeyDates{font-size:10px;color:#767b83;margin-top:4px}
+.journeyTopRight{display:flex;align-items:center;gap:8px}
+.journeyNavBtn{
+  width:40px;height:40px;border-radius:11px;border:1px solid #dfe3e7;background:#fff;
+  color:#555b64;font-size:25px;line-height:1;display:grid;place-items:center;
+}
+.journeyNavBtn:disabled{opacity:.3}
+.journeyVisibilityBadge{
+  display:inline-flex;align-items:center;justify-content:center;min-height:25px;padding:0 9px;
+  border-radius:999px;font-size:8px;font-weight:950;letter-spacing:.04em;white-space:nowrap;
+  background:#eef0f2;color:#676c74;
+}
+.journeyVisibilityBadge.live{background:#e7f6ec;color:#227046}
+.journeyVisibilityBadge.locked{background:#f1f2f4;color:#747982}
+.journeyPrimaryActions{display:flex;gap:7px;flex-wrap:wrap}
+.journeyPrimaryActions .btn{min-height:38px}
+.journeyInlinePanel{
+  padding:12px;border:1px solid #e0e4e8;border-radius:13px;background:#f8f9fa;
+}
+.journeyInlinePanelTitle{font-size:12px;font-weight:950;color:#2b2f35;margin-bottom:9px}
+.journeyQuick{margin:0}
+.journeySettingsGrid{grid-template-columns:minmax(0,1.4fr) minmax(170px,.8fr) minmax(170px,.8fr) !important;margin:0}
+.journeyMatchesHeader{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;padding-top:2px;
+}
+.journeyMatchesTitle{font-size:15px;font-weight:950;color:#25282d}
+.journeyMatchesSub{font-size:9px;color:#858991;margin-top:2px}
+.journeyMoreBtn{
+  width:38px;height:34px;border:1px solid #dde1e5;border-radius:10px;background:#fff;
+  color:#6b7078;font-weight:950;letter-spacing:1px;
+}
+.journeyDangerMenu{
+  display:flex;justify-content:flex-end;padding:8px;border:1px solid #f0d7dc;border-radius:11px;background:#fffafb
+}
+.journeyFixtureList{
+  border:1px solid #e2e5e9;border-radius:13px;overflow:hidden;background:#fff;
+  max-height:360px;overflow-y:auto;-webkit-overflow-scrolling:touch;
+}
+.journeyFixtureList .fixtureListHead{border:0;border-radius:0;margin:0;top:0}
+.journeyFixtureList .fixtureItem{border-width:1px 0 0;border-radius:0;margin:0;background:#fff}
+.journeyFixtureList>.tiny{padding:20px 12px;text-align:center}
+.journeySaveBar{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:11px 12px;border:1px solid #e1e4e8;border-radius:13px;background:#fafbfc;
+}
+.journeySaveState{font-size:9px;color:#777c84;font-weight:800}
+.journeySaveState.dirty{color:#a56b00}
+.journeySaveState.ok{color:#227046}
+.journeySaveBtn{min-width:150px}
+.futureJourneysSection{
+  border-top:1px solid #eceef1;padding-top:14px;margin-top:2px
+}
+.futureJourneysHead{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:9px
+}
+.futureJourneysTitle{font-size:10px;font-weight:950;letter-spacing:.07em;color:#686d74}
+.futureJourneysSub{font-size:9px;color:#8a8f96;margin-top:3px;line-height:1.35}
+.futureJourneysPreview{display:grid;gap:7px}
+.futureJourneyPreviewRow{
+  display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:9px;align-items:center;
+  padding:10px 11px;border:1px solid #e2e5e9;border-radius:11px;background:#fff;
+}
+.futureJourneyPreviewName{font-size:11px;font-weight:900;color:#2c3036}
+.futureJourneyPreviewMeta{font-size:8px;color:#858a91;margin-top:2px}
+.futureJourneyEditBtn{
+  min-height:32px;padding:0 10px;border:1px solid #d9dde2;border-radius:8px;background:#fff;color:#4f545c;
+  font-size:9px;font-weight:900;
+}
+.futureJourneyPublishBtn{
+  min-height:32px;padding:0 10px;border:1px solid #6d0010;border-radius:8px;background:#fff;color:#6d0010;
+  font-size:9px;font-weight:900;
+}
+
+/* Future journey single editor */
+.futureFixturesModal{
+  position:fixed;inset:0;z-index:170;display:flex;align-items:flex-end;justify-content:center;
+  padding:0;background:rgba(8,10,14,.62);backdrop-filter:blur(5px)
+}
+.futureFixturesSheet{
+  width:min(760px,100%);max-height:92dvh;display:flex;flex-direction:column;overflow:hidden;
+  background:#f7f8fa;border-radius:26px 26px 0 0;box-shadow:0 -18px 60px rgba(0,0,0,.28)
+}
+.futureFixturesHead{
+  flex:0 0 auto;display:flex;justify-content:space-between;gap:12px;align-items:center;
+  padding:16px;background:#fff;border-bottom:1px solid #e3e6ea
+}
+.futureFixturesHead h3{margin:0;font-size:18px;color:#1d2025}
+.futureFixturesHead p{margin:3px 0 0;font-size:10px;color:#7d8289}
+.futureFixturesClose{
+  width:42px;height:42px;min-width:42px;border-radius:13px;border:1px solid #dfe2e6;background:#fff;color:#72777f;font-size:22px
+}
+.futureFixturesBody{flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px}
+.futureJourneyCard{
+  margin-bottom:9px;border:1px solid #dfe3e8;border-radius:13px;background:#fff;overflow:hidden
+}
+.futureJourneySummary{
+  display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:9px;align-items:center;padding:12px
+}
+.futureJourneySummaryName{font-size:12px;font-weight:950;color:#292d33}
+.futureJourneySummaryMeta{font-size:9px;color:#858a91;margin-top:3px}
+.futureLockedBadge,.futureVisibleBadge{
+  display:inline-flex;align-items:center;min-height:22px;padding:0 8px;border-radius:999px;font-size:8px;font-weight:950
+}
+.futureLockedBadge{background:#f1f2f4;color:#747982}
+.futureVisibleBadge{background:#e8f6ed;color:#287445}
+.futureJourneyEditor{
+  padding:12px;border-top:1px solid #edf0f2;background:#fafbfc
+}
+.futureEditorQuick{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:end}
+.futureEditorList{margin-top:10px;display:grid;gap:6px}
+.futureEditorRow{
+  display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;gap:8px;align-items:center;
+  padding:9px;border:1px solid #e1e4e8;border-radius:9px;background:#fff;font-size:10px
+}
+.futureEditorActions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.futureFixturesFoot{
+  flex:0 0 auto;padding:12px 14px max(12px,env(safe-area-inset-bottom));border-top:1px solid #e1e4e8;background:#fff
+}
+.futureFixturesSave{width:100%;min-height:46px;border:0;border-radius:12px;background:#6d0010;color:#fff;font-size:12px;font-weight:900}
+
+@media(max-width:700px){
+  .journeySettingsGrid{grid-template-columns:1fr!important}
+  .journeyManagerTop{grid-template-columns:auto minmax(0,1fr) auto}
+  .journeyVisibilityBadge{display:none}
+  .futureJourneyPreviewRow{grid-template-columns:minmax(0,1fr) auto}
+  .futureJourneyPreviewRow .futureJourneyPublishBtn{grid-column:1/-1}
+  .futureEditorQuick{grid-template-columns:1fr}
+  .futureEditorQuick .btn{width:100%}
+}
+@media(max-width:520px){
+  .journeyPrimaryActions{display:grid;grid-template-columns:1fr 1fr}
+  .journeyPrimaryActions .btn{width:100%}
+  .journeySaveBar{align-items:stretch;flex-direction:column}
+  .journeySaveBtn{width:100%}
+}
+
 </style>
 </head>
 <body>
@@ -2788,30 +2936,83 @@ body.resultModalOpen{overflow:hidden}
     <span class="adminSummaryMeta" id="adminMeta_journey">Enfrentamientos</span>
   </summary>
   <div class="adminAccordionBody">
-<div class="adminSubsection">
-      <div class="adminSubsectionHead"><span>Enfrentamientos oficiales</span><span id="adminMeta_fixtures_sub">Abrir</span></div>
-      <div class="adminSubsectionBody"><div class="authNote">La jornada viene marcada desde iSquad u otra fuente externa. Selecciona la semana de arriba, escribe la <b>jornada oficial</b> y carga exactamente los enfrentamientos que correspondan.</div>
-<div class="roundBox">
-<div class="field"><label>Jornada oficial</label><input id="externalRound" placeholder="Ej. Jornada 4" type="text"/></div>
-<div class="field"><label>Inicio de la semana</label><div class="datePickerWrap"><input id="weekStartDate" type="date"/><button class="calendarBtn" id="openWeekStartCal" type="button" aria-label="Abrir calendario para la fecha de inicio" title="Abrir calendario">📅</button></div></div>
-<div class="field"><label>Fin de la semana</label><div class="datePickerWrap"><input id="weekEndDate" type="date"/><button class="calendarBtn" id="openWeekEndCal" type="button" aria-label="Abrir calendario para la fecha final" title="Abrir calendario">📅</button></div></div>
-<button class="btn secondary" id="copyPrevFixtures" type="button">⧉ Copiar anterior</button>
-</div>
-<div class="tiny" id="weekRangeHint" style="margin-top:7px">Estas fechas definen qué días pertenecen a la semana seleccionada y qué fechas podrán usarse en el borrador de pistas.</div>
-<div class="fixtureDivider"></div>
-<div class="tiny"><b>Añadir partido rápido</b> · Solo aparecen jugadores de esta categoría.</div>
-<div class="fixtureQuick">
-<div class="field"><label>Jugador A</label><select id="fixturePlayerA"></select></div>
-<div class="field"><label>Jugador B</label><select id="fixturePlayerB"></select></div>
-<button class="btn gold" id="addFixture" type="button">Añadir</button>
-</div>
-<div class="fixtureList" id="fixtureList"></div>
-<div class="fixtureDivider"></div>
-<div class="tiny" style="margin-bottom:8px"><b>Pegar jornada completa</b> · Una línea por partido. Admite <b>Jugador A vs Jugador B</b>, <b>Jugador A - Jugador B</b> o <b>Jugador A;Jugador B</b>.</div>
-<textarea id="fixturePaste" placeholder="Carlos Pérez vs Hugo Martín\nMario López - Pablo Ruiz"></textarea>
-<div class="fixtureImportStatus" id="fixtureImportStatus">La lista pegada se añadirá a los partidos que ya hayas introducido arriba, evitando duplicados.</div>
-<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"><button class="btn secondary" id="importFixtures" type="button">Importar lista</button><button class="btn gold" id="saveFixtures">Guardar jornada</button><button class="btn danger" id="clearFixtures">Vaciar jornada</button><button class="btn secondary" id="futureFixturesBtn" type="button">📅 Próximas jornadas</button></div>
-<div class="fixtureFutureNote">Puedes dejar preparados los enfrentamientos de jornadas posteriores. Los jugadores no los verán hasta que haya terminado la jornada anterior.</div></div>
+    <div class="journeyManager">
+      <div class="journeyManagerTop">
+        <button class="journeyNavBtn" id="journeyPrevBtn" type="button" aria-label="Jornada anterior">‹</button>
+        <div class="journeyManagerTitle">
+          <div class="journeyEyebrow">JORNADA ACTUAL</div>
+          <div class="journeyName" id="journeyManagerName">Jornada</div>
+          <div class="journeyDates" id="journeyManagerDates">—</div>
+        </div>
+        <div class="journeyTopRight">
+          <span class="journeyVisibilityBadge" id="journeyVisibilityBadge">—</span>
+          <button class="journeyNavBtn" id="journeyNextBtn" type="button" aria-label="Jornada siguiente">›</button>
+        </div>
+      </div>
+
+      <div class="journeyPrimaryActions">
+        <button class="btn gold" id="toggleQuickFixture" type="button">＋ Añadir enfrentamiento</button>
+        <button class="btn secondary" id="togglePasteFixtures" type="button">📋 Pegar lista</button>
+        <button class="btn secondary" id="copyPrevFixtures" type="button">⧉ Copiar anterior</button>
+        <button class="btn secondary" id="toggleJourneySettings" type="button">⚙️ Fechas</button>
+      </div>
+
+      <div class="journeyInlinePanel hidden" id="quickFixturePanel">
+        <div class="journeyInlinePanelTitle">Añadir enfrentamiento</div>
+        <div class="fixtureQuick journeyQuick">
+          <div class="field"><label>Jugador A</label><select id="fixturePlayerA"></select></div>
+          <div class="field"><label>Jugador B</label><select id="fixturePlayerB"></select></div>
+          <button class="btn gold" id="addFixture" type="button">Añadir</button>
+        </div>
+      </div>
+
+      <div class="journeyInlinePanel hidden" id="pasteFixturePanel">
+        <div class="journeyInlinePanelTitle">Pegar lista completa</div>
+        <div class="tiny" style="margin-bottom:8px">Una línea por partido: <b>Jugador A vs Jugador B</b>, <b>Jugador A - Jugador B</b> o <b>Jugador A;Jugador B</b>.</div>
+        <textarea id="fixturePaste" placeholder="Carlos Pérez vs Hugo Martín&#10;Mario López - Pablo Ruiz"></textarea>
+        <div class="fixtureImportStatus" id="fixtureImportStatus">Se añadirá a los partidos existentes evitando duplicados.</div>
+        <button class="btn secondary" id="importFixtures" type="button" style="margin-top:8px">Importar lista</button>
+      </div>
+
+      <div class="journeyInlinePanel hidden" id="journeySettingsPanel">
+        <div class="journeyInlinePanelTitle">Datos de la jornada</div>
+        <div class="roundBox journeySettingsGrid">
+          <div class="field"><label>Jornada oficial</label><input id="externalRound" placeholder="Ej. Jornada 4" type="text"/></div>
+          <div class="field"><label>Inicio</label><div class="datePickerWrap"><input id="weekStartDate" type="date"/><button class="calendarBtn" id="openWeekStartCal" type="button" aria-label="Abrir calendario">📅</button></div></div>
+          <div class="field"><label>Fin</label><div class="datePickerWrap"><input id="weekEndDate" type="date"/><button class="calendarBtn" id="openWeekEndCal" type="button" aria-label="Abrir calendario">📅</button></div></div>
+        </div>
+        <div class="tiny" id="weekRangeHint">Estas fechas determinan cuándo se activa automáticamente la siguiente jornada.</div>
+      </div>
+
+      <div class="journeyMatchesHeader">
+        <div>
+          <div class="journeyMatchesTitle">Enfrentamientos</div>
+          <div class="journeyMatchesSub" id="journeyMatchesSub">0 partidos</div>
+        </div>
+        <button class="journeyMoreBtn" id="journeyMoreBtn" type="button" aria-label="Más opciones">•••</button>
+      </div>
+
+      <div class="journeyDangerMenu hidden" id="journeyDangerMenu">
+        <button class="btn danger" id="clearFixtures" type="button">Vaciar jornada</button>
+      </div>
+
+      <div class="fixtureList journeyFixtureList" id="fixtureList"></div>
+
+      <div class="journeySaveBar">
+        <div class="journeySaveState" id="journeySaveState">Sin cambios pendientes</div>
+        <button class="btn gold journeySaveBtn" id="saveFixtures" type="button">Guardar cambios</button>
+      </div>
+
+      <div class="futureJourneysSection">
+        <div class="futureJourneysHead">
+          <div>
+            <div class="futureJourneysTitle">PRÓXIMAS JORNADAS</div>
+            <div class="futureJourneysSub">Prepara únicamente los cruces. Permanecen ocultos hasta que termine la jornada anterior.</div>
+          </div>
+          <button class="btn secondary" id="futureFixturesBtn" type="button">Ver todas</button>
+        </div>
+        <div class="futureJourneysPreview" id="futureJourneysPreview"></div>
+      </div>
     </div>
   </div>
 </details>
@@ -3046,7 +3247,7 @@ const API_URL="https://ct-campeador-api.ligasdetenis.workers.dev/";
 const PUSH_URL="https://ct-campeador-push-v1.ligasdetenis.workers.dev";
 let PUSH_VAPID_PUBLIC_KEY="";
 const PUSH_SW_URL="/ct-campeador-liga/push-sw.js";
-const APP_BUILD="20261013-admin-entry-top-1";
+const APP_BUILD="20261013-journey-manager-pro-1";
 const weeks=[
  {id:"W1",label:"Semana 1 · 17–25 octubre",start:"2026-10-17",end:"2026-10-25"},
  {id:"W2",label:"Semana 2 · 26 octubre–1 noviembre",start:"2026-10-26",end:"2026-11-01"},
@@ -3326,7 +3527,14 @@ function canonicalIdentity(name){
 function fixtureId(a,b){return `${fixtureKey()}|${slug(a)}|${slug(b)}`}
 function makeFixture(a,b){a=canonicalPlayer(a);b=canonicalPlayer(b);return {id:fixtureId(a,b),a,b}}
 function fixturePairKey(a,b){return [normalizeName(a),normalizeName(b)].sort().join('|')}
-function markFixtureDirty(){fixtureEditorDirty=true;setOnline(true,'✏️ Jornada sin guardar');const st=$('#fixtureImportStatus');if(st)st.textContent='Hay cambios en la jornada pendientes de guardar. Pulsa “Guardar jornada”.';}
+function markFixtureDirty(){
+  fixtureEditorDirty=true;
+  setOnline(true,'✏️ Jornada sin guardar');
+  const st=$('#fixtureImportStatus');
+  if(st)st.textContent='Hay cambios pendientes. Pulsa “Guardar cambios”.';
+  const saveState=$('#journeySaveState');
+  if(saveState){saveState.textContent='Cambios pendientes de guardar';saveState.classList.add('dirty');saveState.classList.remove('ok')}
+}
 function addFixturePair(a,b,{silent=false}={}){
   a=canonicalPlayer(a); b=canonicalPlayer(b);
   if(!a||!b){if(!silent)alert('Selecciona los dos jugadores.');return false}
@@ -3397,7 +3605,45 @@ function parseFutureFixtureText(raw){
 function makeFutureFixture(weekId,a,b){
   return {id:`${weekId}|${state.category}|${state.gender}|${slug(a)}|${slug(b)}`,a,b};
 }
-function openFutureFixturesPlanner(){
+
+function renderFutureJourneysPreview(){
+  const box=$('#futureJourneysPreview');
+  if(!box)return;
+  const currentIdx=journeyIndex(state.week);
+  const rows=weeks.filter((w,i)=>i>currentIdx).slice(0,3);
+  if(!rows.length){
+    box.innerHTML='<div class="tiny">No hay jornadas posteriores.</div>';
+    return;
+  }
+  box.innerHTML=rows.map(w=>{
+    const arr=data.fixtures?.[fixtureKeyForWeek(w.id)]||[];
+    const visible=journeyFixturesArePublic(w.id);
+    return `<div class="futureJourneyPreviewRow">
+      <div>
+        <div class="futureJourneyPreviewName">${mappEsc(makeWeekLabel(w))}</div>
+        <div class="futureJourneyPreviewMeta">${arr.length?`${arr.length} partido${arr.length===1?'':'s'} preparado${arr.length===1?'':'s'}`:'Sin configurar'} · ${visible?'visible':'oculta'}</div>
+      </div>
+      <button class="futureJourneyEditBtn" type="button" data-future-preview-edit="${mappEsc(w.id)}">Editar</button>
+      ${!visible&&arr.length?`<button class="futureJourneyPublishBtn" type="button" data-future-preview-publish="${mappEsc(w.id)}">Publicar ahora</button>`:''}
+    </div>`;
+  }).join('');
+
+  box.querySelectorAll('[data-future-preview-edit]').forEach(btn=>{
+    btn.onclick=()=>openFutureFixturesPlanner(btn.dataset.futurePreviewEdit);
+  });
+  box.querySelectorAll('[data-future-preview-publish]').forEach(btn=>{
+    btn.onclick=()=>publishJourneyFixturesNow(btn.dataset.futurePreviewPublish);
+  });
+}
+
+function futureEditorRowHtml(m,index){
+  return `<div class="futureEditorRow">
+    <b>${mappEsc(m.a)}</b><span>${mappEsc(m.b)}</span>
+    <button class="btn dangerBtn" type="button" data-future-remove="${index}">Quitar</button>
+  </div>`;
+}
+
+function openFutureFixturesPlanner(initialWeekId=''){
   if(!requireAdmin())return;
   document.querySelector('.futureFixturesModal')?.remove();
 
@@ -3408,124 +3654,221 @@ function openFutureFixturesPlanner(){
     return;
   }
 
+  let activeWeekId=targets.some(w=>w.id===initialWeekId)?initialWeekId:targets[0].id;
+  const drafts={};
+  for(const w of targets){
+    drafts[w.id]=(data.fixtures?.[fixtureKeyForWeek(w.id)]||[]).map(m=>({a:m.a,b:m.b}));
+  }
+
   const modal=document.createElement('div');
   modal.className='futureFixturesModal';
-  modal.innerHTML=`<div class="futureFixturesSheet">
-    <div class="futureFixturesHead">
-      <div>
-        <h3>Próximas jornadas</h3>
-        <p>${mappEsc(state.category)} · ${mappEsc(state.gender)} · solo enfrentamientos</p>
+
+  const render=()=>{
+    modal.innerHTML=`<div class="futureFixturesSheet">
+      <div class="futureFixturesHead">
+        <div>
+          <h3>Próximas jornadas</h3>
+          <p>${mappEsc(state.category)} · ${mappEsc(state.gender)} · solo enfrentamientos</p>
+        </div>
+        <button class="futureFixturesClose" type="button" aria-label="Cerrar">×</button>
       </div>
-      <button class="futureFixturesClose" type="button" aria-label="Cerrar">×</button>
-    </div>
-    <div class="futureFixturesBody">
-      ${targets.map(w=>{
-        const idx=journeyIndex(w.id);
-        const prev=weeks[idx-1];
-        const publicNow=journeyFixturesArePublic(w.id);
-        const count=(data.fixtures?.[fixtureKeyForWeek(w.id)]||[]).length;
-        return `<details class="futureJourneyCard">
-          <summary>
-            <span>${mappEsc(makeWeekLabel(w))}</span>
-            <span class="${publicNow?'futureVisibleBadge':'futureLockedBadge'}">${publicNow?'VISIBLE':'OCULTA'}</span>
-          </summary>
-          <div class="futureJourneyInner">
-            <textarea data-future-week="${mappEsc(w.id)}" placeholder="Jugador A vs Jugador B">${mappEsc(futureFixtureText(w.id))}</textarea>
-            <div class="futureJourneyStatus">${count} partido${count===1?'':'s'} preparado${count===1?'':'s'} · ${publicNow?'Esta jornada ya puede mostrarse a los jugadores.':`Se hará visible automáticamente al finalizar ${mappEsc(makeWeekLabel(prev))}.`}</div>
-          </div>
-        </details>`;
-      }).join('')}
-    </div>
-    <div class="futureFixturesFoot">
-      <button class="futureFixturesSave" type="button">Guardar enfrentamientos futuros</button>
-    </div>
-  </div>`;
+      <div class="futureFixturesBody">
+        ${targets.map(w=>{
+          const visible=journeyFixturesArePublic(w.id);
+          const arr=drafts[w.id]||[];
+          const open=w.id===activeWeekId;
+          return `<div class="futureJourneyCard">
+            <div class="futureJourneySummary">
+              <div>
+                <div class="futureJourneySummaryName">${mappEsc(makeWeekLabel(w))}</div>
+                <div class="futureJourneySummaryMeta">${arr.length?`${arr.length} partido${arr.length===1?'':'s'} preparado${arr.length===1?'':'s'}`:'Sin configurar'}</div>
+              </div>
+              <span class="${visible?'futureVisibleBadge':'futureLockedBadge'}">${visible?'VISIBLE':'OCULTA'}</span>
+              <button class="futureJourneyEditBtn" type="button" data-future-toggle="${mappEsc(w.id)}">${open?'Cerrar':'Editar'}</button>
+            </div>
+            ${open?`<div class="futureJourneyEditor" data-editor-week="${mappEsc(w.id)}">
+              <div class="futureEditorQuick">
+                <div class="field"><label>Jugador A</label><select data-future-a><option value="">Selecciona…</option>${categoryPlayers().map(p=>`<option>${mappEsc(p)}</option>`).join('')}</select></div>
+                <div class="field"><label>Jugador B</label><select data-future-b><option value="">Selecciona…</option>${categoryPlayers().map(p=>`<option>${mappEsc(p)}</option>`).join('')}</select></div>
+                <button class="btn gold" type="button" data-future-add>Añadir</button>
+              </div>
+              <div class="futureEditorList">
+                ${arr.length?arr.map((m,i)=>futureEditorRowHtml(m,i)).join(''):'<div class="tiny">Todavía no hay enfrentamientos preparados.</div>'}
+              </div>
+              <div class="futureEditorActions">
+                ${!visible&&arr.length?`<button class="btn secondary" type="button" data-future-publish="${mappEsc(w.id)}">Publicar ahora</button>`:''}
+                ${arr.length?`<button class="btn dangerBtn" type="button" data-future-clear="${mappEsc(w.id)}">Vaciar esta jornada</button>`:''}
+              </div>
+              <div class="tiny" style="margin-top:9px">${visible?'Los jugadores ya pueden ver esta jornada.':`Se publicará automáticamente al finalizar ${mappEsc(makeWeekLabel(weeks[journeyIndex(w.id)-1]))}.`}</div>
+            </div>`:''}
+          </div>`;
+        }).join('')}
+      </div>
+      <div class="futureFixturesFoot">
+        <button class="futureFixturesSave" type="button">Guardar jornadas preparadas</button>
+      </div>
+    </div>`;
 
-  document.body.appendChild(modal);
-  const close=()=>modal.remove();
-  modal.querySelector('.futureFixturesClose').onclick=close;
-  modal.onclick=e=>{if(e.target===modal)close()};
+    modal.querySelector('.futureFixturesClose').onclick=()=>modal.remove();
+    modal.querySelectorAll('[data-future-toggle]').forEach(btn=>{
+      btn.onclick=()=>{
+        activeWeekId=activeWeekId===btn.dataset.futureToggle?'':btn.dataset.futureToggle;
+        render();
+      };
+    });
 
-  modal.querySelector('.futureFixturesSave').onclick=async()=>{
-    const errors=[];
-    const prepared={};
-
-    for(const w of targets){
-      const raw=modal.querySelector(`[data-future-week="${w.id}"]`)?.value||'';
-      const parsed=parseFutureFixtureText(raw);
-      if(parsed.unknown.length)errors.push(`${makeWeekLabel(w)}: nombres no encontrados → ${parsed.unknown.join(', ')}`);
-      if(parsed.duplicated.length)errors.push(`${makeWeekLabel(w)}: enfrentamientos duplicados/no válidos → ${parsed.duplicated.join(', ')}`);
-      prepared[w.id]=parsed.pairs.map(([a,b])=>makeFutureFixture(w.id,a,b));
-    }
-
-    if(errors.length){
-      alert('⚠️ Revisa antes de guardar:\n\n'+errors.join('\n\n'));
-      return;
-    }
-
-    // No eliminar silenciosamente partidos futuros que ya tengan reserva/resultado.
-    const protectedRows=[];
-    for(const w of targets){
-      const key=fixtureKeyForWeek(w.id);
-      const nextIds=new Set((prepared[w.id]||[]).map(m=>m.id));
-      for(const old of (data.fixtures?.[key]||[])){
-        if(!nextIds.has(old.id)&&(data.bookings?.[old.id]||data.results?.[old.id])){
-          protectedRows.push(`${makeWeekLabel(w)}: ${old.a} vs ${old.b}`);
+    const editor=modal.querySelector('[data-editor-week]');
+    if(editor){
+      const weekId=editor.dataset.editorWeek;
+      editor.querySelector('[data-future-add]')?.addEventListener('click',()=>{
+        const a=editor.querySelector('[data-future-a]').value;
+        const b=editor.querySelector('[data-future-b]').value;
+        if(!a||!b){alert('Selecciona Jugador A y Jugador B.');return}
+        if(normalizeName(a)===normalizeName(b)){alert('Un jugador no puede enfrentarse consigo mismo.');return}
+        const key=[normalizeName(a),normalizeName(b)].sort().join('|');
+        if((drafts[weekId]||[]).some(m=>[normalizeName(m.a),normalizeName(m.b)].sort().join('|')===key)){
+          alert('Ese enfrentamiento ya está añadido.');
+          return;
         }
-      }
+        drafts[weekId].push({a,b});
+        render();
+      });
+      editor.querySelectorAll('[data-future-remove]').forEach(btn=>{
+        btn.onclick=()=>{
+          drafts[weekId].splice(Number(btn.dataset.futureRemove),1);
+          render();
+        };
+      });
     }
-    if(protectedRows.length){
-      alert('No se pueden quitar desde aquí partidos que ya tengan reserva o resultado:\n\n'+protectedRows.join('\n'));
-      return;
-    }
 
-    const total=Object.values(prepared).reduce((n,a)=>n+a.length,0);
-    if(!confirm(`¿Guardar ${total} enfrentamiento${total===1?'':'s'} para jornadas posteriores?\n\nSeguirán ocultos para los jugadores hasta que termine la jornada anterior.`))return;
+    modal.querySelectorAll('[data-future-clear]').forEach(btn=>{
+      btn.onclick=()=>{
+        const weekId=btn.dataset.futureClear;
+        if(confirm('¿Vaciar los enfrentamientos preparados de esta jornada?')){
+          drafts[weekId]=[];
+          render();
+        }
+      };
+    });
 
-    const btn=modal.querySelector('.futureFixturesSave');
-    const old=btn.textContent;
-    btn.disabled=true;btn.textContent='⏳ Guardando…';
+    modal.querySelectorAll('[data-future-publish]').forEach(btn=>{
+      btn.onclick=async()=>{
+        await publishJourneyFixturesNow(btn.dataset.futurePublish);
+        render();
+      };
+    });
 
-    const backup=JSON.parse(JSON.stringify(data.fixtures||{}));
-    try{
+    modal.querySelector('.futureFixturesSave').onclick=async()=>{
+      const protectedRows=[];
       for(const w of targets){
         const key=fixtureKeyForWeek(w.id);
-        const arr=prepared[w.id]||[];
-        if(arr.length)data.fixtures[key]=arr;
-        else delete data.fixtures[key];
+        const next=(drafts[w.id]||[]).map(m=>makeFutureFixture(w.id,m.a,m.b));
+        const nextIds=new Set(next.map(m=>m.id));
+        for(const old of (data.fixtures?.[key]||[])){
+          if(!nextIds.has(old.id)&&(data.bookings?.[old.id]||data.results?.[old.id])){
+            protectedRows.push(`${makeWeekLabel(w)}: ${old.a} vs ${old.b}`);
+          }
+        }
       }
-      localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
-      await saveStateOnline();
-      await refreshOnline({silent:true,force:true});
-      renderAll();
-      close();
-      alert('✅ Enfrentamientos futuros guardados.');
-    }catch(e){
-      data.fixtures=backup;
-      localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
-      alert('No se han podido guardar.\n\n'+e.message);
-    }finally{
-      btn.disabled=false;btn.textContent=old;
-    }
+      if(protectedRows.length){
+        alert('No se pueden quitar partidos que ya tengan reserva o resultado:\\n\\n'+protectedRows.join('\\n'));
+        return;
+      }
+
+      const btn=modal.querySelector('.futureFixturesSave');
+      const old=btn.textContent;
+      btn.disabled=true;btn.textContent='⏳ Guardando…';
+      const backup=JSON.parse(JSON.stringify(data.fixtures||{}));
+      try{
+        for(const w of targets){
+          const key=fixtureKeyForWeek(w.id);
+          const arr=(drafts[w.id]||[]).map(m=>makeFutureFixture(w.id,m.a,m.b));
+          if(arr.length)data.fixtures[key]=arr;
+          else delete data.fixtures[key];
+        }
+        localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+        await saveStateOnline();
+        await refreshOnline({silent:true,force:true});
+        renderAll();
+        modal.remove();
+        alert('✅ Jornadas futuras guardadas.');
+      }catch(e){
+        data.fixtures=backup;
+        localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+        alert('No se han podido guardar.\\n\\n'+e.message);
+      }finally{
+        btn.disabled=false;btn.textContent=old;
+      }
+    };
   };
+
+  document.body.appendChild(modal);
+  modal.onclick=e=>{if(e.target===modal)modal.remove()};
+  render();
 }
+
 function renderFixtureEditor(){
   if(!isAdmin())return;
   const ps=categoryPlayers();
   const opts='<option value="">Selecciona…</option>'+ps.map(p=>`<option value="${p.replace(/"/g,'&quot;')}">${p}</option>`).join('');
-  const a=$('#fixturePlayerA'),b=$('#fixturePlayerB'); if(a)a.innerHTML=opts;if(b)b.innerHTML=opts;
+  const a=$('#fixturePlayerA'),b=$('#fixturePlayerB');
+  if(a)a.innerHTML=opts;
+  if(b)b.innerHTML=opts;
+
   if($('#externalRound') && !(fixtureEditorDirty && document.activeElement===$('#externalRound'))) $('#externalRound').value=fixtureRound();
+
+  const w=weeks.find(x=>x.id===state.week);
+  const idx=journeyIndex(state.week);
+  const visible=journeyFixturesArePublic(state.week);
+  const round=fixtureRound()||`Jornada ${idx+1}`;
+
+  if($('#journeyManagerName'))$('#journeyManagerName').textContent=round;
+  if($('#journeyManagerDates'))$('#journeyManagerDates').textContent=w?`${dayDateES(w.start)} → ${dayDateES(w.end)}`:'—';
+
+  const badge=$('#journeyVisibilityBadge');
+  if(badge){
+    badge.textContent=visible?'● PUBLICADA':'🔒 PREPARADA';
+    badge.classList.toggle('live',visible);
+    badge.classList.toggle('locked',!visible);
+  }
+  if($('#journeyPrevBtn'))$('#journeyPrevBtn').disabled=idx<=0;
+  if($('#journeyNextBtn'))$('#journeyNextBtn').disabled=idx<0||idx>=weeks.length-1;
+
   const box=$('#fixtureList'); if(!box)return;
   const fs=fixtures();
+  if($('#journeyMatchesSub'))$('#journeyMatchesSub').textContent=`${fs.length} partido${fs.length===1?'':'s'} · ${visible?'visible para jugadores':'oculta para jugadores'}`;
+
   box.innerHTML=fs.length
     ? `<div class="fixtureListHead"><span>JUGADOR A</span><span>JUGADOR B</span><span></span></div>`+
       fs.map(m=>`<div class="fixtureItem fixtureItemColumns">
-        <b class="fixturePlayerCell">${m.a}</b>
-        <span class="fixturePlayerCell">${m.b}</span>
-        <button class="btn dangerBtn" type="button" data-remove-fixture="${m.id}">Quitar</button>
+        <b class="fixturePlayerCell">${mappEsc(m.a)}</b>
+        <span class="fixturePlayerCell">${mappEsc(m.b)}</span>
+        <button class="btn dangerBtn" type="button" data-remove-fixture="${mappEsc(m.id)}">Quitar</button>
       </div>`).join('')
-    : '<div class="tiny">Todavía no hay partidos cargados para esta jornada.</div>';
-  box.querySelectorAll('[data-remove-fixture]').forEach(btn=>btn.onclick=()=>{const mid=btn.dataset.removeFixture;data.fixtures[fixtureKey()]=fixtures().filter(m=>m.id!==mid);localStorage.setItem(STORAGE_KEY,JSON.stringify(data));markFixtureDirty();renderFixtureEditor();renderMatches()});
+    : '<div class="tiny">Todavía no hay enfrentamientos en esta jornada.</div>';
+
+  box.querySelectorAll('[data-remove-fixture]').forEach(btn=>btn.onclick=()=>{
+    const mid=btn.dataset.removeFixture;
+    const existing=fixtures().find(m=>m.id===mid);
+    if((data.bookings?.[mid]||data.results?.[mid])&&existing){
+      alert('Este partido ya tiene reserva o resultado. Elimínalo desde “Partidos y resultados”.');
+      return;
+    }
+    data.fixtures[fixtureKey()]=fixtures().filter(m=>m.id!==mid);
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+    markFixtureDirty();
+    renderFixtureEditor();
+    renderMatches();
+  });
+
+  const stateBox=$('#journeySaveState');
+  if(stateBox){
+    stateBox.textContent=fixtureEditorDirty?'Cambios pendientes de guardar':'✓ Jornada sincronizada';
+    stateBox.classList.toggle('dirty',fixtureEditorDirty);
+    stateBox.classList.toggle('ok',!fixtureEditorDirty);
+  }
+
+  renderFutureJourneysPreview();
 }
 function parsePlayerLines(){
   const raw=$('#playerPaste').value||'';
@@ -3561,7 +3904,12 @@ function parseCalendarDate(value){
 function journeyIndex(weekId){
   return weeks.findIndex(w=>w.id===weekId);
 }
+function fixtureVisibilityKey(weekId,category=state.category,gender=state.gender){
+  return `${weekId}|${category}|${gender}`;
+}
 function journeyFixturesArePublic(weekId){
+  const forced=!!data.fixtureVisibilityOverrides?.[fixtureVisibilityKey(weekId)];
+  if(forced)return true;
   const idx=journeyIndex(weekId);
   if(idx<=0)return true;
   const previous=weeks[idx-1];
@@ -3569,6 +3917,24 @@ function journeyFixturesArePublic(weekId){
   const end=parseCalendarDate(previous.end);
   if(!end)return true;
   return new Date()>end;
+}
+async function publishJourneyFixturesNow(weekId){
+  if(!isAdmin())return;
+  const w=weeks.find(x=>x.id===weekId);
+  if(!w)return;
+  if(!confirm(`¿Publicar ahora los enfrentamientos de ${makeWeekLabel(w)}?\n\nLos jugadores podrán verlos aunque todavía no haya finalizado la jornada anterior.`))return;
+  data.fixtureVisibilityOverrides=data.fixtureVisibilityOverrides||{};
+  data.fixtureVisibilityOverrides[fixtureVisibilityKey(weekId)]=true;
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+  try{
+    await saveStateOnline();
+    renderAll();
+    alert('✅ Enfrentamientos publicados.');
+  }catch(e){
+    delete data.fixtureVisibilityOverrides[fixtureVisibilityKey(weekId)];
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+    alert('No se ha podido publicar.\n\n'+e.message);
+  }
 }
 function adminOrPublishedFixtures(arr,weekId){
   return isAdmin()||journeyFixturesArePublic(weekId)?arr:[];
@@ -5489,7 +5855,7 @@ function updateAdminSummaries(){
  const jm=$('#adminMeta_journey');
  if(jm){
    const fx=(fixtures()||[]).length;
-   jm.textContent=`${weeks.find(w=>w.id===state.week)?.label||state.week} · ${fx} partido${fx===1?'':'s'}`;
+   jm.textContent=`${fixtureRound()||weeks.find(w=>w.id===state.week)?.label||state.week} · ${fx} partido${fx===1?'':'s'} · ${journeyFixturesArePublic(state.week)?'publicada':'preparada'}`;
  }
  const cm=$('#adminMeta_courts');
  if(cm){
@@ -6371,9 +6737,39 @@ $('#clearPlayers').onclick=async()=>{
   }
 };
 $('#addFixture').onclick=()=>{if(!requireAdmin())return;const a=$('#fixturePlayerA').value,b=$('#fixturePlayerB').value;if(addFixturePair(a,b)){renderFixtureEditor();renderMatches();$('#fixturePlayerA').value='';$('#fixturePlayerB').value=''}};
+
+function toggleJourneyPanel(id){
+  const ids=['#quickFixturePanel','#pasteFixturePanel','#journeySettingsPanel'];
+  ids.forEach(sel=>{
+    const el=$(sel);
+    if(!el)return;
+    if(sel===id)el.classList.toggle('hidden');
+    else el.classList.add('hidden');
+  });
+}
+function navigateJourney(delta){
+  if(fixtureEditorDirty){
+    const ok=confirm('Tienes cambios sin guardar en esta jornada. ¿Cambiar de jornada y perder esos cambios?');
+    if(!ok)return;
+    fixtureEditorDirty=false;
+  }
+  const idx=journeyIndex(state.week);
+  const next=weeks[idx+delta];
+  if(!next)return;
+  state.week=next.id;
+  renderAll();
+  renderModernAdminContext();
+}
+$('#toggleQuickFixture').onclick=()=>toggleJourneyPanel('#quickFixturePanel');
+$('#togglePasteFixtures').onclick=()=>toggleJourneyPanel('#pasteFixturePanel');
+$('#toggleJourneySettings').onclick=()=>toggleJourneyPanel('#journeySettingsPanel');
+$('#journeyMoreBtn').onclick=()=>$('#journeyDangerMenu').classList.toggle('hidden');
+$('#journeyPrevBtn').onclick=()=>navigateJourney(-1);
+$('#journeyNextBtn').onclick=()=>navigateJourney(1);
+
 $('#futureFixturesBtn').onclick=openFutureFixturesPlanner;
 $('#importFixtures').onclick=()=>{if(!requireAdmin())return;const {pairs,unknown}=parseFixtureText($('#fixturePaste').value);if(!pairs.length){alert('No he encontrado enfrentamientos válidos en el texto.');return}let added=0;for(const [a,b] of pairs)if(addFixturePair(a,b,{silent:true}))added++;renderFixtureEditor();renderMatches();$('#fixtureImportStatus').textContent=`${added} partido${added===1?'':'s'} añadido${added===1?'':'s'}.`+(unknown.length?` ⚠ Nombres no encontrados exactamente en la lista: ${unknown.join(', ')}`:' Todos los nombres coinciden con la categoría.');};
-$('#saveFixtures').onclick=async()=>{if(!requireAdmin())return;const start=$('#weekStartDate').value,end=$('#weekEndDate').value;if(!start||!end){alert('Indica el inicio y el fin de la semana.');return}if(start>end){alert('La fecha de inicio no puede ser posterior a la fecha final.');return}data.weekRanges=data.weekRanges||{};data.weekRanges[state.week]={start,end};applyWeekRanges();trimDraftToCurrentWeek({persist:false});trimStoredAvailabilityToCurrentWeek();persistDraft();const round=$('#externalRound').value.trim();if(round)data.fixtureRounds[fixtureKey()]=round;else delete data.fixtureRounds[fixtureKey()];ensurePins();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));const btn=$('#saveFixtures'),oldTxt=btn.textContent;btn.disabled=true;btn.textContent='⏳ Guardando…';try{await saveStateOnline();await saveUsersOnline();fixtureEditorDirty=false;setOnline(true,'☁️ Guardado');await refreshOnline({silent:true,force:true});alert(`✅ Jornada guardada online.\n\n${round||weeks.find(w=>w.id===state.week).label}\n${fixtures().length} partido${fixtures().length===1?'':'s'}.`)}catch(e){fixtureEditorDirty=true;setOnline(true,'✏️ Sin guardar');alert('No se ha podido guardar la jornada online.\n\n'+e.message)}finally{btn.disabled=false;btn.textContent=oldTxt}};
+$('#saveFixtures').onclick=async()=>{if(!requireAdmin())return;const start=$('#weekStartDate').value,end=$('#weekEndDate').value;if(!start||!end){alert('Indica el inicio y el fin de la semana.');return}if(start>end){alert('La fecha de inicio no puede ser posterior a la fecha final.');return}data.weekRanges=data.weekRanges||{};data.weekRanges[state.week]={start,end};applyWeekRanges();trimDraftToCurrentWeek({persist:false});trimStoredAvailabilityToCurrentWeek();persistDraft();const round=$('#externalRound').value.trim();if(round)data.fixtureRounds[fixtureKey()]=round;else delete data.fixtureRounds[fixtureKey()];ensurePins();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));const btn=$('#saveFixtures'),oldTxt=btn.textContent;btn.disabled=true;btn.textContent='⏳ Guardando…';try{await saveStateOnline();await saveUsersOnline();fixtureEditorDirty=false;setOnline(true,'☁️ Guardado');await refreshOnline({silent:true,force:true});const js=$('#journeySaveState');if(js){js.textContent='✓ Jornada sincronizada';js.classList.remove('dirty');js.classList.add('ok')}alert(`✅ Jornada guardada.\n\n${round||weeks.find(w=>w.id===state.week).label}\n${fixtures().length} partido${fixtures().length===1?'':'s'}.`)}catch(e){fixtureEditorDirty=true;setOnline(true,'✏️ Sin guardar');alert('No se ha podido guardar la jornada online.\n\n'+e.message)}finally{btn.disabled=false;btn.textContent=oldTxt}};
 $('#clearFixtures').onclick=async()=>{if(!requireAdmin())return;if(confirm('¿Vaciar todos los enfrentamientos de esta categoría y jornada?')){delete data.fixtures[fixtureKey()];delete data.fixtureRounds[fixtureKey()];localStorage.setItem(STORAGE_KEY,JSON.stringify(data));markFixtureDirty();renderAll();try{await saveStateOnline();fixtureEditorDirty=false;setOnline(true,'☁️ Guardado')}catch(e){alert(e.message)}}};
 $('#copyPrevFixtures').onclick=()=>{if(!requireAdmin())return;const i=weeks.findIndex(w=>w.id===state.week);if(i<=0){alert('No hay una semana anterior para copiar.');return}const prevKey=`${weeks[i-1].id}|${state.category}|${state.gender}`;const prev=data.fixtures[prevKey]||[];if(!prev.length){alert('La semana anterior no tiene enfrentamientos en esta categoría.');return}if(fixtures().length&&!confirm('Ya hay enfrentamientos en esta jornada. ¿Sustituirlos por los de la semana anterior?'))return;data.fixtures[fixtureKey()]=prev.map(m=>makeFixture(m.a,m.b));data.fixtureRounds[fixtureKey()]=data.fixtureRounds?.[prevKey]||'';localStorage.setItem(STORAGE_KEY,JSON.stringify(data));markFixtureDirty();renderFixtureEditor();renderMatches()};
 $('#draftHabitual').onclick=()=>{if(!requireAdmin())return;draftSlots=buildDefaultWeekSlots();persistDraft();renderDraftBoard()};
