@@ -2952,6 +2952,39 @@ body.resultModalOpen{overflow:hidden}
  .adminPlayerPinBox{text-align:left}.adminPlayerPinActions{justify-content:flex-start}
  .adminIncidentRow{grid-template-columns:1fr}.adminIncidentRow button{width:100%}
 }
+
+
+/* Estado Push junto al nombre del usuario */
+.accessDesktopNameLine{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  min-width:0;
+}
+.pushStatusDot{
+  display:inline-block;
+  width:9px;
+  height:9px;
+  min-width:9px;
+  border-radius:50%;
+  vertical-align:middle;
+  box-shadow:0 0 0 2px rgba(0,0,0,.04);
+}
+.pushStatusDot.on{background:#21a55b}
+.pushStatusDot.off{background:#df304a}
+.pushStatusDot.checking{background:#aeb3ba}
+.accessMobileName{
+  display:flex!important;
+  align-items:center;
+  gap:7px;
+  flex-wrap:wrap;
+}
+.accessMobileName .pushStatusDot{
+  width:9px;
+  height:9px;
+  min-width:9px;
+}
+
 </style>
 </head>
 <body>
@@ -3544,7 +3577,7 @@ const API_URL="https://ct-campeador-api.ligasdetenis.workers.dev/";
 const PUSH_URL="https://ct-campeador-push-v1.ligasdetenis.workers.dev";
 let PUSH_VAPID_PUBLIC_KEY="";
 const PUSH_SW_URL="/ct-campeador-liga/push-sw.js";
-const APP_BUILD="20261015-backup-admin-functional-restored-1";
+const APP_BUILD="20261015-push-dot-after-name-1";
 const weeks=[
  {id:"W1",label:"Semana 1 · 17–25 octubre",start:"2026-10-17",end:"2026-10-25"},
  {id:"W2",label:"Semana 2 · 26 octubre–1 noviembre",start:"2026-10-26",end:"2026-11-01"},
@@ -5645,6 +5678,21 @@ function updateSelectedUsersUI(){
     all.indeterminate=checked.length>0&&checked.length<selectable.length;
   }
 }
+function pushStatusForUser(name){
+  const groups=window.__pushDeviceGroups;
+  if(!Array.isArray(groups))return {state:'checking',count:0,label:'Comprobando notificaciones…'};
+  const key=normalizeName(name);
+  const g=groups.find(x=>normalizeName(x?.userName||'')===key);
+  const count=Number(g?.count||0);
+  return count>0
+    ? {state:'on',count,label:`Notificaciones activadas · ${count} dispositivo${count===1?'':'s'}`}
+    : {state:'off',count:0,label:'Notificaciones no activadas'};
+}
+function pushStatusDotHtml(name){
+  const st=pushStatusForUser(name);
+  return `<span class="pushStatusDot ${st.state}" title="${mappEsc(st.label)}" aria-label="${mappEsc(st.label)}"></span>`;
+}
+
 function renderPins(){
   const tb=$('#pinTable');
   const cards=$('#pinCardsMobile');
@@ -5666,7 +5714,7 @@ function renderPins(){
     const roleClass=roleOf(p)==='admin'?'admin':roleOf(p)==='miembro'?'member':'player';
     return `<tr>
       <td><input type="checkbox" data-user-select="${safe}" ${protectedSelf?'disabled title="No puedes eliminar tu propio usuario administrador"':''}></td>
-      <td><b>${mappEsc(p)}</b><div class="accessRolePill ${roleClass}">${roleLabel}</div></td>
+      <td><div class="accessDesktopNameLine"><b>${mappEsc(p)}</b>${pushStatusDotHtml(p)}</div><div class="accessRolePill ${roleClass}">${roleLabel}</div></td>
       <td><span class="mono">${shown}</span></td>
       <td><button class="btn secondary" data-copy-pin="${safe}">Copiar acceso</button></td>
       <td><div class="matchActions"><button class="btn secondary" data-regenerate-pin="${safe}">♻ Nuevo PIN</button><button class="btn dangerBtn" data-delete-user="${safe}" ${protectedSelf?'disabled':''}>Eliminar</button></div></td>
@@ -5687,7 +5735,7 @@ function renderPins(){
         <div class="accessMobileTop">
           <input class="accessMobileCheck" type="checkbox" data-user-select="${safe}" aria-label="Seleccionar ${mappEsc(p)}" ${protectedSelf?'disabled title="No puedes eliminar tu propio usuario administrador"':''}>
           <div class="accessMobileIdentity">
-            <div class="accessMobileName">${mappEsc(p)}</div>
+            <div class="accessMobileName"><span>${mappEsc(p)}</span>${pushStatusDotHtml(p)}</div>
             <span class="accessRolePill ${roleClass}">${roleLabel}</span>
           </div>
         </div>
@@ -6064,6 +6112,7 @@ async function loadPushDevices(){
     if(!groups.length){
       if(tb)tb.innerHTML='<tr><td colspan="4">No hay dispositivos suscritos.</td></tr>';
       window.__pushDeviceCount=0;
+      renderPins();
       renderAdminFunctionalTools();
       updateAdminSummaries();
       return;
@@ -6077,6 +6126,7 @@ async function loadPushDevices(){
       tb.querySelectorAll('[data-remove-devices]').forEach(b=>b.onclick=()=>removePushDevicesFor(b.dataset.removeDevices));
     }
     window.__pushDeviceCount=Number(r.total||0);
+    renderPins();
     renderAdminFunctionalTools();
     updateAdminSummaries();
   }catch(e){
