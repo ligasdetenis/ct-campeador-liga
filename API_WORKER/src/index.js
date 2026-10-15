@@ -303,7 +303,7 @@ var index_default = {
           worker: "online",
           kv,
           durableObject,
-          version: "2.6.8-realtime-deeplink-fix",
+          version: "2.6.9-backup-export",
           error
         }, kv === "online" && durableObject === "online" ? 200 : 500, corsHeaders);
       }
@@ -314,7 +314,7 @@ var index_default = {
       const action = String(body.action || "").trim();
       if (action === "ping") {
         const ping = await bookingCall(env, { action: "ping" });
-        return json({ ok: true, message: "CT Campeador conectado", durableObject: ping.durableObject, version: "2.6.8-realtime-deeplink-fix" }, 200, corsHeaders);
+        return json({ ok: true, message: "CT Campeador conectado", durableObject: ping.durableObject, version: "2.6.9-backup-export" }, 200, corsHeaders);
       }
       if (action === "login") {
         const gateKey = loginGuardKey(request);
@@ -1087,6 +1087,43 @@ var index_default = {
           return json({ ok: false, error: j.error || txt || `Push HTTP ${r.status}` }, 502, corsHeaders);
         }
         return json(j, 200, corsHeaders);
+      }
+      if (action === "exportBackup") {
+        const admin = await requireAdmin(request, body, env);
+        if (!admin.ok) return json({ ok: false, error: admin.error }, admin.status, corsHeaders);
+
+        const [state, users, profiles, messages, adminPreferences, reservations] = await Promise.all([
+          getState(env),
+          getUsers(env),
+          getProfiles(env),
+          getMessages(env),
+          getAdminPrefs(env),
+          listReservations(env)
+        ]);
+
+        const backup = {
+          format: "ct-campeador-backup",
+          schemaVersion: 1,
+          generatedAt: new Date().toISOString(),
+          apiVersion: "2.6.9-backup-export",
+          tournamentName: String(state?.tournamentName || "CT Campeador"),
+          contents: {
+            state,
+            users,
+            profiles,
+            messages,
+            adminPreferences,
+            reservations
+          },
+          excluded: [
+            "sesiones y tokens de autenticación",
+            "secretos de Cloudflare",
+            "claves VAPID privadas",
+            "suscripciones Push del servicio de notificaciones"
+          ]
+        };
+
+        return json({ ok: true, backup }, 200, corsHeaders);
       }
       if (action === "listUsers") {
         const admin = await requireAdmin(request, body, env);
