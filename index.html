@@ -6918,6 +6918,15 @@ async function processPushDeepLink({force=false}={}){
     }else if(link.open==='match'){
       mappShow('match');
     }else if(link.open==='result'){
+      // Al abrir desde una notificación Push, la PWA puede llevar minutos suspendida
+      // y conservar en memoria el resultado anterior. Antes de abrir el modal,
+      // forzamos una lectura del estado remoto para que aparezca inmediatamente
+      // el resultado que acaba de subir el rival, sin tener que recargar la app.
+      if(link.matchId){
+        await refreshOnline({silent:true,force:true});
+        routeContextFromMatch(link.matchId);
+        renderAll();
+      }
       if(link.matchId && findFixtureById(link.matchId)){
         mappShow('match');
         setTimeout(()=>openResultModal(link.matchId),120);
