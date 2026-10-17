@@ -4746,29 +4746,14 @@ async function activateNativePush(){
 async function sendAvailabilityPush(force=false){
   if(!apiToken)throw new Error('Sesión de administrador no disponible.');
   const w=weeks.find(x=>x.id===weekKey());
-  const r=await fetch(PUSH_URL+'/send-availability',{
-    method:'POST',
-    headers:{
-      'Content-Type':'application/json',
-      'Authorization':'Bearer '+apiToken
-    },
-    body:JSON.stringify({
-      weekId:weekKey(),
-      weekLabel:w?.label||weekKey(),
-      url:(()=>{
-        const u=new URL('https://ligasdetenis.github.io/ct-campeador-liga/');
-        u.searchParams.set('open','courts');
-        u.searchParams.set('week',weekKey());
-        u.searchParams.set('category',state.category);
-        u.searchParams.set('gender',state.gender);
-        return u.toString();
-      })(),
-      force:!!force
-    })
+  return await apiRequest({
+    action:'sendAvailabilityPush',
+    weekId:weekKey(),
+    weekLabel:w?.label||weekKey(),
+    category:state.category,
+    gender:state.gender,
+    force:!!force
   });
-  let j={};try{j=await r.json()}catch(e){}
-  if(!r.ok||j.ok===false)throw new Error(j.error||('HTTP '+r.status));
-  return j;
 }
 
 function renderIdentity(){const sel=$('#playerIdentity');const ps=visibleIdentitiesForCategory();sel.innerHTML='<option value="">Selecciona tu nombre</option>'+ps.map(p=>`<option value="${p.replace(/"/g,'&quot;')}">${p}${roleOf(p)==='admin'?' · ADMIN':''}</option>`).join('');if(state.player&&!allIdentities().includes(state.player)){state.player='';state.authenticated=false;localStorage.removeItem('ctcampeador_auth_player')}sel.value=state.player;sel.disabled=state.authenticated;$('#playerPin').disabled=state.authenticated;$('#loginBtn').disabled=state.authenticated;const info=$('#identityInfo');if(!state.authenticated){info.innerHTML='<span class="identityWarn">Sin identificar.</span> Solo aparecen jugadores de '+state.category+' '+state.gender+' y administradores.'}else{const own=allWeekFixtures().filter(m=>m.a===state.player||m.b===state.player);info.innerHTML=`<span class="identityOk">✓ ${state.player}</span> · ${isAdmin()?'ADMIN':'jugador'} · sesión iniciada · ${own.length} partido${own.length===1?'':'s'} esta semana`}}
