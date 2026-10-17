@@ -303,7 +303,7 @@ var index_default = {
           worker: "online",
           kv,
           durableObject,
-          version: "2.6.9-backup-export",
+          version: "2.6.10-finaliza-libera-pista",
           error
         }, kv === "online" && durableObject === "online" ? 200 : 500, corsHeaders);
       }
@@ -314,7 +314,7 @@ var index_default = {
       const action = String(body.action || "").trim();
       if (action === "ping") {
         const ping = await bookingCall(env, { action: "ping" });
-        return json({ ok: true, message: "CT Campeador conectado", durableObject: ping.durableObject, version: "2.6.9-backup-export" }, 200, corsHeaders);
+        return json({ ok: true, message: "CT Campeador conectado", durableObject: ping.durableObject, version: "2.6.10-finaliza-libera-pista" }, 200, corsHeaders);
       }
       if (action === "login") {
         const gateKey = loginGuardKey(request);
@@ -644,6 +644,10 @@ var index_default = {
         const found = findFixture(state, matchId);
         if (!found) return json({ ok: false, error: "El enfrentamiento no existe o ya no est\xE1 publicado." }, 404, corsHeaders);
         const { fixture, week, category, gender } = found;
+        const confirmedResult = state.results?.[matchId];
+        if (confirmedResult?.status === "confirmed") {
+          return json({ ok: false, error: "Este partido ya está finalizado y no puede volver a reservar pista." }, 409, corsHeaders);
+        }
         if (auth.session.role !== "admin" && normalize(fixture.a) !== normalize(auth.session.name) && normalize(fixture.b) !== normalize(auth.session.name)) {
           return json({ ok: false, error: "Solo uno de los jugadores del partido puede reservar." }, 403, corsHeaders);
         }
@@ -743,6 +747,16 @@ var index_default = {
         state.updatedAt = now;
         await env.DATA.put(STATE_KEY, JSON.stringify(state));
 
+        // Partido confirmado = partido finalizado.
+        // La reserva deja de bloquear la pista, pero el resultado permanece en el histórico.
+        if (result.status === "confirmed") {
+          const currentReservation = await bookingCall(env, { action: "get", matchId });
+          if (currentReservation?.reservation) {
+            await bookingCall(env, { action: "cancel", matchId });
+            await broadcastRealtime(env, { type: "reservationChanged", matchId, reservation: null });
+          }
+        }
+
         if (result.status === "pending") {
           const rival = normalize(auth.session.name) === normalize(fixture.a) ? fixture.b : fixture.a;
           await broadcastRealtime(
@@ -790,6 +804,15 @@ var index_default = {
         result.updatedAt = now;
         state.updatedAt = now;
         await env.DATA.put(STATE_KEY, JSON.stringify(state));
+
+        // Partido confirmado = partido finalizado.
+        // Liberamos la pista asociada a la reserva, sin borrar el resultado.
+        const currentReservation = await bookingCall(env, { action: "get", matchId });
+        if (currentReservation?.reservation) {
+          await bookingCall(env, { action: "cancel", matchId });
+          await broadcastRealtime(env, { type: "reservationChanged", matchId, reservation: null });
+        }
+
         await broadcastRealtime(env, { type: "resultChanged", matchId, result });
         if (result.submittedBy && normalize(result.submittedBy) !== normalize(auth.session.name)) {
           await sendTargetedPush(
@@ -1105,7 +1128,7 @@ var index_default = {
           format: "ct-campeador-backup",
           schemaVersion: 1,
           generatedAt: new Date().toISOString(),
-          apiVersion: "2.6.9-backup-export",
+          apiVersion: "2.6.10-finaliza-libera-pista",
           tournamentName: String(state?.tournamentName || "CT Campeador"),
           contents: {
             state,
