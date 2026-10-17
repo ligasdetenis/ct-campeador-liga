@@ -4348,7 +4348,7 @@ function viewFixtures(){
   return [...official,...carried];
 }
 function effectiveWeekFor(mid){const rec=fixtureRecord(mid);const p=postponedInfo(mid);return p?.targetWeek||rec?.week||state.week}
-function isReservableInCurrentWeek(mid){return effectiveWeekFor(mid)===state.week}
+function isReservableInCurrentWeek(mid){const r=resultFor(mid);return effectiveWeekFor(mid)===state.week&&r?.status!=='confirmed'}
 function slots(){return data.slots[weekKey()]||[]}
 function isOpen(){return !!data.published[weekKey()]}
 function bookingFor(mid){return data.bookings[mid]||null}
@@ -5013,6 +5013,7 @@ function fillReserveCourts(mid,preferredCourt=''){
 }
 function openReserve(mid,preferredSlotId=''){
  state.reserveMatchId=mid;const m=findFixtureById(mid);if(!m)return;
+ if(resultFor(mid)?.status==='confirmed'){alert("Este partido ya está finalizado y no puede reservar pista.");return;}
  if(!canPlayerReserve(m)&&!isAdmin()){alert("Solo uno de los dos jugadores de este enfrentamiento o un administrador puede reservarlo.");return;}if(!isReservableInCurrentWeek(mid)){alert("Este partido está asignado a otra semana. Gestiona primero su retraso/reprogramación.");return;}
  $('#modalMatch').textContent=`${m.a} vs ${m.b}`;
  $('#modalCat').textContent=`${state.category} · ${state.gender} · ${weeks.find(w=>w.id===state.week).label}`;
@@ -5038,6 +5039,7 @@ function openReserve(mid,preferredSlotId=''){
 async function book(mid,sid){
  if(reservationPending)return;
  const m=findFixtureById(mid),s=slots().find(x=>x.id===sid);if(!m||!s)return;
+ if(resultFor(mid)?.status==='confirmed'){alert("Este partido ya está finalizado y no puede reservar pista.");return;}
  if(!canPlayerReserve(m)&&!isAdmin()){alert("No puedes reservar un partido en el que no participas.");return;}if(!isReservableInCurrentWeek(mid)){alert("Este partido está asignado a otra semana.");return;}
  const btn=$('#confirmReserve');
  const oldText=btn.textContent;
@@ -6651,7 +6653,9 @@ function mappResultPlayer(name){
 }
 function mappOwnMatches(){
  if(!state.authenticated||!state.player)return [];
- return viewFixtures().filter(m=>m.a===state.player||m.b===state.player)
+ return viewFixtures().filter(m=>
+   (m.a===state.player||m.b===state.player) && resultFor(m.id)?.status!=='confirmed'
+ )
 }
 function mappPrimaryMatch(){return mappOwnMatches()[0]||null}
 function mappOpponent(m){if(!m)return'';return m.a===state.player?m.b:m.a}
