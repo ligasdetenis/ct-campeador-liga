@@ -3549,6 +3549,507 @@ body.resultModalOpen{overflow:hidden}
 }
 </style>
 
+<style id="courts-pro-v2">
+
+/* =========================================================
+   TEST · PISTAS PRO V2 · Panel operativo profesional
+   ========================================================= */
+body.modern-admin .courtsPro{
+  display:grid;
+  gap:14px;
+  color:#20242a;
+}
+body.modern-admin .courtsProHero{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  padding:18px 18px 16px;
+  border:1px solid #e4e7eb;
+  border-radius:16px;
+  background:linear-gradient(135deg,#fff 0%,#fbfbfc 62%,#fff7f8 100%);
+  box-shadow:0 5px 18px rgba(27,31,38,.05);
+}
+body.modern-admin .courtsProHeroTitle{
+  font-size:20px;
+  line-height:1.1;
+  font-weight:950;
+  letter-spacing:-.025em;
+  color:#1e2228;
+}
+body.modern-admin .courtsProHeroSub{
+  margin-top:5px;
+  max-width:620px;
+  font-size:11px;
+  line-height:1.45;
+  color:#7d828a;
+}
+body.modern-admin .courtsProWeek{
+  flex:0 0 auto;
+  min-height:38px;
+  display:flex;
+  align-items:center;
+  padding:0 13px;
+  border:1px solid #e0e3e7;
+  border-radius:11px;
+  background:#fff;
+  color:#5d626b;
+  font-size:10px;
+  font-weight:900;
+  box-shadow:0 2px 8px rgba(20,24,32,.04);
+}
+
+body.modern-admin .courtsProKpis{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:9px;
+}
+body.modern-admin .courtsProKpi{
+  position:relative;
+  min-width:0;
+  padding:13px 14px 12px 15px;
+  border:1px solid #e4e7eb;
+  border-radius:14px;
+  background:#fff;
+  overflow:hidden;
+}
+body.modern-admin .courtsProKpi:before{
+  content:"";
+  position:absolute;
+  left:0;top:0;bottom:0;
+  width:4px;
+  background:#adb3bc;
+}
+body.modern-admin .courtsProKpi strong{
+  display:block;
+  font-size:25px;
+  line-height:1;
+  font-weight:950;
+  letter-spacing:-.04em;
+  color:#25292f;
+}
+body.modern-admin .courtsProKpi span{
+  display:block;
+  margin-top:5px;
+  font-size:9px;
+  font-weight:850;
+  color:#777c85;
+  text-transform:uppercase;
+  letter-spacing:.035em;
+}
+body.modern-admin .courtsProKpi.published{background:#f2fbf6;border-color:#d8ecdf}
+body.modern-admin .courtsProKpi.published:before{background:#1c9c5a}
+body.modern-admin .courtsProKpi.free{background:#f3f8ff;border-color:#dbe7f5}
+body.modern-admin .courtsProKpi.free:before{background:#377ed6}
+body.modern-admin .courtsProKpi.booked{background:#fff5f6;border-color:#f1dde0}
+body.modern-admin .courtsProKpi.booked:before{background:#c91833}
+body.modern-admin .courtsProKpi.pending{background:#fff9ec;border-color:#efe2bf}
+body.modern-admin .courtsProKpi.pending:before{background:#e1a400}
+
+body.modern-admin .courtsProDays{
+  display:flex;
+  gap:7px;
+  overflow-x:auto;
+  padding:2px 1px 4px;
+  scrollbar-width:none;
+  overscroll-behavior-x:contain;
+}
+body.modern-admin .courtsProDays::-webkit-scrollbar{display:none}
+body.modern-admin .courtsProDay{
+  flex:1 0 92px;
+  min-height:58px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:3px;
+  border:1px solid #dfe3e7!important;
+  border-radius:12px!important;
+  background:#fff!important;
+  color:#393e46!important;
+  padding:8px 10px!important;
+  box-shadow:none!important;
+  transition:.15s ease;
+}
+body.modern-admin .courtsProDay b{
+  font-size:11px;
+  font-weight:950;
+  white-space:nowrap;
+}
+body.modern-admin .courtsProDay span{
+  font-size:8px;
+  color:#8a8f97;
+  font-weight:800;
+  white-space:nowrap;
+}
+body.modern-admin .courtsProDay.active{
+  background:linear-gradient(135deg,#7a0014,#a8001d)!important;
+  border-color:#7a0014!important;
+  color:#fff!important;
+  box-shadow:0 5px 14px rgba(122,0,20,.16)!important;
+}
+body.modern-admin .courtsProDay.active span{color:#f4d6db!important}
+
+body.modern-admin .courtsProActions{
+  display:grid;
+  grid-template-columns:1.15fr 1fr 1fr .8fr;
+  gap:8px;
+  padding:10px;
+  border:1px solid #e4e7eb;
+  border-radius:14px;
+  background:#fafbfc;
+}
+body.modern-admin .courtsProActions .btn{
+  min-height:42px!important;
+  margin:0!important;
+  padding:9px 10px!important;
+  font-size:10px!important;
+  font-weight:900!important;
+  border-radius:10px!important;
+}
+body.modern-admin #courtsAddQuick{
+  background:#760011!important;
+  color:#fff!important;
+  border-color:#760011!important;
+}
+body.modern-admin .courtsProSecondary{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  flex-wrap:wrap;
+  margin-top:-4px;
+}
+body.modern-admin .courtsProSecondary .presetBtn{
+  min-height:34px;
+  padding:0 11px!important;
+  background:#fff9e8!important;
+  color:#7b5a08!important;
+  border:1px solid #ead48c!important;
+  border-radius:999px!important;
+  font-size:9px!important;
+  font-weight:900!important;
+}
+body.modern-admin .courtsProSecondary .countBadge{
+  margin-left:auto;
+  min-height:30px;
+  display:inline-flex;
+  align-items:center;
+  border-radius:999px;
+  background:#eff8f3;
+  color:#2e7950;
+  border:1px solid #d6eadf;
+  font-size:9px;
+  font-weight:900;
+}
+
+body.modern-admin .courtsProCustom{
+  padding:14px;
+  border:1px solid #e2e5e9;
+  border-radius:15px;
+  background:#fff;
+  box-shadow:0 3px 12px rgba(25,30,40,.035);
+}
+body.modern-admin .courtsProCustomTitle{
+  font-size:12px;
+  font-weight:950;
+  color:#25292f;
+}
+body.modern-admin .courtsProCustomSub{
+  margin-top:3px;
+  margin-bottom:11px;
+  font-size:9px;
+  color:#858a92;
+  line-height:1.4;
+}
+body.modern-admin .courtsProCustom .customBlockGrid{
+  grid-template-columns:1.25fr .75fr .75fr .6fr auto!important;
+  gap:8px!important;
+  align-items:end!important;
+}
+body.modern-admin .courtsProCustom .field label{
+  margin-bottom:5px!important;
+  color:#8a8f97!important;
+  font-size:8px!important;
+  font-weight:900!important;
+  letter-spacing:.04em;
+}
+body.modern-admin .courtsProCustom input{
+  min-height:42px!important;
+  border-radius:10px!important;
+  background:#f8f9fa!important;
+  border:1px solid #dfe3e7!important;
+  font-size:11px!important;
+}
+body.modern-admin .courtsProCustom #addCustomBlock{
+  min-height:42px!important;
+  background:#760011!important;
+  color:#fff!important;
+  border-color:#760011!important;
+}
+
+body.modern-admin .courtsProEditor{
+  display:grid!important;
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  gap:10px!important;
+  margin:0!important;
+  padding:0!important;
+}
+body.modern-admin .courtsProCard{
+  min-width:0;
+  border:1px solid #e1e4e8;
+  border-radius:15px;
+  background:#fff;
+  overflow:hidden;
+  box-shadow:0 4px 14px rgba(24,28,36,.045);
+}
+body.modern-admin .courtsProCardHead{
+  min-height:46px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:9px;
+  padding:10px 12px;
+  background:#f8f9fa;
+  border-bottom:1px solid #e6e8eb;
+}
+body.modern-admin .courtsProCardTitle{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:12px;
+  font-weight:950;
+  color:#25292f;
+}
+body.modern-admin .courtsProCardTitle:before{
+  content:"";
+  width:26px;
+  height:26px;
+  flex:0 0 26px;
+  border-radius:8px;
+  background:var(--court-gradient,linear-gradient(135deg,#760011,#a7001c));
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.18),0 2px 5px rgba(0,0,0,.08);
+}
+body.modern-admin .courtsProCard.courtTone1{--court-gradient:linear-gradient(135deg,#760011,#b00021)}
+body.modern-admin .courtsProCard.courtTone2{--court-gradient:linear-gradient(135deg,#1261c9,#2389eb)}
+body.modern-admin .courtsProCard.courtTone3{--court-gradient:linear-gradient(135deg,#0d8a58,#23b879)}
+body.modern-admin .courtsProCard.courtTone4{--court-gradient:linear-gradient(135deg,#b36b00,#e9a416)}
+body.modern-admin .courtsProCard.courtTone5{--court-gradient:linear-gradient(135deg,#6539a6,#8d61cc)}
+body.modern-admin .courtsProCard.courtTone6{--court-gradient:linear-gradient(135deg,#007f88,#18a8ae)}
+body.modern-admin .courtsProCardCount{
+  min-height:23px;
+  display:flex;
+  align-items:center;
+  padding:0 8px;
+  border-radius:999px;
+  background:#eef0f3;
+  color:#777c84;
+  font-size:8px;
+  font-weight:900;
+  white-space:nowrap;
+}
+body.modern-admin .courtsProCardHeadRight{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  flex:0 0 auto;
+}
+body.modern-admin .courtsProRemoveCourt{
+  min-height:28px!important;
+  padding:0 9px!important;
+  border:1px solid #efc3ca!important;
+  border-radius:8px!important;
+  background:#fff7f8!important;
+  color:#bd1530!important;
+  font-size:8px!important;
+  font-weight:950!important;
+  box-shadow:none!important;
+  white-space:nowrap;
+}
+body.modern-admin .courtsProRemoveCourt:active{transform:translateY(1px)}
+body.modern-admin .courtsProSlot{
+  display:grid;
+  grid-template-columns:82px minmax(0,1fr) 30px;
+  gap:9px;
+  align-items:center;
+  min-height:58px;
+  padding:9px 10px;
+  border-top:1px solid #edf0f2;
+}
+body.modern-admin .courtsProSlot:first-child{border-top:0}
+body.modern-admin .courtsProTime{
+  font-size:10px;
+  font-weight:950;
+  color:#262a30;
+  white-space:nowrap;
+}
+body.modern-admin .courtsProState{
+  min-width:0;
+  display:grid;
+  grid-template-columns:9px minmax(0,1fr);
+  column-gap:7px;
+  align-items:center;
+  font-size:10px;
+  font-weight:900;
+  color:#3d424a;
+}
+body.modern-admin .courtsProState .sub{
+  grid-column:2;
+  margin-top:2px;
+  font-size:8px;
+  line-height:1.25;
+  font-weight:700;
+  color:#8b9097;
+  overflow-wrap:anywhere;
+}
+body.modern-admin .courtsProDot{
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  background:#b8bdc5;
+}
+body.modern-admin .courtsProDot.free{background:#25a764;box-shadow:0 0 0 3px #e7f6ed}
+body.modern-admin .courtsProDot.booked{background:#d21d39;box-shadow:0 0 0 3px #fdecef}
+body.modern-admin .courtsProDot.draft{background:#dfaa11;box-shadow:0 0 0 3px #fff5d7}
+body.modern-admin .courtsProDelete{
+  width:30px!important;
+  height:30px!important;
+  min-height:0!important;
+  padding:0!important;
+  border:1px solid #f0cbd0!important;
+  border-radius:9px!important;
+  background:#fff7f8!important;
+  color:#bf1932!important;
+  font-size:12px!important;
+  font-weight:950!important;
+  box-shadow:none!important;
+}
+body.modern-admin .courtsProEmpty{
+  padding:26px 16px;
+  border:1px dashed #d8dce1;
+  border-radius:14px;
+  background:#fafbfc;
+  text-align:center;
+  color:#858a92;
+  font-size:10px;
+  line-height:1.5;
+}
+body.modern-admin .courtsProEmpty b{color:#3f444c;font-size:12px}
+
+body.modern-admin .courtsProPublish{
+  position:sticky;
+  bottom:10px;
+  z-index:30;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:14px;
+  align-items:center;
+  padding:13px 14px;
+  border:1px solid #dfe3e7;
+  border-radius:15px;
+  background:rgba(255,255,255,.96);
+  box-shadow:0 12px 32px rgba(21,25,31,.12);
+  backdrop-filter:blur(10px);
+}
+body.modern-admin .courtsProPublishTitle{
+  font-size:12px;
+  font-weight:950;
+  color:#25292f;
+}
+body.modern-admin .courtsProPublishMeta{
+  margin-top:3px;
+  max-width:550px;
+  font-size:9px;
+  line-height:1.35;
+  color:#7d828a;
+}
+body.modern-admin .courtsProPublishActions{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+}
+body.modern-admin .courtsProPublishActions .btn{
+  min-height:39px!important;
+  padding:8px 11px!important;
+  margin:0!important;
+  border-radius:10px!important;
+  font-size:9px!important;
+  font-weight:900!important;
+}
+body.modern-admin #publishSlots{
+  background:linear-gradient(90deg,#1dac64,#138e51)!important;
+  border-color:#138e51!important;
+  color:#fff!important;
+}
+body.modern-admin #saveDraftSlots{
+  background:#fff!important;
+  border:1.5px solid #7b0013!important;
+  color:#7b0013!important;
+}
+body.modern-admin #addCourtBtn{
+  background:#7b0013!important;
+  border-color:#7b0013!important;
+  color:#fff!important;
+}
+body.modern-admin .courtsProEmptyActions{
+  margin-top:12px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap
+}
+body.modern-admin .courtsProEmptyActions .btn{
+  min-height:38px!important;padding:8px 11px!important;font-size:9px!important
+}
+
+@media(max-width:820px){
+  body.modern-admin .courtsProKpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  body.modern-admin .courtsProActions{grid-template-columns:1fr 1fr}
+  body.modern-admin .courtsProEditor{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  body.modern-admin .courtsProCustom .customBlockGrid{grid-template-columns:1fr 1fr!important}
+  body.modern-admin .courtsProCustom .dateField{grid-column:1/-1!important}
+  body.modern-admin .courtsProCustom #addCustomBlock{grid-column:1/-1!important;width:100%!important}
+}
+
+@media(max-width:560px){
+  body.modern-admin .courtsPro{gap:11px}
+  body.modern-admin .courtsProHero{
+    align-items:flex-start;
+    padding:14px;
+    border-radius:14px;
+  }
+  body.modern-admin .courtsProHeroTitle{font-size:18px}
+  body.modern-admin .courtsProHeroSub{font-size:10px}
+  body.modern-admin .courtsProWeek{min-height:34px;padding:0 10px;font-size:9px}
+  body.modern-admin .courtsProKpis{gap:7px}
+  body.modern-admin .courtsProKpi{padding:11px 11px 10px 13px;border-radius:12px}
+  body.modern-admin .courtsProKpi strong{font-size:22px}
+  body.modern-admin .courtsProKpi span{font-size:8px}
+  body.modern-admin .courtsProDay{flex:0 0 76px;min-height:52px;padding:7px 8px!important}
+  body.modern-admin .courtsProDay b{font-size:10px}
+  body.modern-admin .courtsProDay span{font-size:7px}
+  body.modern-admin .courtsProActions{grid-template-columns:1fr!important;padding:8px}
+  body.modern-admin .courtsProActions .btn{width:100%!important;min-height:43px!important}
+  body.modern-admin .courtsProSecondary{gap:6px}
+  body.modern-admin .courtsProSecondary .countBadge{margin-left:0}
+  body.modern-admin .courtsProCustom{padding:12px}
+  body.modern-admin .courtsProCustom .customBlockGrid{grid-template-columns:1fr 1fr!important}
+  body.modern-admin .courtsProCustom .dateField{grid-column:1/-1!important}
+  body.modern-admin .courtsProCustom #addCustomBlock{grid-column:1/-1!important}
+  body.modern-admin .courtsProEditor{grid-template-columns:1fr!important;gap:9px!important}
+  body.modern-admin .courtsProCard{border-radius:13px}
+  body.modern-admin .courtsProSlot{grid-template-columns:76px minmax(0,1fr) 30px;min-height:55px;padding:8px 9px}
+  body.modern-admin .courtsProPublish{
+    position:sticky;
+    bottom:6px;
+    grid-template-columns:1fr;
+    gap:10px;
+    padding:11px;
+    border-radius:14px;
+  }
+  body.modern-admin .courtsProPublishActions{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+  body.modern-admin .courtsProPublishActions #publishSlots{grid-column:1/-1;min-height:45px!important}
+  body.modern-admin .courtsProPublishActions #saveDraftSlots{grid-column:1/-1;min-height:43px!important}
+  body.modern-admin .courtsProPublishActions .btn{width:100%!important}
+}
+</style>
 </head>
 <body>
 
@@ -3899,34 +4400,64 @@ body.resultModalOpen{overflow:hidden}
   <div class="adminAccordionBody">
 <div class="adminSubsection">
       <div class="adminSubsectionHead"><span>Disponibilidad de pistas</span><span id="adminMeta_slots_sub">Abrir</span></div>
-      <div class="adminSubsectionBody"><div class="tiny">Cada turno dura <b>1 h 30 min</b>. La mañana usa siempre <b>10:00–11:30 · 11:30–13:00 · 13:00–14:30</b> y la tarde <b>16:00–17:30 · 17:30–19:00 · 19:00–20:30</b>. Prepara el borrador, elimina los tramos que no estén disponibles y publícalo cuando esté listo.</div>
-<div class="draftToolbar">
-<button class="presetBtn" id="draftHabitual">↺ Horario habitual</button>
-<button class="presetBtn" id="draftAllMorning">Todas las mañanas</button>
-<button class="presetBtn" id="draftAllAfternoon">Todas las tardes</button>
-<button class="presetBtn" id="draftFullWeek">Semana completa</button>
-<button class="btn danger" id="clearSlots">Vaciar borrador</button>
-<span class="countBadge" id="slotCount">0 franjas</span>
-</div>
-<div class="customBlock">
-<div class="customBlockTitle">Bloque horario personalizado</div>
-<div class="tiny" style="margin-bottom:9px">Para excepciones: elige un día y cualquier intervalo. La app lo dividirá automáticamente en tramos de <b>1 h 30 min</b>.</div>
-<div class="customBlockGrid">
-<div class="field dateField"><label>Día</label><input id="customDate" type="date"/></div>
-<div class="field"><label>Desde</label><input id="customFrom" step="900" type="time" value="14:30"/></div>
-<div class="field"><label>Hasta</label><input id="customTo" step="900" type="time" value="16:00"/></div>
-<div class="field"><label>Nº pistas</label><input id="customCourts" max="10" min="1" type="number" value="1"/></div>
-<button class="btn gold" id="addCustomBlock">Añadir al borrador</button>
-</div>
-</div>
-<div class="authNote">El horario es solo un <b>borrador privado del administrador</b>. Los jugadores no verán nada hasta que pulses <b>Publicar disponibilidad y abrir reservas</b>.</div>
-<div class="draftBoard" id="draftBoard"></div>
-<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
-<button class="btn green" id="publishSlots">Publicar disponibilidad y abrir reservas</button>
-<button class="btn secondary" id="resendPushNotice">Reenviar aviso</button>
-<button class="btn danger" id="closeSlots">Despublicar disponibilidad y cerrar reservas</button>
-<span class="tiny" id="publishActionStatus" style="width:100%;margin-top:4px">Al publicar por primera vez —o volver a publicar tras despublicar— se envía un aviso Push a los dispositivos suscritos.</span>
-</div></div>
+      <div class="adminSubsectionBody">
+        <div class="courtsPro">
+          <div class="courtsProHero">
+            <div><div class="courtsProHeroTitle">Panel de pistas</div><div class="courtsProHeroSub">Prepara, revisa y publica la disponibilidad de la jornada desde un único lugar.</div></div>
+            <div class="courtsProWeek" id="courtsProWeek">Jornada actual</div>
+          </div>
+
+          <div class="courtsProKpis">
+            <div class="courtsProKpi published"><strong id="courtsKpiPublished">0</strong><span>Publicadas</span></div>
+            <div class="courtsProKpi free"><strong id="courtsKpiFree">0</strong><span>Libres</span></div>
+            <div class="courtsProKpi booked"><strong id="courtsKpiBooked">0</strong><span>Reservadas</span></div>
+            <div class="courtsProKpi pending"><strong id="courtsKpiPending">0</strong><span>En borrador</span></div>
+          </div>
+
+          <div class="courtsProDays" id="courtsProDays"></div>
+
+          <div class="courtsProActions">
+            <button class="btn" id="addCourtBtn" type="button">＋ Añadir pista</button>
+            <button class="btn gold" id="courtsAddQuick" type="button">＋ Añadir franja</button>
+            <button class="btn secondary" id="draftHabitual" type="button">↺ Horario habitual</button>
+            <button class="btn secondary" id="draftFullWeek" type="button">Semana completa</button>
+            <button class="btn danger" id="clearSlots" type="button">Vaciar borrador</button>
+          </div>
+
+          <div class="courtsProSecondary">
+            <button class="presetBtn" id="draftAllMorning" type="button">Todas las mañanas</button>
+            <button class="presetBtn" id="draftAllAfternoon" type="button">Todas las tardes</button>
+            <span class="countBadge" id="slotCount">0 franjas</span>
+          </div>
+
+          <div class="courtsProCustom" id="courtsCustomPanel">
+            <div class="courtsProCustomTitle">Añadir bloque personalizado</div>
+            <div class="courtsProCustomSub">Elige día, horario y número de pistas. Se divide automáticamente en tramos de 1 h 30 min.</div>
+            <div class="customBlockGrid">
+              <div class="field dateField"><label>Día</label><input id="customDate" type="date"/></div>
+              <div class="field"><label>Desde</label><input id="customFrom" step="900" type="time" value="14:30"/></div>
+              <div class="field"><label>Hasta</label><input id="customTo" step="900" type="time" value="16:00"/></div>
+              <div class="field"><label>Nº pistas</label><input id="customCourts" max="10" min="1" type="number" value="1"/></div>
+              <button class="btn gold" id="addCustomBlock" type="button">Añadir</button>
+            </div>
+          </div>
+
+          <div class="draftBoard courtsProEditor" id="draftBoard"></div>
+
+          <div class="courtsProPublish">
+            <div>
+              <div class="courtsProPublishTitle">Estado de publicación</div>
+              <div class="courtsProPublishMeta" id="publishActionStatus">El borrador es privado hasta que publiques la disponibilidad.</div>
+            </div>
+            <div class="courtsProPublishActions">
+              <button class="btn secondary" id="saveDraftSlots">Guardar borrador sin publicar</button>
+              <button class="btn green" id="publishSlots">Publicar disponibilidad</button>
+              <button class="btn secondary" id="resendPushNotice">Reenviar aviso</button>
+              <button class="btn danger" id="closeSlots">Cerrar reservas</button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </details>
@@ -4146,7 +4677,7 @@ const API_URL="https://ct-campeador-api.ligasdetenis.workers.dev/";
 const PUSH_URL="https://ct-campeador-push-v1.ligasdetenis.workers.dev";
 let PUSH_VAPID_PUBLIC_KEY="";
 const PUSH_SW_URL="/ct-campeador-liga/push-sw.js";
-const APP_BUILD="20261017-jornadas-pro-pwa-1";
+const APP_BUILD="20261017-pistas-pro-produccion-1";
 const DEFAULT_WEEKS=[
  {id:"W1",label:"Semana 1 · 17–25 octubre",start:"2026-10-17",end:"2026-10-25"},
  {id:"W2",label:"Semana 2 · 26 octubre–1 noviembre",start:"2026-10-26",end:"2026-11-01"},
@@ -6799,6 +7330,7 @@ async function removePushDevicesFor(player){
 }
 
 let draftSlots=[];
+let adminCourtsDay="";
 function persistDraft(){if(!data.drafts)data.drafts={};data.drafts[weekKey()]=draftSlots.map(x=>({...x}));save()}
 
 function currentWeekRange(){
@@ -6847,10 +7379,11 @@ function normalizeDraft(){
 }
 function renderSlotRows(){
   const saved=slots();
-  const stored=(data.drafts&&data.drafts[weekKey()])||[];
-  // Renderizar el panel NO debe provocar escrituras en Cloudflare.
-  // El borrador solo se persiste cuando el administrador lo modifica realmente.
-  draftSlots=stored.length?stored.map(x=>({...x})):(saved.length?saved.map(x=>({...x})):buildDefaultWeekSlots());
+  const hasStoredDraft=!!(data.drafts&&Object.prototype.hasOwnProperty.call(data.drafts,weekKey()));
+  const stored=hasStoredDraft?(data.drafts[weekKey()]||[]):[];
+  // Un borrador vacío es un estado válido y debe seguir vacío al recargar.
+  // Solo usamos lo ya publicado como punto de partida en ligas antiguas que todavía no tienen clave de borrador.
+  draftSlots=hasStoredDraft?stored.map(x=>({...x})):(saved.length?saved.map(x=>({...x})):[]);
   trimDraftToCurrentWeek({persist:false});
   normalizeDraft();
   renderSlotChips();
@@ -6865,25 +7398,146 @@ function addDayPart(date,part,courts=1){
 function removeDayPart(date,part){draftSlots=draftSlots.filter(s=>!(s.date===date&&partOfSlot(s)===part));persistDraft();renderDraftBoard()}
 function removeDraftSlot(id){draftSlots=draftSlots.filter(s=>s.id!==id);persistDraft();renderDraftBoard()}
 function renderSlotChips(){renderDraftBoard()}
+function renderCourtsProSummary(){
+  const publishedSlots=slots().slice();
+  const booked=publishedSlots.filter(s=>!!slotBooking(s.id)).length;
+  const free=Math.max(0,publishedSlots.length-booked);
+  const pending=draftSlots.length;
+  const w=weeks.find(x=>x.id===state.week);
+  const p=$('#courtsKpiPublished'),f=$('#courtsKpiFree'),b=$('#courtsKpiBooked'),d=$('#courtsKpiPending');
+  if(p)p.textContent=publishedSlots.length;
+  if(f)f.textContent=free;
+  if(b)b.textContent=booked;
+  if(d)d.textContent=pending;
+  const wk=$('#courtsProWeek'); if(wk&&w)wk.textContent=journeyDisplayName(state.week);
+}
+function renderCourtsDayTabs(days){
+  const wrap=$('#courtsProDays'); if(!wrap)return;
+  if(!days.length){wrap.innerHTML='';return}
+  if(!adminCourtsDay||!days.includes(adminCourtsDay)) adminCourtsDay=days[0];
+  wrap.innerHTML=days.map(date=>{
+    const dt=new Date(date+'T12:00:00');
+    const wd=dt.toLocaleDateString('es-ES',{weekday:'short'}).replace('.','').replace(/^./,c=>c.toUpperCase());
+    const num=dt.getDate();
+    const count=draftSlots.filter(s=>s.date===date).length;
+    return `<button class="courtsProDay ${date===adminCourtsDay?'active':''}" type="button" data-court-day="${date}"><b>${wd} ${num}</b><span>${count} franja${count===1?'':'s'}</span></button>`;
+  }).join('');
+  wrap.querySelectorAll('[data-court-day]').forEach(btn=>btn.onclick=()=>{
+    adminCourtsDay=btn.dataset.courtDay;
+    const customDate=$('#customDate');
+    if(customDate) customDate.value=adminCourtsDay;
+    renderDraftBoard();
+  });
+}
 function renderDraftBoard(){
   normalizeDraft();
-  $('#slotCount').textContent=`${draftSlots.length} ${draftSlots.length===1?'franja':'franjas'}`;
+  const slotCount=$('#slotCount'); if(slotCount)slotCount.textContent=`${draftSlots.length} ${draftSlots.length===1?'franja':'franjas'}`;
   const box=$('#draftBoard');
-  const days=[]; const w=weeks.find(x=>x.id===state.week); if(!w){box.innerHTML='';return}
-  let d=new Date(w.start+'T12:00:00'), end=new Date(w.end+'T12:00:00');
+  const w=weeks.find(x=>x.id===state.week); if(!w){if(box)box.innerHTML='';return}
+  const days=[]; let d=new Date(w.start+'T12:00:00'), end=new Date(w.end+'T12:00:00');
   while(d<=end){days.push(localISO(d));d.setDate(d.getDate()+1)}
-  const partHtml=(date,part,label,icon)=>{
-    const arr=draftSlots.filter(s=>s.date===date&&partOfSlot(s)===part);
-    const cls=part==='morning'?'morning':'afternoon';
-    const action=arr.length?`<span style="display:flex;gap:5px"><button class="miniAdd" data-addcourt="${date}|${part}">＋ pista</button><button class="iconBtn" data-delpart="${date}|${part}" title="Quitar bloque">✕ bloque</button></span>`:`<button class="miniAdd" data-addpart="${date}|${part}">Añadir</button>`;
-    return `<div class="draftPart"><div class="draftPartHead"><div class="draftPartTitle ${cls}">${icon} ${label}</div>${action}</div><div class="draftSlots">${arr.length?arr.map(s=>`<div class="draftSlot"><div><b>${s.time}</b><div class="meta">${s.court}</div></div><button class="iconBtn" data-delslot="${s.id}">✕</button></div>`).join(''):`<div class="draftEmpty">Sin disponibilidad</div>`}</div></div>`;
-  };
-  box.innerHTML=days.map(date=>`<div class="draftDay"><div class="draftDayHead"><b>${dayDateES(date)}</b><span class="tiny">${draftSlots.filter(s=>s.date===date).length} franjas</span></div><div class="draftParts">${partHtml(date,'morning','Mañana','☀️')}${partHtml(date,'afternoon','Tarde','🌇')}</div></div>`).join('');
+  renderCourtsDayTabs(days);
+  renderCourtsProSummary();
+  if(!box)return;
+  const date=adminCourtsDay||days[0];
+  const daySlots=draftSlots.filter(s=>s.date===date);
+  const courts=[...new Set(daySlots.map(s=>s.court))].sort((a,b)=>String(a).localeCompare(String(b),'es',{numeric:true}));
+  if(!courts.length){
+    box.innerHTML=`<div class="courtsProEmpty" style="grid-column:1/-1">
+      <b>${dayDateES(date)} · borrador vacío</b><br>
+      Todavía no has preparado ninguna pista para este día.
+      <div class="courtsProEmptyActions">
+        <button class="btn" id="emptyAddCourtBtn" type="button">＋ Añadir pista</button>
+        <button class="btn secondary" id="emptyHabitualBtn" type="button">Usar horario habitual</button>
+      </div>
+    </div>`;
+    $('#emptyAddCourtBtn').onclick=()=>addNextCourtForCurrentDay();
+    $('#emptyHabitualBtn').onclick=()=>{draftSlots=buildDefaultWeekSlots();persistDraft();renderDraftBoard()};
+    return;
+  }
+  box.innerHTML=courts.map(court=>{
+    const arr=daySlots.filter(s=>s.court===court).sort((a,b)=>a.time.localeCompare(b.time));
+    const courtNumber=Number(String(court||'').match(/\d+/)?.[0]||1);
+    const courtTone=((courtNumber-1)%6)+1;
+    return `<section class="courtsProCard courtTone${courtTone}">
+      <div class="courtsProCardHead">
+        <div class="courtsProCardTitle">${mappEsc(court)}</div>
+        <div class="courtsProCardHeadRight">
+          <div class="courtsProCardCount">${arr.length} franjas</div>
+          <button class="courtsProRemoveCourt" type="button" data-remove-court="${mappEsc(court)}" title="Quitar pista y todas sus franjas">Quitar pista</button>
+        </div>
+      </div>
+      <div>${arr.map(s=>{
+        const published=slots().some(x=>x.id===s.id);
+        const bk=slotBooking(s.id);
+        const stateClass=bk?'booked':published?'free':'draft';
+        const stateText=bk?'Reservada':published?'Libre':'Preparada';
+        const sub=bk?`${mappEsc(bk.a||'')} vs ${mappEsc(bk.b||'')}`:published?'Visible para jugadores':'Sin publicar';
+        return `<div class="courtsProSlot">
+          <div class="courtsProTime">${mappEsc(s.time)}</div>
+          <div class="courtsProState"><span class="courtsProDot ${stateClass}"></span>${stateText}<span class="sub">${sub}</span></div>
+          <button class="courtsProDelete" type="button" data-delslot="${mappEsc(s.id)}" title="Quitar franja">✕</button>
+        </div>`;
+      }).join('')}</div>
+    </section>`;
+  }).join('');
   box.querySelectorAll('[data-delslot]').forEach(b=>b.onclick=()=>removeDraftSlot(b.dataset.delslot));
-  box.querySelectorAll('[data-delpart]').forEach(b=>b.onclick=()=>{const [date,part]=b.dataset.delpart.split('|');removeDayPart(date,part)});
-  box.querySelectorAll('[data-addpart]').forEach(b=>b.onclick=()=>{const [date,part]=b.dataset.addpart.split('|');addDayPart(date,part,1)});
-  box.querySelectorAll('[data-addcourt]').forEach(b=>b.onclick=()=>{const [date,part]=b.dataset.addcourt.split('|');const partSlots=draftSlots.filter(s=>s.date===date&&partOfSlot(s)===part);const courts=partSlots.map(s=>Number((s.court.match(/\d+/)||['0'])[0]));const next=Math.max(0,...courts)+1;const from=part==='morning'?'10:00':'16:00',to=part==='morning'?'14:30':'20:30';let a=timeToMin(from),z=timeToMin(to);for(let t=a;t+90<=z;t+=90){draftSlots.push({day:dayNameES(date),date,time:`${minToTime(t)} - ${minToTime(t+90)}`,court:`Pista ${next}`})}normalizeDraft();persistDraft();renderDraftBoard()});
+  box.querySelectorAll('[data-remove-court]').forEach(b=>b.onclick=()=>removeCourtForCurrentDay(b.dataset.removeCourt));
 }
+
+function removeCourtForCurrentDay(court){
+  if(!requireAdmin())return;
+  const w=weeks.find(x=>x.id===state.week);
+  const date=adminCourtsDay||w?.start;
+  if(!date||!court)return;
+  const courtSlots=draftSlots.filter(s=>s.date===date&&s.court===court);
+  if(!courtSlots.length)return;
+  const booked=courtSlots.filter(s=>!!slotBooking(s.id));
+  if(booked.length){
+    alert(`No se puede quitar ${court} porque tiene ${booked.length} franja${booked.length===1?'':'s'} con reserva activa.\n\nCancela o gestiona primero esas reservas para evitar dejar partidos sin pista.`);
+    return;
+  }
+  const publishedCount=courtSlots.filter(s=>slots().some(x=>x.id===s.id)).length;
+  const msg=`¿Quitar ${court} de ${dayDateES(date)}?\n\nSe eliminarán sus ${courtSlots.length} franja${courtSlots.length===1?'':'s'} del borrador.`+(publishedCount?`\n\n${publishedCount} de ellas están publicadas actualmente. Seguirán visibles para los jugadores hasta que vuelvas a publicar la disponibilidad.`:'');
+  if(!confirm(msg))return;
+  draftSlots=draftSlots.filter(s=>!(s.date===date&&s.court===court));
+  persistDraft();
+  renderDraftBoard();
+  const status=$('#publishActionStatus');
+  if(status)status.textContent=`${court} eliminada del borrador de ${dayDateES(date)}. ${publishedCount?'Vuelve a publicar para aplicar el cambio a los jugadores.':'El cambio sigue sin publicar.'}`;
+}
+
+function nextCourtNameForDate(date){
+  const nums=draftSlots.filter(s=>s.date===date).map(s=>Number(String(s.court||'').match(/\d+/)?.[0]||0)).filter(Boolean);
+  return `Pista ${nums.length?Math.max(...nums)+1:1}`;
+}
+function addNextCourtForCurrentDay(){
+  if(!requireAdmin())return;
+  const w=weeks.find(x=>x.id===state.week);
+  const date=adminCourtsDay||w?.start;
+  if(!date)return;
+  const daySlots=draftSlots.filter(s=>s.date===date);
+  const courtName=nextCourtNameForDate(date);
+  let times=[];
+  if(daySlots.length){
+    const firstCourt=[...new Set(daySlots.map(s=>s.court))].sort((a,b)=>String(a).localeCompare(String(b),'es',{numeric:true}))[0];
+    times=daySlots.filter(s=>s.court===firstCourt).map(s=>s.time);
+  }
+  if(!times.length){
+    const from=$('#customFrom')?.value||'14:30';
+    const to=$('#customTo')?.value||'16:00';
+    const a=timeToMin(from),z=timeToMin(to);
+    if(z>a && z-a>=90) times=[`${minToTime(a)} - ${minToTime(a+90)}`];
+    else times=['14:30 - 16:00'];
+  }
+  for(const time of [...new Set(times)]) draftSlots.push({day:dayNameES(date),date,time,court:courtName});
+  normalizeDraft();
+  persistDraft();
+  renderDraftBoard();
+  const status=$('#publishActionStatus');
+  if(status)status.textContent=`${courtName} añadida al borrador de ${dayDateES(date)}. Todavía no es visible para los jugadores.`;
+}
+
 function addBlock(date,from,to,courts=1){if(!date||!from||!to)return 0;let a=timeToMin(from),z=timeToMin(to);if(z<=a){alert('La hora final debe ser posterior a la inicial.');return 0}let added=0;for(let t=a;t+90<=z;t+=90){const time=`${minToTime(t)} - ${minToTime(t+90)}`;for(let c=1;c<=courts;c++){draftSlots.push({day:dayNameES(date),date,time,court:`Pista ${c}`});added++}}normalizeDraft();persistDraft();renderDraftBoard();return added}
 function addCustomBlock(){
   if(!requireAdmin())return;
@@ -6946,7 +7600,8 @@ function setDefaultQuickDate(){
   const inp=$('#customDate'); if(!inp)return;
   const w=weeks.find(x=>x.id===state.week); if(!w)return;
   inp.min=w.start; inp.max=w.end;
-  if(!inp.value || inp.value<w.start || inp.value>w.end) inp.value=w.start;
+  const preferred=(adminCourtsDay && adminCourtsDay>=w.start && adminCourtsDay<=w.end)?adminCourtsDay:w.start;
+  if(!inp.value || inp.value<w.start || inp.value>w.end || inp.value!==preferred) inp.value=preferred;
 }
 function renderWhats(){const w=weeks.find(x=>x.id===state.week);const ss=slots().slice().sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time));let txt=`🎾 RESERVA DE PISTAS - LIGA CT CAMPEADOR 🎾\n\n📅 ${w.label.toUpperCase()}\n\n`;if(!ss.length)txt+='🔒 Disponibilidad todavía no publicada.';else{const days=[...new Set(ss.map(s=>s.date))];days.forEach(date=>{txt+=`━━━━━━━━━━━━━━━\n📅 ${dayDateES(date).toUpperCase()}\n\n`;ss.filter(s=>s.date===date).forEach(s=>{const bk=slotBooking(s.id);txt+=`${s.time} → ${s.court}: ${bk?`${bk.a} vs ${bk.b} (${bk.category})`:'LIBRE'}\n`});txt+='\n'})}txt+='❗ Los enfrentamientos son los fijados oficialmente para esa semana.';$('#whatsPreview').value=txt}
 
@@ -8206,12 +8861,32 @@ $('#importFixtures').onclick=()=>{if(!requireAdmin())return;const {pairs,unknown
 $('#saveFixtures').onclick=async()=>{if(!requireAdmin())return;const start=$('#weekStartDate').value,end=$('#weekEndDate').value;if(!start||!end){alert('Indica el inicio y el fin de la semana.');return}if(start>end){alert('La fecha de inicio no puede ser posterior a la fecha final.');return}data.weekRanges=data.weekRanges||{};data.weekRanges[state.week]={start,end};applyWeekRanges();trimDraftToCurrentWeek({persist:false});trimStoredAvailabilityToCurrentWeek();persistDraft();const round=$('#externalRound').value.trim();setJourneyName(state.week,round);if(round)data.fixtureRounds[fixtureKey()]=round;else delete data.fixtureRounds[fixtureKey()];syncWeeksIntoData();ensurePins();localStorage.setItem(STORAGE_KEY,JSON.stringify(data));const btn=$('#saveFixtures'),oldTxt=btn.textContent;btn.disabled=true;btn.textContent='⏳ Guardando…';try{await saveStateOnline();await saveUsersOnline();fixtureEditorDirty=false;setOnline(true,'☁️ Guardado');await refreshOnline({silent:true,force:true});const js=$('#journeySaveState');if(js){js.textContent='✓ Jornada sincronizada';js.classList.remove('dirty');js.classList.add('ok')}alert(`✅ Jornada guardada.\n\n${round||weeks.find(w=>w.id===state.week).label}\n${fixtures().length} partido${fixtures().length===1?'':'s'}.`)}catch(e){fixtureEditorDirty=true;setOnline(true,'✏️ Sin guardar');alert('No se ha podido guardar la jornada online.\n\n'+e.message)}finally{btn.disabled=false;btn.textContent=oldTxt}};
 $('#clearFixtures').onclick=async()=>{if(!requireAdmin())return;if(confirm('¿Vaciar todos los enfrentamientos de esta categoría y jornada?')){delete data.fixtures[fixtureKey()];delete data.fixtureRounds[fixtureKey()];localStorage.setItem(STORAGE_KEY,JSON.stringify(data));markFixtureDirty();renderAll();try{await saveStateOnline();fixtureEditorDirty=false;setOnline(true,'☁️ Guardado')}catch(e){alert(e.message)}}};
 $('#copyPrevFixtures').onclick=()=>{if(!requireAdmin())return;const i=weeks.findIndex(w=>w.id===state.week);if(i<=0){alert('No hay una semana anterior para copiar.');return}const prevKey=`${weeks[i-1].id}|${state.category}|${state.gender}`;const prev=data.fixtures[prevKey]||[];if(!prev.length){alert('La semana anterior no tiene enfrentamientos en esta categoría.');return}if(fixtures().length&&!confirm('Ya hay enfrentamientos en esta jornada. ¿Sustituirlos por los de la semana anterior?'))return;data.fixtures[fixtureKey()]=prev.map(m=>makeFixture(m.a,m.b));data.fixtureRounds[fixtureKey()]=data.fixtureRounds?.[prevKey]||'';localStorage.setItem(STORAGE_KEY,JSON.stringify(data));markFixtureDirty();renderFixtureEditor();renderMatches()};
+if($('#courtsAddQuick'))$('#courtsAddQuick').onclick=()=>{if(!requireAdmin())return;const panel=$('#courtsCustomPanel');if(panel){panel.scrollIntoView({behavior:'smooth',block:'center'});const inp=$('#customDate');if(inp&&adminCourtsDay)inp.value=adminCourtsDay;setTimeout(()=>$('#customFrom')?.focus(),250)}};
+if($('#addCourtBtn'))$('#addCourtBtn').onclick=addNextCourtForCurrentDay;
+if($('#saveDraftSlots'))$('#saveDraftSlots').onclick=async()=>{
+  if(!requireAdmin())return;
+  const btn=$('#saveDraftSlots'),old=btn.textContent,status=$('#publishActionStatus');
+  btn.disabled=true;btn.textContent='⏳ Guardando…';
+  try{
+    if(!data.drafts)data.drafts={};
+    data.drafts[weekKey()]=draftSlots.map(x=>({...x}));
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+    await saveStateOnline();
+    setOnline(true,'☁️ Borrador guardado');
+    if(status)status.textContent=`✅ Borrador guardado online · ${draftSlots.length} franja${draftSlots.length===1?'':'s'} · todavía no visible para los jugadores.`;
+    alert(`✅ Borrador guardado sin publicar.\n\n${draftSlots.length} franja${draftSlots.length===1?'':'s'} preparada${draftSlots.length===1?'':'s'}. Los jugadores todavía no pueden verla${draftSlots.length===1?'':'s'}.`);
+  }catch(e){
+    setOnline(false,'⚠️ No guardado');
+    if(status)status.textContent='❌ No se pudo guardar el borrador online.';
+    alert('No se ha podido guardar el borrador online.\n\n'+e.message);
+  }finally{btn.disabled=false;btn.textContent=old}
+};
 $('#draftHabitual').onclick=()=>{if(!requireAdmin())return;draftSlots=buildDefaultWeekSlots();persistDraft();renderDraftBoard()};
 $('#draftAllMorning').onclick=()=>{if(!requireAdmin())return;draftSlots=buildAllPart('morning');persistDraft();renderDraftBoard()};
 $('#draftAllAfternoon').onclick=()=>{if(!requireAdmin())return;draftSlots=buildAllPart('afternoon');persistDraft();renderDraftBoard()};
 $('#draftFullWeek').onclick=()=>{if(!requireAdmin())return;draftSlots=buildFullWeek();persistDraft();renderDraftBoard()};
 $('#addCustomBlock').onclick=addCustomBlock;
-$('#clearSlots').onclick=()=>{if(!requireAdmin())return;if(confirm('¿Vaciar por completo el borrador de disponibilidad?')){draftSlots=[];persistDraft();renderDraftBoard()}};
+$('#clearSlots').onclick=()=>{if(!requireAdmin())return;if(confirm('¿Vaciar por completo el borrador de disponibilidad?\n\nEl borrador quedará vacío y seguirá vacío al volver a entrar. La disponibilidad ya publicada no se borra hasta que cierres reservas o publiques un nuevo borrador.')){draftSlots=[];persistDraft();renderDraftBoard();const status=$('#publishActionStatus');if(status)status.textContent='Borrador vacío guardado. La disponibilidad publicada, si existe, no se ha modificado.'}};
 $('#publishSlots').onclick=async()=>{
   if(!requireAdmin())return;
   const beforeRangeCheck=draftSlots.length;
@@ -8237,15 +8912,16 @@ $('#publishSlots').onclick=async()=>{
     await saveStateOnline();
     setOnline(true,'☁️ Publicado');
     let pushMsg='';
-    if(prevPublished!==true){
-      try{
-        const p=await sendAvailabilityPush(true);
-        pushMsg=p.sent>0?`\n\n🔔 Aviso enviado a ${p.sent} dispositivo${p.sent===1?'':'s'}.`:'\n\n🔔 No hay dispositivos suscritos todavía.';
-      }catch(pushErr){
-        pushMsg='\n\n⚠️ La disponibilidad se ha publicado, pero el aviso Push no se pudo enviar: '+pushErr.message;
-      }
+    try{
+      const p=await sendAvailabilityPush(true);
+      const sent=Number(p?.sent||0);
+      pushMsg=sent>0
+        ? `\n\n🔔 Aviso Push enviado a ${sent} dispositivo${sent===1?'':'s'}.`
+        : '\n\n🔔 Disponibilidad publicada, pero no hay dispositivos suscritos al Push.';
+    }catch(pushErr){
+      pushMsg='\n\n⚠️ La disponibilidad se ha publicado, pero el aviso Push no se pudo enviar: '+(pushErr?.message||pushErr);
     }
-    if(status)status.textContent='✅ Disponibilidad publicada. Reservas abiertas.'+(pushMsg?' Aviso procesado.':'');
+    if(status)status.textContent='✅ Disponibilidad publicada. Reservas abiertas. Aviso Push procesado.';
     alert('✅ Disponibilidad publicada online. Reservas abiertas.'+pushMsg);
   }catch(e){
     if(prevSlots===undefined)delete data.slots[weekKey()];else data.slots[weekKey()]=prevSlots;
