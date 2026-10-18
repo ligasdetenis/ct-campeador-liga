@@ -4677,7 +4677,24 @@ const API_URL="https://ct-campeador-api.ligasdetenis.workers.dev/";
 const PUSH_URL="https://ct-campeador-push-v1.ligasdetenis.workers.dev";
 let PUSH_VAPID_PUBLIC_KEY="";
 const PUSH_SW_URL="/ct-campeador-liga/push-sw.js";
-const APP_BUILD="20261017-pistas-pro-produccion-1";
+
+
+/* =========================================================
+   SEGURIDAD DE RENDERIZADO
+   - Todo dato procedente de usuarios/Cloudflare debe escapar
+     antes de entrar en innerHTML o atributos HTML.
+   - Las fotos de perfil se limitan a data:image seguras.
+   ========================================================= */
+function mappEsc(s){
+  return String(s??'').replace(/[&<>"']/g,c=>({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[c]));
+}
+function safeDataImageUrl(value){
+  const v=String(value||'').trim();
+  return /^data:image\/(?:jpeg|jpg|png|webp|gif|avif);base64,[a-z0-9+/=]+$/i.test(v)?v:'';
+}
+const APP_BUILD="20261017-seguridad-xss-pistas-pro-2";
 const DEFAULT_WEEKS=[
  {id:"W1",label:"Semana 1 · 17–25 octubre",start:"2026-10-17",end:"2026-10-25"},
  {id:"W2",label:"Semana 2 · 26 octubre–1 noviembre",start:"2026-10-26",end:"2026-11-01"},
@@ -5314,7 +5331,7 @@ function openFutureFixturesPlanner(initialWeekId=''){
 function renderFixtureEditor(){
   if(!isAdmin())return;
   const ps=categoryPlayers();
-  const opts='<option value="">Selecciona…</option>'+ps.map(p=>`<option value="${p.replace(/"/g,'&quot;')}">${p}</option>`).join('');
+  const opts='<option value="">Selecciona…</option>'+ps.map(p=>`<option value="${mappEsc(p)}">${mappEsc(p)}</option>`).join('');
   const a=$('#fixturePlayerA'),b=$('#fixturePlayerB');
   if(a)a.innerHTML=opts;
   if(b)b.innerHTML=opts;
@@ -5890,14 +5907,31 @@ async function sendAvailabilityPush(force=false){
   });
 }
 
-function renderIdentity(){const sel=$('#playerIdentity');const ps=visibleIdentitiesForCategory();sel.innerHTML='<option value="">Selecciona tu nombre</option>'+ps.map(p=>`<option value="${p.replace(/"/g,'&quot;')}">${p}${roleOf(p)==='admin'?' · ADMIN':''}</option>`).join('');if(state.player&&!allIdentities().includes(state.player)){state.player='';state.authenticated=false;localStorage.removeItem('ctcampeador_auth_player')}sel.value=state.player;sel.disabled=state.authenticated;$('#playerPin').disabled=state.authenticated;$('#loginBtn').disabled=state.authenticated;const info=$('#identityInfo');if(!state.authenticated){info.innerHTML='<span class="identityWarn">Sin identificar.</span> Solo aparecen jugadores de '+state.category+' '+state.gender+' y administradores.'}else{const own=allWeekFixtures().filter(m=>m.a===state.player||m.b===state.player);info.innerHTML=`<span class="identityOk">✓ ${state.player}</span> · ${isAdmin()?'ADMIN':'jugador'} · sesión iniciada · ${own.length} partido${own.length===1?'':'s'} esta semana`}}
+/* ==================== INTERFAZ CLÁSICA / IDENTIDAD ==================== */
+function renderIdentity(){
+  const sel=$('#playerIdentity');
+  const ps=visibleIdentitiesForCategory();
+  sel.innerHTML='<option value="">Selecciona tu nombre</option>'+ps.map(p=>`<option value="${mappEsc(p)}">${mappEsc(p)}${roleOf(p)==='admin'?' · ADMIN':''}</option>`).join('');
+  if(state.player&&!allIdentities().includes(state.player)){
+    state.player='';state.authenticated=false;localStorage.removeItem('ctcampeador_auth_player');
+  }
+  sel.value=state.player;sel.disabled=state.authenticated;
+  $('#playerPin').disabled=state.authenticated;$('#loginBtn').disabled=state.authenticated;
+  const info=$('#identityInfo');
+  if(!state.authenticated){
+    info.innerHTML=`<span class="identityWarn">Sin identificar.</span> Solo aparecen jugadores de ${mappEsc(state.category)} ${mappEsc(state.gender)} y administradores.`;
+  }else{
+    const own=allWeekFixtures().filter(m=>m.a===state.player||m.b===state.player);
+    info.innerHTML=`<span class="identityOk">✓ ${mappEsc(state.player)}</span> · ${isAdmin()?'ADMIN':'jugador'} · sesión iniciada · ${own.length} partido${own.length===1?'':'s'} esta semana`;
+  }
+}
 function initDemo(){ /* Sin datos ficticios en la versión online */ }
 function renderTabs(){
  $('#catTabs').innerHTML=CATEGORIES.map(c=>`<button class="tab ${c===state.category?'active':''}" data-cat="${c}">${c}</button>`).join("");
  $$('#catTabs .tab').forEach(b=>b.onclick=()=>{state.category=b.dataset.cat;renderAll()});
  $$('.gender').forEach(b=>b.classList.toggle('active',b.dataset.gender===state.gender));
 }
-function renderWeeks(){if(!weeks.some(w=>w.id===state.week)&&weeks.length)state.week=weeks[0].id;const s=$('#weekSelect'); s.innerHTML=weeks.map(w=>`<option value="${w.id}">${journeyDisplayName(w.id)} · ${shortDateES(w.start)}–${shortDateES(w.end)}</option>`).join('');s.value=state.week;const current=weeks.find(w=>w.id===state.week);$('#weekLabel').textContent=current?`${journeyDisplayName(current.id)} · ${shortDateES(current.start)}–${shortDateES(current.end)}`:'—'}
+function renderWeeks(){if(!weeks.some(w=>w.id===state.week)&&weeks.length)state.week=weeks[0].id;const s=$('#weekSelect'); s.innerHTML=weeks.map(w=>`<option value="${mappEsc(w.id)}">${mappEsc(journeyDisplayName(w.id))} · ${mappEsc(shortDateES(w.start))}–${mappEsc(shortDateES(w.end))}</option>`).join('');s.value=state.week;const current=weeks.find(w=>w.id===state.week);$('#weekLabel').textContent=current?`${journeyDisplayName(current.id)} · ${shortDateES(current.start)}–${shortDateES(current.end)}`:'—'}
 function renderState(){const open=isOpen(), b=$('#reserveState');const wasPublished=!!(data.slots&&data.slots[weekKey()]&&data.slots[weekKey()].length);b.className='stateBanner '+(open?'open':'closed');b.innerHTML=open?`<div class="stateIcon">🟢</div><div><b>Reservas abiertas</b><span>El club ya ha publicado la disponibilidad de pistas de esta semana.</span></div>`:`<div class="stateIcon">🔒</div><div><b>${wasPublished?'Disponibilidad despublicada · Reservas cerradas':'Reservas todavía cerradas'}</b><span>${wasPublished?'El borrador y las reservas existentes se conservan. No se admiten nuevas reservas hasta volver a publicar.':'Los enfrentamientos ya son visibles, pero no se podrá reservar hasta que el club publique las pistas disponibles.'}</span></div>`;$('#headerState').textContent=open?'🟢 Reservas abiertas':'🔒 Reservas cerradas'}
 function resultLabel(r){
  if(!r)return '';
@@ -5915,13 +5949,13 @@ function renderMatches(){const fs=viewFixtures(), box=$('#matches');const offici
    const detail=bk?`${dayDateES(bk.date)} · ${bk.time} · ${bk.court}`:(m._carried?`Retrasado de ${weeks.find(w=>w.id===m._originalWeek)?.label||m._originalWeek}`:'Enfrentamiento oficial iSquad');
    let reserveActions='';
    if(bk&&(mine||admin)) reserveActions=`<button class="btn secondary" data-reserve-mid="${m.id}">Cambiar</button><button class="btn dangerBtn" data-cancel-mid="${m.id}">Cancelar</button>`;
-   else {let btnLabel='Reservar',disabled='';if(bk){btnLabel='Reservado';disabled='disabled'}else if(!canReserveHere){btnLabel=p&&!p.targetWeek?'Retrasado':'Otra semana';disabled='disabled'}else if(!state.player){btnLabel='Identifícate';disabled='disabled'}else if(!mine&&!admin){btnLabel='Solo jugadores';disabled='disabled'}else if(!isOpen()){btnLabel='Esperando pistas';disabled='disabled'};reserveActions=`<button class="btn ${bk?'secondary':''}" data-reserve-mid="${m.id}" ${disabled}>${btnLabel}</button>`}
+   else {let btnLabel='Reservar',disabled='';if(bk){btnLabel='Reservado';disabled='disabled'}else if(!canReserveHere){btnLabel=p&&!p.targetWeek?'Retrasado':'Otra semana';disabled='disabled'}else if(!state.player){btnLabel='Identifícate';disabled='disabled'}else if(!mine&&!admin){btnLabel='Solo jugadores';disabled='disabled'}else if(!isOpen()){btnLabel='Esperando pistas';disabled='disabled'};reserveActions=`<button class="btn ${bk?'secondary':''}" data-reserve-mid="${mappEsc(m.id)}" ${disabled}>${mappEsc(btnLabel)}</button>`}
    let resultActions='';
-   if(state.authenticated&&(mine||admin)){if(!r) resultActions=`<button class="btn gold" data-result-mid="${m.id}">Subir resultado</button>`;else if(r.status==='pending'&&!admin&&r.submittedBy!==state.player) resultActions=`<button class="btn green" data-confirm-result="${m.id}">Confirmar resultado</button>`;else if(r.status==='pending') resultActions=`<button class="btn gold" data-result-mid="${m.id}">Editar resultado</button>`;else if(admin) resultActions=`<button class="btn gold" data-result-mid="${m.id}">Corregir resultado</button>`}
-   const delayAction=admin?`<button class="btn secondary" data-delay-mid="${m.id}">${p?'🔄 Gestionar retraso':'🔄 Retrasar'}</button>`:'';
-   const resultHtml=r?`<div class="resultLine ${r.status==='confirmed'?'resultConfirmed':'resultPending'}"><b>Resultado:</b> ${resultLabel(r)} <span class="resultBadge ${r.status==='confirmed'?'confirmed':'pending'}">${r.status==='confirmed'?'CONFIRMADO':'PENDIENTE DEL RIVAL'}</span>${r.status==='pending'?`<div class="tiny" style="margin-top:4px">Enviado por ${r.submittedBy}</div>`:''}</div>`:'';
-   const pBadge=p?`<div class="postponedBadge ${p.targetWeek?'reprogrammedBadge':''}">${p.targetWeek?`➡️ Reprogramado a ${weeks.find(w=>w.id===p.targetWeek)?.label||p.targetWeek}`:'🔄 Partido retrasado · pendiente de nueva semana'}</div>`:'';
-   return `<div class="match ${mine?'mineMatch':'notMine'} ${p?'postponedMatch':''}"><div><div class="cat">${state.category} · ${state.gender}${mine?' · TU PARTIDO':''}</div><div class="players">${m.a} <span style="color:var(--muted);font-weight:700">vs</span> ${m.b}</div><div class="booking">${detail}</div>${pBadge}<div style="margin-top:7px"><span class="status ${st}">${label}</span></div>${resultHtml}</div><div class="matchActions">${reserveActions}${resultActions}${delayAction}</div></div>`
+   if(state.authenticated&&(mine||admin)){if(!r) resultActions=`<button class="btn gold" data-result-mid="${mappEsc(m.id)}">Subir resultado</button>`;else if(r.status==='pending'&&!admin&&r.submittedBy!==state.player) resultActions=`<button class="btn green" data-confirm-result="${mappEsc(m.id)}">Confirmar resultado</button>`;else if(r.status==='pending') resultActions=`<button class="btn gold" data-result-mid="${mappEsc(m.id)}">Editar resultado</button>`;else if(admin) resultActions=`<button class="btn gold" data-result-mid="${mappEsc(m.id)}">Corregir resultado</button>`}
+   const delayAction=admin?`<button class="btn secondary" data-delay-mid="${mappEsc(m.id)}">${p?'🔄 Gestionar retraso':'🔄 Retrasar'}</button>`:'';
+   const resultHtml=r?`<div class="resultLine ${r.status==='confirmed'?'resultConfirmed':'resultPending'}"><b>Resultado:</b> ${mappEsc(resultLabel(r))} <span class="resultBadge ${r.status==='confirmed'?'confirmed':'pending'}">${r.status==='confirmed'?'CONFIRMADO':'PENDIENTE DEL RIVAL'}</span>${r.status==='pending'?`<div class="tiny" style="margin-top:4px">Enviado por ${mappEsc(r.submittedBy)}</div>`:''}</div>`:'';
+   const pBadge=p?`<div class="postponedBadge ${p.targetWeek?'reprogrammedBadge':''}">${p.targetWeek?`➡️ Reprogramado a ${mappEsc(weeks.find(w=>w.id===p.targetWeek)?.label||p.targetWeek)}`:'🔄 Partido retrasado · pendiente de nueva semana'}</div>`:'';
+   return `<div class="match ${mine?'mineMatch':'notMine'} ${p?'postponedMatch':''}"><div><div class="cat">${mappEsc(state.category)} · ${mappEsc(state.gender)}${mine?' · TU PARTIDO':''}</div><div class="players">${mappEsc(m.a)} <span style="color:var(--muted);font-weight:700">vs</span> ${mappEsc(m.b)}</div><div class="booking">${mappEsc(detail)}</div>${pBadge}<div style="margin-top:7px"><span class="status ${st}">${label}</span></div>${resultHtml}</div><div class="matchActions">${reserveActions}${resultActions}${delayAction}</div></div>`
  };
  box.innerHTML=(official.length?`<div class="matchSectionTitle">Partidos de esta jornada</div>${official.map(card).join('')}`:'')+(carried.length?`<div class="matchSectionTitle">🔄 Partidos retrasados de jornadas anteriores</div>${carried.map(card).join('')}`:'');
  box.querySelectorAll('[data-reserve-mid]').forEach(b=>b.onclick=()=>openReserve(b.dataset.reserveMid));
@@ -6051,7 +6085,7 @@ function renderSchedule(){
    box.innerHTML='<div class="empty">El club todavía no ha publicado franjas para esta semana.</div>';
    return;
  }
- box.innerHTML=`<table><thead><tr><th>Día</th><th>Hora</th><th>Pista</th><th>Estado</th><th>Partido</th></tr></thead><tbody>${ss.map(s=>{const bk=slotBooking(s.id);return `<tr ${bk?'':`class="freeSlotRow" data-free-slot="${s.id}" tabindex="0" role="button" aria-label="Reservar ${dayDateES(s.date)}, ${s.time}, ${s.court}"`}><td><b>${dayDateES(s.date)}</b></td><td>${s.time}</td><td>${s.court}</td><td class="${bk?'slotBusy':'slotFree'}">${bk?'OCUPADA':'LIBRE'}</td><td>${bk?`${bk.a} vs ${bk.b}`:'—'}</td></tr>`}).join('')}</tbody></table>`;
+ box.innerHTML=`<table><thead><tr><th>Día</th><th>Hora</th><th>Pista</th><th>Estado</th><th>Partido</th></tr></thead><tbody>${ss.map(s=>{const bk=slotBooking(s.id);return `<tr ${bk?'':`class="freeSlotRow" data-free-slot="${mappEsc(s.id)}" tabindex="0" role="button" aria-label="Reservar ${mappEsc(dayDateES(s.date))}, ${mappEsc(s.time)}, ${mappEsc(s.court)}"`}><td><b>${mappEsc(dayDateES(s.date))}</b></td><td>${mappEsc(s.time)}</td><td>${mappEsc(s.court)}</td><td class="${bk?'slotBusy':'slotFree'}">${bk?'OCUPADA':'LIBRE'}</td><td>${bk?`${mappEsc(bk.a)} vs ${mappEsc(bk.b)}`:'—'}</td></tr>`}).join('')}</tbody></table>`;
  box.querySelectorAll('[data-free-slot]').forEach(row=>{
    const go=()=>reserveFromOccupancy(row.dataset.freeSlot);
    row.onclick=go;
@@ -6155,7 +6189,7 @@ function openReserve(mid,preferredSlotId=''){
  $('#modalMode').textContent=current?'CAMBIAR RESERVA':'RESERVAR PARTIDO';
  $('#reserveCurrent').classList.toggle('hidden',!current);
  $('#cancelReserveModal').classList.toggle('hidden',!current);
- if(current)$('#reserveCurrent').innerHTML=`<b>Reserva actual:</b> ${dayDateES(current.date)} · ${current.time} · ${current.court}`;
+ if(current)$('#reserveCurrent').innerHTML=`<b>Reserva actual:</b> ${mappEsc(dayDateES(current.date))} · ${mappEsc(current.time)} · ${mappEsc(current.court)}`;
  $('#reserveNoSlots').classList.toggle('hidden',!!ss.length);
  $('#reserveForm').classList.toggle('hidden',!ss.length);
  if(ss.length){
@@ -6812,6 +6846,7 @@ async function downloadAdminBackup(){
   }
 }
 
+/* ==================== ADMINISTRACIÓN ==================== */
 function renderAdmin(){
   const admin=isAdmin();
   $('#adminNavBtn').classList.toggle('hidden',!admin);
@@ -6820,7 +6855,7 @@ function renderAdmin(){
 }
 function renderRoles(){
   const tb=$('#roleTable');const ps=allIdentities().filter(p=>!accessIsExcluded(p));
-  tb.innerHTML=ps.map(p=>`<tr><td><b>${p}</b></td><td><select data-role-person="${p.replace(/"/g,'&quot;')}"><option value="jugador" ${roleOf(p)==='jugador'?'selected':''}>Jugador</option><option value="miembro" ${roleOf(p)==='miembro'?'selected':''}>Miembro</option><option value="admin" ${roleOf(p)==='admin'?'selected':''}>ADMIN</option></select></td></tr>`).join('');
+  tb.innerHTML=ps.map(p=>`<tr><td><b>${mappEsc(p)}</b></td><td><select data-role-person="${mappEsc(p)}"><option value="jugador" ${roleOf(p)==='jugador'?'selected':''}>Jugador</option><option value="miembro" ${roleOf(p)==='miembro'?'selected':''}>Miembro</option><option value="admin" ${roleOf(p)==='admin'?'selected':''}>ADMIN</option></select></td></tr>`).join('');
   tb.querySelectorAll('[data-role-person]').forEach(s=>s.onchange=async()=>{
     if(!requireAdmin())return;
     const name=s.dataset.rolePerson;
@@ -6883,7 +6918,7 @@ function renderPins(){
   const rows=ps.map(p=>{
     const pin=data.pins[p]||'—';
     const shown=state.showPins?pin:(pin==='—'?'—':'•'.repeat(String(pin).length));
-    const safe=p.replace(/"/g,'&quot;');
+    const safe=mappEsc(p);
     const protectedSelf=p===state.player&&roleOf(p)==='admin';
     const roleLabel=roleOf(p)==='admin'?'ADMIN':roleOf(p)==='miembro'?'MIEMBRO':'JUGADOR';
     const roleClass=roleOf(p)==='admin'?'admin':roleOf(p)==='miembro'?'member':'player';
@@ -6902,7 +6937,7 @@ function renderPins(){
     cards.innerHTML=ps.map(p=>{
       const pin=data.pins[p]||'—';
       const shown=state.showPins?pin:(pin==='—'?'—':'•'.repeat(String(pin).length));
-      const safe=p.replace(/"/g,'&quot;');
+      const safe=mappEsc(p);
       const protectedSelf=p===state.player&&roleOf(p)==='admin';
       const roleLabel=roleOf(p)==='admin'?'ADMIN':roleOf(p)==='miembro'?'MIEMBRO':'JUGADOR';
       const roleClass=roleOf(p)==='admin'?'admin':roleOf(p)==='miembro'?'member':'player';
@@ -7010,7 +7045,7 @@ function renderExternalAdmins(){
     const shown=state.showPins?pin:(pin==='—'?'—':'•'.repeat(String(pin).length));
     const locked=(p===state.player&&roleOf(p)==='admin');
     const type=roleOf(p)==='admin'?'Administrador':'Miembro';
-    return `<tr><td><b>${p}</b>${p==='Adrián Prádanos'?' <span class="adminBadge">INICIAL</span>':''}</td><td>${type}</td><td><span class="mono">${shown}</span></td><td><div class="matchActions"><button class="btn secondary" data-copy-admin="${p.replace(/"/g,'&quot;')}">📋 Copiar</button><button class="btn dangerBtn" data-delete-other="${p.replace(/"/g,'&quot;')}" ${locked?'disabled':''}>Eliminar</button></div></td></tr>`;
+    return `<tr><td><b>${mappEsc(p)}</b>${p==='Adrián Prádanos'?' <span class="adminBadge">INICIAL</span>':''}</td><td>${mappEsc(type)}</td><td><span class="mono">${mappEsc(shown)}</span></td><td><div class="matchActions"><button class="btn secondary" data-copy-admin="${mappEsc(p)}">📋 Copiar</button><button class="btn dangerBtn" data-delete-other="${mappEsc(p)}" ${locked?'disabled':''}>Eliminar</button></div></td></tr>`;
   }).join('');
   tb.querySelectorAll('[data-copy-admin]').forEach(b=>b.onclick=()=>copyPinMessage(b.dataset.copyAdmin));
   tb.querySelectorAll('[data-delete-other]').forEach(b=>b.onclick=()=>deleteAccessUsers([b.dataset.deleteOther]));
@@ -7135,7 +7170,7 @@ function renderMessageAudience(){
   if(catSel){
     const current=catSel.value;
     const opts=messageCategoryOptions();
-    catSel.innerHTML=opts.map(x=>`<option value="${x.key.replace(/"/g,'&quot;')}">${x.label}</option>`).join('');
+    catSel.innerHTML=opts.map(x=>`<option value="${mappEsc(x.key)}">${mappEsc(x.label)}</option>`).join('');
     if(opts.some(x=>x.key===current))catSel.value=current;
   }
 
@@ -7147,7 +7182,7 @@ function renderMessageAudience(){
           const role=roleOf(n);
           const roleLabel=role==='admin'?'Administrador':role==='miembro'?'Miembro':'Jugador';
           return `<label class="msgUserCard">
-            <input class="msgUserCheck" type="checkbox" data-msg-user="${n.replace(/"/g,'&quot;')}">
+            <input class="msgUserCheck" type="checkbox" data-msg-user="${mappEsc(n)}">
             ${mappAvatar(n,'msgUserAvatar')}
             <span class="msgUserText"><b>${mappEsc(n)}</b><small>${roleLabel}</small></span>
             <span class="msgUserTick">✓</span>
@@ -7294,9 +7329,9 @@ async function loadPushDevices(){
     }
     if(tb){
       tb.innerHTML=groups.map(g=>{
-        const safe=String(g.userName||'').replace(/"/g,'&quot;');
+        const safe=mappEsc(g.userName||'');
         const last=g.lastUpdated?new Date(g.lastUpdated).toLocaleString('es-ES'):'—';
-        return `<tr><td><b>${g.userName||'Sin identificar'}</b></td><td>${g.count||0}</td><td>${last}</td><td>${g.userName?`<button class="btn danger" data-remove-devices="${safe}">🗑️ Dar de baja</button>`:'—'}</td></tr>`;
+        return `<tr><td><b>${mappEsc(g.userName||'Sin identificar')}</b></td><td>${Number(g.count||0)}</td><td>${mappEsc(last)}</td><td>${g.userName?`<button class="btn danger" data-remove-devices="${safe}">🗑️ Dar de baja</button>`:'—'}</td></tr>`;
       }).join('');
       tb.querySelectorAll('[data-remove-devices]').forEach(b=>b.onclick=()=>removePushDevicesFor(b.dataset.removeDevices));
     }
@@ -7305,7 +7340,7 @@ async function loadPushDevices(){
     renderAdminFunctionalTools();
     updateAdminSummaries();
   }catch(e){
-    if(tb)tb.innerHTML=`<tr><td colspan="4">⚠️ ${e.message}</td></tr>`;
+    if(tb)tb.innerHTML=`<tr><td colspan="4">⚠️ ${mappEsc(e.message)}</td></tr>`;
   }
 }
 async function removePushDevicesFor(player){
@@ -7377,6 +7412,7 @@ function normalizeDraft(){
   draftSlots=draftSlots.filter(s=>{const k=`${s.date}|${s.time}|${s.court}`;if(seen.has(k))return false;seen.add(k);s.id=slotIdFor(s);return true})
     .sort((a,b)=>(a.date+a.time+a.court).localeCompare(b.date+b.time+b.court));
 }
+/* ==================== PISTAS · BORRADORES Y PUBLICACIÓN ==================== */
 function renderSlotRows(){
   const saved=slots();
   const hasStoredDraft=!!(data.drafts&&Object.prototype.hasOwnProperty.call(data.drafts,weekKey()));
@@ -7875,15 +7911,16 @@ const MAPP_ICONS={
  camera:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M4 8h3l1.5-2h7L17 8h3v11H4Z"/><circle cx="12" cy="13" r="3"/></svg>`,
  mail:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m4 7 8 6 8-6"/></svg>`
 };
+/* ==================== INTERFAZ MODERNA / PWA ==================== */
 function mappIcon(name){return MAPP_ICONS[name]||''}
-function mappEsc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+
 function mappInitials(name){const p=String(name||'?').trim().split(/\s+/);return (p[0]?.[0]||'')+(p.length>1?p[p.length-1][0]:'')}
 function mappPhotoKey(name){return 'ctcampeador_profile_photo_'+normalizeName(name)}
 function mappLocalPhoto(name){try{return localStorage.getItem(mappPhotoKey(name))||''}catch(_){return ''}}
 function mappPhoto(name){
- const cloud=data.profiles?.[name]?.photoDataUrl;
+ const cloud=safeDataImageUrl(data.profiles?.[name]?.photoDataUrl);
  if(cloud)return cloud;
- return mappLocalPhoto(name);
+ return safeDataImageUrl(mappLocalPhoto(name));
 }
 const mappPhotoSyncing=new Set();
 async function mappMaybeMigrateLegacyPhoto(name){
