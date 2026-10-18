@@ -11,7 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 
-/* V3.16.0 · evita el flash del diseño antiguo durante el arranque */
+/* V3.16.0 + HOTFIX 2026-10-18 REALTAS ACCESOS · evita el flash del diseño antiguo durante el arranque */
 html.app-booting,
 html.app-booting body{
   background:#65000d!important;
@@ -4050,6 +4050,11 @@ body.modern-admin .courtsProEmptyActions .btn{
   body.modern-admin .courtsProPublishActions .btn{width:100%!important}
 }
 </style>
+
+<style id="results-pro-light">
+.mapp-results-user-tools{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin-bottom:11px}.mapp-results-search{min-width:0;height:42px;border:1px solid #dfe2e6;border-radius:11px;background:#fff;color:#202328;padding:0 11px;font-size:12px}.mapp-mine-toggle{min-height:42px;border:1px solid #dfe2e6;border-radius:11px;background:#fff;color:#555b64;padding:0 11px;font-size:10px;font-weight:900;white-space:nowrap}.mapp-mine-toggle.active{border-color:#b6001a;background:#fff5f6;color:#a50018}.mapp-result-week-group{margin-bottom:14px}.mapp-result-week-title{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:2px 2px 8px;padding:0 2px;font-size:11px;font-weight:950;color:#555a62}.mapp-result-week-title small{font-size:8px;color:#9a9ea5;font-weight:800}
+@media(max-width:520px){.mapp-results-user-tools{grid-template-columns:1fr}.mapp-mine-toggle{width:100%}}
+</style>
 </head>
 <body>
 
@@ -4694,7 +4699,7 @@ function safeDataImageUrl(value){
   const v=String(value||'').trim();
   return /^data:image\/(?:jpeg|jpg|png|webp|gif|avif);base64,[a-z0-9+/=]+$/i.test(v)?v:'';
 }
-const APP_BUILD="20261017-seguridad-xss-pistas-pro-2";
+const APP_BUILD="20261018-produccion-seguridad-resultados-pro-3";
 const DEFAULT_WEEKS=[
  {id:"W1",label:"Semana 1 · 17–25 octubre",start:"2026-10-17",end:"2026-10-25"},
  {id:"W2",label:"Semana 2 · 26 octubre–1 noviembre",start:"2026-10-26",end:"2026-11-01"},
@@ -7958,7 +7963,7 @@ function mappFreeSlots(){return isOpen()?slots().filter(s=>!slotBooking(s.id)):[
 function mappWeekShort(){const w=weeks.find(x=>x.id===state.week);const n=String(w?.id||'').replace(/\D/g,'');return n?`Jornada ${n}`:(w?.label||state.week)}
 function mappCurrentRound(){return fixtureRound()||'Jornada'}
 
-const resultsViewState={category:null,gender:null,week:'all'};
+const resultsViewState={category:'all',gender:'all',week:'all',mine:false,query:''};
 
 function confirmedResultsAll(){
   const out=[];
@@ -8034,14 +8039,12 @@ function resultRoundFor(item){
 function renderResultsFilters(){
   const cs=$('#resultsCategory'),gs=$('#resultsGender'),ws=$('#resultsWeek');
   if(!cs||!gs||!ws)return;
-  if(!resultsViewState.category) resultsViewState.category=state.category;
-  if(!resultsViewState.gender) resultsViewState.gender=state.gender;
   cs.innerHTML=`<option value="all">Todas</option>`+CATEGORIES.map(c=>`<option value="${mappEsc(c)}">${mappEsc(c)}</option>`).join('');
   gs.innerHTML=`<option value="all">Todos</option><option value="Masculino">Masculino</option><option value="Femenino">Femenino</option>`;
   cs.value=resultsViewState.category||'all';
   gs.value=resultsViewState.gender||'all';
   ws.innerHTML=`<option value="all">Todas las semanas</option>`+
-    weeks.map(w=>`<option value="${mappEsc(w.id)}" ${resultsViewState.week===w.id?'selected':''}>${mappEsc(w.label)}</option>`).join('');
+    [...weeks].reverse().map(w=>`<option value="${mappEsc(w.id)}" ${resultsViewState.week===w.id?'selected':''}>${mappEsc(w.label)}</option>`).join('');
 }
 
 
@@ -8078,47 +8081,7 @@ async function adminReleaseBookingDirect(matchId,reservation){
   }
 }
 
-function renderModernResults(){
-  const box=$('#modernResultsContent');if(!box)return;
-  renderResultsFilters();
-  const rows=confirmedResultsAll().filter(x=>
-    (resultsViewState.category==='all'||x.category===resultsViewState.category) &&
-    (resultsViewState.gender==='all'||x.gender===resultsViewState.gender) &&
-    (resultsViewState.week==='all'||x.week===resultsViewState.week)
-  );
-  if(!rows.length){
-    box.innerHTML='<div class="mapp-result-empty">Todavía no hay resultados confirmados para esta selección.</div>';
-    return;
-  }
-  box.innerHTML=rows.map(item=>{
-    const sc=resultScoresForPlayers(item);
-    const special=resultSpecialLabel(item.result);
-    return `<div class="mapp-result-card">
-      <div class="mapp-result-meta">
-        <span class="mapp-result-category">${mappEsc(item.category)} · ${mappEsc(item.gender)}</span>
-        <span>${mappEsc(resultRoundFor(item))}</span>
-      </div>
-      <div class="mapp-result-body">
-        <div class="mapp-result-scoreboard">
-          <div class="mapp-result-score-head"><span>Jugador</span><span>S1</span><span>S2</span><span>S3</span></div>
-          <div class="mapp-result-line">${mappResultPlayer(item.a)}${renderScoreCells(resultScoreCells(item).a)}</div>
-          <div class="mapp-result-line">${mappResultPlayer(item.b)}${renderScoreCells(resultScoreCells(item).b)}</div>
-          ${special?`<div class="mapp-result-score-special">${mappEsc(special)}</div>`:''}
-        </div>
-        <div class="mapp-result-confirmed">✓ Resultado confirmado</div>
-        ${isAdmin()?`<div class="mapp-result-admin-row"><button class="mapp-admin-clean" type="button" data-admin-delete-result="${mappEsc(item.matchId)}">Eliminar</button></div>`:''}
-      </div>
-    </div>`;
-  }).join('');
-  box.querySelectorAll('[data-admin-delete-result]').forEach(btn=>{
-    btn.onclick=e=>{
-      e.stopPropagation();
-      const mid=btn.dataset.adminDeleteResult;
-      const item=rows.find(x=>x.matchId===mid);
-      adminDeleteResultDirect(mid,item?.a,item?.b);
-    };
-  });
-}
+function renderModernResults(){const box=$('#modernResultsContent');if(!box)return;renderResultsFilters();const q=normalizeName(resultsViewState.query||''),me=normalizeName(state.player||'');const rows=confirmedResultsAll().filter(x=>(resultsViewState.category==='all'||x.category===resultsViewState.category)&&(resultsViewState.gender==='all'||x.gender===resultsViewState.gender)&&(resultsViewState.week==='all'||x.week===resultsViewState.week)&&(!resultsViewState.mine||(me&&(normalizeName(x.a)===me||normalizeName(x.b)===me)))&&(!q||normalizeName(`${x.a} ${x.b} ${x.category} ${x.gender} ${resultRoundFor(x)}`).includes(q))).sort((a,b)=>{if(resultsViewState.week==='all'){const aw=journeyIndex(a.week),bw=journeyIndex(b.week);if(aw!==bw)return bw-aw}return String(b.when||'').localeCompare(String(a.when||''))});const tools=`<div class="mapp-results-user-tools"><input id="resultsQuickSearch" class="mapp-results-search" placeholder="Buscar jugador o partido…" value="${mappEsc(resultsViewState.query||'')}"><button id="resultsMineToggle" class="mapp-mine-toggle ${resultsViewState.mine?'active':''}" type="button">${resultsViewState.mine?'✓ Solo mis resultados':'Solo mis resultados'}</button></div>`;if(!rows.length){box.innerHTML=tools+'<div class="mapp-result-empty">Todavía no hay resultados confirmados para esta selección.</div>'}else{const groups=[];for(const item of rows){let g=groups.find(x=>x.week===item.week);if(!g){g={week:item.week,items:[]};groups.push(g)}g.items.push(item)}const cards=items=>items.map(item=>{const special=resultSpecialLabel(item.result);return `<div class="mapp-result-card"><div class="mapp-result-meta"><span class="mapp-result-category">${mappEsc(item.category)} · ${mappEsc(item.gender)}</span><span>${mappEsc(resultRoundFor(item))}</span></div><div class="mapp-result-body"><div class="mapp-result-scoreboard"><div class="mapp-result-score-head"><span>Jugador</span><span>S1</span><span>S2</span><span>S3</span></div><div class="mapp-result-line">${mappResultPlayer(item.a)}${renderScoreCells(resultScoreCells(item).a)}</div><div class="mapp-result-line">${mappResultPlayer(item.b)}${renderScoreCells(resultScoreCells(item).b)}</div>${special?`<div class="mapp-result-score-special">${mappEsc(special)}</div>`:''}</div><div class="mapp-result-confirmed">✓ Resultado confirmado</div>${isAdmin()?`<div class="mapp-result-admin-row"><button class="mapp-admin-clean" data-admin-delete-result="${mappEsc(item.matchId)}">Eliminar</button></div>`:''}</div></div>`}).join('');box.innerHTML=tools+groups.map(g=>{const w=weeks.find(x=>x.id===g.week);return `<section class="mapp-result-week-group"><div class="mapp-result-week-title"><span>${mappEsc(w?journeyDisplayName(w.id):(g.week||'Sin jornada'))}</span><small>${mappEsc(w?shortDateES(w.start)+'–'+shortDateES(w.end):'')}</small></div>${cards(g.items)}</section>`}).join('')}$('#resultsQuickSearch')?.addEventListener('input',e=>{const input=e.currentTarget;const value=String(input?.value??'');resultsViewState.query=value;clearTimeout(window.__ctResultsSearchTimer);window.__ctResultsSearchTimer=setTimeout(()=>{renderModernResults();const next=$('#resultsQuickSearch');if(next){next.focus({preventScroll:true});try{next.setSelectionRange(value.length,value.length)}catch(_){}}},180)});$('#resultsMineToggle')?.addEventListener('click',()=>{resultsViewState.mine=!resultsViewState.mine;renderModernResults()});box.querySelectorAll('[data-admin-delete-result]').forEach(btn=>btn.onclick=e=>{e.stopPropagation();const item=rows.find(x=>x.matchId===btn.dataset.adminDeleteResult);adminDeleteResultDirect(btn.dataset.adminDeleteResult,item?.a,item?.b)})}
 
 function tickerTextFor(item){
   const r=item.result;
@@ -8768,17 +8731,21 @@ $('#savePlayers').onclick=async()=>{
   try{
     data.playerLists[key]=list;
 
-    // Guardamos primero la pertenencia deportiva.
+    // FIX 2026-10-18 · cualquier jugador presente en la lista deportiva
+    // debe volver a ser un usuario visible/activo en Accesos y dispositivos.
+    // Esto corrige las re-altas de jugadores que habían quedado en accessExcluded.
+    for(const name of list) restoreAccess(name);
+
+    // Guardamos primero la pertenencia deportiva YA sin exclusiones obsoletas.
     localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
     renderIdentity(); renderAdmin();
     await saveStateOnline();
 
-    // SOLO quienes acaban de incorporarse a esta categoría necesitan comprobar acceso.
-    // La API crea usuario+PIN si no existe.
-    // Si ya existía (ADMIN, MIEMBRO o jugador), conserva exactamente PIN y rol.
+    // Comprobamos TODOS los jugadores de la lista, no solo los detectados como nuevos.
+    // La API crea usuario+PIN si falta; si ya existía conserva PIN y rol.
     let createdUsers=0;
-    if(addedToThisCategory.length){
-      const ensured=await apiRequest({action:'ensurePlayerUsers',names:addedToThisCategory});
+    if(list.length){
+      const ensured=await apiRequest({action:'ensurePlayerUsers',names:list});
       const ensuredUsers=Array.isArray(ensured.users)?ensured.users:[];
       createdUsers=Number(ensured.created||0);
 
