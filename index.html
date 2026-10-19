@@ -1896,6 +1896,12 @@ body.modern-admin #adminView>.head{display:none!important}
   .journeyJump{min-width:108px}
 }
 
+/* V17 TEST · plantillas por pista y por día, sin modificar la publicación */
+body.modern-admin .courtsTemplatePanel{display:grid;gap:7px;padding:14px 17px;border:1px solid #e0e4ea;border-radius:17px;background:#f8fafc}
+body.modern-admin .courtsTemplateHeading{font-size:15px;font-weight:900;color:#242830}
+body.modern-admin .courtsTemplatePanel label{font-weight:800;font-size:12px;color:#4c5665}
+body.modern-admin #templateCourtPick{min-height:44px;width:100%;max-width:480px;border-radius:11px;border:1px solid #cbd2dd;background:white;color:#252b34;font-weight:750;padding:9px}
+body.modern-admin .courtsTemplatePanel p{margin:0;color:#697281;font-size:12px;line-height:1.45}
 </style>
 
 <link rel="manifest" href="manifest.webmanifest">
@@ -4416,17 +4422,25 @@ body.modern-admin .courtsProEmptyActions .btn{
 
           <div class="courtsProDays" id="courtsProDays"></div>
 
+          <div class="courtsTemplatePanel">
+            <div class="courtsTemplateHeading">Plantillas de horario por pista</div>
+            <label for="templateCourtPick">Aplicar a</label>
+            <select id="templateCourtPick" aria-label="Pista a la que aplicar el horario"><option value="__ALL__">Todas las pistas</option></select>
+            <p>Selecciona la pista y aplica un horario. Solo cambia el borrador; para hacerlo visible tendrás que publicarlo.</p>
+          </div>
           <div class="courtsProActions">
             <button class="btn" id="addCourtBtn" type="button">＋ Añadir pista</button>
             <button class="btn gold" id="courtsAddQuick" type="button">＋ Añadir franja</button>
-            <button class="btn secondary" id="draftHabitual" type="button">↺ Horario habitual</button>
+            <button class="btn secondary" id="draftHabitual" type="button">↺ Semana habitual</button>
             <button class="btn secondary" id="draftFullWeek" type="button">Semana completa</button>
             <button class="btn danger" id="clearSlots" type="button">Vaciar borrador</button>
           </div>
 
           <div class="courtsProSecondary">
-            <button class="presetBtn" id="draftAllMorning" type="button">Todas las mañanas</button>
-            <button class="presetBtn" id="draftAllAfternoon" type="button">Todas las tardes</button>
+            <button class="presetBtn" id="draftDayMorning" type="button">☀ Mañana del día seleccionado</button>
+            <button class="presetBtn" id="draftDayAfternoon" type="button">◐ Tarde del día seleccionado</button>
+            <button class="presetBtn" id="draftAllMorning" type="button">Solo mañanas · semana</button>
+            <button class="presetBtn" id="draftAllAfternoon" type="button">Solo tardes · semana</button>
             <span class="countBadge" id="slotCount">0 franjas</span>
           </div>
 
@@ -4694,7 +4708,7 @@ function safeDataImageUrl(value){
   const v=String(value||'').trim();
   return /^data:image\/(?:jpeg|jpg|png|webp|gif|avif);base64,[a-z0-9+/=]+$/i.test(v)?v:'';
 }
-const APP_BUILD="20261017-seguridad-xss-pistas-pro-2";
+const APP_BUILD="20261019-prod-v19-kpis-pistas-publicadas";
 const DEFAULT_WEEKS=[
  {id:"W1",label:"Semana 1 · 17–25 octubre",start:"2026-10-17",end:"2026-10-25"},
  {id:"W2",label:"Semana 2 · 26 octubre–1 noviembre",start:"2026-10-26",end:"2026-11-01"},
@@ -7435,7 +7449,9 @@ function removeDayPart(date,part){draftSlots=draftSlots.filter(s=>!(s.date===dat
 function removeDraftSlot(id){draftSlots=draftSlots.filter(s=>s.id!==id);persistDraft();renderDraftBoard()}
 function renderSlotChips(){renderDraftBoard()}
 function renderCourtsProSummary(){
-  const publishedSlots=slots().slice();
+  // Solo contar franjas disponibles para jugadores en jornadas publicadas.
+  // Conservar los datos almacenados sin alterarlos.
+  const publishedSlots=isOpen()?slots().slice():[];
   const booked=publishedSlots.filter(s=>!!slotBooking(s.id)).length;
   const free=Math.max(0,publishedSlots.length-booked);
   const pending=draftSlots.length;
@@ -7465,8 +7481,69 @@ function renderCourtsDayTabs(days){
     renderDraftBoard();
   });
 }
+function refreshTemplateCourtPick(){
+  const sel=$('#templateCourtPick');if(!sel)return;
+  const old=sel.value||'__ALL__';
+  const named=new Set(draftSlots.map(s=>s.court).filter(Boolean));
+  // Permitir seleccionar una pista aunque su jornada esté vacía.
+  for(let i=1;i<=Math.max(2,...[...named].map(c=>Number(String(c).match(/^Pista (\d+)$/)?.[1]||0)));i++)named.add(`Pista ${i}`);
+  sel.replaceChildren();
+  const all=document.createElement('option');all.value='__ALL__';all.textContent='Todas las pistas';sel.appendChild(all);
+  for(const court of [...named].sort((a,b)=>String(a).localeCompare(String(b),'es',{numeric:true}))){
+    const o=document.createElement('option');o.value=court;o.textContent=court;sel.appendChild(o);
+  }
+  sel.value=[...sel.options].some(o=>o.value===old)?old:'__ALL__';
+}
+function applyCourtTemplate(kind){
+  if(!requireAdmin())return;
+  const sel=$('#templateCourtPick');const target=sel?.value||'__ALL__';
+  const source=kind==='habitual'?buildDefaultWeekSlots():kind==='morning'?buildAllPart('morning'):kind==='afternoon'?buildAllPart('afternoon'):buildFullWeek();
+  // En modo individual se replica el horario de la plantilla sobre la pista escogida,
+  // pero todas las demás pistas permanecen sin cambios.
+  const replacement=target==='__ALL__'?source:source.map(s=>({...s,court:target}));
+  const remaining=target==='__ALL__'?[]:draftSlots.filter(s=>s.court!==target);
+  const nextIds=new Set(replacement.map(s=>slotIdFor(s)));
+  const lostBookings=draftSlots.filter(s=>(target==='__ALL__'||s.court===target)&&!nextIds.has(s.id)&&!!slotBooking(s.id));
+  if(lostBookings.length){alert(`No se puede sustituir este horario: ${lostBookings.length} franja(s) tienen reservas activas que desaparecerían. Gestiona primero esas reservas.`);return;}
+  const labels={habitual:'Semana habitual',morning:'Solo mañanas',afternoon:'Solo tardes',full:'Semana completa'};
+  const affected=draftSlots.filter(s=>target==='__ALL__'||s.court===target).length;
+  if(affected&&!confirm(`¿Aplicar «${labels[kind]}» a ${target==='__ALL__'?'todas las pistas':target}?\n\nSe sustituirán ${affected} franjas de esa selección en el borrador. Las demás pistas no se modificarán.\n\nNo se publicará automáticamente.`))return;
+  draftSlots=[...remaining,...replacement];normalizeDraft();persistDraft();renderDraftBoard();
+  const status=$('#publishActionStatus');if(status)status.textContent=`${labels[kind]} aplicado a ${target==='__ALL__'?'todas las pistas':target}. Borrador sin publicar.`;
+}
+// V17 TEST: aplica una sola parte del horario habitual al día seleccionado.
+// Conserva el resto de ese día, las otras fechas y las otras pistas.
+function applyDayPartTemplate(part){
+  if(!requireAdmin())return;
+  const w=currentWeekRange();
+  const date=adminCourtsDay||w?.start;
+  if(!date||!w||date<w.start||date>w.end){alert('Selecciona primero un día de la semana.');return;}
+  const target=$('#templateCourtPick')?.value||'__ALL__';
+  const existingCourts=[...new Set(draftSlots.filter(s=>s.date===date).map(s=>s.court).filter(Boolean))];
+  const courts=target==='__ALL__'?(existingCourts.length?existingCourts:['Pista 1']):[target];
+  const from=part==='morning'?'10:00':'16:00';
+  const to=part==='morning'?'14:30':'20:30';
+  const timeSlots=[];
+  for(let t=timeToMin(from);t+90<=timeToMin(to);t+=90){
+    const time=`${minToTime(t)} - ${minToTime(t+90)}`;
+    for(const court of courts)timeSlots.push({day:dayNameES(date),date,time,court});
+  }
+  const affected=s=>s.date===date&&courts.includes(s.court)&&partOfSlot(s)===part;
+  const replacementIds=new Set(timeSlots.map(s=>slotIdFor(s)));
+  const lostBookings=draftSlots.filter(s=>affected(s)&&!replacementIds.has(s.id)&&!!slotBooking(s.id));
+  if(lostBookings.length){alert(`No se puede sustituir este horario: ${lostBookings.length} franja(s) tienen reservas activas que desaparecerían.`);return;}
+  const prev=draftSlots.filter(affected).length;
+  const label=part==='morning'?'Mañana habitual':'Tarde habitual';
+  const desc=target==='__ALL__'?`todas las pistas de ${dayDateES(date)}`:`${target} el ${dayDateES(date)}`;
+  if(prev&&!confirm(`¿Aplicar «${label}» a ${desc}?\n\nSe sustituirán únicamente las ${prev} franjas de esa parte del día. La otra parte del día y el resto de la semana no cambian.\n\nNo se publicará automáticamente.`))return;
+  draftSlots=[...draftSlots.filter(s=>!affected(s)),...timeSlots];
+  normalizeDraft();persistDraft();renderDraftBoard();
+  const status=$('#publishActionStatus');
+  if(status)status.textContent=`${label} aplicada a ${desc}. Borrador sin publicar.`;
+}
 function renderDraftBoard(){
   normalizeDraft();
+  refreshTemplateCourtPick();
   const slotCount=$('#slotCount'); if(slotCount)slotCount.textContent=`${draftSlots.length} ${draftSlots.length===1?'franja':'franjas'}`;
   const box=$('#draftBoard');
   const w=weeks.find(x=>x.id===state.week); if(!w){if(box)box.innerHTML='';return}
@@ -7488,7 +7565,7 @@ function renderDraftBoard(){
       </div>
     </div>`;
     $('#emptyAddCourtBtn').onclick=()=>addNextCourtForCurrentDay();
-    $('#emptyHabitualBtn').onclick=()=>{draftSlots=buildDefaultWeekSlots();persistDraft();renderDraftBoard()};
+    $('#emptyHabitualBtn').onclick=()=>applyCourtTemplate('habitual');
     return;
   }
   box.innerHTML=courts.map(court=>{
@@ -8918,10 +8995,12 @@ if($('#saveDraftSlots'))$('#saveDraftSlots').onclick=async()=>{
     alert('No se ha podido guardar el borrador online.\n\n'+e.message);
   }finally{btn.disabled=false;btn.textContent=old}
 };
-$('#draftHabitual').onclick=()=>{if(!requireAdmin())return;draftSlots=buildDefaultWeekSlots();persistDraft();renderDraftBoard()};
-$('#draftAllMorning').onclick=()=>{if(!requireAdmin())return;draftSlots=buildAllPart('morning');persistDraft();renderDraftBoard()};
-$('#draftAllAfternoon').onclick=()=>{if(!requireAdmin())return;draftSlots=buildAllPart('afternoon');persistDraft();renderDraftBoard()};
-$('#draftFullWeek').onclick=()=>{if(!requireAdmin())return;draftSlots=buildFullWeek();persistDraft();renderDraftBoard()};
+$('#draftDayMorning').onclick=()=>applyDayPartTemplate('morning');
+$('#draftDayAfternoon').onclick=()=>applyDayPartTemplate('afternoon');
+$('#draftHabitual').onclick=()=>applyCourtTemplate('habitual');
+$('#draftAllMorning').onclick=()=>applyCourtTemplate('morning');
+$('#draftAllAfternoon').onclick=()=>applyCourtTemplate('afternoon');
+$('#draftFullWeek').onclick=()=>applyCourtTemplate('full');
 $('#addCustomBlock').onclick=addCustomBlock;
 $('#clearSlots').onclick=()=>{if(!requireAdmin())return;if(confirm('¿Vaciar por completo el borrador de disponibilidad?\n\nEl borrador quedará vacío y seguirá vacío al volver a entrar. La disponibilidad ya publicada no se borra hasta que cierres reservas o publiques un nuevo borrador.')){draftSlots=[];persistDraft();renderDraftBoard();const status=$('#publishActionStatus');if(status)status.textContent='Borrador vacío guardado. La disponibilidad publicada, si existe, no se ha modificado.'}};
 $('#publishSlots').onclick=async()=>{
