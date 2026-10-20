@@ -4215,7 +4215,7 @@ body.modern-admin .courtsProEmptyActions .btn{
 
 <!-- PRODUCCIÓN · Histórico de pistas: solo lectura, exclusivamente Administración -->
 <details class="adminBlock adminAccordion adminPrimary" data-admin-section="courtHistory" id="adminCourtHistoryPanel">
-  <summary class="adminSummary"><span class="adminSummaryTitle">📅 Histórico de pistas</span><span class="adminSummaryMeta" id="adminHistoryMeta">Consultar reservas finalizadas</span></summary>
+  <summary class="adminSummary"><span class="adminSummaryTitle">Histórico de pistas</span><span class="adminSummaryMeta" id="adminHistoryMeta">Consultar reservas finalizadas</span></summary>
   <div class="adminAccordionBody">
     <p class="authNote">Consulta las franjas ya finalizadas. Los datos no se eliminan ni se modifican.</p>
     <div class="adminHistoryFilters">
@@ -6483,6 +6483,7 @@ const ADMIN_DEFAULT_ORDER=[
   'matchesAdmin',
   'journey',
   'courts',
+  'courtHistory',
   'players',
   'accessDevices',
   'whats'
@@ -6527,6 +6528,28 @@ function normalizeAdminOrder(order){
     ...ADMIN_DEFAULT_ORDER.filter(id=>available.includes(id)&&!src.includes(id)),
     ...available.filter(id=>!src.includes(id)&&!ADMIN_DEFAULT_ORDER.includes(id))
   ];
+}
+/* La API antigua no contempla aún courtHistory. Conservar su posición en el dispositivo
+   sin modificar el orden que Cloudflare guarda para los demás módulos. */
+function adminOrderWithLocalHistory(cloudOrder,localOrder){
+  const id='courtHistory';
+  const remote=normalizeAdminOrder(cloudOrder).filter(x=>x!==id);
+  const local=Array.isArray(localOrder)?localOrder:[];
+  const pos=local.indexOf(id);
+  if(pos!==-1){
+    // El bloque sigue al vecino anterior conocido, o precede al siguiente.
+    for(let i=pos-1;i>=0;i--){
+      const at=remote.indexOf(local[i]);
+      if(at!==-1){remote.splice(at+1,0,id);return remote;}
+    }
+    for(let i=pos+1;i<local.length;i++){
+      const at=remote.indexOf(local[i]);
+      if(at!==-1){remote.splice(at,0,id);return remote;}
+    }
+  }
+  const courtIndex=remote.indexOf('courts');
+  remote.splice(courtIndex<0?remote.length:courtIndex+1,0,id);
+  return remote;
 }
 function applyAdminOrderArray(order){
   const manager=document.querySelector('#adminView .adminManager');
@@ -6573,9 +6596,10 @@ async function persistAdminBlockOrder({silent=false}={}){
   if(!silent)setAdminOrderStatus('Guardando…');
 
   try{
-    const j=await apiRequest({action:'saveAdminOrder',order});
-    const saved=Array.isArray(j?.adminOrder)?j.adminOrder:[];
-    const normalized=normalizeAdminOrder(saved.length?saved:order);
+    const cloudOrder=order.filter(id=>id!=='courtHistory');
+    const j=await apiRequest({action:'saveAdminOrder',order:cloudOrder});
+    const saved=Array.isArray(j?.adminOrder)?j.adminOrder:cloudOrder;
+    const normalized=adminOrderWithLocalHistory(saved,order);
     saveAdminOrderLocal(normalized);
     applyAdminOrderArray(normalized);
     adminCloudOrderLoadedFor=normalizeName(state.player);
@@ -6614,12 +6638,14 @@ async function loadAdminBlockOrderFromCloud({force=false}={}){
   try{
     const j=await apiRequest({action:'getAdminPreferences'});
     const order=Array.isArray(j?.preferences?.adminOrder)?j.preferences.adminOrder:[];
+    const localOrder=readAdminOrderLocal();
     if(order.length){
-      const normalized=normalizeAdminOrder(order);
+      const normalized=adminOrderWithLocalHistory(order,localOrder);
       saveAdminOrderLocal(normalized);
       applyAdminOrderArray(normalized);
+    }else if(localOrder.length){
+      applyAdminOrderArray(localOrder);
     }else{
-      try{localStorage.removeItem(adminOrderStorageKey())}catch(_){}
       applyAdminOrderArray(ADMIN_DEFAULT_ORDER);
     }
     adminCloudOrderLoadedFor=who;
