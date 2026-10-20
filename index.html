@@ -6131,7 +6131,7 @@ function renderSchedule(){
    box.innerHTML=`<div class="empty">${hadSlots?'📴 La disponibilidad de esta semana está despublicada. Las pistas no son visibles para los jugadores hasta que el administrador vuelva a publicarlas.':'🔒 El club todavía no ha publicado la disponibilidad de pistas para esta semana.'}</div>`;
    return;
  }
- const ss=slots().filter(s=>isAdmin()||!slotHasFinished(s.date,s.time)).slice().sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time)||a.court.localeCompare(b.court));
+ const ss=slots().filter(s=>!slotHasFinished(s.date,s.time)).slice().sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time)||a.court.localeCompare(b.court));
  if(!ss.length){
    box.innerHTML='<div class="empty">El club todavía no ha publicado franjas para esta semana.</div>';
    return;
@@ -8485,7 +8485,7 @@ function renderModernCourts(){
    box.innerHTML='<div class="mapp-card"><div class="mapp-empty">🔒 La disponibilidad de pistas está despublicada. El club todavía no ha abierto las reservas de esta jornada.</div></div>';
    return
  }
- const ss=slots().filter(s=>isAdmin()||!slotHasFinished(s.date,s.time)).slice().sort((a,b)=>(a.date+a.court+a.time).localeCompare(b.date+b.court+b.time));
+ const ss=slots().filter(s=>!slotHasFinished(s.date,s.time)).slice().sort((a,b)=>(a.date+a.court+a.time).localeCompare(b.date+b.court+b.time));
  if(!ss.length){
    box.innerHTML='<div class="mapp-card"><div class="mapp-empty">No hay disponibilidad publicada para esta semana.</div></div>';
    return
