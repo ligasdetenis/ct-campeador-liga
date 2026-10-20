@@ -1902,6 +1902,21 @@ body.modern-admin .courtsTemplateHeading{font-size:15px;font-weight:900;color:#2
 body.modern-admin .courtsTemplatePanel label{font-weight:800;font-size:12px;color:#4c5665}
 body.modern-admin #templateCourtPick{min-height:44px;width:100%;max-width:480px;border-radius:11px;border:1px solid #cbd2dd;background:white;color:#252b34;font-weight:750;padding:9px}
 body.modern-admin .courtsTemplatePanel p{margin:0;color:#697281;font-size:12px;line-height:1.45}
+
+/* Histórico de pistas · ADMIN exclusivamente. No afecta a la pantalla Pistas. */
+.adminHistoryFilters{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.adminHistoryFilters label{display:grid;gap:5px;color:#626871;font-size:11px;font-weight:850}
+.adminHistoryFilters select{min-height:42px;width:100%;background:#fff;color:#25282d;border:1px solid #dce1e7;border-radius:10px;padding:7px}
+.adminHistoryList{display:grid;gap:12px;max-height:550px;overflow-y:auto;overscroll-behavior:contain}
+.adminHistoryDay{border:1px solid #e4e7eb;border-radius:12px;overflow:hidden;background:#fff}
+.adminHistoryDayTitle{background:#f5f6f8;color:#282c32;padding:10px 12px;font-size:12px;font-weight:900}
+.adminHistoryRow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;padding:10px 12px;border-top:1px solid #edf0f2;align-items:center}
+.adminHistoryMain{min-width:0;color:#282b30;font-size:12px;font-weight:800;overflow-wrap:anywhere}
+.adminHistoryPlayers{font-size:11px;color:#696e77;font-weight:550;margin-top:4px;overflow-wrap:anywhere}
+.adminHistoryTag{font-size:9px;font-weight:900;background:#f1f2f4;color:#6a6e75;padding:5px 7px;border-radius:8px;white-space:nowrap}
+.adminHistoryTag.occupied{background:#e8f6ed;color:#237447}
+.adminHistoryEmpty{padding:16px;color:#858a91;font-size:12px;text-align:center}
+@media(max-width:520px){.adminHistoryFilters{grid-template-columns:1fr}}
 </style>
 
 <link rel="manifest" href="manifest.webmanifest">
@@ -4197,6 +4212,19 @@ body.modern-admin .courtsProEmptyActions .btn{
   </div>
 </div>
 
+
+<!-- PRODUCCIÓN · Histórico de pistas: solo lectura, exclusivamente Administración -->
+<details class="adminBlock adminAccordion adminPrimary" data-admin-section="courtHistory" id="adminCourtHistoryPanel">
+  <summary class="adminSummary"><span class="adminSummaryTitle">📅 Histórico de pistas</span><span class="adminSummaryMeta" id="adminHistoryMeta">Consultar reservas finalizadas</span></summary>
+  <div class="adminAccordionBody">
+    <p class="authNote">Consulta las franjas ya finalizadas. Los datos no se eliminan ni se modifican.</p>
+    <div class="adminHistoryFilters">
+      <label>Mes <select id="adminHistoryMonth" aria-label="Mes del histórico"></select></label>
+      <label>Ocupación <select id="adminHistoryStatus"><option value="all">Todas las franjas</option><option value="booked">Solo ocupadas</option><option value="free">Sin reserva registrada</option></select></label>
+    </div>
+    <div id="adminHistoryList" class="adminHistoryList"></div>
+  </div>
+</details>
 
 <details class="adminBlock adminAccordion adminPrimary adminTournamentPanel" data-admin-section="tournamentIdentity" open>
   <summary class="adminSummary">
@@ -6900,11 +6928,52 @@ async function downloadAdminBackup(){
 }
 
 /* ==================== ADMINISTRACIÓN ==================== */
+
+/* Histórico administrativo no destructivo: solo información conservada en el estado. */
+function courtHistoryRecords(){
+ const records=[];
+ const seen=new Set();
+ const bookings=Object.entries(data.bookings||{});
+ const slotsByWeek=data.slots||{};
+ for(const [week,weekSlots] of Object.entries(slotsByWeek)){
+  for(const slot of Array.isArray(weekSlots)?weekSlots:[]){
+   if(!slot||!slotHasFinished(slot.date,slot.time))continue;
+   const match=bookings.find(([,b])=>b&&String(b.week)===String(week)&&String(b.slotId)===String(slot.id));
+   const bk=match?.[1]||null;
+   if(match)seen.add(match[0]);
+   records.push({week,date:String(slot.date||''),time:String(slot.time||''),court:String(slot.court||''),booking:bk});
+  }
+ }
+ // Reserva conservada aunque la franja original ya no esté en la planificación.
+ for(const [id,b] of bookings){
+  if(seen.has(id)||!b||!slotHasFinished(b.date,b.time))continue;
+  records.push({week:String(b.week||''),date:String(b.date||''),time:String(b.time||''),court:String(b.court||'No consta'),booking:b});
+ }
+ return records.sort((a,b)=>`${b.date} ${b.time} ${b.court}`.localeCompare(`${a.date} ${a.time} ${a.court}`));
+}
+function renderAdminCourtHistory(){
+ if(!isAdmin())return;
+ const month=$('#adminHistoryMonth'),status=$('#adminHistoryStatus'),list=$('#adminHistoryList');
+ if(!month||!status||!list)return;
+ const all=courtHistoryRecords();
+ const previous=month.value||'all';
+ const months=[...new Set(all.map(r=>r.date.slice(0,7)).filter(m=>/^\d{4}-\d{2}$/.test(m)))].sort().reverse();
+ month.innerHTML='<option value="all">Todos los meses</option>'+months.map(m=>`<option value="${m}">${mappEsc(new Date(m+'-15T12:00:00').toLocaleDateString('es-ES',{month:'long',year:'numeric'}))}</option>`).join('');
+ month.value=months.includes(previous)?previous:'all';
+ const selected=all.filter(r=>(month.value==='all'||r.date.startsWith(month.value))&&(status.value==='all'||(status.value==='booked'?!!r.booking:!r.booking)));
+ const groups=new Map();
+ for(const r of selected){if(!groups.has(r.date))groups.set(r.date,[]);groups.get(r.date).push(r)}
+ list.innerHTML=selected.length?[...groups].map(([day,rows])=>`<div class="adminHistoryDay"><div class="adminHistoryDayTitle">${mappEsc(dayDateES(day))}</div>${rows.map(r=>`<div class="adminHistoryRow"><div><div class="adminHistoryMain">${mappEsc(r.time||'Hora no indicada')} · ${mappEsc(r.court||'Pista no indicada')}</div><div class="adminHistoryPlayers">${r.booking?mappEsc(`${r.booking.a||'Jugador sin identificar'} vs ${r.booking.b||'Jugador sin identificar'}`):'Sin reserva registrada'} · ${mappEsc(r.week)}</div></div><span class="adminHistoryTag ${r.booking?'occupied':''}">${r.booking?'RESERVADA':'SIN RESERVA'}</span></div>`).join('')}</div>`).join(''):'<div class="adminHistoryEmpty">No hay franjas finalizadas registradas con estos filtros.</div>';
+ $('#adminHistoryMeta').textContent=`${all.length} franjas finalizadas`;
+ month.onchange=renderAdminCourtHistory;
+ status.onchange=renderAdminCourtHistory;
+}
+
 function renderAdmin(){
   const admin=isAdmin();
   $('#adminNavBtn').classList.toggle('hidden',!admin);
   if(!admin){$('#adminView').classList.add('hidden');return}
-  const cps=categoryPlayers();if(!playerEditorDirty)$('#playerPaste').value=cps.join('\n');$('#playerCount').textContent=`${cps.length} jugador${cps.length===1?'':'es'}`;$('#fixturePaste').value='';renderFixtureEditor();const cw=weeks.find(w=>w.id===state.week);if(cw){$('#weekStartDate').value=cw.start;$('#weekEndDate').value=cw.end;$('#weekRangeHint').textContent=`Rango actual: ${dayDateES(cw.start)} → ${dayDateES(cw.end)}. Las pistas del borrador se limitarán a estas fechas.`}renderSlotRows();setDefaultQuickDate();renderAdminMatches();renderPins();renderRoles();renderExternalAdmins();renderWhats();renderAdminFunctionalTools();wireAdminFunctionalTools();setupAdminBlockOrdering();
+  const cps=categoryPlayers();if(!playerEditorDirty)$('#playerPaste').value=cps.join('\n');$('#playerCount').textContent=`${cps.length} jugador${cps.length===1?'':'es'}`;$('#fixturePaste').value='';renderFixtureEditor();const cw=weeks.find(w=>w.id===state.week);if(cw){$('#weekStartDate').value=cw.start;$('#weekEndDate').value=cw.end;$('#weekRangeHint').textContent=`Rango actual: ${dayDateES(cw.start)} → ${dayDateES(cw.end)}. Las pistas del borrador se limitarán a estas fechas.`}renderSlotRows();setDefaultQuickDate();renderAdminMatches();renderPins();renderRoles();renderExternalAdmins();renderWhats();renderAdminFunctionalTools();wireAdminFunctionalTools();renderAdminCourtHistory();setupAdminBlockOrdering();
 }
 function renderRoles(){
   const tb=$('#roleTable');const ps=allIdentities().filter(p=>!accessIsExcluded(p));
