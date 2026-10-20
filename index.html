@@ -4762,8 +4762,8 @@ function setWeekRangeLocal(start,end){
   return true
 }
 
-function fresh(){return {tournamentName:'II Liga Federada',playerLists:{},fixtures:{},fixtureRounds:{},slots:{},drafts:{},published:{},bookings:{},results:{},profiles:{},pins:{},roles:{},staff:{},weekRanges:{},postponed:{},weeks:Object.fromEntries(weeks.map(w=>[w.id,{...w}]))}}
-function normalizeData(x){const d=x&&typeof x==='object'?x:{};const wr={...(d.weekRanges||{})};if(d.weeks&&typeof d.weeks==='object'){for(const [id,w] of Object.entries(d.weeks)){if(w&&w.start&&w.end&&!wr[id])wr[id]={start:w.start,end:w.end}}}hydrateWeeksFromState(d.weeks,wr);return {tournamentName:String(d.tournamentName||'II Liga Federada').trim().slice(0,60)||'II Liga Federada',playerLists:d.playerLists||{},fixtures:d.fixtures||{},fixtureRounds:d.fixtureRounds||{},slots:d.slots||{},drafts:d.drafts||{},published:d.published||{},bookings:d.reservations||d.bookings||{},results:d.results||{},profiles:d.profiles||{},pins:d.pins||{},roles:{...(d.roles||{}),...(d.adminRoles||{})},staff:d.staff||{},accessExcluded:Array.isArray(d.accessExcluded)?d.accessExcluded:[],messageHistory:Array.isArray(d.messageHistory)?d.messageHistory:[],weekRanges:wr,postponed:d.postponed||{},weeks:Object.fromEntries(weeks.map(w=>[w.id,{...w}]))}}
+function fresh(){return {tournamentName:'II Liga Federada',playerLists:{},fixtures:{},fixtureRounds:{},slots:{},drafts:{},published:{},bookings:{},results:{},profiles:{},pins:{},roles:{},staff:{},weekRanges:{},postponed:{},fixtureVisibilityOverrides:{},weeks:Object.fromEntries(weeks.map(w=>[w.id,{...w}]))}}
+function normalizeData(x){const d=x&&typeof x==='object'?x:{};const wr={...(d.weekRanges||{})};if(d.weeks&&typeof d.weeks==='object'){for(const [id,w] of Object.entries(d.weeks)){if(w&&w.start&&w.end&&!wr[id])wr[id]={start:w.start,end:w.end}}}hydrateWeeksFromState(d.weeks,wr);return {tournamentName:String(d.tournamentName||'II Liga Federada').trim().slice(0,60)||'II Liga Federada',playerLists:d.playerLists||{},fixtures:d.fixtures||{},fixtureRounds:d.fixtureRounds||{},slots:d.slots||{},drafts:d.drafts||{},published:d.published||{},bookings:d.reservations||d.bookings||{},results:d.results||{},profiles:d.profiles||{},pins:d.pins||{},roles:{...(d.roles||{}),...(d.adminRoles||{})},staff:d.staff||{},accessExcluded:Array.isArray(d.accessExcluded)?d.accessExcluded:[],messageHistory:Array.isArray(d.messageHistory)?d.messageHistory:[],weekRanges:wr,postponed:d.postponed||{},fixtureVisibilityOverrides:d.fixtureVisibilityOverrides||{},weeks:Object.fromEntries(weeks.map(w=>[w.id,{...w}]))}}
 let data=normalizeData(JSON.parse(localStorage.getItem(STORAGE_KEY)||"null")||fresh());
 applyWeekRanges();
 if(!data.staff["Adrián Prádanos"])data.staff["Adrián Prádanos"]={name:"Adrián Prádanos"};
@@ -4788,7 +4788,7 @@ const PUSH_SYNC_CACHE_KEY='ctcampeador_push_sync_v3161';
 const PUSH_RESYNC_MS=7*24*60*60*1000;  // revalidación push como máximo una vez por semana
 let lastRefreshAt=0;
 function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(data));if(isAdmin()&&apiToken){clearTimeout(saveTimer);saveTimer=setTimeout(()=>saveStateOnline().catch(console.warn),350)}}
-function publicState(){return {tournamentName:data.tournamentName||'II Liga Federada',playerLists:data.playerLists,fixtures:data.fixtures,fixtureRounds:data.fixtureRounds,slots:data.slots,drafts:data.drafts,published:data.published,bookings:data.bookings,reservations:data.bookings,results:data.results,staff:data.staff,accessExcluded:data.accessExcluded||[],adminRoles:Object.fromEntries(Object.entries(data.roles||{}).filter(([,r])=>r==='admin')),weekRanges:data.weekRanges||{},postponed:data.postponed||{},weeks:Object.fromEntries(weeks.map(w=>[w.id,w])),updatedAt:new Date().toISOString()}}
+function publicState(){return {tournamentName:data.tournamentName||'II Liga Federada',playerLists:data.playerLists,fixtures:data.fixtures,fixtureRounds:data.fixtureRounds,slots:data.slots,drafts:data.drafts,published:data.published,bookings:data.bookings,reservations:data.bookings,results:data.results,staff:data.staff,accessExcluded:data.accessExcluded||[],adminRoles:Object.fromEntries(Object.entries(data.roles||{}).filter(([,r])=>r==='admin')),weekRanges:data.weekRanges||{},postponed:data.postponed||{},fixtureVisibilityOverrides:data.fixtureVisibilityOverrides||{},weeks:Object.fromEntries(weeks.map(w=>[w.id,w])),updatedAt:new Date().toISOString()}}
 async function apiRequest(payload,{auth=true}={}){const headers={'Content-Type':'application/json'};if(auth&&apiToken)headers.Authorization='Bearer '+apiToken;const r=await fetch(API_URL,{method:'POST',headers,body:JSON.stringify(payload)});let j={};try{j=await r.json()}catch(e){}if(!r.ok||j.ok===false)throw new Error(j.error||('HTTP '+r.status));return j}
 
 function realtimeUrl(){
@@ -4925,7 +4925,7 @@ async function restoreSession(){
       data.tournamentName=remote.tournamentName||data.tournamentName||'II Liga Federada';data.playerLists=remote.playerLists;data.fixtures=remote.fixtures;data.fixtureRounds=remote.fixtureRounds;
       data.slots=remote.slots;data.drafts=remote.drafts;data.published=remote.published;data.bookings=remote.bookings;
       data.results=remote.results;data.profiles=remote.profiles||{};data.weekRanges=remote.weekRanges||{};
-      data.postponed=remote.postponed||{};data.accessExcluded=remote.accessExcluded||data.accessExcluded||[];data.staff={...(data.staff||{}),...(remote.staff||{})};
+      data.postponed=remote.postponed||{};data.fixtureVisibilityOverrides=remote.fixtureVisibilityOverrides||{};data.accessExcluded=remote.accessExcluded||data.accessExcluded||[];data.staff={...(data.staff||{}),...(remote.staff||{})};
       data.roles={...(data.roles||{}),...(remote.roles||{})};applyWeekRanges();
     }
     data.roles[state.player]=localRoleFromApi(j.user.role);
@@ -4950,7 +4950,7 @@ function adminEditorActive(){
   return !!(el && el.closest && el.closest('#adminView') && /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName));
 }
 
-async function refreshOnline({silent=false,force=false}={}){if((fixtureEditorDirty||playerEditorDirty||adminEditorActive())&&!force){setOnline(true,'✏️ Editando · actualización pausada');return false}try{const j=await apiRequest({action:'read'});const remote=normalizeData(j.state);data.tournamentName=remote.tournamentName||data.tournamentName||'II Liga Federada';data.playerLists=remote.playerLists;data.fixtures=remote.fixtures;data.fixtureRounds=remote.fixtureRounds;data.slots=remote.slots;data.drafts=remote.drafts;data.published=remote.published;data.bookings=remote.bookings;data.results=remote.results;data.profiles=remote.profiles||data.profiles||{};data.weekRanges=remote.weekRanges||data.weekRanges||{};data.postponed=remote.postponed||{};data.accessExcluded=remote.accessExcluded||data.accessExcluded||[];applyWeekRanges();data.staff={...(data.staff||{}),...(remote.staff||{})};data.roles={...(data.roles||{}),...(remote.roles||{})};data.roles["Adrián Prádanos"]="admin";localStorage.setItem(STORAGE_KEY,JSON.stringify(data));lastRefreshAt=Date.now();setOnline(true,'☁️ Online');renderAll();return true}catch(e){setOnline(false,'⚠️ Offline');if(!silent)alert('No se ha podido actualizar desde Cloudflare.\n\n'+e.message);return false}}
+async function refreshOnline({silent=false,force=false}={}){if((fixtureEditorDirty||playerEditorDirty||adminEditorActive())&&!force){setOnline(true,'✏️ Editando · actualización pausada');return false}try{const j=await apiRequest({action:'read'});const remote=normalizeData(j.state);data.tournamentName=remote.tournamentName||data.tournamentName||'II Liga Federada';data.playerLists=remote.playerLists;data.fixtures=remote.fixtures;data.fixtureRounds=remote.fixtureRounds;data.slots=remote.slots;data.drafts=remote.drafts;data.published=remote.published;data.bookings=remote.bookings;data.results=remote.results;data.profiles=remote.profiles||data.profiles||{};data.weekRanges=remote.weekRanges||data.weekRanges||{};data.postponed=remote.postponed||{};data.fixtureVisibilityOverrides=remote.fixtureVisibilityOverrides||{};data.accessExcluded=remote.accessExcluded||data.accessExcluded||[];applyWeekRanges();data.staff={...(data.staff||{}),...(remote.staff||{})};data.roles={...(data.roles||{}),...(remote.roles||{})};data.roles["Adrián Prádanos"]="admin";localStorage.setItem(STORAGE_KEY,JSON.stringify(data));lastRefreshAt=Date.now();setOnline(true,'☁️ Online');renderAll();return true}catch(e){setOnline(false,'⚠️ Offline');if(!silent)alert('No se ha podido actualizar desde Cloudflare.\n\n'+e.message);return false}}
 async function saveStateOnline(){
   if(!apiToken||!isAdmin())return;
   if(saveTimer){clearTimeout(saveTimer);saveTimer=null}
@@ -5384,6 +5384,17 @@ function renderFixtureEditor(){
     else if(temporal==='past') msg=`<strong>Jornada finalizada.</strong> Puedes consultar o corregir sus cruces desde esta misma pantalla.`;
     else msg=`<strong>Jornada actual todavía oculta.</strong> Los jugadores no verán estos cruces hasta su publicación.`;
     statusInfo.innerHTML=`<span class="journeyStatusIcon">${icon}</span><span>${msg}</span>`;
+    // Publicación adelantada de los cruces de ESTA categoría/género y jornada.
+    if(!visible && fsCanPublishEarly(state.week)){
+      const publish=document.createElement('button');
+      publish.type='button';
+      publish.className='btn gold';
+      publish.style.cssText='display:block;width:100%;margin-top:11px;min-height:42px;';
+      publish.textContent='📣 Publicar esta jornada ahora';
+      publish.onclick=()=>publishJourneyFixturesNow(state.week);
+      statusInfo.appendChild(publish);
+    }
+
   }
 
   const badge=$('#journeyVisibilityBadge');
@@ -5480,20 +5491,26 @@ function journeyFixturesArePublic(weekId){
   if(!end)return true;
   return new Date()>end;
 }
+function fsCanPublishEarly(weekId){return (data.fixtures?.[fixtureKeyForWeek(weekId)]||[]).length>0;}
 async function publishJourneyFixturesNow(weekId){
   if(!isAdmin())return;
   const w=weeks.find(x=>x.id===weekId);
   if(!w)return;
+  if(!fsCanPublishEarly(weekId)){alert('Guarda primero los enfrentamientos de esta jornada.');return;}
+  if(fixtureEditorDirty){alert('Guarda primero los cambios pendientes en los partidos.');return;}
   if(!confirm(`¿Publicar ahora los enfrentamientos de ${makeWeekLabel(w)}?\n\nLos jugadores podrán verlos aunque todavía no haya finalizado la jornada anterior.`))return;
   data.fixtureVisibilityOverrides=data.fixtureVisibilityOverrides||{};
-  data.fixtureVisibilityOverrides[fixtureVisibilityKey(weekId)]=true;
+  const overrideKey=fixtureVisibilityKey(weekId);
+  const previousOverride=data.fixtureVisibilityOverrides[overrideKey];
+  data.fixtureVisibilityOverrides[overrideKey]=true;
   localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
   try{
     await saveStateOnline();
     renderAll();
     alert('✅ Enfrentamientos publicados.');
   }catch(e){
-    delete data.fixtureVisibilityOverrides[fixtureVisibilityKey(weekId)];
+    if(previousOverride===undefined) delete data.fixtureVisibilityOverrides[overrideKey];
+    else data.fixtureVisibilityOverrides[overrideKey]=previousOverride;
     localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
     alert('No se ha podido publicar.\n\n'+e.message);
   }
