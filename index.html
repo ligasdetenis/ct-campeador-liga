@@ -7877,10 +7877,11 @@ function addBlockToArray(arr,date,from,to,courts=1){
 }
 function buildDefaultWeekSlots(){
   const arr=[];
-  // Borrador habitual: L-V mañana, sábado tarde, domingo mañana+tarde.
+  // Horario habitual CT Campeador: L-V mañana (P1), sábado 14:00-21:30 (P1 y P2),
+  // domingo mañana 10:00-14:30 y tarde 16:00-20:30 (P1 y P2).
   for(let dow=1;dow<=5;dow++){const d=dateForWeekday(dow);if(d)addBlockToArray(arr,localISO(d),'10:00','14:30',1)}
-  const sat=dateForWeekday(6);if(sat)addBlockToArray(arr,localISO(sat),'16:00','20:30',2);
-  const sun=dateForWeekday(0);if(sun){const ds=localISO(sun);addBlockToArray(arr,ds,'10:00','14:30',1);addBlockToArray(arr,ds,'16:00','20:30',1)}
+  const sat=dateForWeekday(6);if(sat)addBlockToArray(arr,localISO(sat),'14:00','21:30',2);
+  const sun=dateForWeekday(0);if(sun){const ds=localISO(sun);addBlockToArray(arr,ds,'10:00','14:30',2);addBlockToArray(arr,ds,'16:00','20:30',2)}
   return arr;
 }
 function buildAllPart(part){
