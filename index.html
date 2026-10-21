@@ -8650,7 +8650,7 @@ function renderModernMatch(){
     </div>
    </div>
    <div class="mapp-menu-row" data-match-reserve="${mappEsc(m.id)}"><div class="mapp-menu-icon">${mappIcon('calendar')}</div><div><div class="mapp-menu-title">${bk?'Cambiar pista':'Reservar pista'}</div><div class="mapp-menu-sub">${bk?'Modifica tu reserva actual':'Elige día, hora y pista'}</div></div><div>${mappIcon('chevron')}</div></div>
-   <div class="mapp-menu-row" data-match-live="${mappEsc(m.id)}"><div class="mapp-menu-icon">${mappIcon('activity')}</div><div><div class="mapp-menu-title">🎾 Marcador en directo</div><div class="mapp-menu-sub">Seguir o controlar puntos · Independiente del resultado oficial</div></div><div>${mappIcon('chevron')}</div></div>
+   <div class="mapp-menu-row" data-match-live="${mappEsc(m.id)}"><div class="mapp-menu-icon">${mappIcon('camera')}</div><div><div class="mapp-menu-title">Marcador en directo</div><div class="mapp-menu-sub">Seguir o controlar puntos · Independiente del resultado oficial</div></div><div>${mappIcon('chevron')}</div></div>
    <div class="mapp-menu-row" data-match-result="${mappEsc(m.id)}"><div class="mapp-menu-icon">${mappIcon('trophy')}</div><div><div class="mapp-menu-title">${r?'Ver / gestionar resultado':'Subir resultado'}</div><div class="mapp-menu-sub">Resultado del encuentro</div></div><div>${mappIcon('chevron')}</div></div>
    ${p?`<div class="mapp-menu-row"><div class="mapp-menu-icon gray">${mappIcon('calendar')}</div><div><div class="mapp-menu-title">Partido retrasado</div><div class="mapp-menu-sub">${p.targetWeek?'Reprogramado para '+mappEsc(weeks.find(w=>w.id===p.targetWeek)?.label||p.targetWeek):'Pendiente de nueva semana'}</div></div></div>`:''}
    </div>`;
