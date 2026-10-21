@@ -8999,12 +8999,12 @@ $('#savePlayers').onclick=async()=>{
     renderIdentity(); renderAdmin();
     await saveStateOnline();
 
-    // SOLO quienes acaban de incorporarse a esta categoría necesitan comprobar acceso.
-    // La API crea usuario+PIN si no existe.
+    // Comprobar TODOS los participantes de la categoría, también los ya inscritos.
+    // La API crea únicamente las cuentas ausentes y respeta PIN y rol existentes.
     // Si ya existía (ADMIN, MIEMBRO o jugador), conserva exactamente PIN y rol.
     let createdUsers=0;
-    if(addedToThisCategory.length){
-      const ensured=await apiRequest({action:'ensurePlayerUsers',names:addedToThisCategory});
+    if(list.length){
+      const ensured=await apiRequest({action:'ensurePlayerUsers',names:list});
       const ensuredUsers=Array.isArray(ensured.users)?ensured.users:[];
       createdUsers=Number(ensured.created||0);
 
@@ -9267,8 +9267,18 @@ $('#syncAccessUsers').onclick=async()=>{
   try{
     btn.disabled=true;btn.textContent='⏳ Sincronizando…';
     await loadAdminUsers();
+    // La sincronización también recupera cuentas ausentes de jugadores inscritos.
+    // ensurePlayerUsers es no destructiva: nunca cambia PIN ni roles existentes.
+    const players=categorizedPlayers();
+    const ensured=players.length
+      ? await apiRequest({action:'ensurePlayerUsers',names:players})
+      : {created:0};
+    await loadAdminUsers();
     renderAll();
-    alert('✅ Usuarios sincronizados con Cloudflare.');
+    const created=Number(ensured.created||0);
+    alert(created
+      ? `✅ Sincronización completada. Se han creado ${created} cuenta${created===1?'':'s'} con PIN. Los accesos existentes no se han modificado.`
+      : '✅ Usuarios sincronizados con Cloudflare. No faltaba ninguna cuenta.');
   }catch(e){
     alert('No se han podido sincronizar los usuarios.\n\n'+e.message);
   }finally{
