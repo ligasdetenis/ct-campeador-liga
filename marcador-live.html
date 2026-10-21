@@ -1,0 +1,182 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#65000d"><title>CT Campeador · LIVE</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"><style>
+:root{color-scheme:dark;font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:#091323;color:#f1f7ff}*{box-sizing:border-box}body{margin:0;padding:16px;max-width:720px;margin-inline:auto}h1{margin:0;font-size:24px}small,.muted{color:#a4b6cf}.top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:18px}.pill{border:1px solid #386b69;color:#a5f2d0;border-radius:24px;padding:6px 10px;font-size:12px}section{background:#14233a;border:1px solid #263c5b;border-radius:18px;padding:16px;margin:12px 0}.grid{display:grid;grid-template-columns:minmax(0,1fr) 48px 48px 55px 65px;gap:8px;align-items:center}.grid>div{padding:10px 0;border-bottom:1px solid #314057}.score{text-align:center;font-size:26px;font-weight:900}.player{overflow-wrap:anywhere;font-weight:750}button,input{font:inherit;border-radius:12px;padding:12px;border:1px solid #3a536d}button{background:#236f60;color:#fff;font-weight:750;cursor:pointer}button:disabled{opacity:.4}input{background:#091323;color:#fff;max-width:100%;width:100%}.twos{display:grid;grid-template-columns:1fr 1fr;gap:10px}.help{font-size:13px;line-height:1.5;color:#b7c6d9}.hidden{display:none!important}.secondary{background:#2a3e58}.danger{background:#5b3b51}.banner{padding:10px;border-radius:12px;background:#243650;margin:12px 0;font-size:13px}.winner{color:#97ffd4}@media(max-width:450px){.grid{grid-template-columns:minmax(0,1fr) 39px 39px 46px 54px;gap:4px}.grid .score{font-size:21px}.grid small{font-size:9px}}.foot{font-size:12px;color:#9fb1cb;line-height:1.45}
+/* Diseño horizontal para móvil: marcador a la izquierda, control a la derecha. */
+body{max-width:1100px}
+.landscapeTools{display:flex;gap:8px;align-items:center;justify-content:flex-end;margin:0 0 8px}
+.landscapeTools button{padding:9px 12px;font-size:12px;background:#2a3e58}
+#orientationHint{font-size:12px;color:#b7c6d9}
+@media (orientation:landscape) and (max-height:650px){
+ body{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(260px,1fr);gap:8px 12px;align-content:start;padding:8px 12px;max-width:none}
+ .top{grid-column:1/-1;margin:0}.top h1{font-size:19px}
+ .top small{font-size:10px}
+ .banner{grid-column:1/-1;margin:0;padding:6px 10px;font-size:11px}
+ .landscapeTools{grid-column:1/-1;margin:0}
+ #joinSection{grid-column:1/-1;margin:0;display:flex;align-items:center;gap:9px;padding:8px 12px;flex-wrap:wrap}
+ #joinSection label{display:none}
+ #joinSection #matchKey{width:min(260px,35vw);padding:8px}
+ #joinSection p{display:none}
+ #joinSection button{padding:8px 10px;font-size:12px}
+ #scoreSection{grid-column:1;grid-row:5;margin:0;padding:10px;min-width:0}
+ #controlsSection{grid-column:2;grid-row:5;margin:0;padding:10px;min-width:0}
+ #controlsSection p{margin:6px 0}
+ #controlsSection button{padding:9px 6px;font-size:12px}
+ #controlsSection .twos{gap:6px}
+ .grid{grid-template-columns:minmax(0,1fr) 42px 42px 48px 56px;gap:4px}
+ .grid>div{padding:6px 0}
+ .score{font-size:22px}
+ .player{font-size:13px}
+ .help{font-size:11px;margin:7px 0}
+ .foot{grid-column:1/-1;font-size:10px;margin:0}
+}
+@media (orientation:portrait) and (max-width:700px){
+ #orientationHint::after{content:' · Gira el móvil para ver el marcador apaisado.'}
+}
+
+/* V22 TEST · identidad visual CT Campeador, ancho completo */
+:root{color-scheme:light;font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;background:#f4f4f3;color:#202126}
+html,body{min-height:100%;width:100%;max-width:none!important;overflow-x:hidden}
+body{margin:0!important;padding:0!important;max-width:none!important;background:#f4f4f3;color:#202126}
+.top{background:linear-gradient(110deg,#47000a,#810014 68%,#5c000c);color:#fff;padding:13px clamp(12px,2.5vw,32px);margin:0;min-height:76px;box-shadow:0 5px 18px #49000a24}
+.top h1{font-size:clamp(20px,2.7vw,30px);font-weight:950;letter-spacing:-.03em}.top small{color:#f1c94c;font-size:10px;font-weight:850;letter-spacing:.07em}
+.top .pill{background:#ffffff19;color:#fff;border:1px solid #ffffff55;font-weight:900}
+.liveTopActions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.goBack{background:#fff;color:#750012;border:0;border-radius:12px;padding:11px 14px;font-size:13px;font-weight:950;box-shadow:0 4px 12px #27000622}
+.pageShell{max-width:none;width:100%;padding:clamp(8px,1.6vw,22px);display:grid;grid-template-columns:minmax(0,1.35fr) minmax(250px,.65fr);gap:12px;align-items:start}
+.pageShell>*{min-width:0}
+.landscapeTools{grid-column:1/-1;justify-content:space-between;flex-wrap:wrap;margin:0}.landscapeTools button{background:#fff;border:1px solid #e5e5e9;color:#800014}
+.banner{grid-column:1/-1;background:#fff8e7;border:1px solid #f1e2b8;color:#856116;margin:0;border-radius:12px;padding:9px 13px;font-size:11px}
+section{background:#fff;border:1px solid #e8e8ea;border-radius:18px;box-shadow:0 8px 24px #24191c0c;margin:0;padding:clamp(12px,1.7vw,23px)}
+#joinSection{grid-column:1/-1;display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:9px 14px}
+#joinSection label,#joinSection p{display:none}#joinSection input{width:min(260px,100%);background:#fafafa;color:#333;border:1px solid #ddd;padding:9px}#joinSection button{padding:9px 12px;font-size:12px}
+#scoreSection{grid-column:1}#controlsSection{grid-column:2}
+#scoreSection .grid{grid-template-columns:minmax(165px,1fr) repeat(2,minmax(45px,.28fr)) minmax(55px,.34fr) minmax(75px,.45fr);gap:clamp(5px,1vw,16px);align-items:center}
+.grid>div{border-bottom:1px solid #eeeef1;padding:clamp(8px,1.3vw,17px) 0}.grid small{color:#858990;font-weight:950;font-size:clamp(9px,1vw,12px)}
+.grid>div:nth-child(5n+5){color:#b0001b}.grid .score{font-size:clamp(20px,3vw,44px);color:#212328;font-weight:950;font-variant-numeric:tabular-nums}
+.grid #current0,.grid #current1{color:#b6001b;background:#fff0f2;border-radius:12px;text-align:center}
+.player{display:flex;align-items:center;gap:clamp(6px,1vw,12px);font-size:clamp(12px,1.35vw,19px);font-weight:900;overflow-wrap:anywhere}
+.playerAvatar{width:clamp(39px,5.8vw,78px);height:clamp(39px,5.8vw,78px);flex:0 0 auto;border-radius:50%;background:linear-gradient(135deg,#850015,#d9213d);border:3px solid #f4e9e9;object-fit:cover;display:grid;place-items:center;color:#fff;font-size:17px;font-weight:900}
+.playerAvatar.hasPhoto{background:#fff}.playerName{min-width:0;overflow-wrap:anywhere}
+#phase{font-size:clamp(12px,1.4vw,18px);font-weight:900;color:#750012;margin:18px 0 5px}#updated{margin:0}
+#controlsSection>b{font-size:clamp(17px,2vw,23px);font-weight:950;color:#22252a}
+.help,.foot{color:#757982}.help{line-height:1.45}#permissionMessage{border-radius:11px;background:#f6f6f8;padding:10px;color:#5d6269}
+button{background:#ca001f;color:#fff;border:0;font-weight:900}button.secondary{background:#fff5df;color:#77570e;border:1px solid #eed9a0}button.danger{background:#f5f5f6;color:#7c1825;border:1px solid #e5dce0}
+#controlsSection .twos button{min-height:68px;padding:10px 9px;font-size:clamp(11px,1.3vw,16px)}#undo{width:100%;min-height:48px}
+.foot{grid-column:1/-1;margin:0;font-size:10px;padding:0 4px}
+@media(max-width:760px) and (orientation:portrait){.pageShell{grid-template-columns:1fr}#scoreSection,#controlsSection{grid-column:1}.top{gap:6px;flex-wrap:wrap}.goBack{padding:9px 11px}.grid .score{font-size:23px}#scoreSection .grid{grid-template-columns:minmax(110px,1fr) 39px 39px 49px 58px;gap:4px}.grid small{font-size:9px}.playerAvatar{width:40px;height:40px}}
+@media(max-height:650px) and (orientation:landscape){body{display:block!important;max-width:none!important;padding:0!important}.top{margin:0!important}.pageShell{grid-template-columns:minmax(0,1.4fr) minmax(240px,.6fr);gap:8px;padding:8px}.banner{padding:6px 9px}.landscapeTools{margin:0!important}#scoreSection,#controlsSection{grid-row:auto!important;grid-column:auto!important;margin:0!important;padding:12px!important}.grid>div{padding:6px 0}.playerAvatar{width:42px;height:42px}.top{min-height:60px!important}.top h1{font-size:18px}.top small{font-size:9px}#controlsSection .twos button{min-height:45px;padding:7px}}
+
+/* LIVE PRO · Identidad CT Campeador: granate, rojo, dorado, Inter. Solo estilos. */
+:root{color-scheme:dark;background:#100708;color:#fff8f0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+html,body{background:#100708!important;color:#fff8f0!important;min-height:100dvh}
+body{background:radial-gradient(ellipse 80% 70% at 10% -15%,#59101a 0%,transparent 68%),radial-gradient(ellipse 50% 60% at 100% 110%,#5d200d 0%,transparent 75%),#100708!important}
+.top{background:#23090dee!important;box-shadow:none!important;border-bottom:1px solid #ffffff22;padding:14px clamp(15px,2.5vw,36px);min-height:86px}
+.top h1{font-size:clamp(19px,2.2vw,28px);letter-spacing:.055em;font-weight:900;color:#fff8f0}.top h1 em{font-style:normal;color:#ffc928}
+.top small{font-size:10px;letter-spacing:.17em;color:#d9b8ad}.goBack{color:#fff8f0!important;background:#4a141e!important;border:1px solid #75313d!important;box-shadow:none!important;border-radius:10px!important}
+.top .pill{color:#ffc928!important;border:1px solid #ffc92855!important;background:#ffc92812!important;letter-spacing:.075em;font-weight:900}
+.pageShell{padding:clamp(12px,2.1vw,30px);grid-template-columns:minmax(0,1.6fr) minmax(275px,.65fr);gap:clamp(10px,1.4vw,20px);max-width:1680px;margin:0 auto}
+.landscapeTools{gap:12px}.landscapeTools button{color:#ffe7df;background:#331015;border:1px solid #794451}.landscapeTools button:hover,.goBack:hover{border-color:#ffc928!important;color:#fff!important}
+.banner{color:#ddbbb1;background:#240c11;border:1px solid #6c333b;border-radius:10px;padding:10px 14px;font-size:11px;letter-spacing:.025em}
+section{background:linear-gradient(145deg,#2e1016,#220d11 68%,#1a0a0d);border:1px solid #663239;border-radius:20px;box-shadow:0 18px 45px #0005;padding:clamp(16px,2.2vw,32px)}
+#joinSection{background:#240c11;border-color:#62323a;border-radius:13px;padding:10px 14px}
+#joinSection input{background:#14080b;color:#fff8f0;border-color:#6b3540;border-radius:9px}
+#joinSection button{background:#ffc928;color:#391c00;border-radius:9px}
+#joinSection button.secondary{background:#4f222b;color:#fff8f0;border-color:#915763}
+.scoreHeading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:24px}
+.eyebrow{display:block;text-transform:uppercase;color:#ffc928;font-weight:850;font-size:10px;letter-spacing:.20em}
+.scoreHeading h2{font-size:clamp(16px,1.8vw,25px);margin:6px 0 0;font-weight:900;letter-spacing:.018em;color:#fff9f2}
+.scoreLiveFlag{display:flex;align-items:center;gap:8px;color:#e8c9bf;font-size:10px;letter-spacing:.13em;font-weight:900;border:1px solid #895b48;background:#301218;padding:10px 12px;border-radius:7px;white-space:nowrap}
+.pulseDot{height:8px;width:8px;border-radius:50%;background:#ffc928;box-shadow:0 0 15px #ffc92877;animation:pulseL 1.7s infinite}
+@keyframes pulseL{50%{box-shadow:0 0 2px #ffc92833;opacity:.65}}
+#scoreSection .grid{grid-template-columns:minmax(160px,1fr) repeat(2,minmax(45px,.23fr)) minmax(64px,.28fr) minmax(76px,.38fr);gap:clamp(5px,1.2vw,18px);align-items:stretch}
+#scoreSection .grid>div{display:flex;align-items:center;min-width:0;border-bottom:1px solid #67343b;padding:clamp(10px,1.7vw,23px) 0}
+#scoreSection .grid>div:nth-child(-n+5){border-bottom:1px solid #94616b;font-size:11px}
+#scoreSection .grid>div:nth-child(5n+5){color:#ffe8a2}
+#scoreSection .grid small{color:#d9b8ad;font-size:clamp(9px,.95vw,12px);font-weight:850;letter-spacing:.1em;text-transform:uppercase}
+#scoreSection .grid .score{justify-content:center;color:#fff8f0;font-variant-numeric:tabular-nums;font-size:clamp(25px,3.1vw,50px);font-weight:900;letter-spacing:-.05em}
+#scoreSection .grid #current0,#scoreSection .grid #current1{background:#ffc928!important;color:#391d00!important;border-radius:9px;align-self:center;min-height:70px;padding:8px!important;margin:5px 0;font-size:clamp(26px,3.3vw,54px);box-shadow:0 0 0 1px #ffe38d40,0 12px 22px #0003}
+.player{display:flex;gap:clamp(9px,1.4vw,20px)!important;font-size:clamp(12px,1.45vw,22px);font-weight:850;color:#fff;overflow-wrap:anywhere}
+.playerAvatar{border:2px solid #a4786c;width:clamp(48px,6.8vw,91px);height:clamp(48px,6.8vw,91px);background:#622431;box-shadow:0 8px 18px #0005}
+.playerAvatar.hasPhoto{background:#622431}
+.playerName{line-height:1.2}
+.matchMeta{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:22px;background:#200b10;border:1px solid #66313a;padding:12px 14px;border-radius:11px}
+#phase{margin:0;color:#ffdc68;font-weight:900;font-size:clamp(12px,1.1vw,16px)}#updated{margin:0;color:#dbb8af;font-size:11px}
+#controlsSection{background:linear-gradient(160deg,#301017,#19080c);border-color:#7a3845}
+.controlHeading{padding-bottom:17px;border-bottom:1px solid #67343b;margin-bottom:17px}.controlHeading b{display:block;color:#fff;font-size:clamp(19px,2vw,27px);font-weight:900;letter-spacing:-.03em;margin-top:5px}
+#permissionMessage{background:#431a24;color:#f0d0c7;border-left:3px solid #ffc928;font-size:12px;padding:12px}
+#startArea>p{font-size:13px;color:#e8c8bb}#controlsSection .twos{gap:10px}
+#controlsSection .twos button{font-size:clamp(12px,1.2vw,16px);border-radius:11px;min-height:75px;line-height:1.25;transition:transform .12s ease,filter .12s ease}
+#controlsSection button:hover:not(:disabled){filter:brightness(1.10);transform:translateY(-1px)}
+#point0,#point1{background:linear-gradient(135deg,#de1027,#a80715);color:#fff8f0;border:1px solid #f25160;font-weight:900;box-shadow:0 7px 22px #e20c202e}
+#startArea button.secondary{background:#52202b;color:#fff6ee;border:1px solid #95606a}
+#undo{background:#3b151e;color:#fff0e5;border:1px solid #85505a;border-radius:9px}
+#resetMatch{background:#4e1520;color:#ffd6d9;border:1px solid #a75660!important;border-radius:9px}
+#actionsInfo{color:#e4c1b7;font-size:12px}
+.foot{color:#d4aa9d;line-height:1.6;font-size:11px;letter-spacing:.01em}
+@media(max-width:900px) and (orientation:portrait){.pageShell{grid-template-columns:1fr}#scoreSection,#controlsSection{grid-column:1}.top{flex-wrap:wrap}#scoreSection .grid{grid-template-columns:minmax(100px,1fr) repeat(2,36px) 52px 60px;gap:4px}.scoreHeading{margin-bottom:13px}.scoreHeading h2{font-size:16px}#scoreSection .grid .score{font-size:25px}#scoreSection .grid #current0,#scoreSection .grid #current1{font-size:27px;min-height:56px}.playerAvatar{width:39px;height:39px}.player{gap:5px!important;font-size:12px}.scoreLiveFlag{font-size:9px;padding:7px}.matchMeta{margin-top:12px}}
+@media(orientation:landscape) and (max-height:650px){.top{min-height:53px!important;padding:7px 13px}.pageShell{grid-template-columns:minmax(0,1.45fr) minmax(230px,.65fr);gap:7px;padding:7px}.scoreHeading{margin-bottom:9px}.scoreHeading h2{font-size:15px}.scoreLiveFlag{padding:6px}.controlHeading{margin-bottom:8px;padding-bottom:8px}.controlHeading b{font-size:17px}#scoreSection,#controlsSection{padding:12px!important}#scoreSection .grid>div{padding:6px 0}.playerAvatar{width:38px;height:38px}#scoreSection .grid #current0,#scoreSection .grid #current1{min-height:42px;font-size:24px}.matchMeta{margin-top:9px;padding:7px 9px}#controlsSection .twos button{min-height:43px;padding:6px}.banner{padding:5px 8px}.foot{font-size:9px}}
+@media(prefers-reduced-motion:reduce){.pulseDot{animation:none}#controlsSection button{transition:none}}
+.serveBall{display:none;align-items:center;justify-content:center;flex:0 0 auto;width:23px;height:23px;margin-right:-4px;filter:drop-shadow(0 0 3px #eaff8170)}.serveBall.active{display:inline-flex}.serveBall svg{display:block;width:21px;height:21px}@media(max-width:600px){.serveBall{width:17px;height:17px;margin-right:-3px}.serveBall svg{width:16px;height:16px}}
+</style></head><body>
+<div class="top"><div class="liveTopActions"><button id="backToApp" class="goBack" type="button">← Mi partido</button><div><small>CT CAMPEADOR · LIGA OFICIAL</small><h1>MARCADOR <em>LIVE</em></h1></div></div><span class="pill" id="connection">Conectando…</span></div><main class="pageShell">
+<div class="landscapeTools"><button id="landscapeBtn" type="button">⛶ Ver apaisado</button><span id="orientationHint"></span></div>
+<div class="banner">Marcador en directo · No modifica reservas ni publica resultados oficiales.</div>
+<section id="joinSection"><label for="matchKey"><small>Identificador de partido</small></label><input id="matchKey" autocomplete="off" maxlength="80" placeholder="Partido de prueba"><p class="help">Abre el enlace desde «Mi partido», o comparte esta página para que otros sigan el marcador.</p><button id="join">Conectar al partido</button> <button class="secondary" id="share">Compartir enlace</button></section>
+<section id="scoreSection"><div class="scoreHeading"><div><span class="eyebrow">CENTRE COURT · CT CAMPEADOR</span><h2>ENCUENTRO EN DIRECTO</h2></div><span class="scoreLiveFlag"><span class="pulseDot"></span> LIVE SCORE</span></div><div class="grid"><div><small>JUGADORES</small></div><div><small>SET 1</small></div><div><small>SET 2</small></div><div><small>JUEGOS</small></div><div><small>PUNTOS</small></div><div class="player"><img class="playerAvatar" id="avatar0" alt="Foto jugador A"><span class="serveBall" id="serveBall0" aria-label="Al servicio" title="Al servicio"><svg viewBox="0 0 32 32" width="22" height="22" aria-hidden="true" focusable="false"><defs><clipPath id="ballClip0"><circle cx="16" cy="16" r="13"/></clipPath></defs><circle cx="16" cy="16" r="13" fill="#d8ed36" stroke="#fff5ad" stroke-width="1.2"/><g clip-path="url(#ballClip0)" fill="none" stroke="#fffcef" stroke-width="2.2" stroke-linecap="round"><path d="M8 -1C21 9 21 23 8 33"/><path d="M24 -1C11 9 11 23 24 33"/></g></svg></span><span class="playerName" id="name0">Jugador A</span></div><div class="score" id="s01">—</div><div class="score" id="s02">—</div><div class="score" id="game0">0</div><div class="score" id="current0">0</div><div class="player"><img class="playerAvatar" id="avatar1" alt="Foto jugador B"><span class="serveBall" id="serveBall1" aria-label="Al servicio" title="Al servicio"><svg viewBox="0 0 32 32" width="22" height="22" aria-hidden="true" focusable="false"><defs><clipPath id="ballClip1"><circle cx="16" cy="16" r="13"/></clipPath></defs><circle cx="16" cy="16" r="13" fill="#d8ed36" stroke="#fff5ad" stroke-width="1.2"/><g clip-path="url(#ballClip1)" fill="none" stroke="#fffcef" stroke-width="2.2" stroke-linecap="round"><path d="M8 -1C21 9 21 23 8 33"/><path d="M24 -1C11 9 11 23 24 33"/></g></svg></span><span class="playerName" id="name1">Jugador B</span></div><div class="score" id="s11">—</div><div class="score" id="s12">—</div><div class="score" id="game1">0</div><div class="score" id="current1">0</div></div><div class="matchMeta"><p id="phase" class="help">Esperando conexión…</p><p id="updated" class="help"></p></div></section>
+<section id="controlsSection"><div class="controlHeading"><span class="eyebrow">MATCH CONTROL</span><b>Control del marcador</b></div><p class="help" id="permissionMessage">Comprobando tu sesión de CT Campeador…</p><div id="startArea"><p>Elegir quién comienza sacando:</p><div class="twos"><button class="secondary" id="start0">Empieza jugador A</button><button class="secondary" id="start1">Empieza jugador B</button></div></div><div id="pointsArea" class="hidden"><div class="twos"><button id="point0">+ Punto A</button><button id="point1">+ Punto B</button></div><p><button class="danger" id="undo">↶ Deshacer último punto</button></p></div><div id="resetArea" class="hidden"><button id="resetMatch" type="button" class="danger" style="width:100%;min-height:44px;border:1px solid #c68d97">↻ Reiniciar partido</button><p class="help">Borra el tanteo LIVE de este partido (no afecta a resultados oficiales).</p></div><p class="help" id="actionsInfo">Conecta al partido para comenzar.</p></section>
+<p class="foot">Reglas: juegos con ventaja; tie-break a 7 en 6-6; si se reparten los dos primeros sets, supertie-break a 10 y diferencia de dos. Los espectadores reciben actualizaciones por WebSocket.</p></main>
+<script>
+(()=>{'use strict';
+const API='https://ct-campeador-live.ligasdetenis.workers.dev';
+const $=id=>document.getElementById(id);const q=new URL(location.href).searchParams;
+const matchParam=q.get('id')||'demo-ctcampeador';$('matchKey').value=matchParam;
+const suggested=[q.get('a')||'Jugador A',q.get('b')||'Jugador B'];
+let id='',ws=null,state=null,pending=false,reconnectTimer=0,canControl=false;
+const TOKEN_KEY='ctcampeador_api_token';
+const LEAGUE_API='https://ct-campeador-api.ligasdetenis.workers.dev/';
+
+const APP_HOME='https://ligasdetenis.github.io/ct-campeador-liga/?open=matches';
+$('backToApp').onclick=()=>{
+  // Al abrir desde la PWA navegamos en la misma ventana: Back vuelve a Mi partido.
+  const fromApp=(()=>{try{const u=new URL(document.referrer);return u.origin===location.origin&&u.pathname.startsWith('/ct-campeador-liga/')&&u.pathname!==location.pathname}catch(_){return false}})();
+  if(fromApp&&history.length>1){history.back();return;}
+  // Para accesos directos o enlaces compartidos, regresar a la liga oficial sin intentar cerrar la PWA.
+  location.assign(APP_HOME);
+};
+const avatarFallback=(name)=>'data:image/svg+xml;charset=utf-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><linearGradient id="g"><stop stop-color="#65000d"/><stop offset="1" stop-color="#cc1833"/></linearGradient></defs><circle cx="50" cy="50" r="50" fill="url(#g)"/><text x="50" y="60" font-family="Arial,sans-serif" font-size="35" font-weight="bold" text-anchor="middle" fill="white">'+(String(name||'?').trim().split(/\s+/).slice(0,2).map(x=>x[0]||'').join('').toUpperCase().replace(/[<>&]/g,'')||'?')+'</text></svg>');
+const normalizeName=(x)=>String(x||'').trim().toLocaleLowerCase('es');
+let profileImages={};
+function updateAvatars(names){for(let i=0;i<2;i++){const el=$('avatar'+i);const name=names[i]||'Jugador';const src=profileImages[normalizeName(name)];if(el.dataset.player!==name||el.dataset.hasphoto!==(src?'1':'0')){el.src=src||avatarFallback(name);el.alt='Foto de '+name;el.dataset.player=name;el.dataset.hasphoto=src?'1':'0';el.classList.toggle('hasPhoto',!!src);}}}
+async function loadPlayerPhotos(){const token=localStorage.getItem(TOKEN_KEY)||'';if(!token){updateAvatars(suggested);return;}try{const r=await fetch(LEAGUE_API,{method:'POST',headers:{'content-type':'application/json','authorization':'Bearer '+token},body:JSON.stringify({action:'readProfiles'})});if(!r.ok)return;const data=await r.json();if(!data.ok||!data.profiles)return;for(const [name,info] of Object.entries(data.profiles)){const photo=String(info?.photoDataUrl||'');if(photo.startsWith('data:image/')&&photo.length<200000)profileImages[normalizeName(info?.player||name)]=photo;}updateAvatars(state?.names||suggested);}catch(_){updateAvatars(suggested)}}
+
+function setText(k,v){$(k).textContent=String(v)}
+function render(){if(!state)return;const names=state.status==='not_started'?suggested:(state.names||suggested);updateAvatars(names);setText('name0',names[0]);setText('name1',names[1]);$('serveBall0').classList.toggle('active',state.server===0&&state.status==='live');$('serveBall1').classList.toggle('active',state.server===1&&state.status==='live');for(let p=0;p<2;p++){setText('s'+p+'1',state.sets?.[p]?.[0]??'—');setText('s'+p+'2',state.sets?.[p]?.[1]??'—');setText('game'+p,state.games?.[p]??0);setText('current'+p,state.phase==='normal'?(state.pointLabels?.[p]??'0'):(state.points?.[p]??0))}const phase=state.phase==='super'?'Supertie-break decisivo · a 10':state.phase==='tiebreak'?'Tie-break · a 7':state.phase==='finished'?'Finalizado':'Juego con ventaja';setText('phase',state.status==='finished'?'🏆 Ganador: '+names[state.winner]:state.status==='not_started'?'Partido todavía no iniciado':phase+' · Saca '+names[state.server]);setText('updated',state.updatedAt?'Última actualización: '+new Date(state.updatedAt).toLocaleTimeString('es-ES'):'Sin movimientos todavía');$('startArea').classList.toggle('hidden',state.status!=='not_started');$('pointsArea').classList.toggle('hidden',state.status!=='live');$('point0').textContent='+ Punto '+names[0];$('point1').textContent='+ Punto '+names[1];$('startArea').classList.toggle('hidden',state.status!=='not_started'||!canControl);$('pointsArea').classList.toggle('hidden',state.status!=='live'||!canControl);$('resetArea').classList.toggle('hidden',!canControl||state.status==='not_started');$('resetMatch').disabled=pending||!canControl;for(const k of ['start0','start1','point0','point1','undo'])$(k).disabled=pending||!canControl;}
+function url(){return API+'/api/match/'+encodeURIComponent(id)}
+function status(s){setText('connection',s)}
+async function refresh(){const r=await fetch(url(),{cache:'no-store'});if(!r.ok)throw Error('HTTP '+r.status);const j=await r.json();state=j.state;render()}
+function connect(){if(ws){ws.onclose=null;ws.close()}clearTimeout(reconnectTimer);const endpoint=url().replace(/^http/,'ws')+'/ws';ws=new WebSocket(endpoint);ws.onopen=()=>status('● EN DIRECTO');ws.onmessage=e=>{try{const m=JSON.parse(e.data);if(m.type==='state'){state=m.state;render()}}catch{}};ws.onclose=()=>{status('Reconectando…');reconnectTimer=setTimeout(()=>{if(id)connect()},3000)};ws.onerror=()=>status('Sin conexión')}
+async function checkPermissions(){
+  canControl=false;
+  const token=localStorage.getItem(TOKEN_KEY)||'';
+  if(!token){setText('permissionMessage','Modo espectador. Entra en la PWA oficial con tu PIN habitual para controlar tus partidos.');render();return}
+  try{
+    const r=await fetch(LEAGUE_API,{method:'POST',headers:{'content-type':'application/json','authorization':'Bearer '+token},body:JSON.stringify({action:'liveAuthorization',matchKey:id})});
+    const j=await r.json();
+    canControl=!!(r.ok&&j.ok&&j.canControl);
+    if(r.ok&&j.ok&&Array.isArray(j.names)){
+      suggested[0]=j.names[0]; suggested[1]=j.names[1];
+      setText('permissionMessage',canControl?'Puedes controlar este partido con tu sesión habitual.':'Modo espectador: solo los dos jugadores pueden modificar el tanteo.');
+    }else{setText('permissionMessage','Modo espectador: '+(j.error||'sesión no válida'));}
+  }catch(e){setText('permissionMessage','No se pudo verificar la sesión: modo espectador.');}
+  render();
+}
+async function join(){const next=$('matchKey').value.trim();if(!/^[a-zA-Z0-9_-]{1,80}$/.test(next)){alert('Identificador inválido');return}id=next;const u=new URL(location.href);u.searchParams.set('id',id);history.replaceState(null,'',u.toString());state=null;canControl=false;status('Conectando…');try{await refresh();connect();await checkPermissions();await loadPlayerPhotos()}catch(e){status('Error');setText('actionsInfo','No se pudo conectar: '+e.message)}}
+async function action(data){if(pending)return;const token=localStorage.getItem(TOKEN_KEY)||'';if(!canControl||!token){alert('Solo los dos jugadores pueden controlar su partido después de entrar con su PIN habitual.');return}pending=true;render();try{const r=await fetch(url(),{method:'POST',headers:{'content-type':'application/json','authorization':'Bearer '+token},body:JSON.stringify(data)});const j=await r.json();if(!r.ok||!j.ok)throw Error(j.error||'Error');state=j.state;render();setText('actionsInfo','Acción sincronizada con espectadores.')}catch(e){setText('actionsInfo','Error: '+e.message)}finally{pending=false;render()}}
+$('landscapeBtn').onclick=async()=>{
+  try{if(!document.fullscreenElement && document.documentElement.requestFullscreen) await document.documentElement.requestFullscreen();}catch(e){}
+  try{if(screen.orientation && screen.orientation.lock){await screen.orientation.lock('landscape');setText('orientationHint','Horizontal activado');return;}}catch(e){}
+  setText('orientationHint','Si no gira automáticamente, activa el giro de pantalla y coloca el móvil horizontal.');
+};
+$('join').onclick=join;$('share').onclick=async()=>{const u=new URL(location.href);u.searchParams.set('id',$('matchKey').value);u.searchParams.delete('token');try{if(navigator.share)await navigator.share({title:'CT Campeador LIVE',url:u.href});else if(navigator.clipboard){await navigator.clipboard.writeText(u.href);alert('Enlace copiado')}else prompt('Copia el enlace',u.href)}catch{}};
+$('start0').onclick=()=>action({action:'start',names:suggested,firstServer:0});$('start1').onclick=()=>action({action:'start',names:suggested,firstServer:1});$('point0').onclick=()=>action({action:'point',who:0});$('point1').onclick=()=>action({action:'point',who:1});$('undo').onclick=()=>action({action:'undo'});$('resetMatch').onclick=()=>{if(!canControl||pending)return;if(confirm('¿Reiniciar el marcador LIVE de este partido?\n\nSe borrarán puntos, juegos, sets e historial del marcador. No se modifican los resultados oficiales.'))action({action:'reset'});};join();
+})();
+</script></body></html>
