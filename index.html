@@ -4501,7 +4501,7 @@ body.modern-admin .courtsProEmptyActions .btn{
             <div class="courtsTemplateHeading">Plantillas de horario por pista</div>
             <label for="templateCourtPick">Aplicar a</label>
             <select id="templateCourtPick" aria-label="Pista a la que aplicar el horario"><option value="__ALL__">Todas las pistas</option></select>
-            <p>Selecciona la pista y aplica un horario. Solo cambia el borrador; para hacerlo visible tendrás que publicarlo.</p>
+            <p>«Semana habitual» siempre prepara todas las pistas (incluidas las dos del sábado y domingo), aunque haya una pista seleccionada. Las demás plantillas respetan el selector. Solo cambia el borrador; para hacerlo visible tendrás que publicarlo.</p>
           </div>
           <div class="courtsProActions">
             <button class="btn" id="addCourtBtn" type="button">＋ Añadir pista</button>
@@ -7688,7 +7688,9 @@ function refreshTemplateCourtPick(){
 }
 function applyCourtTemplate(kind){
   if(!requireAdmin())return;
-  const sel=$('#templateCourtPick');const target=sel?.value||'__ALL__';
+  // Semana habitual es una plantilla global: debe respetar Pista 1 y Pista 2.
+  // El selector individual solo se aplica a las demás plantillas.
+  const sel=$('#templateCourtPick');const target=kind==='habitual'?'__ALL__':(sel?.value||'__ALL__');
   const source=kind==='habitual'?buildDefaultWeekSlots():kind==='morning'?buildAllPart('morning'):kind==='afternoon'?buildAllPart('afternoon'):buildFullWeek();
   // En modo individual se replica el horario de la plantilla sobre la pista escogida,
   // pero todas las demás pistas permanecen sin cambios.
