@@ -1,0 +1,17 @@
+name = "ct-campeador-live"
+main = "src/index.js"
+compatibility_date = "2026-10-01"
+
+# Crear un Durable Object EXCLUSIVO de producción. No enlazar al de TEST.
+[[durable_objects.bindings]]
+name = "LIVE_MATCH"
+class_name = "LiveMatch"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["LiveMatch"]
+
+# La API es el Worker oficial, no TEST.
+[[services]]
+binding = "API_PRODUCCION"
+service = "ct-campeador-api"
