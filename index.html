@@ -4118,6 +4118,69 @@ body.modern-admin .courtsProEmptyActions .btn{
  #modernApp .mapp-context-item{padding:8px 6px!important}
 }
 </style>
+<style id="v22-1-jornadas-responsive">
+/* V22.1 · Evita que importar liga / nueva jornada salgan fuera de la pantalla */
+body.modern-admin .journeyNavigatorSection,
+body.modern-admin .journeyNavigatorHead,
+body.modern-admin .journeyNavigatorActions{min-width:0!important;width:100%!important;max-width:100%!important;box-sizing:border-box!important}
+body.modern-admin .journeyNavigatorActions{
+  display:flex!important;
+  flex-flow:row wrap!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  gap:8px!important;
+}
+body.modern-admin .journeyNavigatorHint{
+  flex:1 1 100%!important;
+  min-width:0!important;
+}
+body.modern-admin .journeyNavigatorActions .journeyAddBtn{
+  flex:0 1 auto!important;
+  max-width:100%!important;
+  min-width:0!important;
+  white-space:normal!important;
+  overflow-wrap:anywhere!important;
+  line-height:1.25!important;
+  text-align:center!important;
+  min-height:38px!important;
+}
+body.modern-admin .journeyNavigator{
+  display:flex!important;
+  flex-wrap:nowrap!important;
+  width:100%!important;
+  min-width:0!important;
+  max-width:100%!important;
+  overflow-x:auto!important;
+  overflow-y:hidden!important;
+  overscroll-behavior-x:contain!important;
+  -webkit-overflow-scrolling:touch;
+  touch-action:pan-x!important;
+  scrollbar-width:thin!important;
+  scrollbar-color:#9a9da4 #edf0f3;
+  padding-bottom:12px!important;
+}
+body.modern-admin .journeyNavigator .journeyJump{flex-shrink:0!important}
+body.modern-admin .journeyNavigator::-webkit-scrollbar{height:6px}
+body.modern-admin .journeyNavigator::-webkit-scrollbar-thumb{background:#9a9da4;border-radius:6px}
+body.modern-admin .journeyNavigator::-webkit-scrollbar-track{background:#edf0f3;border-radius:6px}
+@media(max-width:600px){
+  body.modern-admin .journeyNavigatorActions{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:7px!important}
+  body.modern-admin .journeyNavigatorHint{grid-column:1/-1!important}
+  body.modern-admin #importCompleteLeagueBtn{grid-column:1/-1!important}
+  body.modern-admin #addJourneyBtn{grid-column:1/-1!important}
+  body.modern-admin .journeyNavigatorActions .journeyAddBtn{width:100%!important;padding:9px 10px!important;font-size:11px!important}
+}
+</style>
+<style id="prod-v224-journey-scroll-stable">
+/* La barra solo se mueve si el usuario la desplaza. */
+body.modern-admin #journeyNavigator{
+  scroll-snap-type:none!important;
+  scroll-behavior:auto!important;
+  overflow-x:auto!important;
+  overscroll-behavior-x:contain!important;
+}
+body.modern-admin #journeyNavigator .journeyJump{scroll-snap-align:none!important}
+</style>
 </head>
 <body>
 
@@ -4464,7 +4527,9 @@ body.modern-admin .courtsProEmptyActions .btn{
           </div>
           <div class="journeyNavigatorActions">
             <div class="journeyNavigatorHint">Toca una jornada para editarla.</div>
-            <button class="btn secondary journeyAddBtn" id="addJourneyBtn" type="button">＋ Nueva jornada</button>
+            <button class="btn secondary journeyAddBtn" id="importCompleteLeagueBtn" type="button">⇧ Importar liga JSON · categoría automática</button>
+             <input type="file" id="importCompleteLeagueFile" accept=".json,application/json" style="display:none" aria-label="Seleccionar archivo de liga">
+             <button class="btn secondary journeyAddBtn" id="addJourneyBtn" type="button">＋ Nueva jornada</button>
           </div>
         </div>
         <div class="journeyNavigator" id="journeyNavigator"></div>
@@ -5227,12 +5292,32 @@ function goToJourney(weekId){
   ['#quickFixturePanel','#pasteFixturePanel','#journeySettingsPanel'].forEach(sel=>$(sel)?.classList.add('hidden'));
   renderAll();
   renderModernAdminContext();
-  requestAnimationFrame(()=>document.querySelector('.journeyManagerTop')?.scrollIntoView({behavior:'smooth',block:'nearest'}));
+  // No centrar la jornada ni modificar desplazamientos al cambiarla.
 }
 
+// PRODUCCIÓN V22.4 · Posición independiente del DOM y sin scroll-snap al redibujar.
+const JOURNEY_NAV_SCROLL_KEY='ctcampeador-prod-journey-navigator-scroll-v224';
+let journeyNavScrollPosition=(()=>{try{return Math.max(0,Number(localStorage.getItem(JOURNEY_NAV_SCROLL_KEY))||0)}catch(_){return 0}})();
+let journeyNavIsRestoring=false;
+let journeyNavRestoreEpoch=0;
 function renderJourneyNavigator(){
   const box=$('#journeyNavigator');
   if(!box)return;
+  // Capturar el desplazamiento antes de tocar el contenido.
+  if(box.dataset.scrollMemoryReady==='1' && !journeyNavIsRestoring){
+    journeyNavScrollPosition=box.scrollLeft;
+  }
+  if(!box.dataset.scrollMemoryReady){
+    box.dataset.scrollMemoryReady='1';
+    box.addEventListener('scroll',()=>{
+      if(journeyNavIsRestoring)return;
+      journeyNavScrollPosition=box.scrollLeft;
+      try{localStorage.setItem(JOURNEY_NAV_SCROLL_KEY,String(journeyNavScrollPosition))}catch(_){}
+    },{passive:true});
+  }
+  const target=journeyNavScrollPosition;
+  journeyNavIsRestoring=true;
+  const epoch=++journeyNavRestoreEpoch;
   box.innerHTML=weeks.map((w,i)=>{
     const arr=data.fixtures?.[fixtureKeyForWeek(w.id)]||[];
     const visible=journeyFixturesArePublic(w.id);
@@ -5246,8 +5331,20 @@ function renderJourneyNavigator(){
     </button>`;
   }).join('');
   box.querySelectorAll('[data-journey-jump]').forEach(btn=>btn.onclick=()=>goToJourney(btn.dataset.journeyJump));
-  const active=box.querySelector('.journeyJump.active');
-  if(active)active.scrollIntoView({behavior:'auto',block:'nearest',inline:'center'});
+  // Restaurar tras calcular el ancho real y después del siguiente render.
+  const restore=()=>{if(epoch===journeyNavRestoreEpoch && box.isConnected)box.scrollLeft=target};
+  restore();
+  requestAnimationFrame(()=>{
+    restore();
+    requestAnimationFrame(()=>{
+      restore();
+      if(epoch===journeyNavRestoreEpoch){
+        journeyNavIsRestoring=false;
+        // Solo persistir la posición intencionada, nunca el cero temporal del repintado.
+        try{localStorage.setItem(JOURNEY_NAV_SCROLL_KEY,String(box.scrollLeft))}catch(_){}
+      }
+    });
+  });
 }
 
 function renderFutureJourneysPreview(){
@@ -9259,6 +9356,140 @@ $('#toggleJourneySettings').onclick=()=>toggleJourneyPanel('#journeySettingsPane
 $('#journeyMoreBtn').onclick=()=>$('#journeyDangerMenu').classList.toggle('hidden');
 $('#journeyPrevBtn').onclick=()=>navigateJourney(-1);
 $('#journeyNextBtn').onclick=()=>navigateJourney(1);
+
+/* CT CAMPEADOR · PRODUCCIÓN · Importación JSON de liga con categoría automática y altas revisadas.
+   No cambia fechas, publicación ni reemplaza partidos existentes. */
+async function importCompleteLeagueFile(file){
+  if(!requireAdmin()||!file)return;
+  if(fixtureEditorDirty||playerEditorDirty){alert('Guarda primero los cambios pendientes antes de importar.');return;}
+  if(file.size>1024*1024){alert('El archivo supera 1 MB.');return;}
+  let doc;
+  try{doc=JSON.parse(await file.text())}catch(e){alert('El archivo no contiene JSON válido.');return;}
+  if(!doc||doc.formato!=='ct-campeador-liga'||doc.version!==1||!Array.isArray(doc.jornadas)||!doc.jornadas.length||!Array.isArray(doc.jugadores)){
+    alert('Formato no reconocido: se requiere ct-campeador-liga, versión 1.');return;
+  }
+  if(doc.jornadas.length>50||doc.jugadores.length>250){alert('El archivo supera los límites de seguridad.');return;}
+
+  // La categoría es un destino exacto y controlado por el JSON, nunca por la selección anterior.
+  const rawCat=normalizeName(doc.categoria);
+  const catMatches=CATEGORIES.filter(c=>rawCat===normalizeName(c)||rawCat.startsWith(normalizeName(c)+' ' )||rawCat.startsWith(normalizeName(c)+'-'));
+  if(catMatches.length!==1){alert(`No puedo reconocer con seguridad la categoría «${doc.categoria||''}».\nCategorías disponibles: ${CATEGORIES.join(', ')}.\nNo se ha importado nada.`);return;}
+  const category=catMatches[0];
+  const genderNorm=normalizeName(doc.genero);
+  const genderMap={'masculino':'Masculino','hombre':'Masculino','femenino':'Femenino','mujer':'Femenino'};
+  const gender=genderMap[genderNorm];
+  if(!gender){alert(`Género no reconocido en el archivo: ${doc.genero||'(vacío)'}. No se ha importado nada.`);return;}
+  const destKey=`${category}|${gender}`;
+
+  // Los jugadores de otras categorías siguen siendo el MISMO usuario si el nombre coincide.
+  const globalNames=new Map(allIdentities().map(n=>[normalizeName(n),n]));
+  const targetPlayers=Array.isArray(data.playerLists[destKey])?data.playerLists[destKey]:[];
+  const categoryNames=new Set(targetPlayers.map(normalizeName));
+  const names=new Map(), roster=[];
+  for(const raw of doc.jugadores){
+    if(typeof raw!=='string'||!raw.trim()||raw.length>150){alert('Nombre inválido en el archivo.');return;}
+    const original=raw.trim(), n=normalizeName(original);
+    if(names.has(n)){alert('Jugador duplicado: '+original);return;}
+    const actual=globalNames.get(n)||original;
+    names.set(n,actual);roster.push(actual);
+  }
+  if(!roster.length){alert('El archivo no contiene jugadores.');return;}
+
+  const schedule=[], allPairs=new Set();
+  for(let i=0;i<doc.jornadas.length;i++){
+    const round=doc.jornadas[i];
+    if(!round||Number(round.numero)!==i+1||!Array.isArray(round.enfrentamientos)||!round.enfrentamientos.length||round.enfrentamientos.length>500){
+      alert(`Jornada ${i+1} inválida. Se requiere numeración consecutiva desde 1.`);return;
+    }
+    const pairs=[], played=new Set();
+    for(const match of round.enfrentamientos){
+      const a=normalizeName(match?.jugadorA),b=normalizeName(match?.jugadorB);
+      if(!a||!b||a===b||!names.has(a)||!names.has(b)){
+        alert(`Enfrentamiento inválido en jornada ${i+1}: deben constar los dos jugadores en el archivo.`);return;
+      }
+      if(played.has(a)||played.has(b)){alert(`Un jugador se repite en la jornada ${i+1}.`);return;}
+      played.add(a);played.add(b);
+      const pair=[a,b].sort().join('|');
+      if(allPairs.has(pair)){alert(`Enfrentamiento duplicado entre jornadas: ${match.jugadorA} / ${match.jugadorB}.`);return;}
+      allPairs.add(pair);pairs.push([names.get(a),names.get(b)]);
+    }
+    schedule.push(pairs);
+  }
+  // Planificar jornadas faltantes SIN modificar el estado hasta confirmar.
+  // Los identificadores siguen W1, W2... y las fechas son rangos orientativos,
+  // calculados al final de la última jornada existente, no tomados del PDF.
+  const currentWeeks=[...weeks].sort((a,b)=>weekNumber(a.id)-weekNumber(b.id));
+  const missingCount=Math.max(0,schedule.length-currentWeeks.length);
+  const plannedWeeks=[...currentWeeks];
+  if(missingCount){
+    let last=currentWeeks[currentWeeks.length-1];
+    let nextN=Math.max(0,...currentWeeks.map(w=>weekNumber(w.id)))+1;
+    for(let j=0;j<missingCount;j++){
+      const start=last?.end?isoAddDays(last.end,1):isoAddDays(new Date().toISOString().slice(0,10),1);
+      const end=isoAddDays(start,6),id=`W${nextN++}`;
+      const next={id,start,end,label:''};
+      next.label=makeWeekLabel(next);
+      plannedWeeks.push(next);last=next;
+    }
+  }
+  const conflicts=[];
+  for(let i=0;i<schedule.length;i++){
+    const key=`${plannedWeeks[i].id}|${category}|${gender}`;
+    if((data.fixtures?.[key]||[]).length)conflicts.push(journeyDisplayName(plannedWeeks[i].id));
+  }
+  if(conflicts.length){
+    alert(`Importación cancelada: ya hay enfrentamientos en ${category} / ${gender}:\n${conflicts.join(', ')}.\nNo se reemplazará ningún partido.`);return;
+  }
+
+  const newAccounts=roster.filter(n=>!globalNames.has(normalizeName(n)));
+  const addedToCategory=roster.filter(n=>!categoryNames.has(normalizeName(n)));
+  const reusedFromOtherCategory=addedToCategory.filter(n=>globalNames.has(normalizeName(n)));
+  const total=schedule.reduce((n,p)=>n+p.length,0);
+  const sample=newAccounts.length?`\n\nALTAS NUEVAS (${newAccounts.length}):\n${newAccounts.slice(0,18).join('\n')}${newAccounts.length>18?'\n…':''}`:'';
+  const ok=confirm(`VISTA PREVIA · IMPORTAR LIGA\n\n${doc.competicion||'Liga'}\nDestino detectado: ${category} / ${gender}\n${schedule.length} jornadas · ${total} partidos\n${missingCount} jornadas nuevas que se crearán automáticamente\n${roster.length} jugadores\n\n${newAccounts.length} cuentas nuevas con PIN automático\n${reusedFromOtherCategory.length} usuarios reutilizados de otras categorías\n${addedToCategory.length} incorporaciones a esta categoría${sample}\n\nNo sustituye enfrentamientos ni modifica las fechas de jornadas existentes. Las nuevas jornadas se crean ocultas con fechas orientativas posteriores a la última. Las jornadas ya públicas seguirán visibles.\n\n¿Confirmas el alta de usuarios y la importación?`);
+  if(!ok)return;
+  const btn=$('#importCompleteLeagueBtn'), oldLabel=btn?.textContent;
+  if(btn){btn.disabled=true;btn.textContent='Importando…';}
+  const backup=JSON.stringify(data),backupWeeks=weeks.map(w=>({...w})),oldCategory=state.category,oldGender=state.gender,oldWeek=state.week;
+  let remoteSaved=false;
+  try{
+    if(!apiToken)throw new Error('Falta la conexión de administrador con Cloudflare.');
+    // Crear todas las jornadas necesarias en memoria antes de guardar una sola vez.
+    data.weekRanges=data.weekRanges||{};
+    for(const w of plannedWeeks.slice(currentWeeks.length)){
+      weeks.push({...w});
+      data.weekRanges[w.id]={start:w.start,end:w.end};
+      setJourneyName(w.id,`Jornada ${weekNumber(w.id)}`);
+      // No se marca como publicada: solo se crean jornada y enfrentamientos.
+    }
+    weeks.sort((a,b)=>weekNumber(a.id)-weekNumber(b.id));
+    data.playerLists[destKey]=targetPlayers.concat(addedToCategory);
+    for(const newName of newAccounts){if(!data.roles[newName])data.roles[newName]='jugador';}
+    data.fixtures=data.fixtures||{};
+    for(let i=0;i<schedule.length;i++){
+      const key=`${plannedWeeks[i].id}|${category}|${gender}`;
+      data.fixtures[key]=schedule[i].map(([a,b])=>({id:`${key}|${slug(a)}|${slug(b)}`,a,b}));
+    }
+    ensurePins();syncWeeksIntoData();
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+    await saveStateOnline();remoteSaved=true;
+    await saveUsersOnline();
+    fixtureEditorDirty=false;playerEditorDirty=false;
+    state.category=category;state.gender=gender;state.week=weeks[0].id;
+    renderAll();renderModernAdminContext();
+    alert(`✅ Importación completada.\n\n${category} · ${gender}\n${schedule.length} jornadas · ${total} partidos\n${missingCount} jornadas creadas automáticamente\n${newAccounts.length} usuarios nuevos con PIN\n${reusedFromOtherCategory.length} usuarios ya existentes reutilizados.\n\nRevisa los PIN nuevos en Administración → Usuarios antes de entregárselos a sus titulares.`);
+  }catch(e){
+    if(!remoteSaved){weeks.splice(0,weeks.length,...backupWeeks);data=normalizeData(JSON.parse(backup));state.category=oldCategory;state.gender=oldGender;state.week=oldWeek;localStorage.setItem(STORAGE_KEY,JSON.stringify(data));}
+    renderAll();renderModernAdminContext();
+    alert((remoteSaved?'Los partidos ya se guardaron, pero falló la sincronización de usuarios. No repitas la importación; revisa Usuarios.':'No se completó la importación y se recuperaron los datos locales anteriores.')+'\n\n'+(e.message||e));
+  }finally{if(btn){btn.disabled=false;btn.textContent=oldLabel;}}
+}
+$('#importCompleteLeagueBtn').onclick=()=>{if(requireAdmin())$('#importCompleteLeagueFile').click()};
+$('#importCompleteLeagueFile').onchange=async function(){
+  const file=this.files?.[0];this.value='';
+  if(file)await importCompleteLeagueFile(file);
+};
+
 if($('#addJourneyBtn'))$('#addJourneyBtn').onclick=addJourney;
 
 if($('#futureFixturesBtn'))$('#futureFixturesBtn').onclick=openFutureFixturesPlanner;
