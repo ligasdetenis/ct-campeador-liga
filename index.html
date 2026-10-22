@@ -1958,7 +1958,7 @@ body.modern-admin .courtsTemplatePanel p{margin:0;color:#697281;font-size:12px;l
 /* Carrusel de jornadas · Producción V22.8 */
 
 .mapp-week-carousel-head{display:flex;justify-content:space-between;gap:8px;margin:5px 3px 8px;font-weight:850;letter-spacing:.065em;font-size:10px;color:#8a6469}
-.mapp-week-carousel-nav{display:flex;overflow-x:auto;gap:8px;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;padding:0 2px 12px;margin-bottom:4px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.mapp-week-carousel-nav{scroll-behavior:smooth;display:flex;overflow-x:auto;gap:8px;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;padding:0 2px 12px;margin-bottom:4px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 .mapp-week-carousel-nav::-webkit-scrollbar{display:none}
 .mapp-week-carousel-chip{appearance:none;flex:0 0 auto;scroll-snap-align:center;border:1px solid #d9c8cb;background:white;color:#651c29;border-radius:99px;padding:10px 17px;font:800 13px Inter,system-ui,sans-serif;cursor:pointer;white-space:nowrap;box-shadow:0 1px 4px #360d1414}
 .mapp-week-carousel-chip.selected{background:#b90020;color:white;border-color:#b90020;box-shadow:0 3px 12px #bb001e33}
@@ -8882,19 +8882,15 @@ function renderModernHeader(){
 }
 function mappPublishedOwnWeeks(){
   if(!state.authenticated||!state.player)return [];
-  const me=normalizeName(state.player);
+  // Show all publicly available journeys with fixtures for the selected category,
+  // including those whose results are already confirmed.
   return weeks.filter(w=>{
+    if(!isAdmin()&&!journeyFixturesArePublic(w.id))return false;
     const key=`${w.id}|${state.category}|${state.gender}`;
-    const published=isAdmin()||journeyFixturesArePublic(w.id);
-    if(!published)return false;
-    const own=(data.fixtures?.[key]||[]).some(m=>
-      (normalizeName(m.a)===me||normalizeName(m.b)===me)&&resultFor(m.id)?.status!=='confirmed'&&effectiveWeekFor(m.id)===w.id);
-    const postponed=Object.entries(data.fixtures||{}).some(([k,list])=>{
+    return (data.fixtures?.[key]||[]).length>0 || Object.entries(data.fixtures||{}).some(([k,list])=>{
       const [,cat,gender]=k.split('|');
-      return cat===state.category&&gender===state.gender&&(list||[]).some(m=>
-        effectiveWeekFor(m.id)===w.id&&(normalizeName(m.a)===me||normalizeName(m.b)===me)&&resultFor(m.id)?.status!=='confirmed');
+      return cat===state.category&&gender===state.gender&&(list||[]).some(m=>effectiveWeekFor(m.id)===w.id);
     });
-    return own||postponed;
   });
 }
 function mappWeekCarouselNav(){
@@ -8932,7 +8928,30 @@ function mappGoCarouselWeek(weekId){
 function mappWireWeekCarousel(box){
   box.querySelectorAll('[data-mapp-carousel-week]').forEach(el=>el.addEventListener('click',()=>mappGoCarouselWeek(el.dataset.mappCarouselWeek)));
   const chosen=box.querySelector('.mapp-week-carousel-chip.selected');
-  if(chosen){const nav=chosen.closest('.mapp-week-carousel-nav');if(nav){const key='ctc_carousel_nav_'+(box.id||'player');const saved=Number(sessionStorage.getItem(key)||0);nav.scrollLeft=saved;nav.addEventListener('scroll',()=>{try{sessionStorage.setItem(key,String(nav.scrollLeft))}catch(_){}},{passive:true});}}
+  if(chosen){
+    const nav=chosen.closest('.mapp-week-carousel-nav');
+    if(nav){
+      const key='ctc_carousel_nav_'+(box.id||'player');
+      const weekKey=key+'_week';
+      let prevWeek='';let saved=0;
+      try{prevWeek=sessionStorage.getItem(weekKey)||'';saved=Number(sessionStorage.getItem(key)||0)}catch(_){}
+      const keepPosition=prevWeek===state.week&&Number.isFinite(saved);
+      const centerChosen=()=>Math.max(0,Math.min(nav.scrollWidth-nav.clientWidth,chosen.offsetLeft-nav.offsetLeft+chosen.offsetWidth/2-nav.clientWidth/2));
+      // If the selected week changed, bring the red chip into view.
+      // Otherwise preserve the horizontal scroll position chosen by the player.
+      nav.scrollLeft=keepPosition?Math.min(saved,Math.max(0,nav.scrollWidth-nav.clientWidth)):centerChosen();
+      try{sessionStorage.setItem(weekKey,state.week)}catch(_){}
+      nav.addEventListener('scroll',()=>{
+        try{sessionStorage.setItem(key,String(nav.scrollLeft))}catch(_){}
+      },{passive:true});
+      if(!keepPosition){
+        requestAnimationFrame(()=>{
+          if(!nav.isConnected)return;
+          nav.scrollTo({left:centerChosen(),behavior:window.matchMedia?.('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
+        });
+      }
+    }
+  }
   const card=box.querySelector('.mapp-week-swipe-area');
   if(!card||mappPublishedOwnWeeks().length<2)return;
   let x=null,y=null;
@@ -9051,8 +9070,12 @@ function renderModernCourts(){
 function renderModernMatch(){
  const box=$('#modernMatchContent');if(!box)return;
  const matches=mappOwnMatches();
- if(!matches.length){box.innerHTML='<div class="mapp-card"><div class="mapp-empty">No tienes partido en esta semana.</div></div>';return}
- box.innerHTML=matches.map(m=>{
+ if(!matches.length){
+   box.innerHTML=mappWeekCarouselNav()+'<div class="mapp-week-swipe-area"><div class="mapp-card"><div class="mapp-empty">No tienes partido asignado en esta jornada.</div></div></div>';
+   mappWireWeekCarousel(box);
+   return;
+ }
+ box.innerHTML=mappWeekCarouselNav()+'<div class="mapp-week-swipe-area">'+matches.map(m=>{
    const bk=upcomingBookingFor(m.id),r=resultFor(m.id),p=postponedInfo(m.id);
    return `<div class="mapp-card"><div class="mapp-card-pad">
     <div class="mapp-section-title"><div class="left"><span class="mapp-title-icon">${mappIcon('trophy')}</span>Mi partido</div><span class="mapp-round mapp-round-with-dates">${mappCurrentRoundBadge()}</span></div>
@@ -9073,7 +9096,7 @@ function renderModernMatch(){
    <div class="mapp-menu-row" data-match-result="${mappEsc(m.id)}"><div class="mapp-menu-icon">${mappIcon('trophy')}</div><div><div class="mapp-menu-title">${r?'Ver / gestionar resultado':'Subir resultado'}</div><div class="mapp-menu-sub">Resultado del encuentro</div></div><div>${mappIcon('chevron')}</div></div>
    ${p?`<div class="mapp-menu-row"><div class="mapp-menu-icon gray">${mappIcon('calendar')}</div><div><div class="mapp-menu-title">Partido retrasado</div><div class="mapp-menu-sub">${p.targetWeek?'Reprogramado para '+mappEsc(weeks.find(w=>w.id===p.targetWeek)?.label||p.targetWeek):'Pendiente de nueva semana'}</div></div></div>`:''}
    </div>`;
- }).join('')+`</div>`;
+ }).join('')+'</div>';
  mappWireWeekCarousel(box);
  box.querySelectorAll('[data-match-reserve]').forEach(x=>x.onclick=()=>openReserve(x.dataset.matchReserve));
  box.querySelectorAll('[data-match-live]').forEach(x=>x.onclick=()=>{
