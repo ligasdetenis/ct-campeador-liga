@@ -1958,19 +1958,19 @@ body.modern-admin .courtsTemplatePanel p{margin:0;color:#697281;font-size:12px;l
 /* Carrusel de jornadas · Producción V22.8 */
 
 .mapp-week-carousel-head{display:flex;justify-content:space-between;gap:8px;margin:5px 3px 8px;font-weight:850;letter-spacing:.065em;font-size:10px;color:#8a6469}
-.mapp-week-carousel-nav{scroll-behavior:smooth;display:flex;overflow-x:auto;gap:8px;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;padding:0 2px 12px;margin-bottom:4px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.mapp-week-carousel-nav{scroll-behavior:smooth;display:flex;overflow-x:auto;gap:8px;scroll-snap-type:none;overscroll-behavior-x:contain;padding:0 2px 12px;margin-bottom:4px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 .mapp-week-carousel-nav::-webkit-scrollbar{display:none}
-.mapp-week-carousel-chip{appearance:none;flex:0 0 auto;scroll-snap-align:center;border:1px solid #d9c8cb;background:white;color:#651c29;border-radius:99px;padding:10px 17px;font:800 13px Inter,system-ui,sans-serif;cursor:pointer;white-space:nowrap;box-shadow:0 1px 4px #360d1414}
+.mapp-week-carousel-chip{appearance:none;flex:0 0 auto;scroll-snap-align:none;border:1px solid #d9c8cb;background:white;color:#651c29;border-radius:99px;padding:10px 17px;font:800 13px Inter,system-ui,sans-serif;cursor:pointer;white-space:nowrap;box-shadow:0 1px 4px #360d1414}
 .mapp-week-carousel-chip.selected{background:#b90020;color:white;border-color:#b90020;box-shadow:0 3px 12px #bb001e33}
 .mapp-week-swipe-area{touch-action:pan-y;}
 /* Transición de tarjeta de jornada: deslizamiento y fundido suaves. */
 .mapp-week-swipe-area{will-change:transform,opacity;transition:transform .24s cubic-bezier(.22,1,.36,1),opacity .24s ease;}
-.mapp-week-swipe-area.mapp-week-slide-out-left{transform:translate3d(-38px,0,0) scale(.985);opacity:0;}
-.mapp-week-swipe-area.mapp-week-slide-out-right{transform:translate3d(38px,0,0) scale(.985);opacity:0;}
-.mapp-week-swipe-area.mapp-week-slide-in-left{animation:mappWeekSlideInLeft .42s cubic-bezier(.2,.8,.2,1) both;}
-.mapp-week-swipe-area.mapp-week-slide-in-right{animation:mappWeekSlideInRight .42s cubic-bezier(.2,.8,.2,1) both;}
-@keyframes mappWeekSlideInLeft{from{transform:translate3d(38px,0,0) scale(.985);opacity:0}to{transform:translate3d(0,0,0) scale(1);opacity:1}}
-@keyframes mappWeekSlideInRight{from{transform:translate3d(-38px,0,0) scale(.985);opacity:0}to{transform:translate3d(0,0,0) scale(1);opacity:1}}
+.mapp-week-swipe-area.mapp-week-slide-out-left{transform:translate3d(-18px,0,0) scale(.995);opacity:0;}
+.mapp-week-swipe-area.mapp-week-slide-out-right{transform:translate3d(18px,0,0) scale(.995);opacity:0;}
+.mapp-week-swipe-area.mapp-week-slide-in-left{animation:mappWeekSlideInLeft .28s cubic-bezier(.2,.8,.2,1) both;}
+.mapp-week-swipe-area.mapp-week-slide-in-right{animation:mappWeekSlideInRight .28s cubic-bezier(.2,.8,.2,1) both;}
+@keyframes mappWeekSlideInLeft{from{transform:translate3d(18px,0,0) scale(.995);opacity:0}to{transform:translate3d(0,0,0) scale(1);opacity:1}}
+@keyframes mappWeekSlideInRight{from{transform:translate3d(-18px,0,0) scale(.995);opacity:0}to{transform:translate3d(0,0,0) scale(1);opacity:1}}
 @media(prefers-reduced-motion:reduce){.mapp-week-swipe-area{transition:none!important}.mapp-week-swipe-area.mapp-week-slide-in-left,.mapp-week-swipe-area.mapp-week-slide-in-right{animation:none!important}}
 
 
@@ -8914,32 +8914,58 @@ function mappWeekCarouselNav(){
     ).join('')}</div>`;
 }
 let mappCarouselSwitching=false;
+let mappCarouselDirection=0;
+// Memoriza por separado la posicion de Inicio y Mi partido ANTES de redibujar.
+const mappCarouselPositions=Object.create(null);
 function mappCenterSelectedWeek(box,smooth=true){
   const nav=box?.querySelector('.mapp-week-carousel-nav');
   const selected=nav?.querySelector('.mapp-week-carousel-chip.selected');
   if(!nav||!selected)return;
-  const target=Math.max(0,Math.min(nav.scrollWidth-nav.clientWidth,
-    selected.offsetLeft-nav.offsetLeft+(selected.offsetWidth-nav.clientWidth)/2));
+  // Solo corregir lo imprescindible cuando la jornada roja queda fuera del area visible.
+  const padding=12;
+  const left=selected.offsetLeft-nav.offsetLeft;
+  const right=left+selected.offsetWidth;
+  const visibleLeft=nav.scrollLeft;
+  const visibleRight=visibleLeft+nav.clientWidth;
+  let target=visibleLeft;
+  if(left<visibleLeft+padding)target=Math.max(0,left-padding);
+  else if(right>visibleRight-padding)target=Math.min(nav.scrollWidth-nav.clientWidth,right-nav.clientWidth+padding);
+  if(Math.abs(target-visibleLeft)<2)return;
   const reduced=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-  nav.scrollTo({left:target,behavior:smooth&&!reduced?'smooth':'auto'});
+  nav.scrollTo({left:target,behavior:smooth&&!reduced?'smooth':'instant'});
 }
 function mappGoCarouselWeek(weekId){
   if(mappCarouselSwitching)return;
   const available=mappPublishedOwnWeeks();
-  if(!available.some(w=>w.id===weekId)||state.week===weekId)return;
+  const nextIndex=available.findIndex(w=>w.id===weekId);
+  if(nextIndex<0||state.week===weekId)return;
+  const oldIndex=available.findIndex(w=>w.id===state.week);
   mappCarouselSwitching=true;
+  mappCarouselDirection=oldIndex<0?0:(nextIndex>oldIndex?1:-1);
+  // La renderizacion sustituye los nodos: conservar exactamente el desplazamiento previo.
+  for(const id of ['modernHomeContent','modernMatchContent']){
+    const nav=document.getElementById(id)?.querySelector('.mapp-week-carousel-nav');
+    if(nav)mappCarouselPositions[id]=nav.scrollLeft;
+  }
   state.week=weekId;
   try{localStorage.setItem('ctc_mapp_last_carousel_week',weekId)}catch(_){}
-  // Cambio inmediato: el refresco de datos ya no puede interrumpir una animación pendiente.
   try{
     renderAll();
+    for(const id of ['modernHomeContent','modernMatchContent']){
+      const box=document.getElementById(id);
+      const panel=box?.querySelector('.mapp-week-swipe-area');
+      if(panel&&mappCarouselDirection){
+        panel.classList.add(mappCarouselDirection>0?'mapp-week-slide-in-left':'mapp-week-slide-in-right');
+      }
+    }
+    // Esperar un frame evita el salto durante el redibujado.
     requestAnimationFrame(()=>{
       for(const id of ['modernHomeContent','modernMatchContent']){
         const box=document.getElementById(id);
         if(box?.getClientRects().length)mappCenterSelectedWeek(box,true);
       }
     });
-  }finally{mappCarouselSwitching=false}
+  }finally{mappCarouselSwitching=false;mappCarouselDirection=0}
 }
 function mappWireWeekCarousel(box){
   box.querySelectorAll('[data-mapp-carousel-week]').forEach(btn=>{
@@ -8947,20 +8973,19 @@ function mappWireWeekCarousel(box){
   });
   const nav=box.querySelector('.mapp-week-carousel-nav');
   if(nav){
-    // Los carruseles de Inicio y Mi partido recuerdan posiciones independientes.
     const key='ctc_prod_carousel_scroll_'+box.id;
-    const weekKey=key+'_selected';
-    let prior='',left=0;
-    try{prior=sessionStorage.getItem(weekKey)||'';left=Number(sessionStorage.getItem(key)||0)}catch(_){}
-    if(prior===state.week&&Number.isFinite(left)){
+    let left=mappCarouselPositions[box.id];
+    if(!Number.isFinite(left)){
+      try{left=Number(sessionStorage.getItem(key))}catch(_){}
+    }
+    if(Number.isFinite(left)){
       nav.style.scrollBehavior='auto';
       nav.scrollLeft=left;
       nav.style.scrollBehavior='';
-    }else{
-      mappCenterSelectedWeek(box,false);
-    }
-    try{sessionStorage.setItem(weekKey,state.week)}catch(_){}
+    }else mappCenterSelectedWeek(box,false);
+    mappCarouselPositions[box.id]=nav.scrollLeft;
     nav.addEventListener('scroll',()=>{
+      mappCarouselPositions[box.id]=nav.scrollLeft;
       try{sessionStorage.setItem(key,String(nav.scrollLeft))}catch(_){}
     },{passive:true});
   }
