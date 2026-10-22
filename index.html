@@ -1949,6 +1949,12 @@ body.modern-admin .courtsTemplatePanel p{margin:0;color:#697281;font-size:12px;l
 .mapp-nav-btn.active:after{width:29px!important}
 #modernRanking .rankProCard{margin-bottom:8px}
 @media(max-width:365px){.mapp-nav-btn>span:last-child{font-size:7px!important}}
+
+/* V22.6 · fecha de jornada discreta en tarjetas de partido */
+.mapp-round.mapp-round-with-dates{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:6px 10px;line-height:1.15;text-align:center;max-width:155px;white-space:normal}
+.mapp-round-title{font-size:11px;font-weight:900;white-space:nowrap}
+.mapp-round-dates{font-size:9px;font-weight:700;color:#956b32;white-space:nowrap}
+@media(max-width:380px){.mapp-round.mapp-round-with-dates{padding:5px 7px;max-width:132px}.mapp-round-title{font-size:10px}.mapp-round-dates{font-size:8px}}
 </style>
 
 <link rel="manifest" href="manifest.webmanifest">
@@ -4181,6 +4187,11 @@ body.modern-admin #journeyNavigator{
 }
 body.modern-admin #journeyNavigator .journeyJump{scroll-snap-align:none!important}
 </style>
+<style id="prod-v225-publicar-todas">
+/* Acción independiente y legible también en móvil */
+body.modern-admin #publishAllJourneysBtn{background:#7b0014!important;color:#fff!important;border-color:#7b0014!important;min-height:40px!important}
+@media(max-width:600px){body.modern-admin #publishAllJourneysBtn{grid-column:1/-1!important;width:100%!important;white-space:normal!important}}
+</style>
 </head>
 <body>
 
@@ -4530,6 +4541,7 @@ body.modern-admin #journeyNavigator .journeyJump{scroll-snap-align:none!importan
             <button class="btn secondary journeyAddBtn" id="importCompleteLeagueBtn" type="button">⇧ Importar liga JSON · categoría automática</button>
              <input type="file" id="importCompleteLeagueFile" accept=".json,application/json" style="display:none" aria-label="Seleccionar archivo de liga">
              <button class="btn secondary journeyAddBtn" id="addJourneyBtn" type="button">＋ Nueva jornada</button>
+            <button class="btn gold journeyAddBtn" id="publishAllJourneysBtn" type="button">📣 Publicar todas</button>
           </div>
         </div>
         <div class="journeyNavigator" id="journeyNavigator"></div>
@@ -5695,6 +5707,37 @@ async function publishJourneyFixturesNow(weekId){
     else data.fixtureVisibilityOverrides[overrideKey]=previousOverride;
     localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
     alert('No se ha podido publicar.\n\n'+e.message);
+  }
+}
+/* PRODUCCIÓN V22.5 · publicar todas las jornadas de la categoría/género actual. */
+async function publishAllJourneysNow(){
+  if(!isAdmin() || !apiToken){alert('Entra como administrador conectado para publicar jornadas.');return;}
+  if(fixtureEditorDirty || playerEditorDirty){alert('Guarda primero los cambios pendientes.');return;}
+  const pending=weeks.filter(w=>
+    (data.fixtures?.[fixtureKeyForWeek(w.id)]||[]).length>0 &&
+    !journeyFixturesArePublic(w.id)
+  );
+  if(!pending.length){alert('No hay jornadas con enfrentamientos pendientes de publicar en esta categoría.');return;}
+  const matchCount=pending.reduce((n,w)=>n+(data.fixtures?.[fixtureKeyForWeek(w.id)]||[]).length,0);
+  const message=`¿PUBLICAR TODAS LAS JORNADAS?\n\nCategoría: ${state.category} · ${state.gender}\nJornadas: ${pending.length}\nEnfrentamientos: ${matchCount}\n\nSe harán visibles inmediatamente para los jugadores, aunque sus fechas sean futuras.\n\nNo se modifican otras categorías ni las reservas de pistas.`;
+  if(!confirm(message))return;
+  const btn=document.getElementById('publishAllJourneysBtn');
+  if(btn){btn.disabled=true;btn.textContent='⏳ Publicando…';}
+  const backup={...(data.fixtureVisibilityOverrides||{})};
+  try{
+    data.fixtureVisibilityOverrides={...backup};
+    for(const w of pending)data.fixtureVisibilityOverrides[fixtureVisibilityKey(w.id)]=true;
+    await saveStateOnline();
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+    renderAll();
+    alert(`✅ Publicadas ${pending.length} jornadas de ${state.category} · ${state.gender}.`);
+  }catch(e){
+    data.fixtureVisibilityOverrides=backup;
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+    renderAll();
+    alert('No se han podido publicar las jornadas.\n\n'+e.message);
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent='📣 Publicar todas';}
   }
 }
 function adminOrPublishedFixtures(arr,weekId){
@@ -8326,6 +8369,15 @@ function mappOpponent(m){if(!m)return'';return m.a===state.player?m.b:m.a}
 function mappFreeSlots(){return isOpen()?slots().filter(s=>!slotBooking(s.id)&&!slotHasFinished(s.date,s.time)):[]}
 function mappWeekShort(){const w=weeks.find(x=>x.id===state.week);const n=String(w?.id||'').replace(/\D/g,'');return n?`Jornada ${n}`:(w?.label||state.week)}
 function mappCurrentRound(){return fixtureRound()||'Jornada'}
+// V22.6 · fecha breve de la jornada seleccionada en la tarjeta del partido.
+function mappCurrentRoundBadge(){
+ const w=weeks.find(x=>x.id===state.week);
+ const title=mappEsc(mappCurrentRound());
+ if(!w?.start||!w?.end)return `<span class="mapp-round-title">${title}</span>`;
+ const range=`${shortDateES(w.start)} – ${shortDateES(w.end)}`;
+ return `<span class="mapp-round-title">${title}</span><span class="mapp-round-dates">${mappEsc(range)}</span>`;
+}
+
 
 const resultsViewState={category:null,gender:null,week:'all'};
 
@@ -8405,10 +8457,8 @@ function renderResultsFilters(){
   if(!cs||!gs||!ws)return;
   if(!resultsViewState.category) resultsViewState.category=state.category;
   if(!resultsViewState.gender) resultsViewState.gender=state.gender;
-  cs.innerHTML=`<option value="all">Todas</option>`+CATEGORIES.map(c=>`<option value="${mappEsc(c)}">${mappEsc(c)}</option>`).join('');
-  gs.innerHTML=`<option value="all">Todos</option><option value="Masculino">Masculino</option><option value="Femenino">Femenino</option>`;
-  cs.value=resultsViewState.category||'all';
-  gs.value=resultsViewState.gender||'all';
+  const chosen=mappSetLeagueChoices(cs,gs,resultsViewState.category,resultsViewState.gender,{allowAll:true});
+  resultsViewState.category=chosen.category;resultsViewState.gender=chosen.gender;
   ws.innerHTML=`<option value="all">Todas las semanas</option>`+
     weeks.map(w=>`<option value="${mappEsc(w.id)}" ${resultsViewState.week===w.id?'selected':''}>${mappEsc(w.label)}</option>`).join('');
 }
@@ -8491,10 +8541,9 @@ function rankProRender(){
   if(!root||!cat||!gender)return;
   rankProState.category=rankProState.category||state.category;
   rankProState.gender=rankProState.gender||state.gender;
-  cat.innerHTML=CATEGORIES.map(c=>`<option value="${mappEsc(c)}">${mappEsc(c)}</option>`).join('');
-  gender.innerHTML=['Masculino','Femenino'].map(g=>`<option value="${g}">${g}</option>`).join('');
-  if(!CATEGORIES.includes(rankProState.category))rankProState.category=CATEGORIES[0];
-  cat.value=rankProState.category;gender.value=rankProState.gender;
+  const chosen=mappSetLeagueChoices(cat,gender,rankProState.category,rankProState.gender);
+  rankProState.category=chosen.category;rankProState.gender=chosen.gender;
+  if(!chosen.category){root.innerHTML='<div class="rankProEmpty">No hay categorías con jugadores y partidos programados.</div>';return;}
   const standings=rankProCompute(rankProState.category,rankProState.gender);
   if(!standings.length){root.innerHTML='<div class="rankProEmpty">Todavía no hay jugadores inscritos en esta categoría.</div>';return;}
   root.innerHTML=`<table class="rankProTable"><thead><tr>${['POS','JUGADOR','PJ','PG','PP','SG','SP','JG','JP','PTS'].map(x=>`<th>${x}</th>`).join('')}</tr></thead><tbody>`+standings.map((p,i)=>{
@@ -8705,16 +8754,56 @@ function mappShow(view){
  if(view==='home')renderModernHome();
  window.scrollTo({top:0,behavior:'smooth'});
 }
+
+/* V22.7 · Solo categorías con jugadores inscritos Y enfrentamientos programados.
+   Administración conserva todas las categorías para configurar ligas futuras. */
+function mappActiveLeaguePairs(){
+ const pairs=[];
+ for(const category of CATEGORIES){
+  for(const gender of ['Masculino','Femenino']){
+   const key=`${category}|${gender}`;
+   const players=data.playerLists?.[key];
+   if(!Array.isArray(players)||!players.some(n=>String(n||'').trim()))continue;
+   const hasMatches=Object.entries(data.fixtures||{}).some(([fixtureKey,arr])=>{
+    const parts=fixtureKey.split('|');
+    return parts.length>=3&&parts[1]===category&&parts[2]===gender&&Array.isArray(arr)&&arr.some(m=>m&&m.a&&m.b);
+   });
+   if(hasMatches)pairs.push({category,gender});
+  }
+ }
+ return pairs;
+}
+function mappActiveCategories(){
+ return [...new Set(mappActiveLeaguePairs().map(x=>x.category))];
+}
+function mappActiveGenders(category){
+ return [...new Set(mappActiveLeaguePairs().filter(x=>x.category===category).map(x=>x.gender))];
+}
+function mappSetLeagueChoices(catSelect,genderSelect,category,gender,{allowAll=false}={}){
+ const categories=mappActiveCategories();
+ const catOptions=allowAll?['all',...categories]:categories;
+ const selectedCategory=catOptions.includes(category)?category:(categories[0]||(allowAll?'all':''));
+ catSelect.innerHTML=catOptions.map(c=>`<option value="${mappEsc(c)}">${c==='all'?'Todas':mappEsc(c)}</option>`).join('');
+ catSelect.value=selectedCategory;
+ const genders=selectedCategory==='all'? [...new Set(mappActiveLeaguePairs().map(x=>x.gender))]:mappActiveGenders(selectedCategory);
+ const genderOptions=allowAll?['all',...genders]:genders;
+ const selectedGender=genderOptions.includes(gender)?gender:(genders[0]||(allowAll?'all':''));
+ genderSelect.innerHTML=genderOptions.map(g=>`<option value="${mappEsc(g)}">${g==='all'?'Todos':mappEsc(g)}</option>`).join('');
+ genderSelect.value=selectedGender;
+ return {category:selectedCategory,gender:selectedGender};
+}
+
 function mappOpenSelector(){
  const cs=$('#modernCatSelect'),gs=$('#modernGenderSelect'),ws=$('#modernWeekSelect');
- cs.innerHTML=CATEGORIES.map(c=>`<option ${c===state.category?'selected':''}>${mappEsc(c)}</option>`).join('');
- gs.value=state.gender;
+ mappSetLeagueChoices(cs,gs,state.category,state.gender);
  ws.innerHTML=weeks.map(w=>`<option value="${mappEsc(w.id)}" ${w.id===state.week?'selected':''}>${mappEsc(w.label)}</option>`).join('');
  $('#modernSelectorSheet').classList.add('show')
 }
 function mappApplySelector(){
- state.category=$('#modernCatSelect').value;
- state.gender=$('#modernGenderSelect').value;
+ const selected=mappSetLeagueChoices($('#modernCatSelect'),$('#modernGenderSelect'),$('#modernCatSelect').value,$('#modernGenderSelect').value);
+ if(!selected.category){alert('No hay categorías con jugadores y partidos programados.');return;}
+ state.category=selected.category;
+ state.gender=selected.gender;
  state.week=$('#modernWeekSelect').value;
  $('#modernSelectorSheet').classList.remove('show');
  renderAll();
@@ -8779,7 +8868,7 @@ function renderModernHome(){
  if(m){
    const bk=upcomingBookingFor(m.id), can=isOpen()&&isReservableInCurrentWeek(m.id)&&mappFreeSlots().length>0;
    hero=`<div class="mapp-card"><div class="mapp-card-pad">
-      <div class="mapp-section-title"><div class="left"><span class="mapp-title-icon">${mappIcon('trophy')}</span>Tu partido</div><span class="mapp-round">${mappEsc(mappCurrentRound())}</span></div>
+      <div class="mapp-section-title"><div class="left"><span class="mapp-title-icon">${mappIcon('trophy')}</span>Tu partido</div><span class="mapp-round mapp-round-with-dates">${mappCurrentRoundBadge()}</span></div>
       <div class="mapp-match-grid">
         <div>${mappAvatar(m.a)}<div class="mapp-player-name">${mappEsc(m.a)}</div></div>
         <div class="mapp-vs">VS</div>
@@ -8872,7 +8961,7 @@ function renderModernMatch(){
  box.innerHTML=matches.map(m=>{
    const bk=upcomingBookingFor(m.id),r=resultFor(m.id),p=postponedInfo(m.id);
    return `<div class="mapp-card"><div class="mapp-card-pad">
-    <div class="mapp-section-title"><div class="left"><span class="mapp-title-icon">${mappIcon('trophy')}</span>Mi partido</div><span class="mapp-round">${mappEsc(mappCurrentRound())}</span></div>
+    <div class="mapp-section-title"><div class="left"><span class="mapp-title-icon">${mappIcon('trophy')}</span>Mi partido</div><span class="mapp-round mapp-round-with-dates">${mappCurrentRoundBadge()}</span></div>
     <div class="mapp-match-grid">
       <div>${mappAvatar(m.a)}<div class="mapp-player-name">${mappEsc(m.a)}</div></div>
       <div class="mapp-vs">VS</div>
@@ -9146,15 +9235,16 @@ $('#modernTrophyIcon').innerHTML=mappIcon('trophy');
 $('#modernCalendarIcon').innerHTML=mappIcon('calendar');
 $('#modernChartIcon').innerHTML=mappIcon('chart');
 document.querySelectorAll('[data-modern-go]').forEach(b=>b.onclick=()=>mappShow(b.dataset.modernGo));
-$('#rankProCategory').onchange=e=>{rankProState.category=e.target.value;rankProRender()};
+$('#rankProCategory').onchange=e=>{rankProState.category=e.target.value;rankProState.gender=mappActiveGenders(e.target.value)[0]||'';rankProRender()};
 $('#rankProGender').onchange=e=>{rankProState.gender=e.target.value;rankProRender()};
-$('#resultsCategory').onchange=e=>{resultsViewState.category=e.target.value;renderModernResults()};
+$('#resultsCategory').onchange=e=>{resultsViewState.category=e.target.value;resultsViewState.gender='all';renderModernResults()};
 $('#resultsGender').onchange=e=>{resultsViewState.gender=e.target.value;renderModernResults()};
 $('#resultsWeek').onchange=e=>{resultsViewState.week=e.target.value;renderModernResults()};
 $('#modernTicker').onclick=()=>mappShow('results');
 $('#modernTicker').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();mappShow('results')}};
 
 $('#modernContextBtn').onclick=mappOpenSelector;
+$('#modernCatSelect').onchange=e=>{mappSetLeagueChoices(e.target,$('#modernGenderSelect'),e.target.value,'')};
 $('#modernSelectorClose').onclick=mappApplySelector;
 $('#modernSelectorSheet').onclick=e=>{if(e.target===$('#modernSelectorSheet'))$('#modernSelectorSheet').classList.remove('show')};
 $('#modernBellBtn').onclick=()=>{
@@ -9491,6 +9581,7 @@ $('#importCompleteLeagueFile').onchange=async function(){
 };
 
 if($('#addJourneyBtn'))$('#addJourneyBtn').onclick=addJourney;
+if($('#publishAllJourneysBtn'))$('#publishAllJourneysBtn').onclick=publishAllJourneysNow;
 
 if($('#futureFixturesBtn'))$('#futureFixturesBtn').onclick=openFutureFixturesPlanner;
 $('#importFixtures').onclick=()=>{if(!requireAdmin())return;const {pairs,unknown}=parseFixtureText($('#fixturePaste').value);if(!pairs.length){alert('No he encontrado enfrentamientos válidos en el texto.');return}let added=0;for(const [a,b] of pairs)if(addFixturePair(a,b,{silent:true}))added++;renderFixtureEditor();renderMatches();$('#fixtureImportStatus').textContent=`${added} partido${added===1?'':'s'} añadido${added===1?'':'s'}.`+(unknown.length?` ⚠ Nombres no encontrados exactamente en la lista: ${unknown.join(', ')}`:' Todos los nombres coinciden con la categoría.');};
