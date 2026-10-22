@@ -1955,6 +1955,25 @@ body.modern-admin .courtsTemplatePanel p{margin:0;color:#697281;font-size:12px;l
 .mapp-round-title{font-size:11px;font-weight:900;white-space:nowrap}
 .mapp-round-dates{font-size:9px;font-weight:700;color:#956b32;white-space:nowrap}
 @media(max-width:380px){.mapp-round.mapp-round-with-dates{padding:5px 7px;max-width:132px}.mapp-round-title{font-size:10px}.mapp-round-dates{font-size:8px}}
+/* Carrusel de jornadas · Producción V22.8 */
+
+.mapp-week-carousel-head{display:flex;justify-content:space-between;gap:8px;margin:5px 3px 8px;font-weight:850;letter-spacing:.065em;font-size:10px;color:#8a6469}
+.mapp-week-carousel-nav{display:flex;overflow-x:auto;gap:8px;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;padding:0 2px 12px;margin-bottom:4px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.mapp-week-carousel-nav::-webkit-scrollbar{display:none}
+.mapp-week-carousel-chip{appearance:none;flex:0 0 auto;scroll-snap-align:center;border:1px solid #d9c8cb;background:white;color:#651c29;border-radius:99px;padding:10px 17px;font:800 13px Inter,system-ui,sans-serif;cursor:pointer;white-space:nowrap;box-shadow:0 1px 4px #360d1414}
+.mapp-week-carousel-chip.selected{background:#b90020;color:white;border-color:#b90020;box-shadow:0 3px 12px #bb001e33}
+.mapp-week-swipe-area{touch-action:pan-y;}
+/* Transición de tarjeta de jornada: deslizamiento y fundido suaves. */
+.mapp-week-swipe-area{will-change:transform,opacity;transition:transform .24s cubic-bezier(.22,1,.36,1),opacity .24s ease;}
+.mapp-week-swipe-area.mapp-week-slide-out-left{transform:translate3d(-38px,0,0) scale(.985);opacity:0;}
+.mapp-week-swipe-area.mapp-week-slide-out-right{transform:translate3d(38px,0,0) scale(.985);opacity:0;}
+.mapp-week-swipe-area.mapp-week-slide-in-left{animation:mappWeekSlideInLeft .42s cubic-bezier(.2,.8,.2,1) both;}
+.mapp-week-swipe-area.mapp-week-slide-in-right{animation:mappWeekSlideInRight .42s cubic-bezier(.2,.8,.2,1) both;}
+@keyframes mappWeekSlideInLeft{from{transform:translate3d(38px,0,0) scale(.985);opacity:0}to{transform:translate3d(0,0,0) scale(1);opacity:1}}
+@keyframes mappWeekSlideInRight{from{transform:translate3d(-38px,0,0) scale(.985);opacity:0}to{transform:translate3d(0,0,0) scale(1);opacity:1}}
+@media(prefers-reduced-motion:reduce){.mapp-week-swipe-area{transition:none!important}.mapp-week-swipe-area.mapp-week-slide-in-left,.mapp-week-swipe-area.mapp-week-slide-in-right{animation:none!important}}
+
+
 </style>
 
 <link rel="manifest" href="manifest.webmanifest">
@@ -8861,6 +8880,80 @@ function renderModernHeader(){
  document.title=`CT Campeador · ${tournament}`;
  mappRefreshBellState();
 }
+function mappPublishedOwnWeeks(){
+  if(!state.authenticated||!state.player)return [];
+  const me=normalizeName(state.player);
+  return weeks.filter(w=>{
+    const key=`${w.id}|${state.category}|${state.gender}`;
+    const published=isAdmin()||journeyFixturesArePublic(w.id);
+    if(!published)return false;
+    const own=(data.fixtures?.[key]||[]).some(m=>
+      (normalizeName(m.a)===me||normalizeName(m.b)===me)&&resultFor(m.id)?.status!=='confirmed'&&effectiveWeekFor(m.id)===w.id);
+    const postponed=Object.entries(data.fixtures||{}).some(([k,list])=>{
+      const [,cat,gender]=k.split('|');
+      return cat===state.category&&gender===state.gender&&(list||[]).some(m=>
+        effectiveWeekFor(m.id)===w.id&&(normalizeName(m.a)===me||normalizeName(m.b)===me)&&resultFor(m.id)?.status!=='confirmed');
+    });
+    return own||postponed;
+  });
+}
+function mappWeekCarouselNav(){
+  const available=mappPublishedOwnWeeks();
+  if(available.length<2)return '';
+  return `<div class="mapp-week-carousel-head"><span>DESLIZA PARA CAMBIAR DE JORNADA</span><span>${available.findIndex(w=>w.id===state.week)+1>0?available.findIndex(w=>w.id===state.week)+1:1} / ${available.length}</span></div>
+    <div class="mapp-week-carousel-nav" aria-label="Jornadas publicadas" role="group">${available.map(w=>
+      `<button type="button" class="mapp-week-carousel-chip ${state.week===w.id?'selected':''}" data-mapp-carousel-week="${mappEsc(w.id)}" aria-pressed="${state.week===w.id}">${mappEsc(journeyDisplayName(w.id,`${w.id}|${state.category}|${state.gender}`)||w.label||w.id)}</button>`
+    ).join('')}</div>`;
+}
+let mappCarouselSwitching=false;
+function mappGoCarouselWeek(weekId){
+  const available=mappPublishedOwnWeeks();
+  const to=available.findIndex(w=>w.id===weekId);
+  const from=available.findIndex(w=>w.id===state.week);
+  if(to<0||state.week===weekId||mappCarouselSwitching)return;
+  const direction=to>from?'left':'right';
+  const currentBox=[document.querySelector('#modernMatchContent'),document.querySelector('#modernHomeContent')].find(el=>el&&el.getClientRects().length);
+  const card=currentBox?.querySelector('.mapp-week-swipe-area');
+  const reduceMotion=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  mappCarouselSwitching=true;
+  const commit=()=>{
+    state.week=weekId;
+    try{localStorage.setItem('ctc_mapp_last_carousel_week',weekId)}catch(_){}
+    renderAll();
+    const nextBox=[document.querySelector('#modernMatchContent'),document.querySelector('#modernHomeContent')].find(el=>el&&el.getClientRects().length);
+    const nextCard=nextBox?.querySelector('.mapp-week-swipe-area');
+    if(nextCard&&!reduceMotion)nextCard.classList.add('mapp-week-slide-in-'+direction);
+    mappCarouselSwitching=false;
+  };
+  if(!card||reduceMotion){commit();return;}
+  card.classList.add('mapp-week-slide-out-'+direction);
+  window.setTimeout(commit,240);
+}
+function mappWireWeekCarousel(box){
+  box.querySelectorAll('[data-mapp-carousel-week]').forEach(el=>el.addEventListener('click',()=>mappGoCarouselWeek(el.dataset.mappCarouselWeek)));
+  const chosen=box.querySelector('.mapp-week-carousel-chip.selected');
+  if(chosen){const nav=chosen.closest('.mapp-week-carousel-nav');if(nav){const key='ctc_carousel_nav_'+(box.id||'player');const saved=Number(sessionStorage.getItem(key)||0);nav.scrollLeft=saved;nav.addEventListener('scroll',()=>{try{sessionStorage.setItem(key,String(nav.scrollLeft))}catch(_){}},{passive:true});}}
+  const card=box.querySelector('.mapp-week-swipe-area');
+  if(!card||mappPublishedOwnWeeks().length<2)return;
+  let x=null,y=null;
+  card.addEventListener('touchstart',e=>{if(e.touches.length===1){x=e.touches[0].clientX;y=e.touches[0].clientY}},{passive:true});
+  card.addEventListener('touchend',e=>{
+    if(x===null||!e.changedTouches.length)return;
+    const dx=e.changedTouches[0].clientX-x,dy=e.changedTouches[0].clientY-y;
+    x=null;y=null;
+    if(Math.abs(dx)<55||Math.abs(dx)<Math.abs(dy)*1.35)return;
+    const arr=mappPublishedOwnWeeks();
+    const i=arr.findIndex(w=>w.id===state.week);
+    const next=arr[i+(dx<0?1:-1)];
+    if(next)mappGoCarouselWeek(next.id);
+  },{passive:true});
+}
+function mappRestoreCarouselWeek(){
+  let last='';try{last=localStorage.getItem('ctc_mapp_last_carousel_week')||''}catch(_){}
+  if(last&&mappPublishedOwnWeeks().some(w=>w.id===last)&&!mappPublishedOwnWeeks().some(w=>w.id===state.week))state.week=last;
+}
+
+
 function renderModernHome(){
  const box=$('#modernHomeContent'); if(!box)return;
  const m=mappPrimaryMatch(), frees=mappFreeSlots().slice(0,3);
@@ -8893,11 +8986,12 @@ function renderModernHome(){
    <div class="mapp-status good"><div><strong>Sesión de administrador</strong>Puedes gestionar la liga desde Mi perfil sin perder tu vista como jugador.</div></div>
    <button class="mapp-primary" data-mapp-profile>Ir a Mi perfil <span class="chev">${mappIcon('chevron')}</span></button>
  </div></div>`:'';
- box.innerHTML=hero+adminCard+`<div class="mapp-card"><div class="mapp-list-header"><div class="mapp-list-title">${mappIcon('court')} Próximas pistas libres</div><button class="mapp-link" data-mapp-all-courts>Ver todas ›</button></div>${rows}</div>`;
+ box.innerHTML=mappWeekCarouselNav()+`<div class="mapp-week-swipe-area">`+hero+`</div>`+adminCard+`<div class="mapp-card"><div class="mapp-list-header"><div class="mapp-list-title">${mappIcon('court')} Próximas pistas libres</div><button class="mapp-link" data-mapp-all-courts>Ver todas ›</button></div>${rows}</div>`;
  box.querySelectorAll('[data-mapp-reserve]').forEach(b=>b.onclick=()=>openReserve(b.dataset.mappReserve));
  box.querySelectorAll('[data-mapp-slot]').forEach(r=>r.onclick=()=>reserveFromOccupancy(r.dataset.mappSlot));
  box.querySelector('[data-mapp-all-courts]')?.addEventListener('click',()=>mappShow('courts'));
  box.querySelector('[data-mapp-profile]')?.addEventListener('click',()=>mappShow('profile'));
+ mappWireWeekCarousel(box);
 }
 function renderModernCourts(){
  const box=$('#modernCourtsContent');if(!box)return;
@@ -8979,7 +9073,8 @@ function renderModernMatch(){
    <div class="mapp-menu-row" data-match-result="${mappEsc(m.id)}"><div class="mapp-menu-icon">${mappIcon('trophy')}</div><div><div class="mapp-menu-title">${r?'Ver / gestionar resultado':'Subir resultado'}</div><div class="mapp-menu-sub">Resultado del encuentro</div></div><div>${mappIcon('chevron')}</div></div>
    ${p?`<div class="mapp-menu-row"><div class="mapp-menu-icon gray">${mappIcon('calendar')}</div><div><div class="mapp-menu-title">Partido retrasado</div><div class="mapp-menu-sub">${p.targetWeek?'Reprogramado para '+mappEsc(weeks.find(w=>w.id===p.targetWeek)?.label||p.targetWeek):'Pendiente de nueva semana'}</div></div></div>`:''}
    </div>`;
- }).join('');
+ }).join('')+`</div>`;
+ mappWireWeekCarousel(box);
  box.querySelectorAll('[data-match-reserve]').forEach(x=>x.onclick=()=>openReserve(x.dataset.matchReserve));
  box.querySelectorAll('[data-match-live]').forEach(x=>x.onclick=()=>{
    const m=matches.find(v=>String(v.id)===String(x.dataset.matchLive));
