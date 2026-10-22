@@ -1974,6 +1974,13 @@ body.modern-admin .courtsTemplatePanel p{margin:0;color:#697281;font-size:12px;l
 @media(prefers-reduced-motion:reduce){.mapp-week-swipe-area{transition:none!important}.mapp-week-swipe-area.mapp-week-slide-in-left,.mapp-week-swipe-area.mapp-week-slide-in-right{animation:none!important}}
 
 
+
+/* V22.10 · carrusel accesible en Inicio y Mi partido */
+.mapp-week-carousel-nav{max-width:100%;min-width:0;overflow-x:auto!important;overflow-y:hidden!important;touch-action:pan-x!important;-webkit-overflow-scrolling:touch;scroll-behavior:smooth;scrollbar-width:thin;scrollbar-color:#bd9fa5 transparent;scroll-padding-inline:24px}
+.mapp-week-carousel-nav::-webkit-scrollbar{height:4px;display:block}
+.mapp-week-carousel-nav::-webkit-scrollbar-thumb{background:#bd9fa5;border-radius:8px}
+.mapp-week-carousel-chip{flex-shrink:0!important}
+.mapp-week-swipe-area{touch-action:pan-y!important;min-width:0}
 </style>
 
 <link rel="manifest" href="manifest.webmanifest">
@@ -8881,86 +8888,93 @@ function renderModernHeader(){
  mappRefreshBellState();
 }
 function mappPublishedOwnWeeks(){
-  if(!state.authenticated||!state.player)return [];
-  // Show all publicly available journeys with fixtures for the selected category,
-  // including those whose results are already confirmed.
-  return weeks.filter(w=>{
-    if(!isAdmin()&&!journeyFixturesArePublic(w.id))return false;
-    const key=`${w.id}|${state.category}|${state.gender}`;
-    return (data.fixtures?.[key]||[]).length>0 || Object.entries(data.fixtures||{}).some(([k,list])=>{
-      const [,cat,gender]=k.split('|');
-      return cat===state.category&&gender===state.gender&&(list||[]).some(m=>effectiveWeekFor(m.id)===w.id);
-    });
-  });
+  if(!state.authenticated)return [];
+  // La lista se basa en enfrentamientos REALES de la categoría y género activos.
+  // El listado de jugadores no es necesario para navegar por jornadas públicas.
+  const related=new Set();
+  for(const [key,items] of Object.entries(data.fixtures||{})){
+    const [week,category,gender]=key.split('|');
+    if(category!==state.category||gender!==state.gender||!Array.isArray(items)||!items.length)continue;
+    for(const match of items){
+      if(!match||!match.a||!match.b)continue;
+      related.add(week);
+      const moved=postponedInfo(match.id)?.targetWeek;
+      if(moved)related.add(moved);
+    }
+  }
+  return weeks.filter(w=>related.has(w.id)&&(isAdmin()||journeyFixturesArePublic(w.id)));
 }
 function mappWeekCarouselNav(){
   const available=mappPublishedOwnWeeks();
-  if(available.length<2)return '';
-  return `<div class="mapp-week-carousel-head"><span>DESLIZA PARA CAMBIAR DE JORNADA</span><span>${available.findIndex(w=>w.id===state.week)+1>0?available.findIndex(w=>w.id===state.week)+1:1} / ${available.length}</span></div>
+  if(!available.length)return '';
+  const pos=available.findIndex(w=>w.id===state.week);
+  return `<div class="mapp-week-carousel-head"><span>JORNADAS PUBLICADAS · DESLIZA</span><span>${Math.max(0,pos)+1} / ${available.length}</span></div>
     <div class="mapp-week-carousel-nav" aria-label="Jornadas publicadas" role="group">${available.map(w=>
       `<button type="button" class="mapp-week-carousel-chip ${state.week===w.id?'selected':''}" data-mapp-carousel-week="${mappEsc(w.id)}" aria-pressed="${state.week===w.id}">${mappEsc(journeyDisplayName(w.id,`${w.id}|${state.category}|${state.gender}`)||w.label||w.id)}</button>`
     ).join('')}</div>`;
 }
 let mappCarouselSwitching=false;
+function mappCenterSelectedWeek(box,smooth=true){
+  const nav=box?.querySelector('.mapp-week-carousel-nav');
+  const selected=nav?.querySelector('.mapp-week-carousel-chip.selected');
+  if(!nav||!selected)return;
+  const target=Math.max(0,Math.min(nav.scrollWidth-nav.clientWidth,
+    selected.offsetLeft-nav.offsetLeft+(selected.offsetWidth-nav.clientWidth)/2));
+  const reduced=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  nav.scrollTo({left:target,behavior:smooth&&!reduced?'smooth':'auto'});
+}
 function mappGoCarouselWeek(weekId){
+  if(mappCarouselSwitching)return;
   const available=mappPublishedOwnWeeks();
-  const to=available.findIndex(w=>w.id===weekId);
-  const from=available.findIndex(w=>w.id===state.week);
-  if(to<0||state.week===weekId||mappCarouselSwitching)return;
-  const direction=to>from?'left':'right';
-  const currentBox=[document.querySelector('#modernMatchContent'),document.querySelector('#modernHomeContent')].find(el=>el&&el.getClientRects().length);
-  const card=currentBox?.querySelector('.mapp-week-swipe-area');
-  const reduceMotion=window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  if(!available.some(w=>w.id===weekId)||state.week===weekId)return;
   mappCarouselSwitching=true;
-  const commit=()=>{
-    state.week=weekId;
-    try{localStorage.setItem('ctc_mapp_last_carousel_week',weekId)}catch(_){}
+  state.week=weekId;
+  try{localStorage.setItem('ctc_mapp_last_carousel_week',weekId)}catch(_){}
+  // Cambio inmediato: el refresco de datos ya no puede interrumpir una animación pendiente.
+  try{
     renderAll();
-    const nextBox=[document.querySelector('#modernMatchContent'),document.querySelector('#modernHomeContent')].find(el=>el&&el.getClientRects().length);
-    const nextCard=nextBox?.querySelector('.mapp-week-swipe-area');
-    if(nextCard&&!reduceMotion)nextCard.classList.add('mapp-week-slide-in-'+direction);
-    mappCarouselSwitching=false;
-  };
-  if(!card||reduceMotion){commit();return;}
-  card.classList.add('mapp-week-slide-out-'+direction);
-  window.setTimeout(commit,240);
+    requestAnimationFrame(()=>{
+      for(const id of ['modernHomeContent','modernMatchContent']){
+        const box=document.getElementById(id);
+        if(box?.getClientRects().length)mappCenterSelectedWeek(box,true);
+      }
+    });
+  }finally{mappCarouselSwitching=false}
 }
 function mappWireWeekCarousel(box){
-  box.querySelectorAll('[data-mapp-carousel-week]').forEach(el=>el.addEventListener('click',()=>mappGoCarouselWeek(el.dataset.mappCarouselWeek)));
-  const chosen=box.querySelector('.mapp-week-carousel-chip.selected');
-  if(chosen){
-    const nav=chosen.closest('.mapp-week-carousel-nav');
-    if(nav){
-      const key='ctc_carousel_nav_'+(box.id||'player');
-      const weekKey=key+'_week';
-      let prevWeek='';let saved=0;
-      try{prevWeek=sessionStorage.getItem(weekKey)||'';saved=Number(sessionStorage.getItem(key)||0)}catch(_){}
-      const keepPosition=prevWeek===state.week&&Number.isFinite(saved);
-      const centerChosen=()=>Math.max(0,Math.min(nav.scrollWidth-nav.clientWidth,chosen.offsetLeft-nav.offsetLeft+chosen.offsetWidth/2-nav.clientWidth/2));
-      // If the selected week changed, bring the red chip into view.
-      // Otherwise preserve the horizontal scroll position chosen by the player.
-      nav.scrollLeft=keepPosition?Math.min(saved,Math.max(0,nav.scrollWidth-nav.clientWidth)):centerChosen();
-      try{sessionStorage.setItem(weekKey,state.week)}catch(_){}
-      nav.addEventListener('scroll',()=>{
-        try{sessionStorage.setItem(key,String(nav.scrollLeft))}catch(_){}
-      },{passive:true});
-      if(!keepPosition){
-        requestAnimationFrame(()=>{
-          if(!nav.isConnected)return;
-          nav.scrollTo({left:centerChosen(),behavior:window.matchMedia?.('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
-        });
-      }
+  box.querySelectorAll('[data-mapp-carousel-week]').forEach(btn=>{
+    btn.addEventListener('click',()=>mappGoCarouselWeek(btn.dataset.mappCarouselWeek));
+  });
+  const nav=box.querySelector('.mapp-week-carousel-nav');
+  if(nav){
+    // Los carruseles de Inicio y Mi partido recuerdan posiciones independientes.
+    const key='ctc_prod_carousel_scroll_'+box.id;
+    const weekKey=key+'_selected';
+    let prior='',left=0;
+    try{prior=sessionStorage.getItem(weekKey)||'';left=Number(sessionStorage.getItem(key)||0)}catch(_){}
+    if(prior===state.week&&Number.isFinite(left)){
+      nav.style.scrollBehavior='auto';
+      nav.scrollLeft=left;
+      nav.style.scrollBehavior='';
+    }else{
+      mappCenterSelectedWeek(box,false);
     }
+    try{sessionStorage.setItem(weekKey,state.week)}catch(_){}
+    nav.addEventListener('scroll',()=>{
+      try{sessionStorage.setItem(key,String(nav.scrollLeft))}catch(_){}
+    },{passive:true});
   }
   const card=box.querySelector('.mapp-week-swipe-area');
   if(!card||mappPublishedOwnWeeks().length<2)return;
   let x=null,y=null;
-  card.addEventListener('touchstart',e=>{if(e.touches.length===1){x=e.touches[0].clientX;y=e.touches[0].clientY}},{passive:true});
+  card.addEventListener('touchstart',e=>{
+    if(e.touches.length===1){x=e.touches[0].clientX;y=e.touches[0].clientY}
+  },{passive:true});
   card.addEventListener('touchend',e=>{
     if(x===null||!e.changedTouches.length)return;
     const dx=e.changedTouches[0].clientX-x,dy=e.changedTouches[0].clientY-y;
     x=null;y=null;
-    if(Math.abs(dx)<55||Math.abs(dx)<Math.abs(dy)*1.35)return;
+    if(Math.abs(dx)<45||Math.abs(dx)<Math.abs(dy)*1.25)return;
     const arr=mappPublishedOwnWeeks();
     const i=arr.findIndex(w=>w.id===state.week);
     const next=arr[i+(dx<0?1:-1)];
@@ -8971,7 +8985,6 @@ function mappRestoreCarouselWeek(){
   let last='';try{last=localStorage.getItem('ctc_mapp_last_carousel_week')||''}catch(_){}
   if(last&&mappPublishedOwnWeeks().some(w=>w.id===last)&&!mappPublishedOwnWeeks().some(w=>w.id===state.week))state.week=last;
 }
-
 
 function renderModernHome(){
  const box=$('#modernHomeContent'); if(!box)return;
