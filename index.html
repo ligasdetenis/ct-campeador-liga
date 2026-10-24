@@ -1991,6 +1991,7 @@ body.modern-admin .courtsTemplatePanel p{margin:0;color:#697281;font-size:12px;l
 .waAction{display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin-top:5px}
 .waAction button{border:1px solid #cdd8d1;background:#eff8f1;color:#17643c;border-radius:8px;padding:7px 9px;font-size:10px;font-weight:850;cursor:pointer}
 .waAction button:disabled{opacity:.4;cursor:not-allowed}
+.waAction .waEdit{background:#f2f4f8;border-color:#cbd3df;color:#374151}
 .waAction .waMark{background:#fff;border-color:#dce0e5;color:#51565e}
 .waAction .waDelivered{background:#e7f6ed;color:#18663e;border-color:#b5dbc4}
 .waPhone{font-size:10px;color:#66707c;font-weight:650}
@@ -7321,9 +7322,24 @@ function waUserActions(name){
   const rec=waUserRecord(name), hasPhone=!!waPhone(rec.phone), hasPin=!!data.pins[name];
   const label=rec.deliveredAt?'✅ Entregado '+new Date(rec.deliveredAt).toLocaleDateString('es-ES'):rec.openedAt?'⏳ Preparado, pendiente de confirmar':'Pendiente';
   const safe=mappEsc(name);
-  return `<div class="waAction"><span class="waPhone">${rec.phone?mappEsc(rec.phone):'Sin teléfono'}</span><span class="waStatus">${label}</span><button type="button" data-wa-open="${safe}" ${hasPhone&&hasPin?'':'disabled'}>WhatsApp ↗</button><button type="button" class="waMark ${rec.deliveredAt?'waDelivered':''}" data-wa-mark="${safe}" ${hasPhone?'':'disabled'}>${rec.deliveredAt?'Desmarcar entrega':'Marcar entregado'}</button></div>`;
+  return `<div class="waAction"><span class="waPhone">${rec.phone?mappEsc(rec.phone):'Sin teléfono'}</span><span class="waStatus">${label}</span><button type="button" class="waEdit" data-wa-edit="${safe}">✏️ Editar teléfono</button><button type="button" data-wa-open="${safe}" ${hasPhone&&hasPin?'':'disabled'}>WhatsApp ↗</button><button type="button" class="waMark ${rec.deliveredAt?'waDelivered':''}" data-wa-mark="${safe}" ${hasPhone?'':'disabled'}>${rec.deliveredAt?'Desmarcar entrega':'Marcar entregado'}</button></div>`;
 }
 function waMessage(name,pin){return `Hola ${name}. \uD83C\uDFBE\n\nTu PIN personal para acceder a la Liga CT Campeador es: ${pin}.\n\nAccede aquí: https://ligasdetenis.github.io/ct-campeador-liga/\n\nNo compartas este PIN con otras personas.`}
+function waEditFor(name){
+  if(!requireAdmin())return;
+  const store=waGetData(), key=waCanonical(name), old=store[key]||{};
+  const input=prompt(`Teléfono de ${name}\n\nIntroduce el móvil (9 cifras, 34 o +34).\nDeja el campo vacío para quitarlo:`,old.phone||'');
+  if(input===null)return;
+  const raw=input.trim();
+  const phone=raw?waPhone(raw):'';
+  if(raw&&!phone){alert('Número no válido. Introduce un móvil español de 9 cifras, con 34 o +34, o un número internacional válido.');return}
+  const previous=waPhone(old.phone);
+  if(phone===previous)return;
+  if(!confirm(phone?`¿Guardar el teléfono ${phone} para ${name}?\n\nSe reiniciará el estado de entrega de este jugador.`:`¿Quitar el teléfono de ${name}?\n\nSe reiniciará su estado de entrega.`))return;
+  store[key]={...old,phone,openedAt:'',deliveredAt:''};
+  waPutData(store);
+  renderPins();
+}
 function waOpenFor(name){
   if(!requireAdmin())return;
   const x=waGetData(), k=waCanonical(name), rec=x[k]||{}, phone=waPhone(rec.phone), pin=String(data.pins[name]||'');
@@ -7471,6 +7487,7 @@ function renderPins(){
   document.querySelectorAll('#pinTable [data-copy-pin],#pinCardsMobile [data-copy-pin]').forEach(b=>b.onclick=()=>copyPinMessage(b.dataset.copyPin));
   document.querySelectorAll('#pinTable [data-regenerate-pin],#pinCardsMobile [data-regenerate-pin]').forEach(b=>b.onclick=()=>regeneratePinFor(b.dataset.regeneratePin));
   document.querySelectorAll('#pinTable [data-delete-user],#pinCardsMobile [data-delete-user]').forEach(b=>b.onclick=()=>deleteAccessUsers([b.dataset.deleteUser]));
+  document.querySelectorAll('#pinTable [data-wa-edit],#pinCardsMobile [data-wa-edit]').forEach(b=>b.onclick=()=>waEditFor(b.dataset.waEdit));
   document.querySelectorAll('#pinTable [data-wa-open],#pinCardsMobile [data-wa-open]').forEach(b=>b.onclick=()=>waOpenFor(b.dataset.waOpen));
   document.querySelectorAll('#pinTable [data-wa-mark],#pinCardsMobile [data-wa-mark]').forEach(b=>b.onclick=()=>waMarkFor(b.dataset.waMark));
 
