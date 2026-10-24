@@ -1981,6 +1981,20 @@ body.modern-admin .courtsTemplatePanel p{margin:0;color:#697281;font-size:12px;l
 .mapp-week-carousel-nav::-webkit-scrollbar-thumb{background:#bd9fa5;border-radius:8px}
 .mapp-week-carousel-chip{flex-shrink:0!important}
 .mapp-week-swipe-area{touch-action:pan-y!important;min-width:0}
+
+/* V22.12 · WhatsApp asistido (solo admin) */
+.waAccessPanel{margin:13px 0;padding:13px;border:1px solid #dee3e9;border-radius:13px;background:#f9fafb;color:#252a32;display:grid;gap:9px}
+.waAccessTitle{font-weight:900;font-size:14px}
+.waAccessTools{display:flex;flex-wrap:wrap;gap:7px;align-items:center}
+.waAccessTools input[type=file]{flex:1 1 190px;min-width:0;max-width:100%;font-size:11px}
+.waAccessTools .btn{font-size:11px!important;min-height:38px!important}
+.waAction{display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin-top:5px}
+.waAction button{border:1px solid #cdd8d1;background:#eff8f1;color:#17643c;border-radius:8px;padding:7px 9px;font-size:10px;font-weight:850;cursor:pointer}
+.waAction button:disabled{opacity:.4;cursor:not-allowed}
+.waAction .waMark{background:#fff;border-color:#dce0e5;color:#51565e}
+.waAction .waDelivered{background:#e7f6ed;color:#18663e;border-color:#b5dbc4}
+.waPhone{font-size:10px;color:#66707c;font-weight:650}
+.waStatus{font-size:9px;font-weight:850;color:#66707c}
 </style>
 
 <link rel="manifest" href="manifest.webmanifest">
@@ -4679,6 +4693,14 @@ Pablo Ruiz"></textarea>
       <div class="adminSubsectionBody"><div class="tiny">Genera PIN de 4 cifras automáticamente para todos los jugadores cargados. Puedes regenerar uno concreto si fuera necesario. Los PIN se guardan online en Cloudflare junto con los usuarios.</div>
 <div class="quickActions"><button class="btn gold" id="generatePins">Generar PIN que falten</button><button class="btn secondary" id="showPins">Mostrar / ocultar PIN</button><button class="btn danger" id="resetPins">Regenerar todos</button><button class="btn dangerBtn" id="deleteSelectedUsers" disabled>🗑️ Eliminar seleccionados</button><button class="btn secondary" id="syncAccessUsers" type="button">🔄 Sincronizar usuarios</button></div>
 <div class="tiny" id="selectedUsersInfo" style="margin-top:7px">Selecciona uno o varios usuarios para eliminarlos rápidamente.</div>
+
+<div id="waAccessPanel" class="waAccessPanel">
+  <div class="waAccessTitle">📱 Accesos por WhatsApp · envío asistido</div>
+  <div class="tiny">Importa un CSV con columnas <b>nombre;telefono</b> (o nombre,telefono). Se relacionará con usuarios ya creados, sin modificar PIN ni enviar mensajes automáticamente.</div>
+  <div class="waAccessTools"><input type="file" id="waPhoneCsv" accept=".csv,.txt,text/csv" aria-label="Seleccionar CSV de teléfonos"><button type="button" class="btn secondary" id="waCsvTemplate">Descargar plantilla CSV</button><button type="button" class="btn secondary" id="waExportLog">Exportar seguimiento</button></div>
+  <div id="waAccessSummary" class="tiny" aria-live="polite"></div>
+  <div class="tiny">Los teléfonos y el registro de envíos se guardan <b>solo en este navegador</b>, no se sincronizan entre administradores. «Preparado» no significa enviado: marca la entrega después de pulsar Enviar en WhatsApp. Utiliza únicamente números facilitados para esta finalidad.</div>
+</div>
 <div class="schedule accessUsersSchedule accessUsersDesktop" style="margin-top:10px"><table class="accessUsersTable"><thead><tr><th style="width:42px"><input id="selectAllUsers" type="checkbox" aria-label="Seleccionar todos"></th><th>Usuario</th><th>PIN</th><th>Mensaje</th><th>Acciones</th></tr></thead><tbody id="pinTable"></tbody></table></div>
 <div class="accessUsersMobile" id="pinCardsMobile" aria-label="Usuarios"></div></div>
     </div>
@@ -7275,6 +7297,109 @@ function pushStatusDotHtml(name){
   return `<span class="pushStatusDot ${st.state}" title="${mappEsc(st.label)}" aria-label="${mappEsc(st.label)}"></span>`;
 }
 
+
+/* V22.12 · Datos de WhatsApp locales al navegador del administrador.
+   No se escriben ni en el estado público ni en el servidor. */
+const WA_ACCESS_KEY='ctcampeador_prod_wa_access_v1';
+function waGetData(){
+  try{const x=JSON.parse(localStorage.getItem(WA_ACCESS_KEY)||'{}');return x&&typeof x==='object'&&!Array.isArray(x)?x:{}}
+  catch(e){return {}}
+}
+function waPutData(x){localStorage.setItem(WA_ACCESS_KEY,JSON.stringify(x))}
+function waCanonical(name){return normalizeName(String(name||'')).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim()}
+function waPhone(raw){
+  const v=String(raw||'').replace(/[\s().-]/g,'');
+  if(/^\+34[67]\d{8}$/.test(v))return v.slice(1);
+  if(/^0034[67]\d{8}$/.test(v))return v.slice(2);
+  if(/^[67]\d{8}$/.test(v))return '34'+v;
+  if(/^\+\d{10,15}$/.test(v))return v.slice(1);
+  return '';
+}
+function waUserRecord(name){return waGetData()[waCanonical(name)]||{}}
+function waUserActions(name){
+  const rec=waUserRecord(name), hasPhone=!!waPhone(rec.phone), hasPin=!!data.pins[name];
+  const label=rec.deliveredAt?'✅ Entregado '+new Date(rec.deliveredAt).toLocaleDateString('es-ES'):rec.openedAt?'⏳ Preparado, pendiente de confirmar':'Pendiente';
+  const safe=mappEsc(name);
+  return `<div class="waAction"><span class="waPhone">${rec.phone?mappEsc(rec.phone):'Sin teléfono'}</span><span class="waStatus">${label}</span><button type="button" data-wa-open="${safe}" ${hasPhone&&hasPin?'':'disabled'}>WhatsApp ↗</button><button type="button" class="waMark ${rec.deliveredAt?'waDelivered':''}" data-wa-mark="${safe}" ${hasPhone?'':'disabled'}>${rec.deliveredAt?'Desmarcar entrega':'Marcar entregado'}</button></div>`;
+}
+function waMessage(name,pin){return `Hola ${name}. \uD83C\uDFBE\n\nTu PIN personal para acceder a la Liga CT Campeador es: ${pin}.\n\nAccede aquí: https://ligasdetenis.github.io/ct-campeador-liga/\n\nNo compartas este PIN con otras personas.`}
+function waOpenFor(name){
+  if(!requireAdmin())return;
+  const x=waGetData(), k=waCanonical(name), rec=x[k]||{}, phone=waPhone(rec.phone), pin=String(data.pins[name]||'');
+  if(!phone||!pin){alert('Falta teléfono válido o PIN para este jugador.');return}
+  if(!confirm(`Se abrirá WhatsApp para ${name} (${phone}) con su PIN en el texto.\n\nComprueba el destinatario antes de pulsar Enviar. ¿Continuar?`))return;
+  const url='https://wa.me/'+phone+'?text='+encodeURIComponent(waMessage(name,pin));
+  const win=window.open(url,'_blank','noopener,noreferrer');
+  if(!win){alert('El navegador ha bloqueado la apertura de WhatsApp. Permite ventanas emergentes para este sitio.');return}
+  x[k]={...rec,phone,openedAt:new Date().toISOString()};waPutData(x);renderPins();
+}
+function waMarkFor(name){
+  if(!requireAdmin())return;
+  const x=waGetData(),k=waCanonical(name),rec=x[k]||{};
+  if(!waPhone(rec.phone))return;
+  if(!rec.deliveredAt&&!confirm(`¿Confirmas que has enviado el acceso de ${name} por WhatsApp?\n\nLa aplicación NO puede comprobar si el mensaje se envió o recibió.`))return;
+  x[k]={...rec,deliveredAt:rec.deliveredAt?'':new Date().toISOString()};waPutData(x);renderPins();
+}
+function waCsvCells(line,separator){
+  const cells=[];let out='',quoted=false;
+  for(let i=0;i<line.length;i++){
+    const c=line[i];
+    if(c==='"'){if(quoted&&line[i+1]==='"'){out+='"';i++}else quoted=!quoted}
+    else if(c===separator&&!quoted){cells.push(out.trim());out=''}
+    else out+=c;
+  }
+  cells.push(out.trim());return cells;
+}
+async function waImportFile(file){
+  if(!requireAdmin()||!file)return;
+  if(file.size>1024*1024){alert('Archivo demasiado grande. Límite: 1 MB.');return}
+  const raw=(await file.text()).replace(/^\uFEFF/,'');
+  const lines=raw.split(/\r?\n/).filter(x=>x.trim());
+  if(lines[0]&&/^sep=./i.test(lines[0]))lines.shift();
+  if(lines.length<2){alert('Archivo vacío. Usa las columnas nombre;telefono.');return}
+  const sep=(lines[0].match(/;/g)||[]).length>=(lines[0].match(/,/g)||[]).length?';':',';
+  const headers=waCsvCells(lines.shift(),sep).map(x=>waCanonical(x));
+  const ni=headers.findIndex(x=>['nombre','jugador','name'].includes(x));
+  const ti=headers.findIndex(x=>['telefono','movil','phone','whatsapp'].includes(x));
+  if(ni<0||ti<0){alert('El CSV necesita columnas nombre y telefono.');return}
+  const identities=allIdentities().filter(n=>!accessIsExcluded(n));
+  const byName=new Map(identities.map(n=>[waCanonical(n),n]));
+  const existing=waGetData(), add={}, missing=[], invalid=[], duplicated=[];
+  for(const line of lines){
+    const cols=waCsvCells(line,sep),n=String(cols[ni]||'').trim(),p=waPhone(cols[ti]);
+    if(!n)continue;
+    const match=byName.get(waCanonical(n));
+    if(!match){missing.push(n);continue}
+    if(!p){invalid.push(n);continue}
+    const k=waCanonical(match);
+    if(add[k]){duplicated.push(n);continue}
+    const old=existing[k]||{};
+    add[k]={...old,phone:p, ...(old.phone===p?{}:{openedAt:'',deliveredAt:''})};
+  }
+  const n=Object.keys(add).length;
+  const summary=`${n} teléfonos válidos; ${missing.length} nombres sin coincidencia; ${invalid.length} teléfonos inválidos; ${duplicated.length} duplicados.`;
+  const detail=[missing.length?'Sin coincidencia: '+missing.slice(0,12).join(', '):'',invalid.length?'Teléfonos inválidos: '+invalid.slice(0,12).join(', '):''].filter(Boolean).join('\n');
+  if(!n){alert(summary+'\n'+detail);return}
+  if(!confirm(`Importación de teléfonos (no de PIN):\n${summary}\n\n${detail}\n\n¿Guardar los ${n} teléfonos SOLO en este navegador?`))return;
+  waPutData({...existing,...add});renderPins();alert('Guardados '+n+' teléfonos en este navegador.\n'+summary);
+}
+function waUpdateSummary(){
+  const el=document.getElementById('waAccessSummary');if(!el)return;
+  const records=waGetData(), names=allIdentities().filter(x=>!accessIsExcluded(x));
+  let phones=0,delivered=0,ready=0;
+  for(const name of names){const r=records[waCanonical(name)]||{};if(waPhone(r.phone)){phones++;if(r.deliveredAt)delivered++;else if(r.openedAt)ready++}}
+  el.textContent=`Usuarios: ${names.length} · Con teléfono: ${phones} · Marcados entregados: ${delivered} · Abiertos, sin confirmar: ${ready} · Sin teléfono: ${names.length-phones}`;
+}
+function waDownloadFile(filename,text,type){
+  const blob=new Blob([text],{type});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+function waExportLog(){if(!requireAdmin())return;
+  const records=waGetData();const q=x=>'"'+String(x??'').replace(/"/g,'""')+'"';
+  const out=[['nombre','telefono','estado','fecha_preparacion','fecha_entrega'].map(q).join(';')];
+  allIdentities().filter(x=>!accessIsExcluded(x)).forEach(n=>{const r=records[waCanonical(n)]||{};out.push([n,r.phone||'',r.deliveredAt?'marcado_entregado':r.openedAt?'preparado':'pendiente',r.openedAt||'',r.deliveredAt||''].map(q).join(';'))});
+  waDownloadFile('ctcampeador_seguimiento_whatsapp.csv','\uFEFF'+out.join('\r\n'),'text/csv;charset=utf-8');
+}
+
 function renderPins(){
   const tb=$('#pinTable');
   const cards=$('#pinCardsMobile');
@@ -7284,6 +7409,7 @@ function renderPins(){
     if(tb)tb.innerHTML='<tr><td colspan="5">No hay usuarios cargados.</td></tr>';
     if(cards)cards.innerHTML='<div class="accessMobileEmpty">No hay usuarios cargados.</div>';
     updateSelectedUsersUI();
+    waUpdateSummary();
     return;
   }
 
@@ -7299,7 +7425,7 @@ function renderPins(){
       <td><div class="accessDesktopNameLine"><b>${mappEsc(p)}</b>${pushStatusDotHtml(p)}</div><div class="accessRolePill ${roleClass}">${roleLabel}</div></td>
       <td><span class="mono">${shown}</span></td>
       <td><button class="btn secondary" data-copy-pin="${safe}">Copiar acceso</button></td>
-      <td><div class="matchActions"><button class="btn secondary" data-regenerate-pin="${safe}">♻ Nuevo PIN</button><button class="btn dangerBtn" data-delete-user="${safe}" ${protectedSelf?'disabled':''}>Eliminar</button></div></td>
+      <td><div class="matchActions"><button class="btn secondary" data-regenerate-pin="${safe}">♻ Nuevo PIN</button><button class="btn dangerBtn" data-delete-user="${safe}" ${protectedSelf?'disabled':''}>Eliminar</button></div>${waUserActions(p)}</td>
     </tr>`;
   }).join('');
 
@@ -7332,6 +7458,7 @@ function renderPins(){
           <button class="btn secondary accessMobileBtn" type="button" data-regenerate-pin="${safe}">♻ Nuevo PIN</button>
         </div>
 
+        ${waUserActions(p)}
         ${protectedSelf
           ? `<div class="accessMobileProtected">Administrador con la sesión iniciada</div>`
           : `<button class="btn dangerBtn accessMobileDelete" type="button" data-delete-user="${safe}">Eliminar usuario</button>`
@@ -7343,6 +7470,8 @@ function renderPins(){
   document.querySelectorAll('#pinTable [data-copy-pin],#pinCardsMobile [data-copy-pin]').forEach(b=>b.onclick=()=>copyPinMessage(b.dataset.copyPin));
   document.querySelectorAll('#pinTable [data-regenerate-pin],#pinCardsMobile [data-regenerate-pin]').forEach(b=>b.onclick=()=>regeneratePinFor(b.dataset.regeneratePin));
   document.querySelectorAll('#pinTable [data-delete-user],#pinCardsMobile [data-delete-user]').forEach(b=>b.onclick=()=>deleteAccessUsers([b.dataset.deleteUser]));
+  document.querySelectorAll('#pinTable [data-wa-open],#pinCardsMobile [data-wa-open]').forEach(b=>b.onclick=()=>waOpenFor(b.dataset.waOpen));
+  document.querySelectorAll('#pinTable [data-wa-mark],#pinCardsMobile [data-wa-mark]').forEach(b=>b.onclick=()=>waMarkFor(b.dataset.waMark));
 
   document.querySelectorAll('#pinTable [data-user-select],#pinCardsMobile [data-user-select]').forEach(c=>c.onchange=()=>{
     const name=c.dataset.userSelect;
@@ -7354,6 +7483,7 @@ function renderPins(){
   });
 
   updateSelectedUsersUI();
+  waUpdateSummary();
 }
 async function deleteAccessUsers(names){
   if(!requireAdmin())return;
@@ -10033,6 +10163,15 @@ if('serviceWorker' in navigator){
 bootstrapApp();
 
 window.addEventListener('scroll',()=>{const a=document.getElementById('adminView');if(a)a.classList.toggle('adminScrolled',window.scrollY>(a.offsetTop+280));},{passive:true});
+
+/* V22.12 · Inicialización del importador de teléfonos */
+(function(){
+  const input=document.getElementById('waPhoneCsv');
+  if(input)input.addEventListener('change',async e=>{try{await waImportFile(e.target.files?.[0])}catch(err){alert('Error al leer CSV: '+err.message)}finally{e.target.value=''}});
+  const template=document.getElementById('waCsvTemplate');
+  if(template)template.onclick=()=>{if(!requireAdmin())return;waDownloadFile('ctcampeador_plantilla_telefonos.csv','\uFEFFnombre;telefono\r\n"Nombre Apellido";"612345678"\r\n'.replace(/\uFEFF/g,'\uFEFF').replace(/\r/g,'\r').replace(/\n/g,'\n'),'text/csv;charset=utf-8')};
+  const exp=document.getElementById('waExportLog');if(exp)exp.onclick=waExportLog;
+})();
 </script>
 
 </body></html>
