@@ -7311,6 +7311,7 @@ function waPhone(raw){
   const v=String(raw||'').replace(/[\s().-]/g,'');
   if(/^\+34[67]\d{8}$/.test(v))return v.slice(1);
   if(/^0034[67]\d{8}$/.test(v))return v.slice(2);
+  if(/^34[67]\d{8}$/.test(v))return v;
   if(/^[67]\d{8}$/.test(v))return '34'+v;
   if(/^\+\d{10,15}$/.test(v))return v.slice(1);
   return '';
