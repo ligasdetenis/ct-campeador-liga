@@ -1996,6 +1996,7 @@ body.modern-admin .courtsTemplatePanel p{margin:0;color:#697281;font-size:12px;l
 .waAction .waDelivered{background:#e7f6ed;color:#18663e;border-color:#b5dbc4}
 .waPhone{font-size:10px;color:#66707c;font-weight:650}
 .waStatus{font-size:9px;font-weight:850;color:#66707c}
+.mapp-proposal-cta{display:flex;align-items:center;gap:12px;margin:12px 14px;padding:15px 13px;border-radius:15px;background:linear-gradient(120deg,#f9e8d1,#fff6e9);border:2px solid #c79b42;color:#491d24;cursor:pointer;box-shadow:0 4px 13px rgba(60,20,18,.13)}.mapp-proposal-cta:focus-visible{outline:3px solid #b12236;outline-offset:3px}.mapp-proposal-cta-icon{font-size:25px}.mapp-proposal-cta strong{display:block;font-weight:950;font-size:14px;line-height:1.2}.mapp-proposal-cta small{display:block;font-size:12px;margin-top:5px;line-height:1.35}
 </style>
 
 <link rel="manifest" href="manifest.webmanifest">
@@ -4228,10 +4229,34 @@ body.modern-admin #journeyNavigator{
 }
 body.modern-admin #journeyNavigator .journeyJump{scroll-snap-align:none!important}
 </style>
-<style id="prod-v225-publicar-todas">
-/* Acción independiente y legible también en móvil */
-body.modern-admin #publishAllJourneysBtn{background:#7b0014!important;color:#fff!important;border-color:#7b0014!important;min-height:40px!important}
-@media(max-width:600px){body.modern-admin #publishAllJourneysBtn{grid-column:1/-1!important;width:100%!important;white-space:normal!important}}
+<style id="ct-proposal-visibility-fix">
+/* Corrección localizada de contraste y visibilidad del botón de propuesta. */
+#reserveModal #proposeReserve.btn.proposal-reserve-button {
+  display:flex!important; align-items:center; justify-content:center;
+  width:100%!important; min-height:54px!important;
+  padding:13px 15px!important; margin:4px 0 10px!important;
+  color:#ffffff!important; background:#73182b!important;
+  border:2px solid #b98b3f!important; border-radius:13px!important;
+  font-size:13px!important; font-weight:850!important;
+  line-height:1.25!important; letter-spacing:.01em!important;
+  text-align:center!important; white-space:normal!important;
+  opacity:1; visibility:visible;
+  text-shadow:none!important; box-shadow:0 3px 10px rgba(40,0,10,.14)!important;
+}
+#reserveModal #proposeReserve:focus-visible {outline:3px solid #e3bd70!important;outline-offset:2px}
+#reserveModal .reserveActions {display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:10px!important;padding-bottom:12px!important}
+#reserveModal .sheetBody {overflow-y:auto!important;-webkit-overflow-scrolling:touch!important;padding-bottom:max(32px,env(safe-area-inset-bottom))!important}
+</style>
+
+<style id="ct-proposal-counter-v227">
+.ct-proposal-overlay{position:fixed;inset:0;z-index:999999;background:rgba(16,10,15,.72);display:flex;align-items:center;justify-content:center;padding:14px;overflow-y:auto}
+.ct-proposal-dialog{width:min(100%,460px);max-height:calc(100dvh - 28px);overflow-y:auto;background:#fffaf3;color:#391b24;border:2px solid #c79b42;border-radius:18px;box-shadow:0 24px 75px #0008;padding:19px;box-sizing:border-box}
+.ct-proposal-header{display:flex;justify-content:space-between;align-items:center;gap:10px}.ct-proposal-header h3{margin:0;color:#601f2d;font-size:20px}
+.ct-proposal-close{border:0;background:transparent;color:#601f2d;font-size:23px;cursor:pointer;padding:8px}
+.ct-proposal-content{padding:12px 0}.ct-proposal-label{color:#7d5360;font-size:13px;font-weight:700}.ct-proposal-slot{padding:15px;background:#f7ecde;border-radius:12px;margin:12px 0;font-weight:850;font-size:16px;color:#471924}
+.ct-proposal-buttons{display:grid;gap:10px}.ct-proposal-buttons .btn{width:100%;min-height:46px;white-space:normal;color:#511d29;background:#f3e5d8;border:1px solid #beab99;border-radius:10px;font-weight:800}
+.ct-proposal-buttons .btn.gold{background:#c79b42;color:#261216;border-color:#a6782c}.ct-proposal-buttons .ct-proposal-counter{background:#681f30;color:#fff;border:2px solid #c79b42}
+.ct-proposal-history{margin-top:16px;font-size:12px}.ct-proposal-history summary{cursor:pointer;font-weight:bold}.ct-proposal-history ul{padding-left:20px}
 </style>
 </head>
 <body>
@@ -4872,7 +4897,7 @@ Pablo Ruiz"></textarea>
   </div>
 </div>
 <nav class="bottomNav"><button class="navBtn active" data-go="home"><span>🎾</span>Partidos</button><button class="navBtn" data-go="courts"><span>🏟️</span>Pistas</button><button class="navBtn hidden" data-go="admin" id="adminNavBtn"><span>⚙️</span>Configuración</button><button class="navBtn" id="refreshBtn"><span>🔄</span>Actualizar</button></nav>
-<div class="modal" id="reserveModal"><div class="sheet"><div class="sheetHead"><div><div class="tiny" id="modalMode">RESERVAR PARTIDO</div><h3 id="modalMatch"></h3></div><button class="close" id="closeModal">✕</button></div><div class="sheetBody"><div class="tiny" id="modalCat"></div><div class="reserveCurrent hidden" id="reserveCurrent"></div><div class="noSlots hidden" id="reserveNoSlots">No quedan huecos disponibles para esta semana.</div><div class="reserveForm" id="reserveForm"><div class="reserveField"><label>Día</label><select id="reserveDay"></select></div><div class="reserveField"><label>Franja horaria</label><select id="reserveTime"></select></div><div class="reserveField"><label>Pista</label><select id="reserveCourt"></select></div><div class="reserveActions"><button class="btn gold" id="confirmReserve">✅ Confirmar reserva</button><button class="btn dangerBtn hidden" id="cancelReserveModal">Cancelar reserva actual</button></div></div></div></div></div>
+<div class="modal" id="reserveModal"><div class="sheet"><div class="sheetHead"><div><div class="tiny" id="modalMode">RESERVAR PARTIDO</div><h3 id="modalMatch"></h3></div><button class="close" id="closeModal">✕</button></div><div class="sheetBody"><div class="tiny" id="modalCat"></div><div class="reserveCurrent hidden" id="reserveCurrent"></div><div class="noSlots hidden" id="reserveNoSlots">No quedan huecos disponibles para esta semana.</div><div class="reserveForm" id="reserveForm"><div class="reserveField"><label>Día</label><select id="reserveDay"></select></div><div class="reserveField"><label>Franja horaria</label><select id="reserveTime"></select></div><div class="reserveField"><label>Pista</label><select id="reserveCourt"></select></div><div class="reserveActions"><button class="btn gold" id="confirmReserve">✅ Confirmar reserva</button><button class="btn proposal-reserve-button" type="button" id="proposeReserve">✉️ ENVIAR PROPUESTA AL RIVAL</button><button class="btn dangerBtn hidden" id="cancelReserveModal">Cancelar reserva actual</button></div></div></div></div></div>
 <div class="modal" id="delayModal"><div class="sheet"><div class="sheetHead"><div><div class="tiny">GESTIONAR PARTIDO RETRASADO</div><h3 id="delayMatch"></h3></div><button class="close" id="closeDelayModal">✕</button></div><div class="sheetBody"><div class="tiny" id="delayOrigin"></div><div class="reserveField"><label>Nueva semana</label><select id="delayTargetWeek"></select></div><div class="resultHint">El partido seguirá perteneciendo a su jornada oficial. Si eliges una semana posterior, aparecerá también allí como <b>reprogramado</b> y podrá reservar una pista de esa semana.</div><div class="reserveActions"><button class="btn gold" id="saveDelayBtn">💾 Guardar retraso</button><button class="btn dangerBtn" id="restoreDelayBtn">↩️ Devolver a jornada original</button></div></div></div></div>
 <div class="modal" id="resultModal"><div class="sheet"><div class="sheetHead"><div><div class="tiny" id="resultModalMode">RESULTADO DEL PARTIDO</div><h3 id="resultModalMatch"></h3></div><button class="close" id="closeResultModal">✕</button></div><div class="sheetBody">
 <div class="tiny" id="resultModalCat"></div>
@@ -5967,8 +5992,9 @@ async function loginWithPinOnly(){
     setOnline(true,'☁️ Online');
     connectRealtime();
     renderAll();
-    mappRestoreTab();
+    ctWelcomeProposalChecked=false;
     queuePushDeepLink();
+    setTimeout(()=>ctShowPendingProposalOnEntry().catch(console.warn),700);
   }catch(e){
     showPinWelcome(e.message||'PIN incorrecto.',true);
   }finally{
@@ -6269,7 +6295,7 @@ function resultLabel(r){
 function renderMatches(){const fs=viewFixtures(), box=$('#matches');const officialCount=fixtures().length,carriedCount=fs.filter(m=>m._carried).length;$('#matchMeta').textContent=`${fixtureRound()?fixtureRound()+' · ':''}${officialCount} oficial${officialCount===1?'':'es'}${carriedCount?` · ${carriedCount} retrasado${carriedCount===1?'':'s'}`:''}`;if(!fs.length){box.innerHTML='<div class="empty">No hay enfrentamientos cargados para esta categoría y semana.</div>';return}
  const official=fs.filter(m=>!m._carried),carried=fs.filter(m=>m._carried);
  const card=m=>{
-   const bk=isAdmin()?bookingFor(m.id):upcomingBookingFor(m.id), r=resultFor(m.id), mine=canPlayerReserve(m), admin=isAdmin(),p=postponedInfo(m.id),effectiveWeek=effectiveWeekFor(m.id),canReserveHere=isReservableInCurrentWeek(m.id);
+   const bk=bookingFor(m.id), r=resultFor(m.id), mine=canPlayerReserve(m), admin=isAdmin(),p=postponedInfo(m.id),effectiveWeek=effectiveWeekFor(m.id),canReserveHere=isReservableInCurrentWeek(m.id);
    const st=bk?'booked':(isOpen()&&canReserveHere?'pending':'locked');
    let label=bk?'✅ Reservado':(p&&!p.targetWeek?'🔄 Retrasado · sin reprogramar':(!canReserveHere?'➡️ Reprogramado':(isOpen()?'⏳ Pendiente de reservar':'🔒 Esperando pistas')));
    const detail=bk?`${dayDateES(bk.date)} · ${bk.time} · ${bk.court}`:(m._carried?`Retrasado de ${weeks.find(w=>w.id===m._originalWeek)?.label||m._originalWeek}`:'Enfrentamiento oficial iSquad');
@@ -6532,6 +6558,86 @@ function openReserve(mid,preferredSlotId=''){
  }
  $('#reserveModal').classList.add('show');
 }
+// Propuestas de pista: el envío no ocupa la pista. Solo la aceptación la reserva.
+async function proposeSelectedSlot(){
+ const mid=state.reserveMatchId,sid=$('#reserveCourt').value;
+ if(!mid||!sid)return alert('Selecciona una pista disponible.');
+ const button=$('#proposeReserve');button.disabled=true;
+ try{await apiRequest({action:'proposeMatchSlot',matchId:mid,slotId:sid});
+   $('#reserveModal').classList.remove('show');alert('✅ Propuesta enviada. Tu rival recibirá un aviso. La pista todavía NO está reservada.');
+   ctProposalCache.delete(mid);renderAll();ctLoadSmartProposal(mid,true);
+ }catch(e){alert(e.message)}finally{button.disabled=false}
+}
+// Formato visual de fechas de propuestas: DD/MM/AAAA. No modifica datos de reserva ni API.
+function ctProposalDateES(value){
+ const raw=String(value??'').trim();
+ const iso=raw.match(/^(\d{4})-(\d{2})-(\d{2})(?:T.*)?$/);
+ if(iso)return `${iso[3]}/${iso[2]}/${iso[1]}`;
+ const local=raw.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/);
+ if(local)return `${local[1].padStart(2,'0')}/${local[2].padStart(2,'0')}/${local[3]}`;
+ return raw;
+}
+// V22.7: tarjeta de propuestas con contrapropuesta sin rechazar prematuramente.
+function proposalChoiceDialog(p,info,canRespond){
+ return new Promise(resolve=>{
+  document.querySelector('#ctProposalChoiceOverlay')?.remove();
+  const overlay=document.createElement('div');
+  overlay.id='ctProposalChoiceOverlay';
+  overlay.className='ct-proposal-overlay';
+  const safe=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const status=p.status==='accepted'?'Aceptada':p.status==='rejected'?'Rechazada':p.status==='cancelled'?'Reserva cancelada':'Pendiente';
+  const history=Array.isArray(p.history)?p.history:[];
+  overlay.innerHTML=`<section class="ct-proposal-dialog" role="dialog" aria-modal="true" aria-labelledby="ctPropTitle">
+    <div class="ct-proposal-header"><h3 id="ctPropTitle">🎾 Propuestas de pista</h3><button type="button" data-choice="close" class="ct-proposal-close" aria-label="Cerrar">✕</button></div>
+    <div class="ct-proposal-content"><div class="ct-proposal-label">${safe(status)} · ${safe(p.from)} → ${safe(p.to)}</div>
+      <div class="ct-proposal-slot">📅 ${safe(info)}</div>
+      ${canRespond?`<p>¿Qué quieres hacer con la fecha propuesta por tu rival?</p>`:p.status==='pending'?'<p>En espera de respuesta de tu rival. La pista todavía no está reservada.</p>':'<p>Esta propuesta ya no está pendiente.</p>'}
+      ${history.length?`<details class="ct-proposal-history"><summary>Historial de propuestas (${history.length})</summary><ul>${history.slice(-12).reverse().map(h=>`<li>${safe(h.from)}: ${safe(ctProposalDateES(h.date))} · ${safe(h.time||'')} · ${safe(h.court||'')} (${safe(h.status||'sustituida')})</li>`).join('')}</ul></details>`:''}
+    </div>
+    <div class="ct-proposal-buttons">
+      ${canRespond?'<button type="button" class="btn gold" data-choice="accept">✅ Aceptar y reservar</button>':''}
+      ${p.status==='pending'?'<button type="button" class="btn ct-proposal-counter" data-choice="counter">📅 Proponer otra fecha</button>':''}
+      ${canRespond?'<button type="button" class="btn" data-choice="reject">Rechazar sin proponer</button>':''}
+      <button type="button" class="btn" data-choice="close">Cerrar</button>
+    </div>
+  </section>`;
+  document.body.appendChild(overlay);
+  const close=v=>{overlay.remove();resolve(v)};
+  overlay.querySelectorAll('[data-choice]').forEach(el=>el.addEventListener('click',()=>close(el.dataset.choice)));
+  overlay.addEventListener('click',e=>{if(e.target===overlay)close('close')});
+  overlay.querySelector('[data-choice="close"]')?.focus();
+ });
+}
+async function viewMatchProposal(mid){
+ try{
+  const {proposal:p}=await apiRequest({action:'getMatchProposal',matchId:mid});
+  if(!p){
+    if(confirm('No hay propuestas todavía. ¿Quieres proponer una fecha?')){routeContextFromMatch(mid);renderAll();openReserve(mid)}
+    return;
+  }
+  const info=`${ctProposalDateES(p.reservation?.date)} · ${p.reservation?.time||''} · ${p.reservation?.court||''}`;
+  const canRespond=p.status==='pending'&&String(p.to||'').trim().toLocaleLowerCase('es')===String(state.player||'').trim().toLocaleLowerCase('es');
+  const choice=await proposalChoiceDialog(p,info,canRespond);
+  if(choice==='counter'){
+    // No rechazamos antes de elegir: si cancela el selector, la oferta previa seguirá pendiente.
+    routeContextFromMatch(mid);renderAll();
+    openReserve(mid);
+    $('#modalMode').textContent='ENVIAR CONTRAPROPUESTA';
+    return;
+  }
+  if(choice==='accept'){
+   const result=await apiRequest({action:'respondMatchProposal',matchId:mid,response:'accept'});
+   if(result.reservation){data.bookings[mid]=result.reservation;localStorage.setItem(STORAGE_KEY,JSON.stringify(data));}
+   alert('✅ Propuesta aceptada. Pista reservada.');
+   ctProposalCache.delete(mid);await refreshOnline({silent:true,force:true});
+  }else if(choice==='reject'){
+   await apiRequest({action:'respondMatchProposal',matchId:mid,response:'reject'});
+   alert('Propuesta rechazada. Tu rival recibirá el aviso.');
+   ctProposalCache.delete(mid);await refreshOnline({silent:true,force:true});
+  }
+ }catch(e){alert(e.message)}
+}
+
 async function book(mid,sid){
  if(reservationPending)return;
  const m=findFixtureById(mid),s=slots().find(x=>x.id===sid);if(!m||!s)return;
@@ -8857,6 +8963,16 @@ async function processPushDeepLink({force=false}={}){
       setTimeout(()=>mappShow('courts'),180);
     }else if(link.open==='match'){
       mappShow('match');
+    }else if(link.open==='proposal'){
+      // Enlace Push directo a la propuesta del partido, también desde otra jornada.
+      // Sincronizamos antes de abrir para recuperar el contexto actualizado.
+      await refreshOnline({silent:true,force:true});
+      if(link.matchId)routeContextFromMatch(link.matchId);
+      renderAll();
+      mappShow('match');
+      if(link.matchId && findFixtureById(link.matchId)){
+        setTimeout(()=>viewMatchProposal(link.matchId),160);
+      }
     }else if(link.open==='result'){
       // Al abrir desde una notificación Push, la PWA puede llevar minutos suspendida
       // y conservar en memoria el resultado anterior. Antes de abrir el modal,
@@ -9253,6 +9369,98 @@ function renderModernCourts(){
    };
  });
 }
+
+// Aviso prioritario al entrar: solo propuestas realmente pendientes DE RESPUESTA.
+// Se consulta en servidor para todas las jornadas, no solo la jornada visible.
+let ctWelcomeProposalChecked = false;
+let ctWelcomeProposalInProgress = false;
+async function ctShowPendingProposalOnEntry(){
+  if(ctWelcomeProposalChecked || ctWelcomeProposalInProgress || !state.authenticated || !apiToken) return;
+  // Los enlaces dirigidos por Push siempre tienen prioridad sobre el aviso general.
+  if(pendingPushDeepLink || readPushDeepLink()) return;
+  ctWelcomeProposalInProgress = true;
+  try {
+    const me = String(state.player || '').trim().toLocaleLowerCase('es');
+    const ids = [...new Set(Object.values(data.fixtures || {}).flatMap(arr =>
+      (Array.isArray(arr) ? arr : [])
+        .filter(m => m && (String(m.a || '').trim().toLocaleLowerCase('es') === me || String(m.b || '').trim().toLocaleLowerCase('es') === me))
+        .filter(m => resultFor(m.id)?.status !== 'confirmed' && !bookingFor(m.id))
+        .map(m => String(m.id))
+    ))];
+    const candidates = [];
+    // Consultas en serie: no saturar la API de reservas ni el dispositivo.
+    for(const mid of ids){
+      if(pendingPushDeepLink || readPushDeepLink()) return;
+      try {
+        const response = await apiRequest({action:'getMatchProposal', matchId:mid});
+        const p = response.proposal || null;
+        ctProposalCache.set(mid, p);
+        ctPaintSmartProposal(mid);
+        if(p && p.status === 'pending' && String(p.to || '').trim().toLocaleLowerCase('es') === me){
+          candidates.push({mid, at: Date.parse(p.createdAt || p.updatedAt || p.at || '') || 0});
+        }
+      }catch(_){ /* Una consulta fallida no debe impedir entrar en la PWA. */ }
+    }
+    // Un aviso por acceso. Las demás propuestas siguen disponibles en Mi partido.
+    ctWelcomeProposalChecked = true;
+    if(!candidates.length || !state.authenticated || pendingPushDeepLink || readPushDeepLink()) return;
+    candidates.sort((a,b) => a.at-b.at);
+    const mid = candidates[0].mid;
+    routeContextFromMatch(mid);
+    renderAll();
+    mappShow('match');
+    await viewMatchProposal(mid);
+    ctLoadSmartProposal(mid,true);
+  } finally {
+    ctWelcomeProposalInProgress = false;
+  }
+}
+
+// Un único acceso a propuestas. Los datos proceden de la API, no de un estado de demostración.
+const ctProposalCache=new Map();
+const ctProposalRequests=new Map();
+function ctProposalStatus(p){
+ if(!p)return ['Proponer fecha al rival','Elige día, hora y pista para enviárselo'];
+ if(p.status==='rejected')return ['Proponer nueva fecha','La anterior fue rechazada; plantea otra opción'];
+ if(p.status==='cancelled')return ['Proponer nueva fecha','La reserva anterior se canceló; puedes acordar otro horario'];
+ if(p.status==='accepted')return ['Propuesta aceptada','Consulta la reserva acordada'];
+ if(p.status==='pending'){
+  const me=String(state.player||'').trim().toLocaleLowerCase('es');
+  const recipient=String(p.to||'').trim().toLocaleLowerCase('es');
+  return me===recipient?['Responder propuesta recibida','Tu rival espera una respuesta']:['Propuesta enviada · Pendiente','Ver propuesta o cambiar la fecha'];
+ }
+ return ['Proponer fecha al rival','Elige día, hora y pista para enviárselo'];
+}
+function ctPaintSmartProposal(mid){
+ const label=document.querySelector(`[data-proposal-label="${CSS.escape(mid)}"]`);
+ const sub=document.querySelector(`[data-proposal-sub="${CSS.escape(mid)}"]`);
+ if(!label||!sub)return;
+ const [t,description]=ctProposalStatus(ctProposalCache.get(mid));
+ label.textContent=t;sub.textContent=description;
+}
+async function ctLoadSmartProposal(mid,force=false){
+ if(!force&&ctProposalCache.has(mid)){ctPaintSmartProposal(mid);return;}
+ if(ctProposalRequests.has(mid))return ctProposalRequests.get(mid);
+ const pending=apiRequest({action:'getMatchProposal',matchId:mid})
+  .then(j=>{ctProposalCache.set(mid,j.proposal||null);ctPaintSmartProposal(mid)})
+  .catch(()=>{ /* Si falla la consulta, se conserva el acceso para intentar de nuevo al pulsar. */ })
+  .finally(()=>ctProposalRequests.delete(mid));
+ ctProposalRequests.set(mid,pending);return pending;
+}
+async function ctOpenSmartProposal(mid){
+ try{
+  const j=await apiRequest({action:'getMatchProposal',matchId:mid});
+  const p=j.proposal||null;ctProposalCache.set(mid,p);ctPaintSmartProposal(mid);
+  if(!p||p.status==='rejected'||p.status==='cancelled'){
+   routeContextFromMatch(mid);renderAll();openReserve(mid);
+   if(p?.status==='rejected'||p?.status==='cancelled')$('#modalMode').textContent='PROPONER NUEVA FECHA';
+   return;
+  }
+  await viewMatchProposal(mid);
+  // Tras una respuesta, refrescar la etiqueta sin cambiar la jornada seleccionada.
+  ctLoadSmartProposal(mid,true);
+ }catch(e){alert(e.message)}
+}
 function renderModernMatch(){
  const box=$('#modernMatchContent');if(!box)return;
  const matches=mappOwnMatches();
@@ -9278,13 +9486,20 @@ function renderModernMatch(){
     </div>
    </div>
    <div class="mapp-menu-row" data-match-reserve="${mappEsc(m.id)}"><div class="mapp-menu-icon">${mappIcon('calendar')}</div><div><div class="mapp-menu-title">${bk?'Cambiar pista':'Reservar pista'}</div><div class="mapp-menu-sub">${bk?'Modifica tu reserva actual':'Elige día, hora y pista'}</div></div><div>${mappIcon('chevron')}</div></div>
-   <div class="mapp-menu-row" data-match-live="${mappEsc(m.id)}"><div class="mapp-menu-icon">${mappIcon('camera')}</div><div><div class="mapp-menu-title">Marcador en directo</div><div class="mapp-menu-sub">Seguir o controlar puntos · Independiente del resultado oficial</div></div><div>${mappIcon('chevron')}</div></div>
+   ${!bk && r?.status!=='confirmed' ? `<div class="mapp-menu-row" data-match-proposal="${mappEsc(m.id)}" role="button" tabindex="0"><div class="mapp-menu-icon">${mappIcon('calendar')}</div><div><div class="mapp-menu-title" data-proposal-label="${mappEsc(m.id)}">Proponer fecha al rival</div><div class="mapp-menu-sub" data-proposal-sub="${mappEsc(m.id)}">Elige día, hora y pista para acordar el partido</div></div><div>${mappIcon('chevron')}</div></div>` : ''}
+   <div class="mapp-menu-row" data-match-live="${mappEsc(m.id)}"><div class="mapp-menu-icon">${mappIcon('activity')}</div><div><div class="mapp-menu-title">🎾 Marcador LIVE (TEST)</div><div class="mapp-menu-sub">Controlar puntos o seguir en directo · Sin resultado oficial</div></div><div>${mappIcon('chevron')}</div></div>
    <div class="mapp-menu-row" data-match-result="${mappEsc(m.id)}"><div class="mapp-menu-icon">${mappIcon('trophy')}</div><div><div class="mapp-menu-title">${r?'Ver / gestionar resultado':'Subir resultado'}</div><div class="mapp-menu-sub">Resultado del encuentro</div></div><div>${mappIcon('chevron')}</div></div>
    ${p?`<div class="mapp-menu-row"><div class="mapp-menu-icon gray">${mappIcon('calendar')}</div><div><div class="mapp-menu-title">Partido retrasado</div><div class="mapp-menu-sub">${p.targetWeek?'Reprogramado para '+mappEsc(weeks.find(w=>w.id===p.targetWeek)?.label||p.targetWeek):'Pendiente de nueva semana'}</div></div></div>`:''}
    </div>`;
  }).join('')+'</div>';
  mappWireWeekCarousel(box);
  box.querySelectorAll('[data-match-reserve]').forEach(x=>x.onclick=()=>openReserve(x.dataset.matchReserve));
+ box.querySelectorAll('[data-match-proposal]').forEach(x=>{
+   const mid=x.dataset.matchProposal;
+   const go=()=>ctOpenSmartProposal(mid);
+   x.onclick=go;x.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}};
+   ctLoadSmartProposal(mid);
+ });
  box.querySelectorAll('[data-match-live]').forEach(x=>x.onclick=()=>{
    const m=matches.find(v=>String(v.id)===String(x.dataset.matchLive));
    if(!m)return;
@@ -10091,6 +10306,7 @@ $('#resetTournamentName').onclick=async()=>{
 $('#copyWhats').onclick=async()=>{if(!requireAdmin())return;renderWhats();const text=$('#whatsPreview').value;const ok=await copyTextRobust(text);if(ok){alert('📋 Mensaje copiado.');return}$('#whatsPreview').focus();$('#whatsPreview').select();alert('No se ha podido copiar automáticamente. El texto queda seleccionado para copiarlo manualmente.');};
 $('#reserveDay').onchange=()=>fillReserveTimes(state.reserveMatchId,'');
 $('#reserveTime').onchange=()=>fillReserveCourts(state.reserveMatchId,'');
+$('#proposeReserve').onclick=proposeSelectedSlot;
 $('#confirmReserve').onclick=()=>{if(reservationPending)return;const sid=$('#reserveCourt').value;if(!sid){alert('Selecciona una pista disponible.');return}book(state.reserveMatchId,sid)};
 $('#cancelReserveModal').onclick=()=>{const mid=state.reserveMatchId;$('#reserveModal').classList.remove('show');cancelBooking(mid)};
 $('#closeModal').onclick=()=>$('#reserveModal').classList.remove('show');$('#reserveModal').onclick=e=>{if(e.target===$('#reserveModal'))$('#reserveModal').classList.remove('show')};
@@ -10122,6 +10338,7 @@ async function bootstrapApp(){
     renderAll();
     if(restored)mappRestoreTab();
     queuePushDeepLink();
+    if(restored)setTimeout(()=>ctShowPendingProposalOnEntry().catch(console.warn),700);
     document.documentElement.classList.remove('app-booting');
     document.documentElement.classList.add('app-ready');
     setInterval(()=>{
