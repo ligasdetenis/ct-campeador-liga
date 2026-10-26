@@ -5969,6 +5969,33 @@ function routePlayerToOwnCategory(player){
   state.gender=chosen.gender;
   return chosen;
 }
+// Jornada inicial según calendario de la liga (hora civil peninsular española).
+// Se ejecuta únicamente al entrar o restaurar sesión; no interfiere con
+// los cambios manuales de jornada ni con los enlaces directos del Push.
+function ctcSelectCalendarWeekOnEntry(){
+  if(!state.authenticated)return;
+  const todayParts=new Intl.DateTimeFormat('en-CA',{
+    timeZone:'Europe/Madrid',year:'numeric',month:'2-digit',day:'2-digit'
+  }).formatToParts(new Date());
+  const parts=Object.fromEntries(todayParts.map(p=>[p.type,p.value]));
+  const today=`${parts.year}-${parts.month}-${parts.day}`;
+  const valid=weeks.filter(w=>/^\d{4}-\d{2}-\d{2}$/.test(w.start||'')
+    && /^\d{4}-\d{2}-\d{2}$/.test(w.end||'') && w.start<=w.end);
+  if(!valid.length)return;
+  // La jornada vigente manda aunque haya otra publicada anticipadamente.
+  const current=valid.find(w=>w.start<=today&&today<=w.end);
+  // Fuera de rango, la última jornada iniciada sigue siendo accesible
+  // para partidos aplazados; antes del torneo se elige la primera.
+  const started=valid.filter(w=>w.start<=today).sort((a,b)=>b.start.localeCompare(a.start));
+  const chosen=current||started[0]||[...valid].sort((a,b)=>a.start.localeCompare(b.start))[0];
+  if(!chosen)return;
+  // No enviar a una jornada invisible: usar la más próxima ya publicada.
+  const publicWeeks=mappPublishedOwnWeeks();
+  const allowed=publicWeeks.find(w=>w.id===chosen.id)
+    || publicWeeks.filter(w=>w.start<=today).sort((a,b)=>b.start.localeCompare(a.start))[0]
+    || publicWeeks[0];
+  if(allowed)state.week=allowed.id;
+}
 async function loginWithPinOnly(){
   const pin=$('#welcomePin')?.value.trim()||'';
   if(!/^(?:\d{4}|\d{6})$/.test(pin)){
@@ -5987,7 +6014,7 @@ async function loginWithPinOnly(){
     data.roles[state.player]=localRoleFromApi(j.user.role);
     await refreshOnline({silent:true,force:true});
     if(isAdmin())await loadAdminUsers();
-    routePlayerToOwnCategory(state.player);
+    routePlayerToOwnCategory(state.player);ctcSelectCalendarWeekOnEntry();
     hidePinWelcome();
     setOnline(true,'☁️ Online');
     connectRealtime();
@@ -9788,7 +9815,7 @@ $('#welcomePin').addEventListener('input',e=>{
 $('#welcomePin').addEventListener('keydown',e=>{if(e.key==='Enter')loginWithPinOnly()});
 
 $('#playerIdentity').onchange=e=>{if(!state.authenticated)state.player=e.target.value;$('#playerPin').value='';renderIdentity()};
-$('#loginBtn').onclick=async()=>{const player=$('#playerIdentity').value,pin=$('#playerPin').value.trim();if(!player){alert('Selecciona tu nombre.');return}if(!/^(?:\d{4}|\d{6})$/.test(pin)){alert('Introduce un PIN válido de 6 cifras. Los PIN antiguos de 4 siguen funcionando.');return}try{$('#loginBtn').disabled=true;const j=await apiRequest({action:'login',name:player,pin},{auth:false});apiToken=j.token;localStorage.setItem(TOKEN_KEY,apiToken);state.player=j.user.name;state.authenticated=true;data.roles[state.player]=localRoleFromApi(j.user.role);if(isAdmin())await loadAdminUsers();routePlayerToOwnCategory(state.player);$('#playerPin').value='';setOnline(true,'☁️ Online');await refreshOnline({silent:true,force:true});connectRealtime();renderAll();queuePushDeepLink()}catch(e){alert('No se ha podido iniciar sesión.\n\n'+e.message)}finally{$('#loginBtn').disabled=false}};
+$('#loginBtn').onclick=async()=>{const player=$('#playerIdentity').value,pin=$('#playerPin').value.trim();if(!player){alert('Selecciona tu nombre.');return}if(!/^(?:\d{4}|\d{6})$/.test(pin)){alert('Introduce un PIN válido de 6 cifras. Los PIN antiguos de 4 siguen funcionando.');return}try{$('#loginBtn').disabled=true;const j=await apiRequest({action:'login',name:player,pin},{auth:false});apiToken=j.token;localStorage.setItem(TOKEN_KEY,apiToken);state.player=j.user.name;state.authenticated=true;data.roles[state.player]=localRoleFromApi(j.user.role);if(isAdmin())await loadAdminUsers();routePlayerToOwnCategory(state.player);ctcSelectCalendarWeekOnEntry();$('#playerPin').value='';setOnline(true,'☁️ Online');await refreshOnline({silent:true,force:true});connectRealtime();renderAll();queuePushDeepLink()}catch(e){alert('No se ha podido iniciar sesión.\n\n'+e.message)}finally{$('#loginBtn').disabled=false}};
 $('#playerPin').addEventListener('keydown',e=>{if(e.key==='Enter')$('#loginBtn').click()});
 $('#clearIdentity').onclick=async()=>{stopRealtime();try{if(apiToken)await apiRequest({action:'logout'})}catch(e){}apiToken='';localStorage.removeItem(TOKEN_KEY);localStorage.removeItem(MAPP_LAST_TAB_KEY);adminCloudOrderLoadedFor='';state.player='';state.authenticated=false;$('#playerPin').value='';renderAll();showPinWelcome('Introduce tu PIN para cambiar de usuario.',false)};
 $$('.gender').forEach(b=>b.onclick=()=>{state.gender=b.dataset.gender;renderAll()});
@@ -10329,7 +10356,7 @@ async function bootstrapApp(){
     renderAll();
     const restored=await restoreSession();
     if(restored){
-      routePlayerToOwnCategory(state.player);
+      routePlayerToOwnCategory(state.player);ctcSelectCalendarWeekOnEntry();
       hidePinWelcome();
       connectRealtime();
     }else{
