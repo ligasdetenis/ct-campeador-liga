@@ -116,6 +116,85 @@ section{background:linear-gradient(145deg,#2e1016,#220d11 68%,#1a0a0d);border:1p
 @media(orientation:landscape) and (max-height:650px){.top{min-height:53px!important;padding:7px 13px}.pageShell{grid-template-columns:minmax(0,1.45fr) minmax(230px,.65fr);gap:7px;padding:7px}.scoreHeading{margin-bottom:9px}.scoreHeading h2{font-size:15px}.scoreLiveFlag{padding:6px}.controlHeading{margin-bottom:8px;padding-bottom:8px}.controlHeading b{font-size:17px}#scoreSection,#controlsSection{padding:12px!important}#scoreSection .grid>div{padding:6px 0}.playerAvatar{width:38px;height:38px}#scoreSection .grid #current0,#scoreSection .grid #current1{min-height:42px;font-size:24px}.matchMeta{margin-top:9px;padding:7px 9px}#controlsSection .twos button{min-height:43px;padding:6px}.banner{padding:5px 8px}.foot{font-size:9px}}
 @media(prefers-reduced-motion:reduce){.pulseDot{animation:none}#controlsSection button{transition:none}}
 .serveBall{display:none;align-items:center;justify-content:center;flex:0 0 auto;width:23px;height:23px;margin-right:-4px;filter:drop-shadow(0 0 3px #eaff8170)}.serveBall.active{display:inline-flex}.serveBall svg{display:block;width:21px;height:21px}@media(max-width:600px){.serveBall{width:17px;height:17px;margin-right:-3px}.serveBall svg{width:16px;height:16px}}
+
+/* Resumen profesional final */
+.summarySection{grid-column:1/-1;background:linear-gradient(180deg,#08192d,#11294a 44%,#0a1f35);border:1px solid #204268;border-radius:28px;color:#f7fbff;box-shadow:0 20px 60px rgba(6,14,30,.28);overflow:hidden}
+.summaryInner{padding:18px clamp(14px,2vw,28px) 22px}
+.summaryTop{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.summaryTitle b{display:block;font-size:clamp(24px,3.1vw,38px);font-weight:950;letter-spacing:-.04em}
+.summaryTitle small{display:block;color:#9fc0e4;font-size:12px;font-weight:800;letter-spacing:.18em}
+.summaryPill{border:1px solid #f0c44b66;background:#f0c44b18;color:#f6ce59;padding:9px 12px;border-radius:999px;font-size:12px;font-weight:900}
+.summaryHero{display:grid;grid-template-columns:minmax(180px,1fr) auto minmax(180px,1fr);gap:18px;align-items:center;margin:14px 0 18px}
+.summaryPlayerCard{display:flex;flex-direction:column;align-items:center;gap:10px;padding:14px 12px;border-radius:24px;background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.03));border:1px solid rgba(255,255,255,.09);min-height:220px;justify-content:center}
+.summaryPlayerCard.winner{box-shadow:inset 0 0 0 2px rgba(240,196,75,.55),0 0 0 1px rgba(240,196,75,.15)}
+.summaryAvatar{width:120px;height:120px;border-radius:50%;object-fit:cover;border:4px solid rgba(255,255,255,.7);box-shadow:0 8px 24px rgba(0,0,0,.22)}
+.summaryPlayerName{font-size:clamp(18px,2.4vw,28px);font-weight:950;letter-spacing:-.03em;text-align:center;line-height:1.05}
+.summaryRating{display:flex;flex-direction:column;align-items:center}
+.summaryRatingValue{font-size:clamp(44px,5vw,72px);line-height:1;font-weight:950;color:#f6ce59}
+.summaryRatingLabel{font-size:11px;letter-spacing:.12em;color:#9fc0e4;font-weight:900}
+.summaryCenter{display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center}
+.summaryVs{font-size:clamp(20px,2.6vw,28px);font-weight:900;color:#9fc0e4;letter-spacing:.22em}
+.summaryResult{font-size:clamp(36px,6.2vw,74px);font-weight:950;letter-spacing:-.06em;line-height:.92}
+.summaryScoreline{font-size:clamp(18px,2.6vw,28px);font-weight:900;color:#f6ce59}
+.summaryWinner{font-size:14px;color:#cfe1f6;font-weight:700}
+.statsTable{display:grid;gap:10px}
+.statRow{display:grid;grid-template-columns:minmax(108px,.9fr) minmax(150px,.95fr) minmax(108px,.9fr);gap:12px;align-items:center;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:10px 14px}
+.statSide{display:flex;flex-direction:column;gap:4px}
+.statSide.right{text-align:right;align-items:flex-end}
+.statValue{font-size:clamp(20px,2.2vw,30px);font-weight:900;line-height:1}
+.statSub{font-size:12px;color:#9fc0e4;font-weight:800}
+.statMid{display:flex;flex-direction:column;gap:8px;align-items:center}
+.statLabel{font-size:13px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:#edf5ff;text-align:center}
+.statBar{width:100%;height:10px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;display:grid;grid-template-columns:1fr 1fr;gap:2px;padding:2px}
+.statFillLeft,.statFillRight{display:block;height:100%;border-radius:999px}
+.statFillLeft{background:linear-gradient(90deg,#f6ce59,#ffea9d);justify-self:end}
+.statFillRight{background:linear-gradient(90deg,#55b8ff,#9fd8ff)}
+.summaryFooter{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.08)}
+.summaryNote{font-size:12px;color:#a8c2df;max-width:760px}
+.summaryActions{display:flex;gap:10px;flex-wrap:wrap}
+.summaryActions button{background:#f6ce59;color:#17253a;border:0;font-weight:900}
+.summaryActions .secondary{background:#17345c;color:#fff;border:1px solid #3a6091}
+body.match-finished #controlsSection{display:none}
+body.match-finished #scoreSection{grid-column:1/-1}
+@media (max-width:900px){.summaryHero{grid-template-columns:1fr;gap:14px}.summaryCenter{order:-1}.summaryPlayerCard{min-height:auto}.statRow{grid-template-columns:1fr;gap:10px}.statSide,.statSide.right{align-items:flex-start;text-align:left}.statBar{order:2}}
+
+
+/* Captura completa del resumen sin recortar estadísticas */
+#summarySection.statsExporting{width:1100px!important;max-width:none!important;overflow:visible!important;box-shadow:none!important;margin:0!important;border-radius:24px!important}
+#summarySection.statsExporting .summaryActions{display:none!important}
+#summarySection.statsExporting .summaryHero{grid-template-columns:minmax(180px,1fr) auto minmax(180px,1fr)!important}
+#summarySection.statsExporting .summaryCenter{order:0!important}
+#summarySection.statsExporting .statRow{grid-template-columns:minmax(108px,.9fr) minmax(150px,.95fr) minmax(108px,.9fr)!important}
+#summarySection.statsExporting .statSide.right{align-items:flex-end!important;text-align:right!important}
+#summarySection.statsExporting .statSide:not(.right){align-items:flex-start!important;text-align:left!important}
+/* Misma altura y ancho en ambos retratos, incluso si un nombre ocupa dos líneas. */
+#summarySection.statsExporting .summaryHero{align-items:stretch!important}
+#summarySection.statsExporting .summaryPlayerCard{
+  min-height:320px!important;height:320px!important;
+  width:100%!important;align-self:stretch!important;
+  box-sizing:border-box!important;justify-content:center!important;
+}
+#summarySection.statsExporting .summaryAvatar{
+  width:120px!important;height:120px!important;min-width:120px!important;min-height:120px!important;
+  object-fit:cover!important;flex-shrink:0!important;
+}
+#summarySection.statsExporting .summaryPlayerName{
+  min-height:58px!important;display:flex!important;align-items:center!important;
+  justify-content:center!important;text-align:center!important;
+}
+
+
+/* html2canvas interpreta incorrectamente el gran inset box-shadow del ganador.
+   Solo en la copia de exportación: usamos borde real, sin sombras internas. */
+#summarySection.statsExporting .summaryPlayerCard,
+#summarySection.statsExporting .summaryPlayerCard.winner {
+  box-shadow:none!important;
+  background:#1a304c!important;
+  border:2px solid rgba(255,255,255,.10)!important;
+}
+#summarySection.statsExporting .summaryPlayerCard.winner {
+  border:2px solid #d8ad47!important;
+}
 </style></head><body>
 <div class="top"><div class="liveTopActions"><button id="backToApp" class="goBack" type="button">← Mi partido</button><div><small>CT CAMPEADOR · LIGA OFICIAL</small><h1>MARCADOR <em>LIVE</em></h1></div></div><span class="pill" id="connection">Conectando…</span></div><main class="pageShell">
 <div class="landscapeTools"><button id="landscapeBtn" type="button">⛶ Ver apaisado</button><span id="orientationHint"></span></div>
@@ -123,7 +202,7 @@ section{background:linear-gradient(145deg,#2e1016,#220d11 68%,#1a0a0d);border:1p
 <section id="joinSection"><label for="matchKey"><small>Identificador de partido</small></label><input id="matchKey" autocomplete="off" maxlength="80" placeholder="Partido de prueba"><p class="help">Abre el enlace desde «Mi partido», o comparte esta página para que otros sigan el marcador.</p><button id="join">Conectar al partido</button> <button class="secondary" id="share">Compartir enlace</button></section>
 <section id="scoreSection"><div class="scoreHeading"><div><span class="eyebrow">CENTRE COURT · CT CAMPEADOR</span><h2>ENCUENTRO EN DIRECTO</h2></div><span class="scoreLiveFlag"><span class="pulseDot"></span> LIVE SCORE</span></div><div class="grid"><div><small>JUGADORES</small></div><div><small>SET 1</small></div><div><small>SET 2</small></div><div><small>JUEGOS</small></div><div><small>PUNTOS</small></div><div class="player"><img class="playerAvatar" id="avatar0" alt="Foto jugador A"><span class="serveBall" id="serveBall0" aria-label="Al servicio" title="Al servicio"><svg viewBox="0 0 32 32" width="22" height="22" aria-hidden="true" focusable="false"><defs><clipPath id="ballClip0"><circle cx="16" cy="16" r="13"/></clipPath></defs><circle cx="16" cy="16" r="13" fill="#d8ed36" stroke="#fff5ad" stroke-width="1.2"/><g clip-path="url(#ballClip0)" fill="none" stroke="#fffcef" stroke-width="2.2" stroke-linecap="round"><path d="M8 -1C21 9 21 23 8 33"/><path d="M24 -1C11 9 11 23 24 33"/></g></svg></span><span class="playerName" id="name0">Jugador A</span></div><div class="score" id="s01">—</div><div class="score" id="s02">—</div><div class="score" id="game0">0</div><div class="score" id="current0">0</div><div class="player"><img class="playerAvatar" id="avatar1" alt="Foto jugador B"><span class="serveBall" id="serveBall1" aria-label="Al servicio" title="Al servicio"><svg viewBox="0 0 32 32" width="22" height="22" aria-hidden="true" focusable="false"><defs><clipPath id="ballClip1"><circle cx="16" cy="16" r="13"/></clipPath></defs><circle cx="16" cy="16" r="13" fill="#d8ed36" stroke="#fff5ad" stroke-width="1.2"/><g clip-path="url(#ballClip1)" fill="none" stroke="#fffcef" stroke-width="2.2" stroke-linecap="round"><path d="M8 -1C21 9 21 23 8 33"/><path d="M24 -1C11 9 11 23 24 33"/></g></svg></span><span class="playerName" id="name1">Jugador B</span></div><div class="score" id="s11">—</div><div class="score" id="s12">—</div><div class="score" id="game1">0</div><div class="score" id="current1">0</div></div><div class="matchMeta"><p id="phase" class="help">Esperando conexión…</p><p id="updated" class="help"></p></div></section>
 <section id="controlsSection"><div class="controlHeading"><span class="eyebrow">MATCH CONTROL</span><b>Control del marcador</b></div><p class="help" id="permissionMessage">Comprobando tu sesión de CT Campeador…</p><div id="startArea"><p>Elegir quién comienza sacando:</p><div class="twos"><button class="secondary" id="start0">Empieza jugador A</button><button class="secondary" id="start1">Empieza jugador B</button></div></div><div id="pointsArea" class="hidden"><div class="twos"><button id="point0">+ Punto A</button><button id="point1">+ Punto B</button></div><p><button class="danger" id="undo">↶ Deshacer último punto</button></p></div><div id="resetArea" class="hidden"><button id="resetMatch" type="button" class="danger" style="width:100%;min-height:44px;border:1px solid #c68d97">↻ Reiniciar partido</button><p class="help">Borra el tanteo LIVE de este partido (no afecta a resultados oficiales).</p></div><p class="help" id="actionsInfo">Conecta al partido para comenzar.</p></section>
-<p class="foot">Reglas: juegos con ventaja; tie-break a 7 en 6-6; si se reparten los dos primeros sets, supertie-break a 10 y diferencia de dos. Los espectadores reciben actualizaciones por WebSocket.</p></main>
+<section id="summarySection" class="summarySection hidden"><div class="summaryInner"><div class="summaryTop"><div class="summaryTitle"><small>MATCH STATISTICS · CT CAMPEADOR</small><b>Resumen final del partido</b></div><div class="summaryPill" id="summaryDuration">Duración no disponible</div></div><div class="summaryHero"><div class="summaryPlayerCard" id="summaryCard0"><img class="summaryAvatar" id="summaryAvatar0" alt="Jugador 1"><div class="summaryPlayerName" id="summaryName0">Jugador A</div><div class="summaryRating"><div class="summaryRatingValue" id="summaryRating0">—</div><div class="summaryRatingLabel">MATCH RATING</div></div></div><div class="summaryCenter"><div class="summaryVs">VS</div><div class="summaryResult" id="summarySetsResult">2-1</div><div class="summaryScoreline" id="summaryScoreline">6-4 · 3-6 · 10-7</div><div class="summaryWinner" id="summaryWinnerText">Partido finalizado</div></div><div class="summaryPlayerCard" id="summaryCard1"><img class="summaryAvatar" id="summaryAvatar1" alt="Jugador 2"><div class="summaryPlayerName" id="summaryName1">Jugador B</div><div class="summaryRating"><div class="summaryRatingValue" id="summaryRating1">—</div><div class="summaryRatingLabel">MATCH RATING</div></div></div></div><div class="statsTable" id="statsTable"></div><div class="summaryFooter"><div class="summaryNote">Estadísticas generadas automáticamente a partir de los puntos del marcador LIVE. No modifican el resultado oficial de la liga.</div><div class="summaryActions"><button type="button" id="shareImageStats">📸 Compartir imagen</button><button type="button" id="saveImageStats" class="secondary">↓ Guardar PNG</button><button type="button" id="shareStats" class="secondary">Compartir texto</button><button type="button" class="secondary" id="backToTopStats">Ver arriba</button></div></div></div></section><p class="foot">Reglas: juegos con ventaja; tie-break a 7 en 6-6; si se reparten los dos primeros sets, supertie-break a 10 y diferencia de dos. Los espectadores reciben actualizaciones por WebSocket.</p></main>
 <script>
 (()=>{'use strict';
 const API='https://ct-campeador-live.ligasdetenis.workers.dev';
@@ -149,7 +228,47 @@ function updateAvatars(names){for(let i=0;i<2;i++){const el=$('avatar'+i);const 
 async function loadPlayerPhotos(){const token=localStorage.getItem(TOKEN_KEY)||'';if(!token){updateAvatars(suggested);return;}try{const r=await fetch(LEAGUE_API,{method:'POST',headers:{'content-type':'application/json','authorization':'Bearer '+token},body:JSON.stringify({action:'readProfiles'})});if(!r.ok)return;const data=await r.json();if(!data.ok||!data.profiles)return;for(const [name,info] of Object.entries(data.profiles)){const photo=String(info?.photoDataUrl||'');if(photo.startsWith('data:image/')&&photo.length<200000)profileImages[normalizeName(info?.player||name)]=photo;}updateAvatars(state?.names||suggested);}catch(_){updateAvatars(suggested)}}
 
 function setText(k,v){$(k).textContent=String(v)}
-function render(){if(!state)return;const names=state.status==='not_started'?suggested:(state.names||suggested);updateAvatars(names);setText('name0',names[0]);setText('name1',names[1]);$('serveBall0').classList.toggle('active',state.server===0&&state.status==='live');$('serveBall1').classList.toggle('active',state.server===1&&state.status==='live');for(let p=0;p<2;p++){setText('s'+p+'1',state.sets?.[p]?.[0]??'—');setText('s'+p+'2',state.sets?.[p]?.[1]??'—');setText('game'+p,state.games?.[p]??0);setText('current'+p,state.phase==='normal'?(state.pointLabels?.[p]??'0'):(state.points?.[p]??0))}const phase=state.phase==='super'?'Supertie-break decisivo · a 10':state.phase==='tiebreak'?'Tie-break · a 7':state.phase==='finished'?'Finalizado':'Juego con ventaja';setText('phase',state.status==='finished'?'🏆 Ganador: '+names[state.winner]:state.status==='not_started'?'Partido todavía no iniciado':phase+' · Saca '+names[state.server]);setText('updated',state.updatedAt?'Última actualización: '+new Date(state.updatedAt).toLocaleTimeString('es-ES'):'Sin movimientos todavía');$('startArea').classList.toggle('hidden',state.status!=='not_started');$('pointsArea').classList.toggle('hidden',state.status!=='live');$('point0').textContent='+ Punto '+names[0];$('point1').textContent='+ Punto '+names[1];$('startArea').classList.toggle('hidden',state.status!=='not_started'||!canControl);$('pointsArea').classList.toggle('hidden',state.status!=='live'||!canControl);$('resetArea').classList.toggle('hidden',!canControl||state.status==='not_started');$('resetMatch').disabled=pending||!canControl;for(const k of ['start0','start1','point0','point1','undo'])$(k).disabled=pending||!canControl;}
+function fmtPct(v){return typeof v==='number' && Number.isFinite(v) ? v.toFixed(1).replace('.',',')+'%' : '—'}
+function fmtPair(w,t){return typeof w==='number' && typeof t==='number' ? `${w}/${t}` : '—'}
+function fmtValue(v){return typeof v==='number' && Number.isFinite(v) ? String(v) : '—'}
+function fmtDuration(sec){if(!(sec>=0)) return 'Duración no disponible'; const h=Math.floor(sec/3600); const m=Math.floor((sec%3600)/60); const s=sec%60; return h?`${h} h ${String(m).padStart(2,'0')} min`:`${m} min ${String(s).padStart(2,'0')} s`;}
+function setImg(id,src,alt){const el=$(id); if(!el) return; el.src=src; el.alt=alt||'';}
+function buildStatRow(label,leftValue,rightValue,leftMeta,rightMeta,leftPct,rightPct){
+  const row=document.createElement('div'); row.className='statRow';
+  const lp=Math.max(0,Math.min(100,Number(leftPct)||0)); const rp=Math.max(0,Math.min(100,Number(rightPct)||0));
+  row.innerHTML=`<div class="statSide"><div class="statValue">${leftValue}</div><div class="statSub">${leftMeta||''}</div></div><div class="statMid"><div class="statLabel">${label}</div><div class="statBar"><span class="statFillLeft" style="width:${lp}%"></span><span class="statFillRight" style="width:${rp}%"></span></div></div><div class="statSide right"><div class="statValue">${rightValue}</div><div class="statSub">${rightMeta||''}</div></div>`;
+  return row;
+}
+function renderStatsSummary(names){
+  const stats=state?.matchStats; const section=$('summarySection');
+  const finished=state && state.status==='finished' && stats;
+  document.body.classList.toggle('match-finished',!!finished);
+  section.classList.toggle('hidden',!finished);
+  if(!finished) return;
+  setText('summaryName0',names[0]); setText('summaryName1',names[1]);
+  setImg('summaryAvatar0',$('avatar0').src,names[0]); setImg('summaryAvatar1',$('avatar1').src,names[1]);
+  const setsWon=stats.setsWon||[0,0];
+  setText('summarySetsResult',`${setsWon[0]}-${setsWon[1]}`);
+  setText('summaryScoreline',(stats.scoreline&&stats.scoreline.length?stats.scoreline.join(' · '):'Sin sets registrados'));
+  const winner=typeof state.winner==='number'?state.winner:null;
+  setText('summaryWinnerText',winner===null?'Partido finalizado':`Victoria de ${names[winner]}`);
+  setText('summaryDuration',fmtDuration(stats.durationSeconds));
+  const ratings=stats.matchRating||[];
+  setText('summaryRating0',ratings[0]==null?'—':ratings[0].toFixed(1));
+  setText('summaryRating1',ratings[1]==null?'—':ratings[1].toFixed(1));
+  $('summaryCard0').classList.toggle('winner',winner===0); $('summaryCard1').classList.toggle('winner',winner===1);
+  const rows=[];
+  rows.push(buildStatRow('Puntos ganados', fmtValue(stats.totalPointsWon?.[0]), fmtValue(stats.totalPointsWon?.[1]), fmtPct(stats.totalPointsPct?.[0]), fmtPct(stats.totalPointsPct?.[1]), stats.totalPointsPct?.[0], stats.totalPointsPct?.[1]));
+  rows.push(buildStatRow('Puntos ganados al saque', fmtPair(stats.servePointsWon?.[0],stats.servePointsTotal?.[0]), fmtPair(stats.servePointsWon?.[1],stats.servePointsTotal?.[1]), fmtPct(stats.servePointsPct?.[0]), fmtPct(stats.servePointsPct?.[1]), stats.servePointsPct?.[0], stats.servePointsPct?.[1]));
+  rows.push(buildStatRow('Puntos ganados al resto', fmtPair(stats.returnPointsWon?.[0],stats.returnPointsTotal?.[0]), fmtPair(stats.returnPointsWon?.[1],stats.returnPointsTotal?.[1]), fmtPct(stats.returnPointsPct?.[0]), fmtPct(stats.returnPointsPct?.[1]), stats.returnPointsPct?.[0], stats.returnPointsPct?.[1]));
+  rows.push(buildStatRow('Break points convertidos', fmtPair(stats.breakPointsWon?.[0],stats.breakPointsTotal?.[0]), fmtPair(stats.breakPointsWon?.[1],stats.breakPointsTotal?.[1]), fmtPct(stats.breakPointsPct?.[0]), fmtPct(stats.breakPointsPct?.[1]), stats.breakPointsPct?.[0], stats.breakPointsPct?.[1]));
+  rows.push(buildStatRow('Break points salvados', fmtPair(stats.breakPointsSaved?.[0],stats.breakPointsFaced?.[0]), fmtPair(stats.breakPointsSaved?.[1],stats.breakPointsFaced?.[1]), fmtPct(stats.breakPointsSavedPct?.[0]), fmtPct(stats.breakPointsSavedPct?.[1]), stats.breakPointsSavedPct?.[0], stats.breakPointsSavedPct?.[1]));
+  rows.push(buildStatRow('Juegos ganados al saque', fmtValue(stats.serviceGamesWon?.[0]), fmtValue(stats.serviceGamesWon?.[1]), 'Juegos de servicio', 'Juegos de servicio', stats.serviceGamesWon?.[0], stats.serviceGamesWon?.[1]));
+  rows.push(buildStatRow('Juegos ganados al resto', fmtValue(stats.returnGamesWon?.[0]), fmtValue(stats.returnGamesWon?.[1]), 'Juegos al resto', 'Juegos al resto', stats.returnGamesWon?.[0], stats.returnGamesWon?.[1]));
+  rows.push(buildStatRow('Racha máxima de puntos', fmtValue(stats.maxStreak?.[0]), fmtValue(stats.maxStreak?.[1]), 'Consecutivos', 'Consecutivos', stats.maxStreak?.[0], stats.maxStreak?.[1]));
+  const host=$('statsTable'); host.innerHTML=''; rows.forEach(r=>host.appendChild(r));
+}
+function render(){if(!state){document.body.classList.remove('match-finished');$('summarySection').classList.add('hidden');return;}const names=state.status==='not_started'?suggested:(state.names||suggested);updateAvatars(names);setText('name0',names[0]);setText('name1',names[1]);$('serveBall0').classList.toggle('active',state.server===0&&state.status==='live');$('serveBall1').classList.toggle('active',state.server===1&&state.status==='live');for(let p=0;p<2;p++){setText('s'+p+'1',state.sets?.[p]?.[0]??'—');setText('s'+p+'2',state.sets?.[p]?.[1]??'—');setText('game'+p,state.games?.[p]??0);setText('current'+p,state.phase==='normal'?(state.pointLabels?.[p]??'0'):(state.points?.[p]??0))}const phase=state.phase==='super'?'Supertie-break decisivo · a 10':state.phase==='tiebreak'?'Tie-break · a 7':state.phase==='finished'?'Finalizado':'Juego con ventaja';setText('phase',state.status==='finished'?'🏆 Ganador: '+names[state.winner]:state.status==='not_started'?'Partido todavía no iniciado':phase+' · Saca '+names[state.server]);setText('updated',state.updatedAt?'Última actualización: '+new Date(state.updatedAt).toLocaleTimeString('es-ES'):'Sin movimientos todavía');$('startArea').classList.toggle('hidden',state.status!=='not_started'||!canControl);$('pointsArea').classList.toggle('hidden',state.status!=='live'||!canControl);$('point0').textContent='+ Punto '+names[0];$('point1').textContent='+ Punto '+names[1];$('resetArea').classList.toggle('hidden',!canControl||state.status==='not_started');$('resetMatch').disabled=pending||!canControl;for(const k of ['start0','start1','point0','point1','undo'])$(k).disabled=pending||!canControl;renderStatsSummary(names);}
 function url(){return API+'/api/match/'+encodeURIComponent(id)}
 function status(s){setText('connection',s)}
 async function refresh(){const r=await fetch(url(),{cache:'no-store'});if(!r.ok)throw Error('HTTP '+r.status);const j=await r.json();state=j.state;render()}
@@ -171,6 +290,127 @@ async function checkPermissions(){
 }
 async function join(){const next=$('matchKey').value.trim();if(!/^[a-zA-Z0-9_-]{1,80}$/.test(next)){alert('Identificador inválido');return}id=next;const u=new URL(location.href);u.searchParams.set('id',id);history.replaceState(null,'',u.toString());state=null;canControl=false;status('Conectando…');try{await refresh();connect();await checkPermissions();await loadPlayerPhotos()}catch(e){status('Error');setText('actionsInfo','No se pudo conectar: '+e.message)}}
 async function action(data){if(pending)return;const token=localStorage.getItem(TOKEN_KEY)||'';if(!canControl||!token){alert('Solo los dos jugadores pueden controlar su partido después de entrar con su PIN habitual.');return}pending=true;render();try{const r=await fetch(url(),{method:'POST',headers:{'content-type':'application/json','authorization':'Bearer '+token},body:JSON.stringify(data)});const j=await r.json();if(!r.ok||!j.ok)throw Error(j.error||'Error');state=j.state;render();setText('actionsInfo','Acción sincronizada con espectadores.')}catch(e){setText('actionsInfo','Error: '+e.message)}finally{pending=false;render()}}
+
+
+// Captura el panel real (no recrea la tarjeta) y genera un PNG de todas las filas.
+let statsExportBusy=false;
+async function loadStatsCaptureLibrary(){
+  if(window.html2canvas) return window.html2canvas;
+  if(!window.__ctStatsCapturePromise){
+    window.__ctStatsCapturePromise=new Promise((resolve,reject)=>{
+      const script=document.createElement('script');
+      script.src='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+      script.async=true;
+      script.onload=()=>window.html2canvas?resolve(window.html2canvas):reject(new Error('Biblioteca de captura no disponible'));
+      script.onerror=()=>reject(new Error('No se ha podido cargar el generador de imagen. Comprueba tu conexión.'));
+      document.head.appendChild(script);
+    }).catch(e=>{window.__ctStatsCapturePromise=null;throw e;});
+  }
+  return window.__ctStatsCapturePromise;
+}
+function safeStatsFileName(){
+  const names=state?.names||suggested;
+  const cleaned=names.map(name=>String(name||'jugador').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,25));
+  return `CT-Campeador-Stats-${cleaned.join('-vs-')}.png`;
+}
+async function captureSummaryPng(){
+  if(state?.status!=='finished')throw Error('Finaliza el partido para compartir sus estadísticas.');
+  const source=$('summarySection');
+  if(!source||source.classList.contains('hidden'))throw Error('El resumen no está visible.');
+  const library=await loadStatsCaptureLibrary();
+  // Dibujar previamente los retratos en un PNG local evita que html2canvas pierda
+  // imagenes data:image o SVG al duplicar el documento y aplicar CSS de exportación.
+  const photoCopies=await Promise.all([0,1].map(async i=>{
+    const real=$('summaryAvatar'+i);
+    const backup=$('avatar'+i);
+    const original=real?.currentSrc||real?.src||backup?.currentSrc||backup?.src||'';
+    if(!original)return '';
+    try {
+      const photo=new Image();
+      photo.crossOrigin='anonymous';
+      await new Promise((resolve,reject)=>{
+        photo.onload=resolve;photo.onerror=reject;photo.src=original;
+        if(photo.complete&&photo.naturalWidth)resolve();
+      });
+      const c=document.createElement('canvas');c.width=320;c.height=320;
+      const ctx=c.getContext('2d');
+      const side=Math.min(photo.naturalWidth,photo.naturalHeight);
+      const sx=(photo.naturalWidth-side)/2,sy=(photo.naturalHeight-side)/2;
+      ctx.drawImage(photo,sx,sy,side,side,0,0,320,320);
+      return c.toDataURL('image/png');
+    } catch(err){
+      // Si el PNG no puede dibujarse, preservamos la imagen original sin ocultarla.
+      return original;
+    }
+  }));
+  const prevScrollX=window.scrollX,prevScrollY=window.scrollY;
+  // La captura no altera el marcador real; el clon usa anchura constante (como la TV).
+  const canvas=await library(source,{
+    backgroundColor:'#08192d',scale:2,useCORS:true,allowTaint:false,logging:false,
+    width:1100,windowWidth:1400,scrollX:0,scrollY:-window.scrollY,
+    onclone:(doc)=>{
+      const node=doc.getElementById('summarySection');
+      node?.classList.add('statsExporting');
+      if(node){node.style.width='1100px';node.style.maxWidth='none';node.style.height='auto';node.style.overflow='visible';}
+      doc.querySelectorAll('#summarySection .summaryActions').forEach(n=>n.style.display='none');
+      photoCopies.forEach((src,i)=>{
+        const img=doc.getElementById('summaryAvatar'+i);
+        if(img&&src){img.src=src;img.style.setProperty('display','block','important');img.style.setProperty('visibility','visible','important');img.style.setProperty('opacity','1','important');}
+      });
+      // Igualar las tarjetas de ambos participantes exclusivamente en la copia PNG.
+      // La fotografía y el nombre de cada jugador pueden tener alturas distintas.
+      doc.querySelectorAll('#summarySection .summaryPlayerCard').forEach(n=>{
+        n.style.setProperty('height','320px','important');
+        n.style.setProperty('min-height','320px','important');
+        n.style.setProperty('width','100%','important');
+        n.style.setProperty('box-sizing','border-box','important');
+      });
+      // Evita el fallo conocido de html2canvas con sombras inset (rectángulo dorado sobre el ganador).
+      doc.querySelectorAll('#summarySection .summaryPlayerCard').forEach(n=>{
+        n.style.setProperty('box-shadow','none','important');
+        n.style.setProperty('background','#1a304c','important');
+        n.style.setProperty('border',n.classList.contains('winner')?'2px solid #d8ad47':'2px solid rgba(255,255,255,.10)','important');
+      });
+    }
+  });
+  window.scrollTo(prevScrollX,prevScrollY);
+  return new Promise((resolve,reject)=>canvas.toBlob(blob=>blob?resolve(blob):reject(new Error('No se pudo crear la imagen PNG')),'image/png'));
+}
+function downloadStatsPng(blob){
+  const u=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=u;a.download=safeStatsFileName();document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),15000);
+}
+async function exportStatsImage(share){
+  if(statsExportBusy)return;
+  statsExportBusy=true;
+  const btns=[$('shareImageStats'),$('saveImageStats')].filter(Boolean);
+  btns.forEach(b=>b.disabled=true);
+  try{
+    const blob=await captureSummaryPng();
+    const file=new File([blob],safeStatsFileName(),{type:'image/png'});
+    if(share && navigator.share && navigator.canShare?.({files:[file]})){
+      try{await navigator.share({files:[file],title:'CT Campeador · Estadísticas del partido'});return;}
+      catch(e){if(e?.name==='AbortError')return;}
+    }
+    downloadStatsPng(blob);
+    if(share)alert('Imagen PNG guardada. Puedes enviarla desde WhatsApp o la galería.');
+  }catch(e){alert('No se pudo generar la imagen: '+(e?.message||e)+'\nSi las fotos proceden de servidores externos, puede ser necesario que permitan CORS.');}
+  finally{statsExportBusy=false;btns.forEach(b=>b.disabled=false);}
+}
+$('shareImageStats').onclick=()=>exportStatsImage(true);
+$('saveImageStats').onclick=()=>exportStatsImage(false);
+
+$('backToTopStats').onclick=()=>window.scrollTo({top:0,behavior:'smooth'});
+$('shareStats').onclick=async()=>{
+  if(!state?.matchStats) return;
+  const names=state.names||suggested; const st=state.matchStats; const text=[
+    `CT Campeador LIVE · ${names[0]} vs ${names[1]}`,
+    `Resultado: ${(st.scoreline&&st.scoreline.length?st.scoreline.join(' | '):'—')}`,
+    `Puntos ganados: ${names[0]} ${st.totalPointsWon?.[0]||0} (${fmtPct(st.totalPointsPct?.[0])}) · ${names[1]} ${st.totalPointsWon?.[1]||0} (${fmtPct(st.totalPointsPct?.[1])})`,
+    `Break points: ${names[0]} ${fmtPair(st.breakPointsWon?.[0],st.breakPointsTotal?.[0])} · ${names[1]} ${fmtPair(st.breakPointsWon?.[1],st.breakPointsTotal?.[1])}`
+  ].join('\n');
+  try{ if(navigator.share) await navigator.share({title:'Resumen LIVE CT Campeador', text}); else if(navigator.clipboard){ await navigator.clipboard.writeText(text); alert('Resumen copiado al portapapeles'); } else prompt('Copia el resumen', text); }catch(_){ }
+};
 $('landscapeBtn').onclick=async()=>{
   try{if(!document.fullscreenElement && document.documentElement.requestFullscreen) await document.documentElement.requestFullscreen();}catch(e){}
   try{if(screen.orientation && screen.orientation.lock){await screen.orientation.lock('landscape');setText('orientationHint','Horizontal activado');return;}}catch(e){}
