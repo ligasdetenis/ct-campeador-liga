@@ -224,7 +224,23 @@ $('backToApp').onclick=()=>{
 const avatarFallback=(name)=>'data:image/svg+xml;charset=utf-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><linearGradient id="g"><stop stop-color="#65000d"/><stop offset="1" stop-color="#cc1833"/></linearGradient></defs><circle cx="50" cy="50" r="50" fill="url(#g)"/><text x="50" y="60" font-family="Arial,sans-serif" font-size="35" font-weight="bold" text-anchor="middle" fill="white">'+(String(name||'?').trim().split(/\s+/).slice(0,2).map(x=>x[0]||'').join('').toUpperCase().replace(/[<>&]/g,'')||'?')+'</text></svg>');
 const normalizeName=(x)=>String(x||'').trim().toLocaleLowerCase('es');
 let profileImages={};
-function updateAvatars(names){for(let i=0;i<2;i++){const el=$('avatar'+i);const name=names[i]||'Jugador';const src=profileImages[normalizeName(name)];if(el.dataset.player!==name||el.dataset.hasphoto!==(src?'1':'0')){el.src=src||avatarFallback(name);el.alt='Foto de '+name;el.dataset.player=name;el.dataset.hasphoto=src?'1':'0';el.classList.toggle('hasPhoto',!!src);}}}
+function updateAvatars(names){for(let i=0;i<2;i++){
+  const el=$('avatar'+i);
+  const portrait=$('summaryAvatar'+i);
+  const name=names[i]||'Jugador';
+  const src=profileImages[normalizeName(name)]||avatarFallback(name);
+  // Los retratos del marcador y del resumen siempre comparten la misma foto real.
+  // dataset.hasphoto no es suficiente: una foto actualizada puede conservar ese valor.
+  if(el.getAttribute('src')!==src) el.src=src;
+  el.alt='Foto de '+name;
+  el.dataset.player=name;
+  el.dataset.hasphoto=profileImages[normalizeName(name)]?'1':'0';
+  el.classList.toggle('hasPhoto',!!profileImages[normalizeName(name)]);
+  if(portrait){
+    if(portrait.getAttribute('src')!==src) portrait.src=src;
+    portrait.alt='Foto de '+name;
+  }
+}}
 async function loadPlayerPhotos(){const token=localStorage.getItem(TOKEN_KEY)||'';if(!token){updateAvatars(suggested);return;}try{const r=await fetch(LEAGUE_API,{method:'POST',headers:{'content-type':'application/json','authorization':'Bearer '+token},body:JSON.stringify({action:'readProfiles'})});if(!r.ok)return;const data=await r.json();if(!data.ok||!data.profiles)return;for(const [name,info] of Object.entries(data.profiles)){const photo=String(info?.photoDataUrl||'');if(photo.startsWith('data:image/')&&photo.length<200000)profileImages[normalizeName(info?.player||name)]=photo;}updateAvatars(state?.names||suggested);}catch(_){updateAvatars(suggested)}}
 
 function setText(k,v){$(k).textContent=String(v)}
@@ -246,7 +262,7 @@ function renderStatsSummary(names){
   section.classList.toggle('hidden',!finished);
   if(!finished) return;
   setText('summaryName0',names[0]); setText('summaryName1',names[1]);
-  setImg('summaryAvatar0',$('avatar0').src,names[0]); setImg('summaryAvatar1',$('avatar1').src,names[1]);
+  setImg('summaryAvatar0',profileImages[normalizeName(names[0])]||$('avatar0').src,names[0]); setImg('summaryAvatar1',profileImages[normalizeName(names[1])]||$('avatar1').src,names[1]);
   const setsWon=stats.setsWon||[0,0];
   setText('summarySetsResult',`${setsWon[0]}-${setsWon[1]}`);
   setText('summaryScoreline',(stats.scoreline&&stats.scoreline.length?stats.scoreline.join(' · '):'Sin sets registrados'));
@@ -317,6 +333,14 @@ async function captureSummaryPng(){
   if(state?.status!=='finished')throw Error('Finaliza el partido para compartir sus estadísticas.');
   const source=$('summarySection');
   if(!source||source.classList.contains('hidden'))throw Error('El resumen no está visible.');
+  // Evita exportar iniciales cuando la foto aún no había terminado de cargarse.
+  await loadPlayerPhotos();
+  renderStatsSummary(state.names||suggested);
+  await Promise.all([0,1].map(async i=>{
+    const image=$('summaryAvatar'+i);
+    if(!image)return;
+    try {if(image.decode) await image.decode();} catch(_){}
+  }));
   const library=await loadStatsCaptureLibrary();
   // Dibujar previamente los retratos en un PNG local evita que html2canvas pierda
   // imagenes data:image o SVG al duplicar el documento y aplicar CSS de exportación.
@@ -348,15 +372,20 @@ async function captureSummaryPng(){
   const canvas=await library(source,{
     backgroundColor:'#08192d',scale:2,useCORS:true,allowTaint:false,logging:false,
     width:1100,windowWidth:1400,scrollX:0,scrollY:-window.scrollY,
-    onclone:(doc)=>{
+    onclone:async (doc)=>{
       const node=doc.getElementById('summarySection');
       node?.classList.add('statsExporting');
       if(node){node.style.width='1100px';node.style.maxWidth='none';node.style.height='auto';node.style.overflow='visible';}
       doc.querySelectorAll('#summarySection .summaryActions').forEach(n=>n.style.display='none');
-      photoCopies.forEach((src,i)=>{
+      await Promise.all(photoCopies.map(async (src,i)=>{
         const img=doc.getElementById('summaryAvatar'+i);
-        if(img&&src){img.src=src;img.style.setProperty('display','block','important');img.style.setProperty('visibility','visible','important');img.style.setProperty('opacity','1','important');}
-      });
+        if(!img||!src)return;
+        img.src=src;
+        img.style.setProperty('display','block','important');
+        img.style.setProperty('visibility','visible','important');
+        img.style.setProperty('opacity','1','important');
+        try { if(img.decode) await img.decode(); } catch(_){}
+      }));
       // Igualar las tarjetas de ambos participantes exclusivamente en la copia PNG.
       // La fotografía y el nombre de cada jugador pueden tener alturas distintas.
       doc.querySelectorAll('#summarySection .summaryPlayerCard').forEach(n=>{
