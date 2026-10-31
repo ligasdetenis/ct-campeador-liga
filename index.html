@@ -1997,6 +1997,32 @@ body.modern-admin .courtsTemplatePanel p{margin:0;color:#697281;font-size:12px;l
 .waPhone{font-size:10px;color:#66707c;font-weight:650}
 .waStatus{font-size:9px;font-weight:850;color:#66707c}
 .mapp-proposal-cta{display:flex;align-items:center;gap:12px;margin:12px 14px;padding:15px 13px;border-radius:15px;background:linear-gradient(120deg,#f9e8d1,#fff6e9);border:2px solid #c79b42;color:#491d24;cursor:pointer;box-shadow:0 4px 13px rgba(60,20,18,.13)}.mapp-proposal-cta:focus-visible{outline:3px solid #b12236;outline-offset:3px}.mapp-proposal-cta-icon{font-size:25px}.mapp-proposal-cta strong{display:block;font-weight:950;font-size:14px;line-height:1.2}.mapp-proposal-cta small{display:block;font-size:12px;margin-top:5px;line-height:1.35}
+
+/* TEST · asuntos pendientes V3: indicador Push independiente de la campana de asuntos. */
+.mapp-brand .mapp-bell{flex:0 0 42px}
+.mapp-brand #modernBellBtn .mapp-bell-dot{display:none!important}
+.ct-push-indicator{box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;gap:5px;
+  flex:0 0 auto;min-width:77px;padding:6px 8px;border-radius:999px;
+  border:1px solid rgba(255,255,255,.23);background:rgba(25,0,6,.48);
+  color:#e9d9d9;font:750 10px/1.1 Inter,system-ui,sans-serif;letter-spacing:.015em;white-space:nowrap}
+.ct-push-led{width:7px;height:7px;flex:0 0 7px;border-radius:50%;background:#9ca3af}
+.ct-push-indicator.on{border-color:rgba(89,228,155,.42);background:rgba(0,96,50,.28);color:#beffda}
+.ct-push-indicator.on .ct-push-led{background:#55e19b;box-shadow:0 0 0 2px rgba(85,225,155,.14)}
+.ct-push-indicator.off{border-color:rgba(255,209,114,.39);color:#ffdfa1}
+.ct-push-indicator.off .ct-push-led{background:#ffc95d}
+.ct-push-indicator.blocked{border-color:rgba(252,128,143,.36);color:#ffbec7}
+.ct-push-indicator.blocked .ct-push-led{background:#ff8092}
+@media(max-width:420px){.mapp-brand{gap:7px}.ct-push-indicator{min-width:68px;padding:6px 5px;font-size:9px}}
+@media(max-width:365px){.ct-push-indicator{min-width:auto}.mapp-brand-title{font-size:20px}}
+
+/* V5: estado Push pequeño y secundario; mantiene clic y accesibilidad. */
+.ct-push-indicator{min-width:0!important;padding:4px 6px!important;gap:4px!important;font-size:9px!important;line-height:1!important;letter-spacing:0!important;border-radius:7px!important;background:rgba(15,0,5,.25)!important;border-color:rgba(255,255,255,.13)!important;box-shadow:none!important}
+.ct-push-indicator .ct-push-led{width:5px!important;height:5px!important;flex-basis:5px!important;box-shadow:none!important}
+.ct-push-indicator .ct-push-text{font-weight:650!important;opacity:.83}
+.ct-push-indicator.on{color:#b6e9c6!important}
+.ct-push-indicator.off{color:#edd6ad!important}
+.ct-push-indicator.blocked{color:#ffb9bb!important}
+@media(max-width:420px){.ct-push-indicator{padding:3px 5px!important;font-size:8px!important}}
 </style>
 
 <link rel="manifest" href="manifest.webmanifest">
@@ -3200,6 +3226,11 @@ body.resultModalOpen{overflow:hidden}
 }
 
 
+/* Navegación desde el indicador Push a Mi perfil → Avisos */
+#ctPushIndicator{font:inherit;cursor:pointer;appearance:none;-webkit-appearance:none}
+#ctPushIndicator:disabled{cursor:default}
+#ctPushIndicator:focus-visible{outline:2px solid #f5c75c;outline-offset:3px}
+#mappPushRow.ct-push-row-highlight{outline:2px solid rgba(245,199,92,.75);outline-offset:-2px;background:rgba(245,199,92,.10)}
 /* Estado Push junto al nombre del usuario */
 .accessDesktopNameLine{
   display:flex;
@@ -4258,6 +4289,12 @@ body.modern-admin #journeyNavigator .journeyJump{scroll-snap-align:none!importan
 .ct-proposal-buttons .btn.gold{background:#c79b42;color:#261216;border-color:#a6782c}.ct-proposal-buttons .ct-proposal-counter{background:#681f30;color:#fff;border:2px solid #c79b42}
 .ct-proposal-history{margin-top:16px;font-size:12px}.ct-proposal-history summary{cursor:pointer;font-weight:bold}.ct-proposal-history ul{padding-left:20px}
 </style>
+<style id="ctOwnResultsStyle">
+.ct-own-results-switch{display:flex;gap:4px;padding:4px;background:#eae8e8;border:1px solid #ded8db;border-radius:13px;margin:12px 0 14px;max-width:390px}
+.ct-own-results-tab{appearance:none;border:0;background:transparent;color:#685960;border-radius:10px;min-height:38px;flex:1;font:inherit;font-weight:800;font-size:13px;cursor:pointer;transition:background .15s,color .15s,box-shadow .15s}
+.ct-own-results-tab.active{background:#fff;color:#681329;box-shadow:0 2px 8px rgba(43,17,24,.13)}
+.ct-own-results-tab:focus-visible{outline:2px solid #c69b51;outline-offset:2px}
+</style>
 </head>
 <body>
 
@@ -4814,6 +4851,7 @@ Pablo Ruiz"></textarea>
       <button class="mapp-bell" id="modernBellBtn" type="button" aria-label="Avisos">
         <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg><span class="mapp-bell-dot" id="modernBellDot"></span>
       </button>
+      <button class="ct-push-indicator checking" id="ctPushIndicator" type="button" title="Estado de las notificaciones Push. Se configuran en Mi perfil" aria-label="Comprobando notificaciones Push"><span class="ct-push-led" aria-hidden="true"></span><span class="ct-push-text">···</span></button>
     </div>
     <div class="mapp-context" id="modernContextBtn">
       <div class="mapp-context-item">
@@ -4856,6 +4894,10 @@ Pablo Ruiz"></textarea>
     <section class="mapp-screen" id="modernResults">
       <div class="mapp-screen-heading">Resultados</div>
       <div class="mapp-subheading">Solo se muestran resultados confirmados.</div>
+      <div class="ct-own-results-switch" role="group" aria-label="Filtrar resultados">
+        <button type="button" id="ctResultsAll" class="ct-own-results-tab active" aria-pressed="true">Todos</button>
+        <button type="button" id="ctResultsMine" class="ct-own-results-tab" aria-pressed="false">Mis resultados</button>
+      </div>
       <div class="mapp-results-toolbar">
         <div class="mapp-results-filter"><label>Categoría</label><select id="resultsCategory"></select></div>
         <div class="mapp-results-filter"><label>Género</label><select id="resultsGender"><option>Masculino</option><option>Femenino</option></select></div>
@@ -6021,7 +6063,7 @@ async function loginWithPinOnly(){
     renderAll();
     ctWelcomeProposalChecked=false;
     queuePushDeepLink();
-    setTimeout(()=>ctShowPendingProposalOnEntry().catch(console.warn),700);
+    setTimeout(()=>ctPendingEntry().catch(console.warn),700);
   }catch(e){
     showPinWelcome(e.message||'PIN incorrecto.',true);
   }finally{
@@ -8686,7 +8728,7 @@ function mappCurrentRoundBadge(){
 }
 
 
-const resultsViewState={category:null,gender:null,week:'all'};
+const resultsViewState={category:null,gender:null,week:'all',mine:false};
 
 function confirmedResultsAll(){
   const out=[];
@@ -8870,13 +8912,19 @@ function rankProRender(){
 function renderModernResults(){
   const box=$('#modernResultsContent');if(!box)return;
   renderResultsFilters();
+  const mine=Boolean(resultsViewState.mine);
+  const allBtn=$('#ctResultsAll'),mineBtn=$('#ctResultsMine');
+  if(allBtn){allBtn.classList.toggle('active',!mine);allBtn.setAttribute('aria-pressed',String(!mine));}
+  if(mineBtn){mineBtn.classList.toggle('active',mine);mineBtn.setAttribute('aria-pressed',String(mine));}
+  const ownName=state.authenticated ? normalizeName(state.player) : '';
   const rows=confirmedResultsAll().filter(x=>
+    (!mine || (ownName && (normalizeName(x.a)===ownName || normalizeName(x.b)===ownName))) &&
     (resultsViewState.category==='all'||x.category===resultsViewState.category) &&
     (resultsViewState.gender==='all'||x.gender===resultsViewState.gender) &&
     (resultsViewState.week==='all'||x.week===resultsViewState.week)
   );
   if(!rows.length){
-    box.innerHTML='<div class="mapp-result-empty">Todavía no hay resultados confirmados para esta selección.</div>';
+    box.innerHTML='<div class="mapp-result-empty">'+(mine ? (ownName?'Todavía no tienes resultados confirmados.':'Accede con tu PIN para ver tus resultados.') : 'Todavía no hay resultados confirmados para esta selección.')+'</div>';
     return;
   }
   box.innerHTML=rows.map(item=>{
@@ -9126,40 +9174,43 @@ function mappApplySelector(){
  renderAll();
 }
 
+function ctSetPushIndicator(status){
+  const pill=document.getElementById('ctPushIndicator');
+  if(!pill)return;
+  const states={
+    on:['ON','Notificaciones Push activadas en este dispositivo'],
+    off:['OFF','Notificaciones Push sin activar. Configúralas en Mi perfil'],
+    blocked:['!','Notificaciones Push bloqueadas o no compatibles en este dispositivo'],
+    checking:['···','Comprobando notificaciones Push…']
+  };
+  const [label,description]=states[status]||states.checking;
+  pill.className='ct-push-indicator '+status;
+  pill.querySelector('.ct-push-text').textContent=label;
+  pill.title=description;
+  pill.setAttribute('aria-label',description + (status==='off'||status==='blocked'?'. Pulsa para ir a Mi perfil, Avisos.':''));
+  pill.dataset.pushStatus=status;
+  pill.disabled=status==='checking';
+}
 async function mappRefreshBellState(){
-  const btn=$('#modernBellBtn'),dot=$('#modernBellDot');
-  if(!btn||!dot)return;
+  const btn=$('#modernBellBtn');
+  if(!btn)return;
   btn.classList.remove('push-on','push-off','push-blocked');
 
   if(!('Notification' in window)||!('serviceWorker' in navigator)||!('PushManager' in window)){
-    btn.classList.add('push-blocked');
-    btn.title='Avisos no compatibles en este dispositivo';
-    dot.style.display='block';
+    ctSetPushIndicator('blocked');
     return;
   }
 
   if(Notification.permission==='denied'){
-    btn.classList.add('push-blocked');
-    btn.title='Avisos bloqueados';
-    dot.style.display='block';
+    ctSetPushIndicator('blocked');
     return;
   }
 
   try{
     const sub=await currentPushSubscription();
-    if(sub && Notification.permission==='granted'){
-      btn.classList.add('push-on');
-      btn.title='Avisos activados';
-      dot.style.display='none';
-    }else{
-      btn.classList.add('push-off');
-      btn.title='Avisos pendientes de activar';
-      dot.style.display='block';
-    }
+    ctSetPushIndicator(sub&&Notification.permission==='granted'?'on':'off');
   }catch(_){
-    btn.classList.add('push-off');
-    btn.title='Configurar avisos';
-    dot.style.display='block';
+    ctSetPushIndicator('off');
   }
 }
 
@@ -9781,6 +9832,8 @@ $('#modernTrophyIcon').innerHTML=mappIcon('trophy');
 $('#modernCalendarIcon').innerHTML=mappIcon('calendar');
 $('#modernChartIcon').innerHTML=mappIcon('chart');
 document.querySelectorAll('[data-modern-go]').forEach(b=>b.onclick=()=>mappShow(b.dataset.modernGo));
+$('#ctResultsAll').onclick=()=>{resultsViewState.mine=false;renderModernResults()};
+$('#ctResultsMine').onclick=()=>{resultsViewState.mine=true;resultsViewState.category='all';resultsViewState.gender='all';resultsViewState.week='all';renderModernResults()};
 $('#rankProCategory').onchange=e=>{rankProState.category=e.target.value;rankProState.gender=mappActiveGenders(e.target.value)[0]||'';rankProRender()};
 $('#rankProGender').onchange=e=>{rankProState.gender=e.target.value;rankProRender()};
 $('#resultsCategory').onchange=e=>{resultsViewState.category=e.target.value;resultsViewState.gender='all';renderModernResults()};
@@ -9793,9 +9846,16 @@ $('#modernContextBtn').onclick=mappOpenSelector;
 $('#modernCatSelect').onchange=e=>{mappSetLeagueChoices(e.target,$('#modernGenderSelect'),e.target.value,'')};
 $('#modernSelectorClose').onclick=mappApplySelector;
 $('#modernSelectorSheet').onclick=e=>{if(e.target===$('#modernSelectorSheet'))$('#modernSelectorSheet').classList.remove('show')};
-$('#modernBellBtn').onclick=()=>{
+$('#modernBellBtn').onclick=async()=>{ctPendingOpen();await ctPendingScan()};
+$('#ctPushIndicator').onclick=()=>{
+  // Acceso explícito al apartado Avisos; no solicita permisos de forma automática.
   mappShow('profile');
-  setTimeout(()=>$('#mappPushRow')?.scrollIntoView({behavior:'smooth',block:'center'}),120);
+  const row=document.getElementById('mappPushRow');
+  if(row){
+    row.scrollIntoView({behavior:'smooth',block:'center'});
+    row.classList.add('ct-push-row-highlight');
+    setTimeout(()=>row.classList.remove('ct-push-row-highlight'),1800);
+  }
 };
 $('#modernAdminBack').onclick=closeModernAdmin;
 $('#modernAdminBack2').onclick=closeModernAdmin;
@@ -10349,6 +10409,145 @@ $('#saveDelayBtn').onclick=saveDelay;$('#restoreDelayBtn').onclick=restoreDelay;
 $('#resultType').onchange=syncResultType;$('#saveResultBtn').onclick=saveResult;$('#confirmResultBtn').onclick=()=>confirmResult(state.resultMatchId);$('#deleteResultBtn').onclick=()=>deleteResult(state.resultMatchId);$('#closeResultModal').onclick=()=>closeResultModalUI();$('#resultModal').onclick=e=>{if(e.target===$('#resultModal'))closeResultModalUI()};
 $$('.navBtn[data-go]').forEach(b=>b.onclick=()=>{const go=b.dataset.go;$$('.navBtn').forEach(x=>x.classList.remove('active'));b.classList.add('active');if(go==='home')$('#homeView').scrollIntoView({behavior:'smooth',block:'start'});if(go==='courts')$('#courtsView').scrollIntoView({behavior:'smooth',block:'start'});if(go==='admin'){if(!isAdmin()){alert('Acceso restringido a administradores.');return;}$('#adminView').classList.remove('hidden');$('#adminView').scrollIntoView({behavior:'smooth',block:'start'})}});
 $('#refreshBtn').onclick=()=>refreshOnline();
+
+/* CT CAMPEADOR · CENTRO DE ASUNTOS PENDIENTES V1 (solo frontend)
+   Datos reales: resultados oficiales pendientes de confirmar y propuestas de pista
+   sin respuesta. Nunca escribe en API excepto al activar acciones ya existentes.
+   El Push dirigido prevalece. Aplazamiento de ventana por sesión/identidad. */
+let ctPendingItems=[], ctPendingLoading=false, ctPendingOpened=false, ctPendingEntryChecked=false;
+let ctPendingUser='',ctPendingDeferredKey='';
+function ctPendingNorm(s){return String(s||'').trim().toLocaleLowerCase('es')}
+function ctPendingHasPush(){return !!(pendingPushDeepLink||readPushDeepLink())}
+function ctPendingAllOwnMatches(){
+ const me=ctPendingNorm(state.player),found=new Map();
+ Object.values(data.fixtures||{}).forEach(arr=>{
+  if(!Array.isArray(arr))return;
+  arr.forEach(m=>{
+   if(m?.id && (ctPendingNorm(m.a)===me||ctPendingNorm(m.b)===me))found.set(String(m.id),m);
+  });
+ });
+ return [...found.values()];
+}
+function ctPendingReadResults(){
+ return ctPendingAllOwnMatches().flatMap(m=>{
+   const r=resultFor(m.id);
+   if(!r||r.status!=='pending'||ctPendingNorm(r.submittedBy)===ctPendingNorm(state.player))return [];
+   return [{id:'result:'+m.id,kind:'result',mid:String(m.id),title:'Resultado por confirmar',desc:`${m.a} vs ${m.b} · ${resultLabel(r)}`,at:Date.parse(r.updatedAt||r.submittedAt||r.createdAt||'')||0}];
+ });
+}
+async function ctPendingFetchProposals(matches){
+ const eligible=matches.filter(m=>!bookingFor(m.id)&&resultFor(m.id)?.status!=='confirmed');
+ const output=[];let index=0;
+ // Cuatro consultas simultáneas como máximo; todas se autentican en API producción.
+ async function worker(){
+  while(index<eligible.length){
+   const m=eligible[index++];
+   try{
+    const r=await apiRequest({action:'getMatchProposal',matchId:m.id});
+    const p=r.proposal||null;
+    ctProposalCache.set(String(m.id),p);
+    ctPaintSmartProposal(String(m.id));
+    if(p?.status==='pending'&&ctPendingNorm(p.to)===ctPendingNorm(state.player)){
+     output.push({id:'proposal:'+m.id,kind:'proposal',mid:String(m.id),title:'Propuesta de pista pendiente',desc:`${m.a} vs ${m.b} · ${p.date||''} ${p.time||''} ${p.court||''}`,at:Date.parse(p.updatedAt||p.createdAt||'')||0});
+    }
+   }catch(e){ /* Fallo aislado: mostrar el resto de los asuntos disponibles. */ }
+  }
+ }
+ await Promise.all(Array.from({length:Math.min(4,eligible.length)},()=>worker()));
+ return output;
+}
+function ctPendingElements(){return {modal:document.getElementById('ctPendingModal'),bell:document.getElementById('modernBellBtn'),badge:document.getElementById('ctPendingBadge'),list:document.getElementById('ctPendingList')}}
+function ctPendingRender(){
+ const {modal,bell,badge,list}=ctPendingElements();if(!modal)return;
+ bell.classList.toggle('ctp-has-pending',!!ctPendingItems.length&&!!state.authenticated);
+ bell.setAttribute('aria-label',ctPendingItems.length?`${ctPendingItems.length} asuntos pendientes`:'Abrir asuntos pendientes');
+ bell.title='Asuntos pendientes';
+ badge.textContent=String(ctPendingItems.length);
+ badge.hidden=!ctPendingItems.length;
+ list.replaceChildren();
+ if(!ctPendingItems.length){
+  const p=document.createElement('p');p.className='ctp-empty';p.textContent=ctPendingLoading?'Comprobando asuntos pendientes…':'¡Todo al día! No tienes acciones pendientes.';list.append(p);
+ }else ctPendingItems.forEach(item=>{
+  const row=document.createElement('article');row.className='ctp-item';
+  const symbol=document.createElement('span');symbol.className='ctp-icon';symbol.textContent=item.kind==='result'?'🏆':'📅';
+  const content=document.createElement('div');const title=document.createElement('strong');title.textContent=item.title;
+  const desc=document.createElement('small');desc.textContent=item.desc;content.append(title,desc);
+  const button=document.createElement('button');button.type='button';button.className='ctp-action';button.textContent=item.kind==='result'?'Revisar':'Responder';button.addEventListener('click',()=>ctPendingGo(item));
+  row.append(symbol,content,button);list.append(row);
+ });
+ document.getElementById('ctPendingCount').textContent=ctPendingItems.length===1?'1 asunto pendiente':`${ctPendingItems.length} asuntos pendientes`;
+}
+function ctPendingClose(defer=false){
+ const {modal}=ctPendingElements();modal.classList.remove('show');modal.setAttribute('aria-hidden','true');ctPendingOpened=false;
+ if(defer&&ctPendingDeferredKey)try{sessionStorage.setItem(ctPendingDeferredKey,ctPendingItems.map(x=>x.id).sort().join('|'))}catch(_){}
+}
+function ctPendingOpen(){
+ if(!state.authenticated)return;
+ ctPendingOpened=true;ctPendingRender();const {modal}=ctPendingElements();modal.classList.add('show');modal.setAttribute('aria-hidden','false');
+}
+function ctPendingGo(item){
+ ctPendingClose();const m=findFixtureById(item.mid);if(!m)return;
+ routeContextFromMatch(item.mid);renderAll();mappShow('match');
+ if(item.kind==='result')openResultModal(item.mid);
+ else viewMatchProposal(item.mid).catch(e=>alert(e.message||'No se ha podido abrir la propuesta'));
+}
+async function ctPendingScan({showWelcome=false}={}){
+ if(ctPendingLoading||!state.authenticated||!apiToken)return;
+ const identity=ctPendingNorm(state.player);
+ if(identity!==ctPendingUser){ctPendingUser=identity;ctPendingEntryChecked=false;ctPendingItems=[]}
+ ctPendingDeferredKey='ct_pending_dismissed_v1_'+identity;
+ ctPendingLoading=true;ctPendingRender();
+ try{
+  // Se hace tras refreshOnline de inicio; no se guardan propuestas ni resultados en otro almacén.
+  const matches=ctPendingAllOwnMatches();
+  const resultItems=ctPendingReadResults();
+  const proposals=await ctPendingFetchProposals(matches);
+  if(!state.authenticated||ctPendingNorm(state.player)!==identity)return;
+  ctPendingItems=[...resultItems,...proposals].sort((a,b)=>a.kind===b.kind?a.at-b.at:(a.kind==='result'?-1:1));
+  const signature=ctPendingItems.map(x=>x.id).sort().join('|');
+  let dismissed='';try{dismissed=sessionStorage.getItem(ctPendingDeferredKey)||''}catch(_){}
+  if(showWelcome&&!ctPendingHasPush()&&ctPendingItems.length&&signature!==dismissed)ctPendingOpen();
+ }finally{ctPendingLoading=false;ctPendingRender()}
+}
+async function ctPendingEntry(){
+ if(ctPendingEntryChecked||ctPendingHasPush()||!state.authenticated)return;
+ ctPendingEntryChecked=true;
+ await ctPendingScan({showWelcome:true});
+}
+function ctPendingInstallUI(){
+ if(document.getElementById('ctPendingModal'))return;
+ const style=document.createElement('style');style.id='ctPendingStyles';style.textContent=`
+ /* V2: usamos la campana original de cabecera, nunca un botón flotante */
+ #modernBellBtn{flex:0 0 42px;isolation:isolate;box-shadow:none!important}
+ #modernBellBtn.ctp-has-pending{border-color:rgba(255,204,100,.65)!important;background:rgba(255,202,74,.13)!important}
+ #ctPendingBadge{position:absolute;top:-7px;right:-7px;min-width:18px;height:18px;display:grid;place-items:center;padding:0 4px;border-radius:999px;background:#f5c75c;color:#421220;border:2px solid #57000d;font-size:10px;font-weight:900;line-height:1;box-shadow:0 2px 7px #0005}
+ #modernBellBtn #modernBellDot{display:none!important}
+ #modernBellBtn:focus-visible{outline:2px solid #f5c75c;outline-offset:3px}
+ #ctPendingBadge[hidden]{display:none!important}
+ #ctPendingModal{display:none;position:fixed;inset:0;z-index:999996;background:#14080ec4;align-items:center;justify-content:center;padding:15px;box-sizing:border-box}
+ #ctPendingModal.show{display:flex}
+ .ctp-box{width:min(100%,480px);max-height:calc(100dvh - 32px);overflow:auto;background:#fffaf3;color:#421928;border:2px solid #d7aa57;border-radius:22px;box-shadow:0 24px 75px #090408aa;padding:19px;box-sizing:border-box}
+ .ctp-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}.ctp-top h2{margin:3px 0 6px;font-size:23px}.ctp-kicker{color:#966826;font-weight:900;font-size:11px;letter-spacing:.11em}.ctp-sub{font-size:13px;color:#856674;margin:0 0 17px}.ctp-close{border:0;background:transparent;color:#641e30;font-size:25px;cursor:pointer;padding:6px}
+ .ctp-list{display:grid;gap:10px}.ctp-item{display:grid;grid-template-columns:36px minmax(0,1fr);gap:10px;background:#fff;border:1px solid #e6d6c0;border-radius:13px;padding:13px;align-items:center}.ctp-icon{font-size:24px}.ctp-item strong{display:block;font-size:13px;color:#502034}.ctp-item small{display:block;margin-top:4px;font-size:12px;color:#866b74;line-height:1.4;overflow-wrap:anywhere}.ctp-action{grid-column:2;background:#672138;color:white;font-size:13px;font-weight:800;border:0;border-radius:9px;padding:10px 14px;cursor:pointer;justify-self:start}.ctp-empty{padding:18px;text-align:center;color:#77616d}
+ .ctp-footer{display:flex;justify-content:space-between;gap:9px;margin-top:18px;flex-wrap:wrap}.ctp-footer button{border:1px solid #d0b6a5;background:#eee4d9;color:#512738;border-radius:10px;padding:11px;font-weight:800;cursor:pointer}.ctp-footer button.ctp-refresh{background:#d6a953;color:#2b1520}
+ `;
+ document.head.append(style);
+ const modal=document.createElement('div');modal.id='ctPendingModal';modal.setAttribute('aria-hidden','true');modal.innerHTML=`<div class="ctp-box" role="dialog" aria-modal="true" aria-labelledby="ctPendingTitle"><div class="ctp-top"><div><span class="ctp-kicker">CT CAMPEADOR · MI BANDEJA</span><h2 id="ctPendingTitle">🔔 Asuntos pendientes</h2><p class="ctp-sub" id="ctPendingCount">Comprobando…</p></div><button class="ctp-close" type="button" aria-label="Cerrar">×</button></div><div class="ctp-list" id="ctPendingList"></div><div class="ctp-footer"><button type="button" id="ctPendingLater">Revisar más tarde</button><button type="button" class="ctp-refresh" id="ctPendingRefresh">↻ Actualizar</button></div></div>`;
+ const bell=document.getElementById('modernBellBtn');
+ if(!bell)throw new Error('No se encuentra la campana original de la cabecera');
+ bell.insertAdjacentHTML('beforeend','<span id="ctPendingBadge" hidden>0</span>');
+ bell.setAttribute('aria-label','Abrir asuntos pendientes');
+ document.body.append(modal);
+ // El manejador de esta campana se asigna al final de la inicialización moderna.
+ // Allí se sustituye el acceso directo a configuración Push por esta bandeja.
+ modal.querySelector('.ctp-close').addEventListener('click',()=>ctPendingClose(true));
+ modal.querySelector('#ctPendingLater').addEventListener('click',()=>ctPendingClose(true));
+ modal.querySelector('#ctPendingRefresh').addEventListener('click',async()=>{await refreshOnline({silent:true});await ctPendingScan()});
+ modal.addEventListener('click',e=>{if(e.target===modal)ctPendingClose(true)});
+ ctPendingRender();
+}
+ctPendingInstallUI();
+
 async function bootstrapApp(){
   try{
     setOnline(false,'☁️ Conectando…');
@@ -10365,7 +10564,7 @@ async function bootstrapApp(){
     renderAll();
     if(restored)mappRestoreTab();
     queuePushDeepLink();
-    if(restored)setTimeout(()=>ctShowPendingProposalOnEntry().catch(console.warn),700);
+    if(restored)setTimeout(()=>ctPendingEntry().catch(console.warn),700);
     document.documentElement.classList.remove('app-booting');
     document.documentElement.classList.add('app-ready');
     setInterval(()=>{
