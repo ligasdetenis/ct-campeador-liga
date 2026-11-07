@@ -4295,6 +4295,17 @@ body.modern-admin #journeyNavigator .journeyJump{scroll-snap-align:none!importan
 .ct-own-results-tab.active{background:#fff;color:#681329;box-shadow:0 2px 8px rgba(43,17,24,.13)}
 .ct-own-results-tab:focus-visible{outline:2px solid #c69b51;outline-offset:2px}
 </style>
+<style id="courtPublicationClarityV1">
+.courtPublishStatusCard{margin:14px 0 18px;padding:20px 22px;border-radius:17px;border:2px solid #e6b651;background:linear-gradient(120deg,#fffaf0,#fff3d7);color:#49360b;display:flex;align-items:center;gap:15px;box-shadow:0 8px 24px rgba(0,0,0,.07)}
+.courtPublishStatusCard.is-published{border-color:#28ae74;background:linear-gradient(120deg,#ecfff5,#d9f9e8);color:#095735}
+.courtPublishStatusCard.is-closed{border-color:#de8b49;background:linear-gradient(120deg,#fff7ed,#ffeedb);color:#743609}
+.courtPublishStatusIcon{font-size:30px;line-height:1}
+.courtPublishStatusMain{font-weight:900;font-size:clamp(17px,2.1vw,23px);letter-spacing:.3px}
+.courtPublishStatusSub{font-size:13px;margin-top:4px;line-height:1.45}
+.courtPublishStatusPill{margin-left:auto;white-space:nowrap;font-weight:850;background:#fff9;border-radius:40px;padding:7px 11px;font-size:12px}
+.courtPublishInfoBar{margin:0 0 12px;font-weight:650;font-size:13px;opacity:.85}
+@media(max-width:620px){.courtPublishStatusCard{padding:15px;gap:10px;flex-wrap:wrap}.courtPublishStatusPill{margin-left:38px}}
+</style>
 </head>
 <body>
 
@@ -4667,6 +4678,14 @@ body.modern-admin #journeyNavigator .journeyJump{scroll-snap-align:none!importan
             <div><div class="courtsProHeroTitle">Panel de pistas</div><div class="courtsProHeroSub">Prepara, revisa y publica la disponibilidad de la jornada desde un único lugar.</div></div>
             <div class="courtsProWeek" id="courtsProWeek">Jornada actual</div>
           </div>
+
+          <div class="courtPublishStatusCard is-closed" id="courtPublishStatusCard" role="status" aria-live="polite">
+            <span class="courtPublishStatusIcon" id="courtPublishStatusIcon">🔒</span>
+            <div><div class="courtPublishStatusMain" id="courtPublishStatusMain">DISPONIBILIDAD SIN PUBLICAR</div>
+              <div class="courtPublishStatusSub" id="courtPublishStatusSub">Los jugadores no pueden realizar nuevas reservas en esta jornada.</div></div>
+            <span class="courtPublishStatusPill" id="courtPublishStatusPill">CERRADA</span>
+          </div>
+          <div class="courtPublishInfoBar" id="courtPublishInfoBar">El indicador corresponde a la jornada seleccionada.</div>
 
           <div class="courtsProKpis">
             <div class="courtsProKpi published"><strong id="courtsKpiPublished">0</strong><span>Publicadas</span></div>
@@ -8145,6 +8164,20 @@ function renderCourtsProSummary(){
   if(b)b.textContent=booked;
   if(d)d.textContent=pending;
   const wk=$('#courtsProWeek'); if(wk&&w)wk.textContent=journeyDisplayName(state.week);
+  // Estado de publicación real (data.published), no cantidad de franjas en borrador.
+  const open=!!data.published?.[state.week];
+  const card=$('#courtPublishStatusCard');
+  if(card)card.className='courtPublishStatusCard '+(open?'is-published':'is-closed');
+  const icon=$('#courtPublishStatusIcon');if(icon)icon.textContent=open?'✅':'🔒';
+  const main=$('#courtPublishStatusMain');if(main)main.textContent=open?'DISPONIBILIDAD PUBLICADA':'DISPONIBILIDAD SIN PUBLICAR';
+  const sub=$('#courtPublishStatusSub');if(sub)sub.textContent=open
+    ? `Los jugadores pueden reservar las ${publishedSlots.length} franjas publicadas de esta jornada. Editar el borrador no modifica lo publicado hasta que pulses «Actualizar disponibilidad».`
+    : 'Los jugadores no pueden realizar nuevas reservas. Puedes preparar y guardar el borrador sin publicarlo.';
+  const pill=$('#courtPublishStatusPill');if(pill)pill.textContent=open?'RESERVAS ABIERTAS':'RESERVAS CERRADAS';
+  const info=$('#courtPublishInfoBar');if(info)info.textContent=`${journeyDisplayName(state.week)} · ${publishedSlots.length} franjas visibles para los jugadores · ${draftSlots.length} en borrador`;
+  const publishBtn=$('#publishSlots');if(publishBtn)publishBtn.textContent=open?'🔄 Actualizar disponibilidad publicada':'🟢 Publicar disponibilidad';
+  const closeBtn=$('#closeSlots');if(closeBtn){closeBtn.disabled=!open;closeBtn.style.display=open?'':'none';closeBtn.textContent='🔴 Retirar publicación y cerrar reservas';}
+  const resendBtn=$('#resendPushNotice');if(resendBtn){resendBtn.disabled=!open;resendBtn.style.display=open?'':'none';}
 }
 function renderCourtsDayTabs(days){
   const wrap=$('#courtsProDays'); if(!wrap)return;
@@ -10270,7 +10303,7 @@ $('#publishSlots').onclick=async()=>{
     setOnline(false,'⚠️ No publicado');
     if(status)status.textContent='❌ No se pudo publicar. El borrador se conserva.';
     alert('No se ha podido publicar la disponibilidad online.\n\n'+e.message);
-  }finally{btn.disabled=false;btn.textContent=old}
+  }finally{btn.disabled=false;btn.textContent=isOpen()?'🔄 Actualizar disponibilidad publicada':'🟢 Publicar disponibilidad'}
 };
 
 $('#resendPushNotice').onclick=async()=>{
