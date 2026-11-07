@@ -1,0 +1,60 @@
+name: CT Campeador PROD - activar autoresultados 24 horas
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  deploy-prod:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Descargar repositorio
+        uses: actions/checkout@v4
+      - name: Preparar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verificar identidad de PRODUCCIÓN y activar desde ahora
+        env:
+          REPO: ${{ github.repository }}
+        run: |
+          python3 - <<'PYVALIDATE'
+          import os, pathlib, datetime, tomllib
+          if os.environ['REPO'].lower() != 'ligasdetenis/ct-campeador-liga':
+              raise SystemExit('BLOQUEADO: repositorio distinto al de PRODUCCION')
+          p=pathlib.Path('API_WORKER/wrangler.autoresultados-prod.toml')
+          s=pathlib.Path('API_WORKER/src/index.js')
+          if not p.is_file() or not s.is_file():
+              raise SystemExit('BLOQUEADO: faltan archivos API_WORKER')
+          d=tomllib.loads(p.read_text('utf8'))
+          if d.get('name')!='ct-campeador-api' or d.get('main')!='src/index.js':
+              raise SystemExit('BLOQUEADO: destino Worker inesperado')
+          if not any(x.get('binding')=='DATA' and x.get('id')=='cd8d040962b7432180e0bb3141fed1f5' for x in d.get('kv_namespaces',[])):
+              raise SystemExit('BLOQUEADO: KV de producción no coincide')
+          if not any(x.get('binding')=='PUSH_SERVICE' and x.get('service')=='ct-campeador-push-v1' for x in d.get('services',[])):
+              raise SystemExit('BLOQUEADO: servicio Push de producción incorrecto')
+          if not any(x.get('name')=='BOOKINGS' and x.get('class_name')=='BookingCoordinator' for x in d.get('durable_objects',{}).get('bindings',[])):
+              raise SystemExit('BLOQUEADO: falta BOOKING DO')
+          if d.get('triggers',{}).get('crons')!=['*/5 * * * *']:
+              raise SystemExit('BLOQUEADO: cron incorrecto')
+          code=s.read_text('utf8')
+          if 'confirmExpiredResults' not in code or 'AUTORESULTS_WAIT_MS = 24 * 60 * 60 * 1000' not in code:
+              raise SystemExit('BLOQUEADO: falta código de 24 horas')
+          # Fecha de corte fija durante el despliegue actual. Nunca altera resultados anteriores.
+          old='AUTORESULTS_NOT_BEFORE = "2099-01-01T00:00:00Z"'
+          contents=p.read_text('utf8')
+          if old not in contents: raise SystemExit('BLOQUEADO: fecha de seguridad ausente')
+          now=datetime.datetime.now(datetime.timezone.utc).isoformat(timespec='seconds').replace('+00:00','Z')
+          p.write_text(contents.replace(old, f'AUTORESULTS_NOT_BEFORE = "{now}"'),encoding='utf8')
+          print('PRODUCCION VALIDADA. Solo resultados creados a partir de',now)
+          PYVALIDATE
+      - name: Validar sintaxis JavaScript
+        run: node --check API_WORKER/src/index.js
+      - name: Instalar Wrangler
+        run: npm install --no-save wrangler@4
+      - name: Desplegar exclusivamente API PRODUCCIÓN
+        working-directory: API_WORKER
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx wrangler deploy --config ./wrangler.autoresultados-prod.toml
