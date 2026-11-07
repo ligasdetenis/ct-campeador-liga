@@ -10323,47 +10323,65 @@ const OFFICIAL_PDF_IMPORT_20261107 = [{"matchId":"W1|Absoluto|Masculino|marcos-g
 async function importOfficialPdfResults(){
  if(!requireAdmin())return;
  const btn=$('#importOfficialResultsPdf'), status=$('#importOfficialResultsStatus');
- const old=btn.textContent; btn.disabled=true;
+ const old=btn.textContent;btn.disabled=true;
+ const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
  try{
-  status.textContent='Consultando los datos reales de Cloudflare…';
+  status.textContent='Comprobando resultados existentes en Cloudflare…';
   const res=await apiRequest({action:'exportBackup'});
-  if(!res.backup?.contents?.state)throw new Error('No se pudo verificar el estado actual.');
+  if(!res.backup?.contents?.state)throw new Error('No se pudo consultar el estado actual.');
   const live=res.backup.contents.state;
   const fixtureById=new Map(Object.values(live.fixtures||{}).flat().map(f=>[f.id,f]));
   const conflicts=[],pending=[],already=[];
   for(const r of OFFICIAL_PDF_IMPORT_20261107){
    const f=fixtureById.get(r.matchId);
-   if(!f || f.a!==r.a || f.b!==r.b){conflicts.push(r.a+' vs '+r.b+' (enfrentamiento modificado)');continue;}
+   if(!f||f.a!==r.a||f.b!==r.b){conflicts.push(r.a+' vs '+r.b+': enfrentamiento distinto');continue;}
    const prior=(live.results||{})[r.matchId];
-   if(prior){
-    if(prior.status==='confirmed'&&JSON.stringify(prior.sets)===JSON.stringify(r.sets))already.push(r);
-    else conflicts.push(r.a+' vs '+r.b+' (resultado ya existente)');
-   }else pending.push(r);
+   if(!prior)pending.push(r);
+   else if(prior.status==='confirmed'&&JSON.stringify(prior.sets)===JSON.stringify(r.sets))already.push(r);
+   else conflicts.push(r.a+' vs '+r.b+': resultado existente distinto o sin confirmar');
   }
-  if(conflicts.length){status.textContent='⛔ Hay conflictos. No se ha importado nada.';alert('Importación detenida. Revisa estos partidos antes de continuar:\n\n'+conflicts.join('\n'));return;}
-  if(!pending.length){status.textContent='✅ Todos estos resultados ya están confirmados.';return;}
-  const summary=`Encontrados ${pending.length} resultados nuevos.\n${already.length} ya confirmados y coincidentes.\n\nNo se sobrescribirá ningún resultado existente.\nSe liberará la reserva asociada a cada partido confirmado, según la API actual.\n\n¿Descargar una copia de seguridad ANTES de importar?`;
-  if(!confirm(summary)){status.textContent='Importación cancelada. No se han modificado datos.';return;}
-  // Copia de seguridad obtenida en este mismo instante, antes de escribir resultados.
+  if(conflicts.length){status.textContent='⛔ Se detectaron discrepancias. No se ha escrito ningún resultado.';alert('Importación detenida. Deben revisarse estos encuentros:\n\n'+conflicts.join('\n'));return;}
+  if(!pending.length){status.textContent='✅ Los 25 resultados oficiales ya están confirmados.';alert('No hay nada pendiente de importar. Los resultados oficiales ya están confirmados.');return;}
+  if(!confirm('Hay '+pending.length+' resultados oficiales pendientes y '+already.length+' ya confirmados.\n\nEsta versión espera al menos 8 segundos entre escrituras y se detiene si Cloudflare limita las operaciones.\n\n¿Descargar copia de seguridad actualizada antes de continuar?')){status.textContent='Operación cancelada. Sin cambios.';return;}
   const blob=new Blob([JSON.stringify(res.backup,null,2)],{type:'application/json'});
-  const url=URL.createObjectURL(blob), a=document.createElement('a'); a.href=url;a.download='CT_CAMPEADOR_BACKUP_ANTES_IMPORTAR_RESULTADOS_2026-11-07.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),3000);
-  if(!confirm('Se ha iniciado la descarga de seguridad. Comprueba que el archivo está guardado.\n\n¿Confirmas que quieres incorporar '+pending.length+' resultados OFICIALES en PRODUCCIÓN?')){status.textContent='Importación cancelada tras descargar la copia.';return;}
-  let ok=0;const failed=[];
-  for(const r of pending){
+  const url=URL.createObjectURL(blob),link=document.createElement('a');
+  link.href=url;link.download='CT_CAMPEADOR_BACKUP_ANTES_REINTENTO_RESULTADOS_2026-11-07.json';document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),5000);
+  if(!confirm('Comprueba que se ha guardado la copia de seguridad.\n\n¿Iniciar la importación de los '+pending.length+' resultados que faltan?')){status.textContent='Operación cancelada tras descargar la copia.';return;}
+  let ok=0,skipped=0,stopReason='',lastSuccess=false;
+  for(let i=0;i<pending.length;i++){
+   const r=pending[i];
+   if(i>0){
+    for(let wait=8;wait>0;wait--){status.textContent=`✅ ${ok} nuevos · ${skipped} ya guardados · siguiente en ${wait}s (${i+1}/${pending.length})`;await sleep(1000);}
+   }
    try{
-    // Consulta individual para no sobreescribir resultados que aparezcan mientras se importa.
+    // Verificar el registro individual antes de escribir, también si hubo una importación parcial.
     const current=await apiRequest({action:'exportBackup'});
-    if(current.backup?.contents?.state?.results?.[r.matchId]){failed.push(r.a+' vs '+r.b+': apareció un resultado durante la importación');continue;}
+    const now=(current.backup?.contents?.state?.results||{})[r.matchId];
+    if(now){
+     if(now.status==='confirmed'&&JSON.stringify(now.sets)===JSON.stringify(r.sets)){skipped++;continue;}
+     stopReason='Se encontró un marcador diferente para '+r.a+' vs '+r.b+'.';break;
+    }
     const response=await apiRequest({action:'submitResult',matchId:r.matchId,result:{type:'normal',sets:r.sets,winner:''}});
-    if(response.result?.status!=='confirmed')throw new Error('La API no confirmó el resultado');
-    ok++;
-   }catch(e){failed.push(r.a+' vs '+r.b+': '+e.message);}
-   status.textContent=`Importando resultados: ${ok} de ${pending.length}. Errores: ${failed.length}`;
+    if(response.result?.status!=='confirmed')throw new Error('La API no devolvió un resultado confirmado');
+    ok++;lastSuccess=true;
+    status.textContent=`✅ Importados ${ok} nuevos de ${pending.length}.`;
+   }catch(e){
+    const message=String(e?.message||e);
+    stopReason=/429|too many requests|rate.limit/i.test(message)
+     ? 'Cloudflare ha aplicado de nuevo el límite 429. Se ha detenido la importación sin repetir las escrituras.'
+     : 'Error al guardar '+r.a+' vs '+r.b+': '+message;
+    break;
+   }
   }
-  await refreshOnline({silent:true});
-  status.textContent=failed.length?`⚠ Importados ${ok}; ${failed.length} requieren revisión.`:`✅ ${ok} resultados oficiales importados y confirmados.`;
-  alert(`${ok} resultados importados. ${failed.length} incidencias.${failed.length?'\n\n'+failed.join('\n'):''}`);
- }catch(e){status.textContent='⚠ Error: '+e.message;alert('No se pudo completar la importación: '+e.message)}
+  try{await refreshOnline({silent:true});}catch(e){}
+  if(stopReason){
+   status.textContent=`⚠️ ${ok} nuevos importados. ${stopReason} Puedes reintentar más adelante: se comprobará lo ya guardado.`;
+   alert('Importación detenida de forma segura.\n\n'+ok+' nuevos confirmados en este intento.\n'+stopReason+'\n\nNo restaures una copia antigua. Cuando Cloudflare vuelva a permitir escrituras, puedes volver a pulsar el botón: solo procesará los que sigan pendientes.');
+  }else{
+   status.textContent=`✅ Importación completada: ${ok} nuevos y ${already.length+skipped} ya existentes.`;
+   alert('✅ Importación terminada.\n\n'+ok+' resultados nuevos confirmados.\n'+(already.length+skipped)+' ya existentes.\nTotal oficial: '+OFFICIAL_PDF_IMPORT_20261107.length+'.');
+  }
+ }catch(e){status.textContent='⚠️ '+(e?.message||e);alert('No se pudo completar la comprobación o importación: '+(e?.message||e));}
  finally{btn.disabled=false;btn.textContent=old;}
 }
 $('#importOfficialResultsPdf').onclick=importOfficialPdfResults;
