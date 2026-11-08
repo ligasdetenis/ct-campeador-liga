@@ -26,6 +26,10 @@ var BookingCoordinator = class extends DurableObject {
     this.ctx = ctx;
     this.env = env;
     this.sql = ctx.storage.sql;
+    // V2: el estado de la liga se coordina en este Durable Object. SQLite evita
+    // que una confirmación automática sobrescriba una modificación simultánea.
+    this.sql.exec(`CREATE TABLE IF NOT EXISTS league_snapshot (id INTEGER PRIMARY KEY CHECK(id=1), payload TEXT NOT NULL)`);
+
     this.sql.exec(`
       CREATE TABLE IF NOT EXISTS reservations (
         match_id TEXT PRIMARY KEY,
@@ -60,6 +64,111 @@ var BookingCoordinator = class extends DurableObject {
 
     const body = await request.json().catch(() => ({}));
     const action = String(body.action || "");
+    if (action === "leagueRead" || action === "leagueWrite" || action === "leagueExpire") {
+      try {
+        // La única lectura de KV para migrar se realiza al inicializar el DO.
+        // Después SQLite es la fuente de verdad; KV se mantiene como espejo.
+        const result = await this.ctx.blockConcurrencyWhile(async () => {
+          let row = this.sql.exec("SELECT payload FROM league_snapshot WHERE id=1").toArray()[0];
+          if (!row) {
+            const legacy = await this.env.DATA.get(STATE_KEY);
+            const initial = legacy ? JSON.parse(legacy) : {version:2,playerLists:{},fixtures:{},slots:{},drafts:{},published:{},results:{},bookings:{},reservations:{},staff:{},adminRoles:{},weeks:{}};
+            this.sql.exec("INSERT INTO league_snapshot (id,payload) VALUES (1,?)", JSON.stringify(initial));
+            row = {payload:JSON.stringify(initial)};
+          }
+          const state = JSON.parse(row.payload);
+          if (action === "leagueRead") return {ok:true,state};
+          if (action === "leagueWrite") {
+            const mode = String(body.mode||"");
+            if (mode === "general") {
+              if (!body.state || typeof body.state!=="object") return {ok:false,status:400,error:"Estado ausente"};
+              // Serializar también los cambios generales y detectar una lectura previa obsoleta.
+              // No sustituir nunca resultados desde un guardado general.
+              const expectedUpdatedAt = String(body.expectedUpdatedAt || "");
+              if (expectedUpdatedAt && String(state.updatedAt || "") !== expectedUpdatedAt)
+                return {ok:false,status:409,error:"La liga ha cambiado mientras editabas. Actualiza la página y vuelve a intentarlo."};
+              const next = {...body.state, results: state.results || {}};
+              this.sql.exec("UPDATE league_snapshot SET payload=? WHERE id=1", JSON.stringify(next));
+              await this.env.DATA.put(STATE_KEY,JSON.stringify(next)).catch(e=>console.error("Espejo KV pendiente",e));
+              return {ok:true,state:next};
+            }
+            if (mode === "reset") {
+              if (!body.state || typeof body.state!=="object") return {ok:false,status:400,error:"Estado ausente"};
+              this.sql.exec("UPDATE league_snapshot SET payload=? WHERE id=1", JSON.stringify(body.state));
+              await this.env.DATA.put(STATE_KEY,JSON.stringify(body.state)).catch(e=>console.error("Espejo KV pendiente",e));
+              return {ok:true,state:body.state};
+            }
+            const matchId=String(body.matchId||"");
+            const found=findFixture(state,matchId);
+            if (!found) return {ok:false,status:404,error:"Partido inexistente"};
+            const {fixture,week,category,gender}=found;
+            const who=String(body.who||"");
+            const isAdmin=body.isAdmin===true;
+            const isPlayer=normalize(fixture.a)===normalize(who)||normalize(fixture.b)===normalize(who);
+            if (!isAdmin&&!isPlayer) return {ok:false,status:403,error:"No perteneces al partido"};
+            state.results=state.results||{};
+            const previous=state.results[matchId]||null;
+            const now=new Date().toISOString();
+            if (mode==="submit") {
+              if (previous?.status==="confirmed"&&!isAdmin) return {ok:false,status:409,error:"Resultado confirmado. Solo administración puede corregirlo."};
+              const incoming=body.incoming||{};
+              const type=["normal","retirement","wo","not_played"].includes(incoming.type)?incoming.type:"normal";
+              const sets=sanitizeSets(incoming.sets||[]);
+              const winner=String(incoming.winner||"").trim();
+              if (type==="normal") {const v=validateCompletedTennisResult(sets);if(!v.ok)return {ok:false,status:400,error:v.error};}
+              if ((type==="wo"||type==="retirement")&&winner!==fixture.a&&winner!==fixture.b)return {ok:false,status:400,error:"Selecciona ganador"};
+              const revised=previous?.status==="pending"&&!isAdmin&&normalize(previous.submittedBy)!==normalize(who);
+              state.results[matchId]={type,sets,winner:type==="wo"||type==="retirement"?winner:"",status:isAdmin?"confirmed":"pending",submittedBy:who,submittedAt:now,revisedFrom:revised?previous.submittedBy:null,revisedAt:revised?now:null,confirmedBy:isAdmin?who:null,confirmedAt:isAdmin?now:null,week,category,gender,a:fixture.a,b:fixture.b,updatedAt:now};
+              state.updatedAt=now;
+              this.sql.exec("UPDATE league_snapshot SET payload=? WHERE id=1",JSON.stringify(state));
+              await this.env.DATA.put(STATE_KEY,JSON.stringify(state)).catch(e=>console.error("Espejo KV pendiente",e));
+              return {ok:true,result:state.results[matchId],editedPendingFromRival:!!revised};
+            }
+            if (mode==="confirm") {
+              if (!previous) return {ok:false,status:404,error:"No hay resultado pendiente"};
+              if (previous.status==="confirmed")return {ok:true,result:previous,alreadyConfirmed:true};
+              if (!isAdmin&&normalize(previous.submittedBy)===normalize(who))return {ok:false,status:403,error:"Debe confirmarlo el rival"};
+              previous.status="confirmed";previous.confirmedBy=who;previous.confirmedAt=now;previous.updatedAt=now;state.updatedAt=now;
+              this.sql.exec("UPDATE league_snapshot SET payload=? WHERE id=1",JSON.stringify(state));
+              await this.env.DATA.put(STATE_KEY,JSON.stringify(state)).catch(e=>console.error("Espejo KV pendiente",e));
+              return {ok:true,result:previous};
+            }
+            if (mode==="delete") {
+              if (!isAdmin)return {ok:false,status:403,error:"Solo administración"};
+              delete state.results[matchId];state.updatedAt=now;
+              this.sql.exec("UPDATE league_snapshot SET payload=? WHERE id=1",JSON.stringify(state));
+              await this.env.DATA.put(STATE_KEY,JSON.stringify(state)).catch(e=>console.error("Espejo KV pendiente",e));
+              return {ok:true,previousResult:previous};
+            }
+            return {ok:false,status:400,error:"Operación desconocida"};
+          }
+          // Cron: una sola actualización SQLite, cuando realmente haya caducados.
+          if (body.enabled!==true)return {ok:true,enabled:false,confirmed:[]};
+          const start=Date.parse(String(body.notBefore||""));
+          if (!Number.isFinite(start))return {ok:false,status:400,error:"Fecha de activación no válida"};
+          const now=Date.now(), stamp=new Date(now).toISOString(), confirmed=[];
+          for(const [id,r] of Object.entries(state.results||{})){
+            const t=Date.parse(r?.submittedAt||"");
+            if(r?.status!=="pending"||!findFixture(state,id)||!Number.isFinite(t)||t<start||t>now-24*60*60*1000)continue;
+            r.status="confirmed";r.confirmedBy="Sistema (24 h sin respuesta)";r.confirmedAt=stamp;r.updatedAt=stamp;r.autoConfirmed=true;
+            confirmed.push({matchId:id,result:{...r}});
+          }
+          if(confirmed.length){state.updatedAt=stamp;this.sql.exec("UPDATE league_snapshot SET payload=? WHERE id=1",JSON.stringify(state));await this.env.DATA.put(STATE_KEY,JSON.stringify(state)).catch(e=>console.error("Espejo KV pendiente",e));}
+          return {ok:true,enabled:true,confirmed};
+        });
+        return doJson(result,result.status||200);
+      }catch(error){return doJson({ok:false,error:error?.message||String(error)},500);}
+    }
+    if (action === "leagueStatus") {
+      const row=this.sql.exec("SELECT payload FROM league_snapshot WHERE id=1").toArray()[0];
+      if(!row)return doJson({ok:true,initialized:false});
+      const state=JSON.parse(row.payload);
+      const results=Object.values(state.results||{});
+      return doJson({ok:true,initialized:true,updatedAt:state.updatedAt||null,
+        fixtureCount:Object.values(state.fixtures||{}).reduce((n,a)=>n+(Array.isArray(a)?a.length:0),0),
+        resultCount:results.length,confirmed:results.filter(r=>r?.status==="confirmed").length,
+        pending:results.filter(r=>r?.status==="pending").length});
+    }
     if (action === "ping") {
       return doJson({ ok: true, durableObject: "online" });
     }
@@ -382,69 +491,25 @@ var BookingCoordinator = class extends DurableObject {
 // el envío es posterior a AUTORESULTS_NOT_BEFORE (fecha del despliegue inicial).
 const AUTORESULTS_WAIT_MS = 24 * 60 * 60 * 1000;
 async function confirmExpiredResults(env) {
-  if (env.AUTORESULTS_ENABLED !== "true") return { enabled: false, confirmed: 0 };
-  const start = Date.parse(String(env.AUTORESULTS_NOT_BEFORE || ""));
-  if (!Number.isFinite(start)) throw new Error("Falta fecha válida AUTORESULTS_NOT_BEFORE: se bloquea la automatización");
-  const now = Date.now();
-  const state = await getState(env);
-  const targets = Object.entries(state.results || {}).filter(([id, r]) =>
-    r?.status === "pending" && !!findFixture(state, id) &&
-    Number.isFinite(Date.parse(r.submittedAt || "")) &&
-    Date.parse(r.submittedAt) >= start &&
-    Date.parse(r.submittedAt) <= now - AUTORESULTS_WAIT_MS
-  );
-  if (!targets.length) return { enabled: true, checked: 0, confirmed: 0 };
-
-  // Relectura y revalidación para no confirmar un resultado revisado por el rival.
-  // Cloudflare KV no proporciona transacciones sobre el estado compartido: si
-  // existen escrituras simultáneas, se requiere una migración a coordinación DO.
-  const latest = await getState(env);
-  const stamp = new Date().toISOString();
-  const confirmed = [];
-  for (const [id, oldResult] of targets) {
-    const r = latest.results?.[id];
-    const submitted = Date.parse(r?.submittedAt || "");
-    if (!r || r.status !== "pending" || !findFixture(latest, id) ||
-        r.submittedAt !== oldResult.submittedAt ||
-        r.submittedBy !== oldResult.submittedBy ||
-        !Number.isFinite(submitted) || submitted < start ||
-        submitted > Date.now() - AUTORESULTS_WAIT_MS) continue;
-    r.status = "confirmed";
-    r.confirmedBy = "Sistema (24 h sin respuesta)";
-    r.confirmedAt = stamp;
-    r.updatedAt = stamp;
-    r.autoConfirmed = true;
-    confirmed.push([id, { ...r }]);
+  if(env.AUTORESULTS_ENABLED!=="true")return {enabled:false,confirmed:0};
+  const op=await bookingCall(env,{action:"leagueExpire",enabled:true,notBefore:env.AUTORESULTS_NOT_BEFORE});
+  if(!op.ok)throw new Error(op.error||"Error al confirmar resultados");
+  for(const {matchId:id,result} of op.confirmed){
+    try{
+      const b=await bookingCall(env,{action:"get",matchId:id});
+      if(b?.reservation){const c=await bookingCall(env,{action:"cancel",matchId:id});if(!c?.ok)throw new Error(c.error||"No se pudo liberar la pista");await broadcastRealtime(env,{type:"reservationChanged",matchId:id,reservation:null});}
+    }catch(e){console.error("Reserva pendiente de liberar",id,e);}
+    await broadcastRealtime(env,{type:"resultChanged",matchId:id,result});
+    await sendTargetedPush(env,[result.a,result.b],"✅ Resultado confirmado automáticamente","Han pasado 24 horas sin respuesta. El resultado ya cuenta para la clasificación.",{open:"result",matchId:id,week:result.week,category:result.category,gender:result.gender});
   }
-  if (!confirmed.length) return { enabled: true, checked: targets.length, confirmed: 0 };
-  latest.updatedAt = stamp;
-  // Una sola escritura KV por lote, respetando los límites observados (429).
-  await env.DATA.put(STATE_KEY, JSON.stringify(latest));
-  for (const [id, result] of confirmed) {
-    try {
-      const booking = await bookingCall(env, { action: "get", matchId: id });
-      if (booking?.reservation) {
-        const cancelled = await bookingCall(env, { action: "cancel", matchId: id });
-        if (!cancelled?.ok) throw new Error(cancelled?.error || "Error al liberar pista");
-        await broadcastRealtime(env, { type: "reservationChanged", matchId: id, reservation: null });
-      }
-    } catch (error) { console.error("Autoresultados: reserva pendiente de liberar", id, error); }
-    await broadcastRealtime(env, { type: "resultChanged", matchId: id, result });
-    try {
-      await sendTargetedPush(env, [result.a, result.b],
-        "✅ Resultado confirmado automáticamente",
-        "Han pasado 24 horas sin respuesta. El resultado ya cuenta para la clasificación.",
-        { open: "result", matchId: id, week: result.week, category: result.category, gender: result.gender });
-    } catch (error) { console.error("Autoresultados: fallo aviso", id, error); }
-  }
-  return { enabled: true, checked: targets.length, confirmed: confirmed.length };
+  return {enabled:true,confirmed:op.confirmed.length};
 }
 
 var index_default = {
   async scheduled(event, env, ctx) {
     ctx.waitUntil(confirmExpiredResults(env).then(
-      summary => console.log("PROD autoresultados 24h", JSON.stringify(summary)),
-      error => console.error("PROD autoresultados 24h", error)
+      summary => console.log("PROD V3 autoresultados 24h", JSON.stringify(summary)),
+      error => console.error("PROD V3 autoresultados 24h", error)
     ));
   },
   async fetch(request, env) {
@@ -602,7 +667,8 @@ var index_default = {
           updatedBy: admin.session.name
         };
 
-        await env.DATA.put(STATE_KEY, JSON.stringify(nextState));
+        const saved = await bookingCall(env, {action:"leagueWrite", mode:"general", state:nextState, expectedUpdatedAt:state.updatedAt || ""});
+        if(!saved.ok)return json({ok:false,error:saved.error||"No se pudo guardar estado"},saved.status||409,corsHeaders);
 
         return json({
           ok: true,
@@ -835,7 +901,8 @@ var index_default = {
           updatedAt: (/* @__PURE__ */ new Date()).toISOString(),
           updatedBy: admin.session.name
         };
-        await env.DATA.put(STATE_KEY, JSON.stringify(safeState));
+        const saved = await bookingCall(env, {action:"leagueWrite", mode:"general", state:safeState, expectedUpdatedAt:currentState.updatedAt || ""});
+        if(!saved.ok)return json({ok:false,error:saved.error||"No se pudo guardar estado"},saved.status||409,corsHeaders);
         await broadcastRealtime(env, { type: "stateChanged", updatedAt: safeState.updatedAt });
         return json({ ok: true, state: safeState }, 200, corsHeaders);
       }
@@ -966,48 +1033,10 @@ var index_default = {
         const isAdmin = auth.session.role === "admin";
         const isPlayer = normalize(fixture.a) === normalize(auth.session.name) || normalize(fixture.b) === normalize(auth.session.name);
         if (!isAdmin && !isPlayer) return json({ ok: false, error: "Solo los jugadores del partido o un administrador pueden subir el resultado." }, 403, corsHeaders);
-        state.results = state.results || {};
-        const previous = state.results[matchId];
-        if (previous?.status === "confirmed" && !isAdmin) {
-          return json({ ok: false, error: "El resultado ya est\xE1 confirmado. Solo un administrador puede corregirlo." }, 409, corsHeaders);
-        }
-        const type = ["normal", "retirement", "wo", "not_played"].includes(incoming.type) ? incoming.type : "normal";
-        const sets = sanitizeSets(incoming.sets || []);
-        const winner = String(incoming.winner || "").trim();
-        if (type === "normal") {
-          const validation = validateCompletedTennisResult(sets);
-          if (!validation.ok) return json({ ok: false, error: validation.error }, 400, corsHeaders);
-        }
-        if ((type === "wo" || type === "retirement") && winner !== fixture.a && winner !== fixture.b) {
-          return json({ ok: false, error: "Selecciona el ganador del partido." }, 400, corsHeaders);
-        }
-        const now = (/* @__PURE__ */ new Date()).toISOString();
-        const editedPendingFromRival =
-          previous?.status === "pending" &&
-          !isAdmin &&
-          normalize(previous.submittedBy) !== normalize(auth.session.name);
-
-        const result = {
-          type,
-          sets,
-          winner: type === "wo" || type === "retirement" ? winner : "",
-          status: isAdmin ? "confirmed" : "pending",
-          submittedBy: auth.session.name,
-          submittedAt: now,
-          revisedFrom: editedPendingFromRival ? previous.submittedBy : null,
-          revisedAt: editedPendingFromRival ? now : null,
-          confirmedBy: isAdmin ? auth.session.name : null,
-          confirmedAt: isAdmin ? now : null,
-          week,
-          category,
-          gender,
-          a: fixture.a,
-          b: fixture.b,
-          updatedAt: now
-        };
-        state.results[matchId] = result;
-        state.updatedAt = now;
-        await env.DATA.put(STATE_KEY, JSON.stringify(state));
+        const op = await bookingCall(env,{action:"leagueWrite",mode:"submit",matchId,who:auth.session.name,isAdmin,incoming});
+        if(!op.ok)return json({ok:false,error:op.error},op.status||409,corsHeaders);
+        const result=op.result;
+        const editedPendingFromRival=op.editedPendingFromRival;
 
         // Partido confirmado = partido finalizado.
         // La reserva deja de bloquear la pista, pero el resultado permanece en el histórico.
@@ -1048,24 +1077,11 @@ var index_default = {
         const state = await getState(env);
         const found = findFixture(state, matchId);
         if (!found) return json({ ok: false, error: "El enfrentamiento no existe." }, 404, corsHeaders);
-        state.results = state.results || {};
-        const result = state.results[matchId];
-        if (!result) return json({ ok: false, error: "No hay ning\xFAn resultado pendiente." }, 404, corsHeaders);
-        if (result.status === "confirmed") return json({ ok: true, result }, 200, corsHeaders);
         const { fixture } = found;
-        const isAdmin = auth.session.role === "admin";
-        const isPlayer = normalize(fixture.a) === normalize(auth.session.name) || normalize(fixture.b) === normalize(auth.session.name);
-        if (!isAdmin && !isPlayer) return json({ ok: false, error: "No puedes confirmar este resultado." }, 403, corsHeaders);
-        if (!isAdmin && normalize(result.submittedBy) === normalize(auth.session.name)) {
-          return json({ ok: false, error: "El resultado debe confirmarlo el rival." }, 403, corsHeaders);
-        }
-        const now = (/* @__PURE__ */ new Date()).toISOString();
-        result.status = "confirmed";
-        result.confirmedBy = auth.session.name;
-        result.confirmedAt = now;
-        result.updatedAt = now;
-        state.updatedAt = now;
-        await env.DATA.put(STATE_KEY, JSON.stringify(state));
+        const op=await bookingCall(env,{action:"leagueWrite",mode:"confirm",matchId,who:auth.session.name,isAdmin:auth.session.role==="admin"});
+        if(!op.ok)return json({ok:false,error:op.error},op.status||409,corsHeaders);
+        const result=op.result;
+        if(op.alreadyConfirmed)return json({ok:true,result},200,corsHeaders);
 
         // Partido confirmado = partido finalizado.
         // Liberamos la pista asociada a la reserva, sin borrar el resultado.
@@ -1091,12 +1107,9 @@ var index_default = {
         const admin = await requireAdmin(request, body, env);
         if (!admin.ok) return json({ ok: false, error: admin.error }, admin.status, corsHeaders);
         const matchId = String(body.matchId || "").trim();
-        const state = await getState(env);
-        state.results = state.results || {};
-        const previousResult = state.results[matchId] || null;
-        delete state.results[matchId];
-        state.updatedAt = (/* @__PURE__ */ new Date()).toISOString();
-        await env.DATA.put(STATE_KEY, JSON.stringify(state));
+        const op=await bookingCall(env,{action:"leagueWrite",mode:"delete",matchId,who:admin.session.name,isAdmin:true});
+        if(!op.ok)return json({ok:false,error:op.error},op.status||409,corsHeaders);
+        const previousResult=op.previousResult;
         if (previousResult?.status === "pending") {
           await broadcastRealtime(
             env,
@@ -1382,6 +1395,12 @@ var index_default = {
         }
         return json(j, 200, corsHeaders);
       }
+      if (action === "resultStorageHealth") {
+        const admin=await requireAdmin(request,body,env);
+        if(!admin.ok)return json({ok:false,error:admin.error},admin.status,corsHeaders);
+        const status=await bookingCall(env,{action:"leagueStatus"});
+        return json(status,status.ok?200:500,corsHeaders);
+      }
       if (action === "exportBackup") {
         const admin = await requireAdmin(request, body, env);
         if (!admin.ok) return json({ ok: false, error: admin.error }, admin.status, corsHeaders);
@@ -1619,7 +1638,8 @@ var index_default = {
           updatedAt: (/* @__PURE__ */ new Date()).toISOString(),
           updatedBy: admin.session.name
         };
-        await env.DATA.put(STATE_KEY, JSON.stringify(blankState));
+        const saved = await bookingCall(env, {action:"leagueWrite", mode:"reset", state:blankState});
+        if(!saved.ok)return json({ok:false,error:saved.error||"No se pudo guardar estado"},saved.status||409,corsHeaders);
         return json({ ok: true, state: blankState }, 200, corsHeaders);
       }
       return json({ ok: false, error: `Acci\xF3n desconocida: ${action}` }, 400, corsHeaders);
@@ -1807,14 +1827,11 @@ function normalize(text) {
 }
 __name(normalize, "normalize");
 async function getState(env) {
-  const raw = await env.DATA.get(STATE_KEY);
-  if (!raw) return { version: 2, playerLists: {}, fixtures: {}, slots: {}, drafts: {}, published: {}, results: {}, bookings: {}, reservations: {}, staff: {}, adminRoles: {}, weeks: {} };
-  try {
-    return JSON.parse(raw);
-  } catch {
-    return { version: 2, playerLists: {}, fixtures: {}, slots: {}, drafts: {}, published: {}, results: {}, bookings: {}, reservations: {}, staff: {}, adminRoles: {}, weeks: {} };
-  }
+  const r=await bookingCall(env,{action:"leagueRead"});
+  if(!r.ok)throw new Error(r.error||"No se pudo leer la liga desde el coordinador");
+  return r.state;
 }
+
 __name(getState, "getState");
 
 async function getAdminPrefs(env) {
