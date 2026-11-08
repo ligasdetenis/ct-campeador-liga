@@ -1,0 +1,66 @@
+name: CT Campeador PROD - proteccion escrituras V3
+on:
+  workflow_dispatch:
+    inputs:
+      confirmacion:
+        description: 'Escribe MIGRAR-PRODUCCION para autorizar el despliegue'
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: ct-campeador-api-production-deploy
+  cancel-in-progress: false
+jobs:
+  migrar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verificar identidad PROD y permiso explícito
+        env:
+          REPO: ${{ github.repository }}
+          CONFIRMACION: ${{ inputs.confirmacion }}
+        run: |
+          python3 - <<'PYVALIDATE'
+          import os, pathlib, tomllib, datetime
+          if os.environ['REPO'].lower() != 'ligasdetenis/ct-campeador-liga':
+              raise SystemExit('BLOQUEADO: repositorio distinto de PRODUCCION')
+          if os.environ['CONFIRMACION'] != 'MIGRAR-PRODUCCION':
+              raise SystemExit('BLOQUEADO: falta confirmacion MIGRAR-PRODUCCION')
+          p=pathlib.Path('API_WORKER/wrangler.proteccion-prod.toml')
+          js=pathlib.Path('API_WORKER/src/index.js')
+          if not p.is_file() or not js.is_file(): raise SystemExit('Archivos obligatorios ausentes')
+          config=tomllib.loads(p.read_text('utf8'))
+          if config.get('name')!='ct-campeador-api': raise SystemExit('Worker incorrecto')
+          if not any(k.get('binding')=='DATA' and k.get('id')=='cd8d040962b7432180e0bb3141fed1f5' for k in config.get('kv_namespaces',[])):
+              raise SystemExit('KV de produccion incorrecto')
+          if not any(k.get('name')=='BOOKINGS' and k.get('class_name')=='BookingCoordinator' for k in config.get('durable_objects',{}).get('bindings',[])):
+              raise SystemExit('Binding DO incorrecto')
+          if not any(k.get('service')=='ct-campeador-push-v1' for k in config.get('services',[])):
+              raise SystemExit('Servicio Push incorrecto')
+          if config.get('triggers',{}).get('crons') != ['*/5 * * * *']:
+              raise SystemExit('Cron inesperado')
+          code=js.read_text('utf8')
+          for key in ('leagueRead','leagueWrite','leagueExpire','resultStorageHealth','AUTORESULTS_WAIT_MS = 24 * 60 * 60 * 1000'):
+              if key not in code: raise SystemExit('Falta funcionalidad '+key)
+          marker='AUTORESULTS_NOT_BEFORE = "2099-01-01T00:00:00Z"'
+          contents=p.read_text('utf8')
+          if marker not in contents: raise SystemExit('No se encuentra la fecha de corte protectora')
+          now=datetime.datetime.now(datetime.timezone.utc).isoformat(timespec='seconds').replace('+00:00','Z')
+          p.write_text(contents.replace(marker,'AUTORESULTS_NOT_BEFORE = "'+now+'"'),'utf8')
+          print('Validación PROD correcta. Corte para autoresultados:',now)
+          PYVALIDATE
+      - name: Validar JavaScript
+        run: node --check API_WORKER/src/index.js
+      - name: Instalar Wrangler
+        run: npm install --no-save wrangler@4
+      - name: Desplegar SOLO Worker PRODUCCION
+        working-directory: API_WORKER
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx wrangler deploy --config wrangler.proteccion-prod.toml
