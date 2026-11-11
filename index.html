@@ -2023,6 +2023,15 @@ body.modern-admin .courtsTemplatePanel p{margin:0;color:#697281;font-size:12px;l
 .ct-push-indicator.off{color:#edd6ad!important}
 .ct-push-indicator.blocked{color:#ffb9bb!important}
 @media(max-width:420px){.ct-push-indicator{padding:3px 5px!important;font-size:8px!important}}
+
+/* CT CAMPEADOR PROD · Paneles contextuales y pago integrado */
+.ctInlineContext{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0;padding:12px;background:#f4f7fb;border:1px solid #dfe6ef;border-radius:12px}
+.ctInlineContext.one{grid-template-columns:1fr}
+.ctInlineContext label{display:grid;gap:5px;font-weight:750;font-size:12px;color:#344256}
+.ctInlineContext select{width:100%;min-height:44px;border:1px solid #c8d1dc;border-radius:9px;padding:8px;background:white;color:#202b3c}
+.ctHistPayPair{display:grid;gap:7px;margin-top:8px}.ctHistPayPlayer{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:12px}.ctHistPayPlayer span{flex:1;min-width:115px;overflow-wrap:anywhere}.ctHistPayPlayer select{min-width:112px;min-height:36px;border:1px solid #cdd7e1;border-radius:8px;padding:6px;background:white;color:#202b3c}
+.ctHistPayPlayer select:disabled{opacity:.6}.ctHistPayMsg{font-size:12px;color:#536173;margin:9px 0}.ctHistPayReload{font-size:12px;padding:8px 11px;border:1px solid #bfcedc;border-radius:9px;background:#fff;color:#24364a;font-weight:700}
+@media(max-width:430px){.ctInlineContext{grid-template-columns:1fr}.ctHistPayPlayer{align-items:flex-start}}
 </style>
 
 <link rel="manifest" href="manifest.webmanifest">
@@ -4452,10 +4461,12 @@ body.modern-admin #journeyNavigator .journeyJump{scroll-snap-align:none!importan
 <details class="adminBlock adminAccordion adminPrimary" data-admin-section="courtHistory" id="adminCourtHistoryPanel">
   <summary class="adminSummary"><span class="adminSummaryTitle">Histórico de pistas</span><span class="adminSummaryMeta" id="adminHistoryMeta">Consultar reservas finalizadas</span></summary>
   <div class="adminAccordionBody">
-    <p class="authNote">Consulta las franjas ya finalizadas. Los datos no se eliminan ni se modifican.</p>
+    <p class="authNote">Histórico de pistas y pagos individuales por jugador. Los registros de pagos nuevos se conservan aunque se libere la pista.</p>
+    <div class="ctHistPayMsg" id="ctHistPayMessage">El control de pagos se consulta en Cloudflare y solo está disponible para Administración.</div>
+    <button type="button" class="ctHistPayReload" id="ctHistPayReload">↻ Actualizar histórico y pagos</button>
     <div class="adminHistoryFilters">
       <label>Mes <select id="adminHistoryMonth" aria-label="Mes del histórico"></select></label>
-      <label>Ocupación <select id="adminHistoryStatus"><option value="all">Todas las franjas</option><option value="booked">Solo ocupadas</option><option value="free">Sin reserva registrada</option></select></label>
+      <label>Mostrar <select id="adminHistoryStatus"><option value="booked">Solo reservas (recomendado)</option><option value="all">Todas las franjas</option><option value="free">Sin reserva registrada</option></select></label><label>Pago <select id="ctHistPayFilter"><option value="all">Todos</option><option value="pending">Con pagos pendientes</option><option value="paid">Pagos completos</option></select></label>
     </div>
     <div id="adminHistoryList" class="adminHistoryList"></div>
   </div>
@@ -4674,6 +4685,7 @@ body.modern-admin #journeyNavigator .journeyJump{scroll-snap-align:none!importan
       <div class="adminSubsectionHead"><span>Disponibilidad de pistas</span><span id="adminMeta_slots_sub">Abrir</span></div>
       <div class="adminSubsectionBody">
         <div class="courtsPro">
+          <div class="ctInlineContext one"><label>Jornada cuya disponibilidad quieres configurar<select id="ctCourtsWeek" aria-label="Jornada de configuración de pistas"></select></label></div>
           <div class="courtsProHero">
             <div><div class="courtsProHeroTitle">Panel de pistas</div><div class="courtsProHeroSub">Prepara, revisa y publica la disponibilidad de la jornada desde un único lugar.</div></div>
             <div class="courtsProWeek" id="courtsProWeek">Jornada actual</div>
@@ -4755,7 +4767,9 @@ body.modern-admin #journeyNavigator .journeyJump{scroll-snap-align:none!importan
     <span class="adminSummaryTitle">Jugadores</span>
     <span class="adminSummaryMeta" id="adminMeta_players">Abrir</span>
   </summary>
-  <div class="adminAccordionBody"><div class="authNote">Carga aquí la lista completa de jugadores de <b>la categoría y sexo seleccionados</b>. No depende de la semana. Una línea por jugador.</div>
+  <div class="adminAccordionBody">
+ <div class="ctInlineContext" id="ctPlayerContext"><label>Categoría<select id="ctPlayerCategory" aria-label="Categoría para introducir jugadores"></select></label><label>Modalidad<select id="ctPlayerGender" aria-label="Modalidad de jugadores"><option value="Masculino">Masculino</option><option value="Femenino">Femenino</option></select></label></div>
+ <div class="authNote">Carga aquí la lista completa de jugadores de <b>la categoría y sexo seleccionados</b>. No depende de la semana. Una línea por jugador.</div>
 <div class="tiny" style="margin-bottom:8px">Puedes pegar directamente una lista desde Excel, WhatsApp o iSquad. Se eliminan líneas vacías y duplicados.</div>
 <textarea id="playerPaste" placeholder="Carlos Pérez
 Hugo Martín
@@ -7420,29 +7434,96 @@ function courtHistoryRecords(){
  }
  return records.sort((a,b)=>`${b.date} ${b.time} ${b.court}`.localeCompare(`${a.date} ${a.time} ${a.court}`));
 }
+// Estado de pago remoto: nunca se guarda en localStorage.
+let ctPaymentsV1=[];
+let ctPaymentsV1Loaded=false;
+let ctPaymentsV1Busy=false;
+function ctHistoryLocationKey(week,date,time,court){return [week,date,time,court].map(x=>String(x||'').trim().toLowerCase()).join('|')}
+async function ctRefreshPayments(){
+ if(!isAdmin()||ctPaymentsV1Busy)return;
+ ctPaymentsV1Busy=true;
+ const status=$('#ctHistPayMessage');if(status)status.textContent='Consultando el histórico de reservas y pagos en Cloudflare…';
+ try{
+  const response=await apiRequest({action:'listCourtPayments'});
+  ctPaymentsV1=Array.isArray(response.records)?response.records:[];
+  ctPaymentsV1Loaded=true;
+  if(status)status.textContent='✓ Datos de pago actualizados. Los cambios se guardan en Cloudflare.';
+  renderAdminCourtHistory();
+ }catch(e){if(status)status.textContent='⚠ No se han podido consultar los pagos. No se permite marcarlos sin conexión: '+String(e.message||e);renderAdminCourtHistory()}
+ finally{ctPaymentsV1Busy=false}
+}
+function ctHistoryAllRows(){
+ const base=courtHistoryRecords();
+ if(!ctPaymentsV1Loaded)return base;
+ const indexed=new Set();const records=[];
+ for(const h of ctPaymentsV1){
+  const b=h.reservation||{};
+  if(!b.date||!slotHasFinished(b.date,b.time))continue;
+  records.push({week:String(b.week||''),date:String(b.date||''),time:String(b.time||''),court:String(b.court||''),booking:b,payment:h});
+  indexed.add(ctHistoryLocationKey(b.week,b.date,b.time,b.court));
+ }
+ for(const row of base){
+  const key=ctHistoryLocationKey(row.week,row.date,row.time,row.court);
+  if(!indexed.has(key))records.push({...row,payment:null});
+ }
+ return records.sort((a,b)=>`${b.date} ${b.time} ${b.court}`.localeCompare(`${a.date} ${a.time} ${a.court}`));
+}
 function renderAdminCourtHistory(){
  if(!isAdmin())return;
- const month=$('#adminHistoryMonth'),status=$('#adminHistoryStatus'),list=$('#adminHistoryList');
- if(!month||!status||!list)return;
- const all=courtHistoryRecords();
+ const month=$('#adminHistoryMonth'),status=$('#adminHistoryStatus'),list=$('#adminHistoryList'),payFilter=$('#ctHistPayFilter');
+ if(!month||!status||!list||!payFilter)return;
+ const all=ctHistoryAllRows();
  const previous=month.value||'all';
  const months=[...new Set(all.map(r=>r.date.slice(0,7)).filter(m=>/^\d{4}-\d{2}$/.test(m)))].sort().reverse();
  month.innerHTML='<option value="all">Todos los meses</option>'+months.map(m=>`<option value="${m}">${mappEsc(new Date(m+'-15T12:00:00').toLocaleDateString('es-ES',{month:'long',year:'numeric'}))}</option>`).join('');
  month.value=months.includes(previous)?previous:'all';
- const selected=all.filter(r=>(month.value==='all'||r.date.startsWith(month.value))&&(status.value==='all'||(status.value==='booked'?!!r.booking:!r.booking)));
- const groups=new Map();
- for(const r of selected){if(!groups.has(r.date))groups.set(r.date,[]);groups.get(r.date).push(r)}
- list.innerHTML=selected.length?[...groups].map(([day,rows])=>`<div class="adminHistoryDay"><div class="adminHistoryDayTitle">${mappEsc(dayDateES(day))}</div>${rows.map(r=>`<div class="adminHistoryRow"><div><div class="adminHistoryMain">${mappEsc(r.time||'Hora no indicada')} · ${mappEsc(r.court||'Pista no indicada')}</div><div class="adminHistoryPlayers">${r.booking?mappEsc(`${r.booking.a||'Jugador sin identificar'} vs ${r.booking.b||'Jugador sin identificar'}`):'Sin reserva registrada'} · ${mappEsc(r.week)}</div></div><span class="adminHistoryTag ${r.booking?'occupied':''}">${r.booking?'RESERVADA':'SIN RESERVA'}</span></div>`).join('')}</div>`).join(''):'<div class="adminHistoryEmpty">No hay franjas finalizadas registradas con estos filtros.</div>';
- $('#adminHistoryMeta').textContent=`${all.length} franjas finalizadas`;
- month.onchange=renderAdminCourtHistory;
- status.onchange=renderAdminCourtHistory;
+ const selected=all.filter(r=>(month.value==='all'||r.date.startsWith(month.value))&&(status.value==='all'||(status.value==='booked'?!!r.booking:!r.booking)) && (payFilter.value==='all'||(r.payment&&(payFilter.value==='paid'?(r.payment.paymentA==='paid'&&r.payment.paymentB==='paid'):(r.payment.paymentA!=='paid'||r.payment.paymentB!=='paid')))));
+ const groups=new Map();for(const r of selected){if(!groups.has(r.date))groups.set(r.date,[]);groups.get(r.date).push(r)}
+ const paymentSelect=(r,side)=>{
+  const record=r.payment;if(!record||!record.bookingId)return '';
+  const player=side==='a'?r.booking?.a:r.booking?.b;
+  if(!player)return '';
+  const current=side==='a'?record.paymentA:record.paymentB;
+  return `<div class="ctHistPayPlayer"><span>${mappEsc(player)}</span><select aria-label="Pago de ${mappEsc(player)}" data-ct-payment-id="${mappEsc(record.bookingId)}" data-ct-payment-side="${side}"><option value="pending" ${current!=='paid'?'selected':''}>🔴 Pendiente</option><option value="paid" ${current==='paid'?'selected':''}>🟢 Pagado</option></select></div>`;
+ };
+ list.innerHTML=selected.length?[...groups].map(([day,rows])=>`<div class="adminHistoryDay"><div class="adminHistoryDayTitle">${mappEsc(dayDateES(day))}</div>${rows.map(r=>`<div class="adminHistoryRow"><div style="min-width:0;flex:1"><div class="adminHistoryMain">${mappEsc(r.time||'Hora no indicada')} · ${mappEsc(r.court||'Pista no indicada')}</div><div class="adminHistoryPlayers">${r.booking?mappEsc(`${r.booking.a||'Jugador sin identificar'} vs ${r.booking.b||'Jugador sin identificar'}`):'Sin reserva registrada'} · ${mappEsc(r.week)}</div>${r.payment?`<div class="ctHistPayPair">${paymentSelect(r,'a')}${paymentSelect(r,'b')}</div>`:(r.booking?'<div class="ctHistPayMsg">Reserva anterior sin registro de pagos: no se puede marcar automáticamente.</div>':'')}</div><span class="adminHistoryTag ${r.booking?'occupied':''}">${r.booking?(r.payment?.paymentA==='paid'&&r.payment?.paymentB==='paid'?'PAGADA':'RESERVA'):'SIN RESERVA'}</span></div>`).join('')}</div>`).join(''):'<div class="adminHistoryEmpty">No hay franjas con estos filtros.</div>';
+ const meta=$('#adminHistoryMeta');if(meta)meta.textContent=`${all.length} registros de histórico`;
+ month.onchange=renderAdminCourtHistory;status.onchange=renderAdminCourtHistory;payFilter.onchange=renderAdminCourtHistory;
+ list.querySelectorAll('[data-ct-payment-id]').forEach(sel=>sel.addEventListener('change',async()=>{
+   if(!isAdmin()||!ctPaymentsV1Loaded)return;
+   const bookingId=sel.dataset.ctPaymentId,side=sel.dataset.ctPaymentSide,payment=sel.value;
+   if(!confirm(`¿Confirmas marcar este pago como ${payment==='paid'?'PAGADO':'PENDIENTE'}?`)){renderAdminCourtHistory();return}
+   sel.disabled=true;
+   try{await apiRequest({action:'setCourtPayment',bookingId,side,payment});await ctRefreshPayments()}
+   catch(e){alert('No se ha guardado el pago: '+String(e.message||e));await ctRefreshPayments()}
+ }));
+}
+function ctConfigureAdminInlineSelectors(){
+ if(!isAdmin())return;
+ const cat=$('#ctPlayerCategory'),gen=$('#ctPlayerGender'),week=$('#ctCourtsWeek');
+ if(cat){cat.innerHTML=CATEGORIES.map(c=>`<option value="${mappEsc(c)}" ${c===state.category?'selected':''}>${mappEsc(c)}</option>`).join('')}
+ if(gen)gen.value=state.gender;
+ if(week){week.innerHTML=weeks.map(w=>`<option value="${mappEsc(w.id)}" ${w.id===state.week?'selected':''}>${mappEsc(w.label)}</option>`).join('')}
+ const switchContext=(values)=>{
+  if(playerEditorDirty && !confirm('Hay cambios sin guardar en la lista de jugadores. ¿Cambiar y descartarlos?')){ctConfigureAdminInlineSelectors();return}
+  playerEditorDirty=false;
+  Object.assign(state,values);
+  renderAll();renderModernAdminContext();
+ };
+ if(cat)cat.onchange=()=>switchContext({category:cat.value,gender:gen?.value||state.gender});
+ if(gen)gen.onchange=()=>switchContext({category:cat?.value||state.category,gender:gen.value});
+ if(week)week.onchange=()=>switchContext({week:week.value});
+ const reload=$('#ctHistPayReload');if(reload)reload.onclick=ctRefreshPayments;
+ const panel=$('#adminCourtHistoryPanel');
+ if(panel&&!panel.dataset.ctPaymentsWired){panel.dataset.ctPaymentsWired='1';panel.addEventListener('toggle',()=>{if(panel.open&&isAdmin())ctRefreshPayments()})}
+ if(panel?.open&&!ctPaymentsV1Loaded&&!ctPaymentsV1Busy)ctRefreshPayments();
 }
 
 function renderAdmin(){
   const admin=isAdmin();
   $('#adminNavBtn').classList.toggle('hidden',!admin);
   if(!admin){$('#adminView').classList.add('hidden');return}
-  const cps=categoryPlayers();if(!playerEditorDirty)$('#playerPaste').value=cps.join('\n');$('#playerCount').textContent=`${cps.length} jugador${cps.length===1?'':'es'}`;$('#fixturePaste').value='';renderFixtureEditor();const cw=weeks.find(w=>w.id===state.week);if(cw){$('#weekStartDate').value=cw.start;$('#weekEndDate').value=cw.end;$('#weekRangeHint').textContent=`Rango actual: ${dayDateES(cw.start)} → ${dayDateES(cw.end)}. Las pistas del borrador se limitarán a estas fechas.`}renderSlotRows();setDefaultQuickDate();renderAdminMatches();renderPins();renderRoles();renderExternalAdmins();renderWhats();renderAdminFunctionalTools();wireAdminFunctionalTools();renderAdminCourtHistory();setupAdminBlockOrdering();
+  const cps=categoryPlayers();if(!playerEditorDirty)$('#playerPaste').value=cps.join('\n');$('#playerCount').textContent=`${cps.length} jugador${cps.length===1?'':'es'}`;$('#fixturePaste').value='';renderFixtureEditor();const cw=weeks.find(w=>w.id===state.week);if(cw){$('#weekStartDate').value=cw.start;$('#weekEndDate').value=cw.end;$('#weekRangeHint').textContent=`Rango actual: ${dayDateES(cw.start)} → ${dayDateES(cw.end)}. Las pistas del borrador se limitarán a estas fechas.`}renderSlotRows();setDefaultQuickDate();renderAdminMatches();renderPins();renderRoles();renderExternalAdmins();renderWhats();renderAdminFunctionalTools();wireAdminFunctionalTools();renderAdminCourtHistory();ctConfigureAdminInlineSelectors();setupAdminBlockOrdering();
 }
 function renderRoles(){
   const tb=$('#roleTable');const ps=allIdentities().filter(p=>!accessIsExcluded(p));
