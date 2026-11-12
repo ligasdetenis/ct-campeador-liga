@@ -5906,7 +5906,8 @@ function viewFixtures(){
   return [...official,...carried];
 }
 function effectiveWeekFor(mid){const rec=fixtureRecord(mid);const p=postponedInfo(mid);return p?.targetWeek||rec?.week||state.week}
-function isReservableInCurrentWeek(mid){const r=resultFor(mid);return effectiveWeekFor(mid)===state.week&&r?.status!=='confirmed'}
+// El partido conserva su jornada oficial; la reserva usa la jornada de la pista elegida.
+function isReservableInCurrentWeek(mid){return !!fixtureRecord(mid)&&resultFor(mid)?.status!=='confirmed'}
 function slots(){return data.slots[weekKey()]||[]}
 function isOpen(){return !!data.published[weekKey()]}
 function bookingFor(mid){return data.bookings[mid]||null}
@@ -6551,13 +6552,17 @@ function renderSchedule(){
 
 function eligibleMatchesForFreeSlot(){
   const unique=new Map();
-  allWeekFixtures().forEach(m=>{
-    if(!m?.id || unique.has(m.id))return;
-    const real=findFixtureById(m.id)||m;
-    if(!isReservableInCurrentWeek(m.id))return;
-    if(!isAdmin()&&!canPlayerReserve(real))return;
-    unique.set(m.id,real);
-  });
+  for(const [key,arr] of Object.entries(data.fixtures||{})){
+    const [officialWeek,category,gender]=key.split('|');
+    if(category!==state.category||gender!==state.gender)continue;
+    // Solo enfrentamientos publicados, salvo usuarios administradores.
+    if(!isAdmin()&&!journeyFixturesArePublic(officialWeek))continue;
+    for(const m of arr||[]){
+      if(!m?.id||unique.has(m.id)||!isReservableInCurrentWeek(m.id))continue;
+      if(!isAdmin()&&!canPlayerReserve(m))continue;
+      unique.set(m.id,{...m,_officialWeek:officialWeek});
+    }
+  }
   return [...unique.values()];
 }
 function reserveFromOccupancy(slotId){
@@ -6591,7 +6596,7 @@ function reserveFromOccupancy(slotId){
   }else{
     const lines=matches.map((m,i)=>{
       const current=bookingFor(m.id);
-      return `${i+1}. ${m.a} vs ${m.b}${current?' · CAMBIAR RESERVA':''}`;
+      return `${i+1}. ${m.a} vs ${m.b} · ${journeyDisplayName(m._officialWeek)||m._officialWeek}${current?' · CAMBIAR RESERVA':''}`;
     });
     const ans=prompt(
       `¿Qué partido quieres reservar en esta franja?\n\n${dayDateES(s.date)} · ${s.time} · ${s.court}\n\n${lines.join('\n')}\n\nEscribe el número:`,
@@ -6640,9 +6645,9 @@ function fillReserveCourts(mid,preferredCourt=''){
 function openReserve(mid,preferredSlotId=''){
  state.reserveMatchId=mid;const m=findFixtureById(mid);if(!m)return;
  if(resultFor(mid)?.status==='confirmed'){alert("Este partido ya está finalizado y no puede reservar pista.");return;}
- if(!canPlayerReserve(m)&&!isAdmin()){alert("Solo uno de los dos jugadores de este enfrentamiento o un administrador puede reservarlo.");return;}if(!isReservableInCurrentWeek(mid)){alert("Este partido está asignado a otra semana. Gestiona primero su retraso/reprogramación.");return;}
+ if(!canPlayerReserve(m)&&!isAdmin()){alert("Solo uno de los dos jugadores de este enfrentamiento o un administrador puede reservarlo.");return;}if(!isReservableInCurrentWeek(mid)){alert("El partido está finalizado y no puede reservar pista.");return;}
  $('#modalMatch').textContent=`${m.a} vs ${m.b}`;
- $('#modalCat').textContent=`${state.category} · ${state.gender} · ${weeks.find(w=>w.id===state.week).label}`;
+ const official=fixtureRecord(mid);$('#modalCat').textContent=`${official?.category||state.category} · ${official?.gender||state.gender} · Jornada oficial: ${journeyDisplayName(official?.week)||official?.week||'—'} · Pista: ${journeyDisplayName(state.week)||state.week}`;
  const current=bookingFor(mid),ss=reservableSlotsFor(mid);
  $('#modalMode').textContent=current?'CAMBIAR RESERVA':'RESERVAR PARTIDO';
  $('#reserveCurrent').classList.toggle('hidden',!current);
@@ -6667,7 +6672,7 @@ async function proposeSelectedSlot(){
  const mid=state.reserveMatchId,sid=$('#reserveCourt').value;
  if(!mid||!sid)return alert('Selecciona una pista disponible.');
  const button=$('#proposeReserve');button.disabled=true;
- try{await apiRequest({action:'proposeMatchSlot',matchId:mid,slotId:sid});
+ try{await apiRequest({action:'proposeMatchSlot',matchId:mid,slotId:sid,week:state.week});
    $('#reserveModal').classList.remove('show');alert('✅ Propuesta enviada. Tu rival recibirá un aviso. La pista todavía NO está reservada.');
    ctProposalCache.delete(mid);renderAll();ctLoadSmartProposal(mid,true);
  }catch(e){alert(e.message)}finally{button.disabled=false}
@@ -6746,13 +6751,13 @@ async function book(mid,sid){
  if(reservationPending)return;
  const m=findFixtureById(mid),s=slots().find(x=>x.id===sid);if(!m||!s)return;
  if(resultFor(mid)?.status==='confirmed'){alert("Este partido ya está finalizado y no puede reservar pista.");return;}
- if(!canPlayerReserve(m)&&!isAdmin()){alert("No puedes reservar un partido en el que no participas.");return;}if(!isReservableInCurrentWeek(mid)){alert("Este partido está asignado a otra semana.");return;}
+ if(!canPlayerReserve(m)&&!isAdmin()){alert("No puedes reservar un partido en el que no participas.");return;}if(!isReservableInCurrentWeek(mid)){alert("El partido está finalizado y no puede reservar pista.");return;}
  const btn=$('#confirmReserve');
  const oldText=btn.textContent;
  reservationPending=true;btn.disabled=true;btn.textContent='⏳ Reservando…';
  try{
    const reservation={week:state.week,slotId:sid,a:m.a,b:m.b,day:s.day,date:s.date,time:s.time,court:s.court,category:state.category,gender:state.gender};
-   const j=await apiRequest({action:'reserve',matchId:mid,slotId:sid,reservation});
+   const j=await apiRequest({action:'reserve',matchId:mid,slotId:sid,week:state.week,reservation});
    data.bookings[mid]={...reservation,...j.reservation};
    localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
    $('#reserveModal').classList.remove('show');
@@ -8825,9 +8830,18 @@ function mappResultPlayer(name){
 }
 function mappOwnMatches(){
  if(!state.authenticated||!state.player)return [];
- return viewFixtures().filter(m=>
-   (m.a===state.player||m.b===state.player) && resultFor(m.id)?.status!=='confirmed'
- )
+ const my=normalizeName(state.player), matches=new Map();
+ for(const [key,arr] of Object.entries(data.fixtures||{})){
+   const [week,category,gender]=key.split('|');
+   if(category!==state.category||gender!==state.gender)continue;
+   if(!isAdmin()&&!journeyFixturesArePublic(week))continue;
+   for(const m of arr||[]){
+     if(!m?.id||resultFor(m.id)?.status==='confirmed')continue;
+     if(normalizeName(m.a)!==my&&normalizeName(m.b)!==my)continue;
+     matches.set(m.id,{...m,_originalWeek:week,_carried:week!==state.week});
+   }
+ }
+ return [...matches.values()].sort((a,b)=>Number(a._originalWeek!==state.week)-Number(b._originalWeek!==state.week));
 }
 function mappPrimaryMatch(){return mappOwnMatches()[0]||null}
 function mappOpponent(m){if(!m)return'';return m.a===state.player?m.b:m.a}
@@ -9674,12 +9688,12 @@ function renderModernMatch(){
     </div>
     <div style="margin-top:17px;border-top:1px solid var(--app-line)">
       <div class="mapp-day-slot"><div class="court">Categoría</div><div style="grid-column:2/5;font-weight:800">${mappEsc(state.category)} · ${mappEsc(state.gender)}</div></div>
-      <div class="mapp-day-slot"><div class="court">Jornada</div><div style="grid-column:2/5;font-weight:800">${mappEsc(mappCurrentRound())}</div></div>
+      <div class="mapp-day-slot"><div class="court">Jornada oficial</div><div style="grid-column:2/5;font-weight:800">${mappEsc(journeyDisplayName(fixtureRecord(m.id)?.week)||fixtureRecord(m.id)?.week||state.week)}</div></div>
       <div class="mapp-day-slot"><div class="court">Pista</div><div style="grid-column:2/5;font-weight:800">${bk?`${mappEsc(dayDateES(bk.date))} · ${mappEsc(bk.time)} · ${mappEsc(bk.court)}`:'Pendiente de reserva'}</div></div>
       <div class="mapp-day-slot"><div class="court">Resultado</div><div style="grid-column:2/5;font-weight:800">${r?mappEsc(resultLabel(r)):'Pendiente'}</div></div>
     </div>
    </div>
-   <div class="mapp-menu-row" data-match-reserve="${mappEsc(m.id)}"><div class="mapp-menu-icon">${mappIcon('calendar')}</div><div><div class="mapp-menu-title">${bk?'Cambiar pista':'Reservar pista'}</div><div class="mapp-menu-sub">${bk?'Modifica tu reserva actual':'Elige día, hora y pista'}</div></div><div>${mappIcon('chevron')}</div></div>
+   <div class="mapp-menu-row" data-match-reserve="${mappEsc(m.id)}"><div class="mapp-menu-icon">${mappIcon('calendar')}</div><div><div class="mapp-menu-title">${bk?'Cambiar pista':'Reservar pista'}</div><div class="mapp-menu-sub">${bk?'Modifica tu reserva actual':'Elige una pista libre en la jornada seleccionada'}</div></div><div>${mappIcon('chevron')}</div></div>
    ${!bk && r?.status!=='confirmed' ? `<div class="mapp-menu-row" data-match-proposal="${mappEsc(m.id)}" role="button" tabindex="0"><div class="mapp-menu-icon">${mappIcon('calendar')}</div><div><div class="mapp-menu-title" data-proposal-label="${mappEsc(m.id)}">Proponer fecha al rival</div><div class="mapp-menu-sub" data-proposal-sub="${mappEsc(m.id)}">Elige día, hora y pista para acordar el partido</div></div><div>${mappIcon('chevron')}</div></div>` : ''}
    <div class="mapp-menu-row" data-match-live="${mappEsc(m.id)}"><div class="mapp-menu-icon">${mappIcon('activity')}</div><div><div class="mapp-menu-title">🎾 Marcador LIVE (TEST)</div><div class="mapp-menu-sub">Controlar puntos o seguir en directo · Sin resultado oficial</div></div><div>${mappIcon('chevron')}</div></div>
    <div class="mapp-menu-row" data-match-result="${mappEsc(m.id)}"><div class="mapp-menu-icon">${mappIcon('trophy')}</div><div><div class="mapp-menu-title">${r?'Ver / gestionar resultado':'Subir resultado'}</div><div class="mapp-menu-sub">Resultado del encuentro</div></div><div>${mappIcon('chevron')}</div></div>
