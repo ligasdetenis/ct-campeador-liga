@@ -5000,6 +5000,8 @@ Pablo Ruiz"></textarea>
 const CATEGORIES=["Benjamín","Alevín","Infantil","Cadete","Junior","Absoluto"];
 const STORAGE_KEY="ctcampeador_reservas_v3_cloudflare_cache";
 const TOKEN_KEY="ctcampeador_api_token";
+const FAMILY_SELECTION_KEY='ctc_prod_family_selection_v1';
+let familyMode=false, familyName='',familyLinks=[],familyActive='';
 const API_URL="https://ct-campeador-api.ligasdetenis.workers.dev/";
 const PUSH_URL="https://ct-campeador-push-v1.ligasdetenis.workers.dev";
 let PUSH_VAPID_PUBLIC_KEY="";
@@ -5102,7 +5104,114 @@ const PUSH_RESYNC_MS=7*24*60*60*1000;  // revalidación push como máximo una ve
 let lastRefreshAt=0;
 function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(data));if(isAdmin()&&apiToken){clearTimeout(saveTimer);saveTimer=setTimeout(()=>saveStateOnline().catch(console.warn),350)}}
 function publicState(){return {tournamentName:data.tournamentName||'II Liga Federada',playerLists:data.playerLists,fixtures:data.fixtures,fixtureRounds:data.fixtureRounds,slots:data.slots,drafts:data.drafts,published:data.published,bookings:data.bookings,reservations:data.bookings,results:data.results,staff:data.staff,accessExcluded:data.accessExcluded||[],adminRoles:Object.fromEntries(Object.entries(data.roles||{}).filter(([,r])=>r==='admin')),weekRanges:data.weekRanges||{},postponed:data.postponed||{},fixtureVisibilityOverrides:data.fixtureVisibilityOverrides||{},weeks:Object.fromEntries(weeks.map(w=>[w.id,w])),updatedAt:new Date().toISOString()}}
-async function apiRequest(payload,{auth=true}={}){const headers={'Content-Type':'application/json'};if(auth&&apiToken)headers.Authorization='Bearer '+apiToken;const r=await fetch(API_URL,{method:'POST',headers,body:JSON.stringify(payload)});let j={};try{j=await r.json()}catch(e){}if(!r.ok||j.ok===false)throw new Error(j.error||('HTTP '+r.status));return j}
+async function apiRequest(payload,{auth=true}={}){const headers={'Content-Type':'application/json'};if(auth&&apiToken)headers.Authorization='Bearer '+apiToken;const safePayload=auth&&familyMode&&familyActive?{...payload,familyPlayer:payload.familyPlayer||familyActive}:payload;const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),9000);let r;try{r=await fetch(API_URL,{method:'POST',headers,body:JSON.stringify(safePayload),signal:controller.signal});}catch(e){throw new Error(e?.name==='AbortError'?'La API de PRODUCCIÓN no responde en 9 segundos. Comprueba ct-campeador-api.':(e?.message||'No se puede conectar con la API de PRODUCCIÓN.'));}finally{clearTimeout(timeout);}let j={};try{j=await r.json()}catch(e){}if(!r.ok||j.ok===false)throw new Error(j.error||('HTTP '+r.status));return j}
+// FAMILY V1 — Sólo la cuenta familiar puede iniciar la vinculación. El servidor autoriza operaciones.
+const familyEsc=s=>String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function familyMount(){
+ if(document.getElementById('familyAccountPanel'))return;
+ const style=document.createElement('style');style.textContent=`
+ #familyOpenLogin{margin:13px auto 0;display:block;width:min(100%,310px);border:1px solid #ebd6d9;background:#fff;border-radius:13px;padding:13px 18px;font:850 13px Inter,system-ui;color:#a90019;box-shadow:0 4px 12px #28000912;cursor:pointer}
+ #familyAccountPanel{position:fixed;z-index:999990;inset:auto 0 0;width:min(100%,760px);margin:0 auto;max-height:min(87dvh,860px);overflow:auto;overscroll-behavior:contain;background:#f6f6f7;color:#1b1d22;border:1px solid #e6e6e9;border-radius:24px 24px 0 0;box-shadow:0 -20px 60px #17070b55;padding:0 0 calc(22px + env(safe-area-inset-bottom));font:14px Inter,system-ui}
+ #familyAccountPanel[hidden]{display:none!important}
+ #familyAccountPanel .familyHead{background:linear-gradient(125deg,#57000c,#9f0018 80%);color:#fff;padding:19px 56px 18px 20px;position:sticky;top:0;z-index:2;box-shadow:0 5px 18px #35000715}
+ #familyAccountPanel .familyEyebrow{color:#f1c348;font-weight:850;letter-spacing:.11em;text-transform:uppercase;font-size:10px}
+ #familyAccountPanel .familyHead h3{margin:5px 0;font-size:21px;font-weight:950;letter-spacing:-.025em;line-height:1.2}
+ #familyAccountPanel .familyHead p{margin:6px 0 0;color:#f3dfe2;font-size:12px;line-height:1.5}
+ #familyAccountPanel .familyBody{padding:16px;display:grid;gap:13px}
+ #familyAccountPanel .familyCard{background:#fff;border:1px solid #e8e8ec;border-radius:16px;box-shadow:0 5px 17px #23080e0a;padding:15px}
+ #familyAccountPanel .familySection{font-size:15px;font-weight:950;margin:0 0 12px;color:#202127}
+ #familyAccountPanel .familyHelp{font-size:12px;color:#6f7480;line-height:1.5;margin:6px 0 12px}
+ #familyAccountPanel .familyField{display:block;font-size:11px;font-weight:850;color:#5e626c;margin:0 0 5px}
+ #familyAccountPanel input{box-sizing:border-box;width:100%;max-width:none;border:1px solid #dce0e7;border-radius:12px;color:#202126;background:#fff;padding:13px 14px;font:800 15px Inter,system-ui;min-height:48px}
+ #familyAccountPanel input:focus{border-color:#cf001d;outline:3px solid #cf001d1a}
+ #familyAccountPanel .familyGrid{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin-top:10px}
+ #familyAccountPanel .familyGrid>*{flex:1 1 145px;min-width:0}
+ #familyAccountPanel button{border-radius:12px;padding:11px 14px;font:850 12px Inter,system-ui;min-height:43px;border:1px solid #ececef;background:#fff;color:#30343b;cursor:pointer}
+ #familyAccountPanel button.familyPrimary{background:linear-gradient(90deg,#d60020,#bd0019);border:0;color:white;box-shadow:0 6px 13px #d600201c}
+ #familyAccountPanel button.familySecondary{background:#fff;border-color:#e6d8dc;color:#ad001b}
+ #familyAccountPanel button.familyPlayer{display:flex;align-items:center;text-align:left;gap:11px;width:100%;background:#fff;border:1px solid #e7e7ea;color:#24262b}
+ #familyAccountPanel button.familyPlayer.approved{border:2px solid #29a367;background:#f0fbf4;color:#0d663d}
+ #familyAccountPanel .familyAvatar{width:42px;height:42px;min-width:42px;border-radius:50%;background:#f3e4e7 center/cover no-repeat;border:2px solid #e6d5d9;display:grid;place-items:center;color:#8d001b;font-size:13px;font-weight:900;letter-spacing:.02em;overflow:hidden}
+ #familyAccountPanel button.familyPlayer.approved .familyAvatar{border-color:#55ae82}
+ #familyAccountPanel .familyRow{padding:12px 0;border-bottom:1px solid #ececef;color:#30343b;font-size:12px}
+ #familyAccountPanel .familyRow:last-child{border-bottom:0}
+ .familyMessageActions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px}
+ .familyInboxOpen,.familyInboxDelete{min-height:36px;padding:8px 12px;border-radius:10px;border:1px solid #e6d7da;background:#fff;color:#8b0019;font:800 12px Inter,system-ui,sans-serif;cursor:pointer}
+ .familyInboxOpen{background:#930019;color:white;border-color:#930019}
+ .familyInboxDelete{background:#fff5f5;color:#9f142d;border-color:#f0d4da;margin-top:8px}
+ .familyMessageActions .familyInboxDelete{margin-top:0}
+ .familyMessageActions .familyAvatar{width:27px!important;height:27px!important;min-width:27px!important;font-size:10px!important}
+ #familyAccountPanel .familyChip{display:inline-block;background:#fff2d6;color:#936006;border:1px solid #f1dfad;padding:5px 8px;border-radius:99px;font-weight:800;font-size:10px}
+ #familyAccountPanel .familyStat{background:#fff7e1;border:1px solid #f0dfae;border-radius:12px;padding:11px 13px;font-size:12px;color:#75531c}
+ #familyAccountPanel #familyClose{position:sticky;z-index:4;float:right;top:12px;right:13px;margin:12px 13px -51px 0;width:37px;height:37px;min-height:37px;line-height:1;padding:0;border:1px solid #ffffff5c;background:#ffffff20;color:white;border-radius:50%;font-size:20px}
+ @media(min-width:650px){#familyAccountPanel{bottom:10px;border-radius:22px;max-height:85dvh}#familyAccountPanel .familyBody{padding:19px 20px}}
+ `;document.head.append(style);
+ const welcome=document.querySelector('#welcomePinBtn');if(welcome){welcome.insertAdjacentHTML('afterend','<button id="familyOpenLogin" type="button">👨‍👩‍👧‍👦 Acceso familiar</button>');document.getElementById('familyOpenLogin').onclick=()=>familyShowLogin();}
+ document.body.insertAdjacentHTML('beforeend','<div id="familyAccountPanel" hidden></div>');
+}
+function familyBox(content){familyMount();const el=document.querySelector('#familyAccountPanel');el.hidden=false;el.innerHTML='<button id="familyClose" type="button" aria-label="Cerrar">×</button>'+content;el.querySelector('#familyClose').onclick=()=>el.hidden=true;return el;}
+function familyShowLogin(){
+ const el=familyBox(`<div class="familyHead"><div class="familyEyebrow">CT Campeador · Familias</div><h3>Tu equipo, en una sola cuenta</h3><p>Gestiona los partidos y las reservas de tus hijos desde una única sesión.</p></div>
+ <div class="familyBody"><section class="familyCard"><h4 class="familySection">Acceso familiar</h4>
+ <label class="familyField" for="famName">Nombre de la familia</label><input id="famName" maxlength="70" placeholder="Ej.: Familia González" autocomplete="username">
+ <label class="familyField" for="famPin" style="margin-top:14px">PIN familiar (6 cifras)</label><input id="famPin" type="password" inputmode="numeric" maxlength="6" autocomplete="current-password" placeholder="••••••">
+ <div class="familyGrid"><button class="familyPrimary" id="famLogin">Entrar</button><button class="familySecondary" id="famRegister">Crear cuenta familiar</button></div></section>
+ <div class="familyStat">🔒 Los jugadores se vinculan mediante su PIN personal y requieren autorización del administrador.</div></div>`);
+ async function go(action){let name=el.querySelector('#famName').value.trim(),pin=el.querySelector('#famPin').value.trim();if(name.length<4||!/^[0-9]{6}$/.test(pin)){alert('Introduce nombre y PIN de 6 cifras.');return}
+ try{const j=await apiRequest({action,name,pin},{auth:false});apiToken=j.token;localStorage.setItem(TOKEN_KEY,apiToken);familyMode=true;familyName=j.familyName||name;familyActive='';state.player='';state.authenticated=true;await familyRefresh();hidePinWelcome();renderAll();familyOpen();if(familyActive){await familySelect(familyActive)}else familyOpen();}
+ catch(e){alert('Acceso familiar: '+e.message)}}
+ el.querySelector('#famLogin').onclick=()=>go('familyLogin');el.querySelector('#famRegister').onclick=()=>go('familyRegister');
+}
+async function familyRefresh(){
+ const r=await apiRequest({action:'familyInfo'});familyMode=true;familyName=r.name||'';familyLinks=r.links||[];
+ const choices=familyLinks.filter(l=>l.status==='approved');
+ if(!choices.some(l=>l.playerName===familyActive)){
+   const saved=localStorage.getItem(FAMILY_SELECTION_KEY)||'';
+   familyActive=choices.find(l=>l.playerName===saved)?.playerName||choices[0]?.playerName||'';
+ }
+ // El acceso familiar reside en Mi perfil; no hay control flotante.
+}
+async function familySelect(player,{openPanel=true,refreshPending=true}={}){
+ if(!familyLinks.some(l=>l.status==='approved'&&l.playerName===player))throw new Error('Jugador no autorizado');
+ familyActive=player;localStorage.setItem(FAMILY_SELECTION_KEY,player);state.player=player;state.authenticated=true;data.roles[player]='jugador';
+ await refreshOnline({silent:true,force:true});routePlayerToOwnCategory(player);renderAll();if(openPanel)familyOpen();if(refreshPending)setTimeout(()=>ctPendingScan().catch(console.warn),120);
+ try{const sub=await currentPushSubscription();if(sub)await apiRequest({action:'subscribePush',deviceId:getPushDeviceId(),subscription:sub.toJSON()});}catch(e){console.warn('Push familiar pendiente de sincronizar',e)}
+}
+function familyPlayerAvatar(name){
+ const photo=mappPhoto(name);
+ const style=photo?` style="background-image:url('${photo.replace(/'/g,'%27')}')"`:'';
+ return `<span class="familyAvatar"${style}>${photo?'':mappEsc(mappInitials(name))}</span>`;
+}
+function familyOpen(){
+ const active=familyLinks.filter(l=>l.status==='approved'),pending=familyLinks.filter(l=>l.status!=='approved');
+ const el=familyBox(`<div class="familyHead"><div class="familyEyebrow">CT Campeador · Mi familia</div><h3>${familyEsc(familyName)}</h3><p>Selecciona un jugador para gestionar sus partidos, pistas y resultados.</p></div>
+ <div class="familyBody"><section class="familyCard"><button class="familyPrimary" style="width:100%;font-size:14px" id="familyAllMessages">✉️ Mensajes de todos los jugadores</button></section><section class="familyCard"><h4 class="familySection">🎾 Jugadores vinculados</h4>
+ ${active.map(l=>`<button type="button" data-family-player="${familyEsc(l.playerName)}" class="familyPlayer ${l.playerName===familyActive?'approved':''}" style="margin-bottom:9px">${familyPlayerAvatar(l.playerName)}<span style="flex:1">${familyEsc(l.playerName)}</span><span>${l.playerName===familyActive?'✓ Activo':'Cambiar'}</span></button>`).join('')||'<p class="familyHelp">Todavía no hay jugadores autorizados. Vincula el primero con su PIN.</p>'}
+ ${pending.map(l=>`<div class="familyRow"><span class="familyChip">${familyEsc(l.status==='pending'?'⏳ Pendiente':l.status==='revoked'?'Revocado':'No autorizado')}</span> &nbsp;${familyEsc(l.playerName)}</div>`).join('')}
+ </section><section class="familyCard"><h4 class="familySection">➕ Vincular un jugador</h4><p class="familyHelp">Introduce únicamente su PIN personal. Identificaremos su nombre automáticamente y enviaremos la solicitud al administrador.</p>
+ <label for="familyPlayerPin" class="familyField">PIN del jugador (4 o 6 cifras)</label><input id="familyPlayerPin" type="password" inputmode="numeric" maxlength="6" pattern="[0-9]*" placeholder="••••••" autocomplete="off">
+ <button class="familyPrimary" style="width:100%;margin-top:11px" id="familyRequest">Solicitar vinculación</button>
+ <p class="familyHelp" style="margin:10px 0 0">🔒 Nunca guardamos el PIN personal en la cuenta familiar.</p></section>
+ <div class="familyGrid"><button class="familySecondary" id="familyRefresh">↻ Actualizar autorizaciones</button><button id="familyLogout">Cerrar sesión</button></div></div>`);
+ el.querySelector('#familyAllMessages').onclick=()=>{el.hidden=true;familyShowInbox().catch(e=>alert(e.message))};
+ el.querySelectorAll('[data-family-player]').forEach(b=>b.onclick=()=>familySelect(b.dataset.familyPlayer).catch(e=>alert(e.message)));
+ el.querySelector('#familyRequest').onclick=async()=>{const pinInput=el.querySelector('#familyPlayerPin'),pin=pinInput.value.trim(),btn=el.querySelector('#familyRequest');if(!/^(?:\d{4}|\d{6})$/.test(pin)){alert('Introduce el PIN del jugador (4 o 6 cifras).');return;}btn.disabled=true;try{const r=await apiRequest({action:'familyRequestLink',pin});pinInput.value='';await familyRefresh();familyOpen();alert('Jugador identificado: '+r.player+'\n'+(r.status==='approved'?'Ya está vinculado.':'Solicitud enviada. Falta la autorización del administrador.'))}catch(e){alert(e.message)}finally{btn.disabled=false}};
+ el.querySelector('#familyRefresh').onclick=async()=>{try{await familyRefresh();familyOpen()}catch(e){alert(e.message)}};
+ el.querySelector('#familyLogout').onclick=()=>document.querySelector('#clearIdentity')?.click();
+}
+async function familyAdminOpen(){
+ const j=await apiRequest({action:'familyAdminList'});
+ const requests=j.requests||[];
+ const el=familyBox(`<div class="familyHead"><div class="familyEyebrow">Administración</div><h3>Autorizaciones familiares</h3><p>Antes de aprobar, verifica que quien solicita el acceso es el tutor autorizado del jugador.</p></div>
+ <div class="familyBody"><section class="familyCard">${requests.map((r,i)=>`<div class="familyRow"><b>${familyEsc(r.familyName)}</b> → <b>${familyEsc(r.playerName)}</b><p class="familyHelp">Estado: ${familyEsc(r.status)}</p><div class="familyGrid"><button class="familyPrimary" data-i="${i}" data-dec="approved">✓ Aprobar</button><button class="familySecondary" data-i="${i}" data-dec="revoked">Revocar</button></div></div>`).join('')||'<p class="familyHelp">No hay solicitudes.</p>'}</section></div>`);
+ el.querySelectorAll('[data-dec]').forEach(b=>b.onclick=async()=>{const r=requests[Number(b.dataset.i)],status=b.dataset.dec;if(!confirm(`${status==='approved'?'¿Confirmas que esta persona es tutor autorizado?':'¿Revocar acceso?'}\n${r.familyName} → ${r.playerName}`))return;try{await apiRequest({action:'familyAdminDecision',familyId:r.familyId,player:r.playerName,status});await familyAdminOpen()}catch(e){alert(e.message)}});
+}
+function familyRenderButton(){
+ // V1.6.1 · El acceso a familia se presenta como fila integrada en Mi perfil.
+ // Sin botones position:fixed: no tapar ticker ni navegación inferior.
+}
+
+
 
 function realtimeUrl(){
   return API_URL.replace(/^https:/,'wss:').replace(/^http:/,'ws:').replace(/\/$/,'')+'/realtime';
@@ -5229,6 +5338,13 @@ async function loadPublicTournamentName(){
 async function restoreSession(){
   if(!apiToken)return false;
   try{
+    let fam=null;
+    try{fam=await apiRequest({action:'familyInfo'})}catch(_){}
+    if(fam?.ok){familyMode=true;familyName=fam.name;familyLinks=fam.links||[];await familyRefresh();
+      state.authenticated=true;
+      if(!familyActive){state.player='';return true}
+      state.player=familyActive;data.roles[familyActive]='jugador';
+    }
     const j=await apiRequest({action:'read'});
     if(!j.user||!j.user.name){throw new Error('Sesión no válida');}
     state.player=j.user.name;
@@ -6086,6 +6202,7 @@ async function loginWithPinOnly(){
     if(btn){btn.disabled=true;btn.textContent='⏳ Entrando…'}
     const j=await apiRequest({action:'loginPin',pin},{auth:false});
     apiToken=j.token;
+    familyMode=false;familyActive='';familyLinks=[];
     localStorage.setItem(TOKEN_KEY,apiToken);
     state.player=j.user.name;
     state.authenticated=true;
@@ -6150,6 +6267,7 @@ function pushSubscriptionFingerprint(sub,userName){
   }catch(_){return ''}
 }
 async function syncPushSubscription(sub,{force=false}={}){
+  if(familyMode){if(!sub||!apiToken)return false;await apiRequest({action:'subscribePush',deviceId:getPushDeviceId(),subscription:sub.toJSON?sub.toJSON():sub});return true;}
   if(!sub||!state.authenticated||!state.player||!apiToken)return false;
   const fp=pushSubscriptionFingerprint(sub,state.player);
   if(!force&&fp){
@@ -6158,20 +6276,7 @@ async function syncPushSubscription(sub,{force=false}={}){
       if(cached?.fingerprint===fp && Date.now()-Number(cached.syncedAt||0)<PUSH_RESYNC_MS)return true;
     }catch(_){}
   }
-  const r=await fetch(PUSH_URL+'/subscribe',{
-    method:'POST',
-    headers:{
-      'Content-Type':'application/json',
-      'Authorization':'Bearer '+apiToken
-    },
-    body:JSON.stringify({
-      deviceId:getPushDeviceId(),
-      subscription:sub.toJSON?sub.toJSON():sub,
-      userName:state.player
-    })
-  });
-  let j={};try{j=await r.json()}catch(e){}
-  if(!r.ok||j.ok===false)throw new Error(j.error||('HTTP '+r.status));
+  await apiRequest({action:'subscribePush',deviceId:getPushDeviceId(),subscription:sub.toJSON?sub.toJSON():sub});
   if(fp){try{localStorage.setItem(PUSH_SYNC_CACHE_KEY,JSON.stringify({fingerprint:fp,syncedAt:Date.now()}))}catch(_){}}
   return true;
 }
@@ -8778,6 +8883,7 @@ function wireAdminCompact(){
 
 /* ===== V3.13.0 modern app shell ===== */
 const MAPP_ICONS={
+ users:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3 20v-2a6 6 0 0 1 12 0v2"/><circle cx="17" cy="9" r="2.5"/><path d="M17 15a5 5 0 0 1 4 5"/></svg>`,
  home:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.7 12 3l9 7.7"/><path d="M5.5 9.3V21h13V9.3"/><path d="M9.5 21v-6h5v6"/></svg>`,
  court:`<img class="mapp-court-icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAgAAAAIACAMAAADDpiTIAAAAA3NCSVQICAjb4U/gAAAACXBIWXMAABegAAAXoAHmbqwWAAAAGXRFWHRTb2Z0d2FyZQB3d3cuaW5rc2NhcGUub3Jnm+48GgAAAGxQTFRF////AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAfHZfwQAAACN0Uk5TAAUJECgwOFJYXXCHi4+QoaiwuLy/wMHH19zd5+jp7O3w9fgYTXvlAAAD1UlEQVR42u3dT0/iQBjAYeq0zQruitnoJhpPfv/v5GXjaWNE8E8B2fvMAePhrek8z/ENydDhV4YDgdkMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAWbO0B1Vrf9uDqp3YAgEgAASAABAAAkAACAABIAAEgAAQAAJgitp8sHuo4bLTdTZYP9bxet8eDWA/1LAPXT7YDpW+AzgCfAZAAAgAASAABIAAEAACQAAIAAEgAASAABAAAkAACAABIAAEgAAQAAJAAAgAASAABIAAEAACQAAIAAEgAL6b4mfiUl/DZad80PWVBtDcuQkcAQgAASAABIAAEAACQAAIAAEgAASAABAAU1N8IeQQ+w+KJ8tssH2OWDadZ4NhHbFs9zMbvK6DX+/LowEMsQG0eQCvIet3eQCbkGX7IoDV2AE4AnwGQAAIAAEgAASAABAAAkAACAABIAAEgAAQAAJAAAgAASAABIAAEAACQAAIAAEgAASAABAAAkAACAABIAAEgAAQAAJAAAgAASAABIAAEAACQAAIAAEgAASAABAAAkAACAABIAAEgAAQAAJAAAgAASAABIAAEAACQAAIAAEgAASAABAAAkAACAABIADaYvCjeMzhPfIJzUfpvg9ZNsXe3GdfCSDdFI/Z3wc+6/l8lBthsZjezd1cOgIQAAJAAAgAASAABIAAEAACQAACsAUCQADUqvg+wMe/4jH7yCf08hTS/Z9ssFlFLJuuIrfy4285uzkawHY1bpG7l4hVunwwhCzbh27l4c0RgAAQAAJAAAgAASAABIAAEAACEIAtEAACQAAIAAEgAASAABAAAkAACAABIAAEgAAQAAJAAAgAASAABIAAEAACQAAIAAEgAASAABAAAkAACAABIAAEgAAQAAJAAAgAASAABIAAEAACQAAIAAEgAASAABAAAkAACAABIAAEgAAQAAJAAAgAASAABIAAEACf0OaD7lfo+k0+OL2IWDblg8UhYtkuH8xHD6C5cxM4AhAAAkAACAABIAAEgAAQAAJAAAgAASAApqb4QsjuoYbLTtfZYP1Yx+t9ezSA/VDDPhRfzdkOlb4DOAJ8BkAACAABIAAEgAAQAAJAAAgAASAABIAAEAACQAAIAAEgAASAABAAAkAACAABIAAEgAAQAAJAAAgAASAAvpviZ+JSX8NlF38c2fWVBuCPIx0BCAABIAAEgAAQAAJAAAgAASAABIAAEADT0yztAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAALX7D28HOc0eQ7h6AAAAAElFTkSuQmCC" alt="Pista de tenis">`,
  trophy:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4h8v4a4 4 0 0 1-8 0V4Z"/><path d="M6 5H3v2a4 4 0 0 0 4 4M18 5h3v2a4 4 0 0 1-4 4M12 12v5M8 21h8M9 17h6"/></svg>`,
@@ -9113,7 +9219,7 @@ function renderResultsTicker(){
 }
 
 
-const PUSH_DEEP_LINK_KEYS=['open','matchId','week','category','gender'];
+const PUSH_DEEP_LINK_KEYS=['open','matchId','week','category','gender','player','messageId'];
 let pendingPushDeepLink=null;
 let pushDeepLinkRunning=false;
 
@@ -9124,7 +9230,8 @@ function readPushDeepLink(){
     if(!open)return null;
     return {
       open,
-      matchId:String(u.searchParams.get('matchId')||'').trim(),
+      player:String(u.searchParams.get('player')||'').trim(),
+      messageId:String(u.searchParams.get('messageId')||'').trim(),
       week:String(u.searchParams.get('week')||'').trim(),
       category:String(u.searchParams.get('category')||'').trim(),
       gender:String(u.searchParams.get('gender')||'').trim()
@@ -9154,6 +9261,20 @@ async function processPushDeepLink({force=false}={}){
   if(!state.authenticated||!apiToken){return false}
   pushDeepLinkRunning=true;
   try{
+    if(familyMode && link.player){
+      try{await familyRefresh()}catch(e){console.warn('No se pudieron revisar las autorizaciones familiares',e);return false}
+      const target=familyLinks.find(l=>l.status==='approved'&&normalizeName(l.playerName)===normalizeName(link.player));
+      if(!target){
+        clearPushDeepLinkFromUrl();pendingPushDeepLink=null;
+        familyOpen();alert('Este aviso corresponde a un jugador que ya no está autorizado en esta cuenta familiar.');return false;
+      }
+      if(normalizeName(familyActive)!==normalizeName(target.playerName)){
+        await familySelect(target.playerName,{openPanel:false,refreshPending:false});
+      }
+    }else if(familyMode && link.open==='messages' && !link.player){
+      clearPushDeepLinkFromUrl();pendingPushDeepLink=null;
+      await familyShowInbox();return true;
+    }
     if(link.week && weeks.some(w=>w.id===link.week))state.week=link.week;
     if(link.category && CATEGORIES.includes(link.category))state.category=link.category;
     if(link.gender && ['Masculino','Femenino'].includes(link.gender))state.gender=link.gender;
@@ -9203,7 +9324,7 @@ async function processPushDeepLink({force=false}={}){
       }
     }else if(link.open==='messages'){
       mappShow('profile');
-      setTimeout(()=>openMessagesInbox(),120);
+      setTimeout(()=>openMessagesInbox({highlightId:link.messageId||''}),120);
     }else if(link.open==='results'){
       mappShow('results');
     }else if(link.open==='profile'){
@@ -9746,6 +9867,50 @@ async function loadCloudMessages({silent=true}={}){
     return cloudMessages;
   }
 }
+// V1.6 TEST: Bandeja familiar autorizada y lectura por jugador.
+let familyInboxCache=[];
+async function familyFetchInbox(){
+  if(!familyMode)return {players:[],messages:[]};
+  const r=await apiRequest({action:'familyInbox'});
+  familyInboxCache=Array.isArray(r.messages)?r.messages:[];
+  return r;
+}
+async function familyHideMessage(m){
+ if(!m?.id||!m?.playerName)return;
+ if(!confirm(`¿Quitar este mensaje solo del buzón de ${m.playerName}?\n\nLos demás destinatarios y el administrador conservarán su copia.`))return;
+ await apiRequest({action:'hideOwnMessage',id:m.id,familyPlayer:m.playerName});
+ await loadCloudMessages({silent:true});
+ await familyShowInbox();
+ renderModernProfile({skipMessageLoad:true});
+ if(typeof ctPendingScan==='function')ctPendingScan().catch(console.warn);
+}
+async function familyShowInbox(){
+  if(!familyMode)return openMessagesInbox();
+  let inbox;
+  try{inbox=await familyFetchInbox()}catch(e){alert('No se pudo cargar la bandeja familiar: '+e.message);return}
+  document.querySelector('.mapp-msg-modal')?.remove();
+  const modal=document.createElement('div');modal.className='mapp-msg-modal';
+  const items=inbox.messages||[];
+  const unread=items.filter(m=>!m.read).length;
+  modal.innerHTML=`<div class="mapp-msg-sheet" style="max-width:570px"><div class="mapp-msg-head" style="background:linear-gradient(120deg,#57000c,#9f0018);color:white;padding:17px;border-radius:14px 14px 0 0"><div><small style="color:#f6cb58;font-weight:900;letter-spacing:.08em">CT CAMPEADOR · MI FAMILIA</small><h3 style="margin:4px 0">Mensajes familiares</h3><span style="font-size:12px">${unread} sin leer · ${items.length} comunicaciones</span></div><button class="mapp-msg-close" type="button" aria-label="Cerrar">×</button></div>
+   <div class="mapp-msg-list">${items.length?items.map((m,i)=>`<div class="mapp-msg-card ${m.read?'':'unread'}" style="border-radius:12px;margin:8px 0;padding:13px"><div style="display:flex;align-items:center;gap:8px"><span style="display:inline-flex;align-items:center;gap:7px;background:#fff0d9;color:#7b2738;padding:4px 9px;border-radius:999px;font-size:11px;font-weight:900">${familyPlayerAvatar(m.playerName)} ${familyEsc(m.playerName)}</span></div><div class="mapp-msg-title" style="margin-top:8px">${familyEsc(m.title||'Aviso')}</div><div class="mapp-msg-body">${familyEsc(m.body||'')}</div><div class="mapp-msg-date">${m.at?new Date(m.at).toLocaleString('es-ES'):'—'} · ${familyEsc(m.sentBy||'Club')}</div><div class="familyMessageActions"><button type="button" data-family-msg="${i}" class="familyInboxOpen">${m.read?'Ver como '+familyEsc(m.playerName):'● Abrir y marcar leído'}</button><button type="button" data-family-hide="${i}" class="familyInboxDelete" aria-label="Eliminar solo del buzón de ${familyEsc(m.playerName)}">Eliminar de mi buzón</button></div></div>`).join(''):'<div class="mapp-msg-empty">No hay mensajes para los jugadores autorizados.</div>'}</div></div>`;
+  document.body.append(modal);
+  const close=()=>{modal.remove();renderModernProfile({skipMessageLoad:true})};
+  modal.querySelector('.mapp-msg-close').onclick=close;
+  modal.addEventListener('click',e=>{if(e.target===modal)close()});
+  modal.querySelectorAll('[data-family-hide]').forEach(b=>b.onclick=async()=>{
+    const m=items[Number(b.dataset.familyHide)];if(!m)return;b.disabled=true;
+    try{await familyHideMessage(m)}catch(e){alert('No se pudo eliminar: '+e.message);b.disabled=false}
+  });
+  modal.querySelectorAll('[data-family-msg]').forEach(b=>b.onclick=async()=>{
+    const m=items[Number(b.dataset.familyMsg)];if(!m)return;b.disabled=true;
+    try{
+      await familySelect(m.playerName,{openPanel:false,refreshPending:false});
+      if(!m.read){await apiRequest({action:'markMessagesRead',ids:[m.id],familyPlayer:m.playerName});m.read=true}
+      close();mappShow('profile');await openMessagesInbox({highlightId:m.id});
+    }catch(e){alert('No se pudo abrir el mensaje: '+e.message);b.disabled=false}
+  });
+}
 function mappUserMessages(){
   if(!state.player)return [];
   if(isAdmin()){
@@ -9764,15 +9929,17 @@ function renderOpenMessagesInboxFromCache(){
   if(!list)return;
   const messages=mappUserMessages();
   list.innerHTML=messages.length
-    ? messages.map(m=>`<div class="mapp-msg-card ${m.read?'':'unread'}">
+    ? messages.map((m,i)=>`<div class="mapp-msg-card ${m.read?'':'unread'}">
         <div class="mapp-msg-title">${mappEsc(m.title||'Aviso')}</div>
         <div class="mapp-msg-body">${mappEsc(m.body||'')}</div>
         <div class="mapp-msg-date">${m.at?new Date(m.at).toLocaleString('es-ES'):'—'} · ${mappEsc(m.sentBy||'Administrador')}</div>
+        ${!isAdmin()?`<button type="button" class="familyInboxDelete" data-own-hide="${i}">Eliminar de mi buzón</button>`:''}
       </div>`).join('')
     : '<div class="mapp-msg-empty">No tienes mensajes.</div>';
 }
-async function openMessagesInbox(){
+async function openMessagesInbox({highlightId=''}={}){
   document.querySelector('.mapp-msg-modal')?.remove();
+  if(familyMode && !highlightId)return familyShowInbox();
   await loadCloudMessages({silent:false});
   const messages=mappUserMessages();
   const modal=document.createElement('div');
@@ -9781,10 +9948,11 @@ async function openMessagesInbox(){
     <div class="mapp-msg-head"><h3>Mensajes</h3><button class="mapp-msg-close" type="button" aria-label="Cerrar">×</button></div>
     <div class="mapp-msg-list">${
       messages.length
-        ? messages.map(m=>`<div class="mapp-msg-card ${m.read?'':'unread'}">
+        ? messages.map((m,i)=>`<div class="mapp-msg-card ${m.read?'':'unread'}">
             <div class="mapp-msg-title">${mappEsc(m.title||'Aviso')}</div>
             <div class="mapp-msg-body">${mappEsc(m.body||'')}</div>
             <div class="mapp-msg-date">${m.at?new Date(m.at).toLocaleString('es-ES'):'—'} · ${mappEsc(m.sentBy||'Administrador')}</div>
+            ${!isAdmin()?`<button type="button" class="familyInboxDelete" data-own-hide="${i}">Eliminar de mi buzón</button>`:''}
           </div>`).join('')
         : '<div class="mapp-msg-empty">No tienes mensajes.</div>'
     }</div>
@@ -9793,6 +9961,18 @@ async function openMessagesInbox(){
   const close=()=>{modal.remove();renderModernProfile()};
   modal.querySelector('.mapp-msg-close')?.addEventListener('click',close);
   modal.addEventListener('click',e=>{if(e.target===modal)close()});
+  modal.querySelectorAll('[data-own-hide]').forEach(btn=>btn.addEventListener('click',async()=>{
+    const m=messages[Number(btn.dataset.ownHide)];if(!m)return;
+    if(!confirm('¿Quitar este mensaje únicamente de tu buzón?\n\nLos demás destinatarios conservarán su copia.'))return;
+    btn.disabled=true;
+    try{
+      await apiRequest({action:'hideOwnMessage',id:m.id});
+      await loadCloudMessages({silent:false});
+      await openMessagesInbox({highlightId:m.id});
+      renderModernProfile({skipMessageLoad:true});
+      if(typeof ctPendingScan==='function')ctPendingScan().catch(console.warn);
+    }catch(e){alert('No se pudo eliminar: '+e.message);btn.disabled=false}
+  }));
 
   const unread=messages.filter(m=>!m.read).map(m=>m.id).filter(Boolean);
   if(unread.length){
@@ -9818,6 +9998,8 @@ async function renderModernProfile({skipMessageLoad=false}={}){
      ${mappAvatar(state.player,'mapp-profile-avatar')}
      <div><div class="mapp-profile-name">${mappEsc(state.player)}</div><div class="mapp-profile-role">${isAdmin()?(playerCategoryMemberships(state.player).length?`Administrador · Jugador · ${mappEsc(state.category)} ${mappEsc(state.gender)}`:'Administrador'):'Jugador · '+mappEsc(state.category)+' '+mappEsc(state.gender)}</div>${!isAdmin()&&playerCategoryMemberships(state.player).length>1?`<div class="mapp-menu-sub">Inscrito en ${playerCategoryMemberships(state.player).length} categorías · acceso inicial a la inferior</div>`:`<div class="mapp-menu-sub">Toca la foto para cambiarla · sincronizada en Cloudflare</div>`}</div>
    </div>
+   ${familyMode?`<div class="mapp-menu-row" id="mappFamilyRow" role="button" tabindex="0"><div class="mapp-menu-icon">${mappIcon('users')}</div><div><div class="mapp-menu-title">Mi familia</div><div class="mapp-menu-sub">${mappEsc(familyName||'Cuenta familiar')} · ${mappEsc(familyActive||'Seleccionar jugador')}</div></div><div>${mappIcon('chevron')}</div></div>`:''}
+   ${!familyMode&&isAdmin()?`<div class="mapp-menu-row" id="mappFamilyAdminRow" role="button" tabindex="0"><div class="mapp-menu-icon gray">${mappIcon('users')}</div><div><div class="mapp-menu-title">Familias</div><div class="mapp-menu-sub">Solicitudes y autorizaciones</div></div><div>${mappIcon('chevron')}</div></div>`:''}
    <div class="mapp-menu-row" id="mappPushRow"><div class="mapp-menu-icon">${mappIcon('bell')}</div><div><div class="mapp-menu-title">Avisos</div><div class="mapp-menu-sub ${pushCls}">${mappEsc(pushText)}</div></div><div>${mappIcon('chevron')}</div></div>
    <div class="mapp-menu-row" id="mappMessagesRow"><div class="mapp-menu-icon">${mappIcon('mail')}</div><div><div class="mapp-menu-title">Mensajes</div><div class="mapp-menu-sub">${mappUserMessages().length?`${mappUserMessages().length} mensaje${mappUserMessages().length===1?'':'s'} recibido${mappUserMessages().length===1?'':'s'}`:'No tienes mensajes'}</div></div>${mappUnreadMessages().length?`<div class="mapp-msg-badge">${mappUnreadMessages().length}</div>`:`<div>${mappIcon('chevron')}</div>`}</div>
    <div class="mapp-menu-row" id="mappInstallRow"><div class="mapp-menu-icon">${mappIcon('phone')}</div><div><div class="mapp-menu-title">Aplicación</div><div class="mapp-menu-sub ${installCls}">${mappEsc(installText)}</div></div><div>${mappIcon('chevron')}</div></div>
@@ -9828,6 +10010,8 @@ async function renderModernProfile({skipMessageLoad=false}={}){
  const avatar=box.querySelector('.mapp-profile-avatar');
  avatar?.addEventListener('click',()=>$('#mappPhotoInput').click());
  $('#mappPhotoInput')?.addEventListener('change',mappSavePhoto);
+ $('#mappFamilyRow')?.addEventListener('click',()=>familyOpen());
+ $('#mappFamilyAdminRow')?.addEventListener('click',()=>familyAdminOpen().catch(e=>alert(e.message)));
  $('#mappPushRow')?.addEventListener('click',async()=>{await activateNativePush();await renderModernProfile();renderModernHeader();mappRefreshBellState()});
  $('#mappMessagesRow')?.addEventListener('click',openMessagesInbox);
  $('#mappInstallRow')?.addEventListener('click',installAppNow);
@@ -9954,7 +10138,7 @@ function renderModernUI(){
  renderModernProfile();
 }
 
-function renderAll(){renderModernHeader();renderTournamentNameEditor();renderMessageAudience();renderMessageHistory();renderTabs();renderWeeks();renderIdentity();renderState();renderMatches();renderSchedule();renderKpis();renderAdmin();updateAdminSummaries();wireAdminCompact();renderPushUI();renderModernUI();renderModernAdminContext()}
+function renderAll(){familyMount();renderModernHeader();renderTournamentNameEditor();renderMessageAudience();renderMessageHistory();renderTabs();renderWeeks();renderIdentity();renderState();renderMatches();renderSchedule();renderKpis();renderAdmin();updateAdminSummaries();wireAdminCompact();renderPushUI();renderModernUI();renderModernAdminContext();familyRenderButton()}
 
 
 document.querySelectorAll('[data-icon]').forEach(el=>el.innerHTML=mappIcon(el.dataset.icon));
@@ -10005,9 +10189,9 @@ $('#welcomePin').addEventListener('input',e=>{
 $('#welcomePin').addEventListener('keydown',e=>{if(e.key==='Enter')loginWithPinOnly()});
 
 $('#playerIdentity').onchange=e=>{if(!state.authenticated)state.player=e.target.value;$('#playerPin').value='';renderIdentity()};
-$('#loginBtn').onclick=async()=>{const player=$('#playerIdentity').value,pin=$('#playerPin').value.trim();if(!player){alert('Selecciona tu nombre.');return}if(!/^(?:\d{4}|\d{6})$/.test(pin)){alert('Introduce un PIN válido de 6 cifras. Los PIN antiguos de 4 siguen funcionando.');return}try{$('#loginBtn').disabled=true;const j=await apiRequest({action:'login',name:player,pin},{auth:false});apiToken=j.token;localStorage.setItem(TOKEN_KEY,apiToken);state.player=j.user.name;state.authenticated=true;data.roles[state.player]=localRoleFromApi(j.user.role);if(isAdmin())await loadAdminUsers();routePlayerToOwnCategory(state.player);ctcSelectCalendarWeekOnEntry();$('#playerPin').value='';setOnline(true,'☁️ Online');await refreshOnline({silent:true,force:true});connectRealtime();renderAll();queuePushDeepLink()}catch(e){alert('No se ha podido iniciar sesión.\n\n'+e.message)}finally{$('#loginBtn').disabled=false}};
+$('#loginBtn').onclick=async()=>{const player=$('#playerIdentity').value,pin=$('#playerPin').value.trim();if(!player){alert('Selecciona tu nombre.');return}if(!/^(?:\d{4}|\d{6})$/.test(pin)){alert('Introduce un PIN válido de 6 cifras. Los PIN antiguos de 4 siguen funcionando.');return}try{$('#loginBtn').disabled=true;const j=await apiRequest({action:'login',name:player,pin},{auth:false});apiToken=j.token;familyMode=false;familyActive='';familyLinks=[];localStorage.setItem(TOKEN_KEY,apiToken);state.player=j.user.name;state.authenticated=true;data.roles[state.player]=localRoleFromApi(j.user.role);if(isAdmin())await loadAdminUsers();routePlayerToOwnCategory(state.player);ctcSelectCalendarWeekOnEntry();$('#playerPin').value='';setOnline(true,'☁️ Online');await refreshOnline({silent:true,force:true});connectRealtime();renderAll();queuePushDeepLink()}catch(e){alert('No se ha podido iniciar sesión.\n\n'+e.message)}finally{$('#loginBtn').disabled=false}};
 $('#playerPin').addEventListener('keydown',e=>{if(e.key==='Enter')$('#loginBtn').click()});
-$('#clearIdentity').onclick=async()=>{stopRealtime();try{if(apiToken)await apiRequest({action:'logout'})}catch(e){}apiToken='';localStorage.removeItem(TOKEN_KEY);localStorage.removeItem(MAPP_LAST_TAB_KEY);adminCloudOrderLoadedFor='';state.player='';state.authenticated=false;$('#playerPin').value='';renderAll();showPinWelcome('Introduce tu PIN para cambiar de usuario.',false)};
+$('#clearIdentity').onclick=async()=>{stopRealtime();try{if(apiToken)await apiRequest({action:'logout'})}catch(e){}apiToken='';localStorage.removeItem(TOKEN_KEY);localStorage.removeItem(MAPP_LAST_TAB_KEY);localStorage.removeItem(FAMILY_SELECTION_KEY);familyMode=false;familyActive='';familyLinks=[];document.querySelector('#familyAccountPanel')?.setAttribute('hidden','');adminCloudOrderLoadedFor='';state.player='';state.authenticated=false;$('#playerPin').value='';renderAll();showPinWelcome('Introduce tu PIN para cambiar de usuario.',false)};
 $$('.gender').forEach(b=>b.onclick=()=>{state.gender=b.dataset.gender;renderAll()});
 $('#weekSelect').onchange=e=>{state.week=e.target.value;renderAll()};
 function openNativeDatePicker(inputId){
@@ -10616,8 +10800,8 @@ let ctPendingItems=[], ctPendingLoading=false, ctPendingOpened=false, ctPendingE
 let ctPendingUser='',ctPendingDeferredKey='';
 function ctPendingNorm(s){return String(s||'').trim().toLocaleLowerCase('es')}
 function ctPendingHasPush(){return !!(pendingPushDeepLink||readPushDeepLink())}
-function ctPendingAllOwnMatches(){
- const me=ctPendingNorm(state.player),found=new Map();
+function ctPendingAllOwnMatches(player=state.player){
+ const me=ctPendingNorm(player),found=new Map();
  Object.values(data.fixtures||{}).forEach(arr=>{
   if(!Array.isArray(arr))return;
   arr.forEach(m=>{
@@ -10626,14 +10810,14 @@ function ctPendingAllOwnMatches(){
  });
  return [...found.values()];
 }
-function ctPendingReadResults(){
- return ctPendingAllOwnMatches().flatMap(m=>{
+function ctPendingReadResults(player=state.player){
+ return ctPendingAllOwnMatches(player).flatMap(m=>{
    const r=resultFor(m.id);
-   if(!r||r.status!=='pending'||ctPendingNorm(r.submittedBy)===ctPendingNorm(state.player))return [];
-   return [{id:'result:'+m.id,kind:'result',mid:String(m.id),title:'Resultado por confirmar',desc:`${m.a} vs ${m.b} · ${resultLabel(r)}`,at:Date.parse(r.updatedAt||r.submittedAt||r.createdAt||'')||0}];
+   if(!r||r.status!=='pending'||ctPendingNorm(r.submittedBy)===ctPendingNorm(player))return [];
+   return [{playerName:player,id:'result:'+m.id,kind:'result',mid:String(m.id),title:'Resultado por confirmar',desc:`${m.a} vs ${m.b} · ${resultLabel(r)}`,at:Date.parse(r.updatedAt||r.submittedAt||r.createdAt||'')||0}];
  });
 }
-async function ctPendingFetchProposals(matches){
+async function ctPendingFetchProposals(matches,player=state.player){
  const eligible=matches.filter(m=>!bookingFor(m.id)&&resultFor(m.id)?.status!=='confirmed');
  const output=[];let index=0;
  // Cuatro consultas simultáneas como máximo; todas se autentican en API producción.
@@ -10641,12 +10825,11 @@ async function ctPendingFetchProposals(matches){
   while(index<eligible.length){
    const m=eligible[index++];
    try{
-    const r=await apiRequest({action:'getMatchProposal',matchId:m.id});
+    const r=await apiRequest({action:'getMatchProposal',matchId:m.id,familyPlayer:player});
     const p=r.proposal||null;
-    ctProposalCache.set(String(m.id),p);
-    ctPaintSmartProposal(String(m.id));
-    if(p?.status==='pending'&&ctPendingNorm(p.to)===ctPendingNorm(state.player)){
-     output.push({id:'proposal:'+m.id,kind:'proposal',mid:String(m.id),title:'Propuesta de pista pendiente',desc:`${m.a} vs ${m.b} · ${p.date||''} ${p.time||''} ${p.court||''}`,at:Date.parse(p.updatedAt||p.createdAt||'')||0});
+    if(ctPendingNorm(player)===ctPendingNorm(state.player)){ctProposalCache.set(String(m.id),p);ctPaintSmartProposal(String(m.id));}
+    if(p?.status==='pending'&&ctPendingNorm(p.to)===ctPendingNorm(player)){
+     output.push({playerName:player,id:'proposal:'+m.id,kind:'proposal',mid:String(m.id),title:'Propuesta de pista pendiente',desc:`${m.a} vs ${m.b} · ${p.date||''} ${p.time||''} ${p.court||''}`,at:Date.parse(p.updatedAt||p.createdAt||'')||0});
     }
    }catch(e){ /* Fallo aislado: mostrar el resto de los asuntos disponibles. */ }
   }
@@ -10667,10 +10850,10 @@ function ctPendingRender(){
   const p=document.createElement('p');p.className='ctp-empty';p.textContent=ctPendingLoading?'Comprobando asuntos pendientes…':'¡Todo al día! No tienes acciones pendientes.';list.append(p);
  }else ctPendingItems.forEach(item=>{
   const row=document.createElement('article');row.className='ctp-item';
-  const symbol=document.createElement('span');symbol.className='ctp-icon';symbol.textContent=item.kind==='result'?'🏆':'📅';
+  const symbol=document.createElement('span');symbol.className='ctp-icon';symbol.textContent=item.kind==='result'?'🏆':item.kind==='message'?'✉️':'📅';
   const content=document.createElement('div');const title=document.createElement('strong');title.textContent=item.title;
-  const desc=document.createElement('small');desc.textContent=item.desc;content.append(title,desc);
-  const button=document.createElement('button');button.type='button';button.className='ctp-action';button.textContent=item.kind==='result'?'Revisar':'Responder';button.addEventListener('click',()=>ctPendingGo(item));
+  const desc=document.createElement('small');desc.textContent=item.desc;content.append(title,desc);if(familyMode&&item.playerName){const tag=document.createElement('span');tag.className='ctp-player';tag.textContent='🎾 '+item.playerName;content.prepend(tag)}
+  const button=document.createElement('button');button.type='button';button.className='ctp-action';button.textContent=item.kind==='message'?'Leer':item.kind==='result'?'Revisar':'Responder';button.addEventListener('click',()=>ctPendingGo(item));
   row.append(symbol,content,button);list.append(row);
  });
  document.getElementById('ctPendingCount').textContent=ctPendingItems.length===1?'1 asunto pendiente':`${ctPendingItems.length} asuntos pendientes`;
@@ -10683,29 +10866,55 @@ function ctPendingOpen(){
  if(!state.authenticated)return;
  ctPendingOpened=true;ctPendingRender();const {modal}=ctPendingElements();modal.classList.add('show');modal.setAttribute('aria-hidden','false');
 }
-function ctPendingGo(item){
- ctPendingClose();const m=findFixtureById(item.mid);if(!m)return;
- routeContextFromMatch(item.mid);renderAll();mappShow('match');
- if(item.kind==='result')openResultModal(item.mid);
- else viewMatchProposal(item.mid).catch(e=>alert(e.message||'No se ha podido abrir la propuesta'));
+async function ctPendingGo(item){
+ ctPendingClose();
+ try{
+  if(familyMode&&item.playerName&&normalizeName(item.playerName)!==normalizeName(familyActive)){
+   await familyRefresh();
+   await familySelect(item.playerName,{openPanel:false,refreshPending:false});
+  }
+  if(item.kind==='message'){
+   mappShow('profile');await openMessagesInbox({highlightId:item.messageId||''});
+   await ctPendingScan();return;
+  }
+  const m=findFixtureById(item.mid);if(!m)return;
+  routeContextFromMatch(item.mid);renderAll();mappShow('match');
+  if(item.kind==='result')openResultModal(item.mid);
+  else await viewMatchProposal(item.mid);
+ }catch(e){alert('No se pudo abrir el asunto: '+(e?.message||e))}
 }
 async function ctPendingScan({showWelcome=false}={}){
  if(ctPendingLoading||!state.authenticated||!apiToken)return;
- const identity=ctPendingNorm(state.player);
+ const players=familyMode?familyLinks.filter(l=>l.status==='approved').map(l=>l.playerName):[state.player];
+ const identity=familyMode?'family:'+familyName+':'+players.map(ctPendingNorm).join('|'):ctPendingNorm(state.player);
  if(identity!==ctPendingUser){ctPendingUser=identity;ctPendingEntryChecked=false;ctPendingItems=[]}
- ctPendingDeferredKey='ct_pending_dismissed_v1_'+identity;
+ ctPendingDeferredKey='ct_pending_dismissed_v16_'+identity;
  ctPendingLoading=true;ctPendingRender();
  try{
-  // Se hace tras refreshOnline de inicio; no se guardan propuestas ni resultados en otro almacén.
-  const matches=ctPendingAllOwnMatches();
-  const resultItems=ctPendingReadResults();
-  const proposals=await ctPendingFetchProposals(matches);
-  if(!state.authenticated||ctPendingNorm(state.player)!==identity)return;
-  ctPendingItems=[...resultItems,...proposals].sort((a,b)=>a.kind===b.kind?a.at-b.at:(a.kind==='result'?-1:1));
+  const output=[];
+  for(const player of players){
+   if(!player)continue;
+   const matches=ctPendingAllOwnMatches(player);
+   output.push(...ctPendingReadResults(player));
+   output.push(...await ctPendingFetchProposals(matches,player));
+  }
+  if(familyMode){
+   // Mensajes no leídos de TODOS los hijos. La lectura sigue siendo por destinatario.
+   let inbox={messages:[]};try{inbox=await familyFetchInbox()}catch(e){console.warn('No se pudo consultar mensajes familiares',e)}
+   for(const m of inbox.messages||[]){
+    if(m.read)continue;
+    output.push({id:'message:'+m.id+':'+m.playerName,kind:'message',playerName:m.playerName,
+      messageId:m.id,title:m.title||'Nuevo mensaje',desc:m.body||'Tienes una comunicación sin leer',
+      at:Date.parse(m.at||'')||0});
+   }
+  }
+  if(!state.authenticated)return;
+  ctPendingItems=output.sort((a,b)=>b.at-a.at);
   const signature=ctPendingItems.map(x=>x.id).sort().join('|');
   let dismissed='';try{dismissed=sessionStorage.getItem(ctPendingDeferredKey)||''}catch(_){}
   if(showWelcome&&!ctPendingHasPush()&&ctPendingItems.length&&signature!==dismissed)ctPendingOpen();
- }finally{ctPendingLoading=false;ctPendingRender()}
+ }catch(e){console.warn('Pendientes familiares: consulta parcial',e)}
+ finally{ctPendingLoading=false;ctPendingRender()}
 }
 async function ctPendingEntry(){
  if(ctPendingEntryChecked||ctPendingHasPush()||!state.authenticated)return;
@@ -10727,6 +10936,7 @@ function ctPendingInstallUI(){
  .ctp-box{width:min(100%,480px);max-height:calc(100dvh - 32px);overflow:auto;background:#fffaf3;color:#421928;border:2px solid #d7aa57;border-radius:22px;box-shadow:0 24px 75px #090408aa;padding:19px;box-sizing:border-box}
  .ctp-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}.ctp-top h2{margin:3px 0 6px;font-size:23px}.ctp-kicker{color:#966826;font-weight:900;font-size:11px;letter-spacing:.11em}.ctp-sub{font-size:13px;color:#856674;margin:0 0 17px}.ctp-close{border:0;background:transparent;color:#641e30;font-size:25px;cursor:pointer;padding:6px}
  .ctp-list{display:grid;gap:10px}.ctp-item{display:grid;grid-template-columns:36px minmax(0,1fr);gap:10px;background:#fff;border:1px solid #e6d6c0;border-radius:13px;padding:13px;align-items:center}.ctp-icon{font-size:24px}.ctp-item strong{display:block;font-size:13px;color:#502034}.ctp-item small{display:block;margin-top:4px;font-size:12px;color:#866b74;line-height:1.4;overflow-wrap:anywhere}.ctp-action{grid-column:2;background:#672138;color:white;font-size:13px;font-weight:800;border:0;border-radius:9px;padding:10px 14px;cursor:pointer;justify-self:start}.ctp-empty{padding:18px;text-align:center;color:#77616d}
+ .ctp-player{display:inline-block;margin:0 0 5px;padding:4px 8px;border-radius:99px;background:#fff0d4;color:#732332;font-size:11px;font-weight:900}
  .ctp-footer{display:flex;justify-content:space-between;gap:9px;margin-top:18px;flex-wrap:wrap}.ctp-footer button{border:1px solid #d0b6a5;background:#eee4d9;color:#512738;border-radius:10px;padding:11px;font-weight:800;cursor:pointer}.ctp-footer button.ctp-refresh{background:#d6a953;color:#2b1520}
  `;
  document.head.append(style);
@@ -10777,6 +10987,7 @@ async function bootstrapApp(){
         connectRealtime();
         // Los mensajes son ligeros: al volver a primer plano refrescamos el buzón
         // aunque la actualización general todavía no toque.
+        if(familyMode)ctPendingScan().catch(console.warn);
         loadCloudMessages({silent:true}).then(()=>{
           renderOpenMessagesInboxFromCache();
           renderModernProfile({skipMessageLoad:true});
@@ -10808,6 +11019,8 @@ if('serviceWorker' in navigator){
       // que iOS/PWA lo pierda durante focus/navigation.
       pendingPushDeepLink={
         open:String(u.searchParams.get('open')||'').trim(),
+        player:String(u.searchParams.get('player')||'').trim(),
+        messageId:String(u.searchParams.get('messageId')||'').trim(),
         matchId:String(u.searchParams.get('matchId')||'').trim(),
         week:String(u.searchParams.get('week')||'').trim(),
         category:String(u.searchParams.get('category')||'').trim(),
