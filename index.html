@@ -6290,18 +6290,14 @@ function pushSubscriptionFingerprint(sub,userName){
   }catch(_){return ''}
 }
 async function syncPushSubscription(sub,{force=false}={}){
-  if(familyMode){if(!sub||!apiToken)return false;await apiRequest({action:'subscribePush',deviceId:getPushDeviceId(),subscription:sub.toJSON?sub.toJSON():sub});return true;}
-  if(!sub||!state.authenticated||!state.player||!apiToken)return false;
-  const fp=pushSubscriptionFingerprint(sub,state.player);
-  if(!force&&fp){
-    try{
-      const cached=JSON.parse(localStorage.getItem(PUSH_SYNC_CACHE_KEY)||'null');
-      if(cached?.fingerprint===fp && Date.now()-Number(cached.syncedAt||0)<PUSH_RESYNC_MS)return true;
-    }catch(_){}
-  }
-  await apiRequest({action:'subscribePush',deviceId:getPushDeviceId(),subscription:sub.toJSON?sub.toJSON():sub});
+  if(!sub||!state.authenticated||!apiToken)return false;
+  if(!familyMode&&!state.player)return false;
+  // El estado de activación sólo puede depender de una confirmación REAL del backend.
+  // No reutilizar la caché de 7 días: puede haber sido borrada la suscripción del Worker.
+  const r=await apiRequest({action:'subscribePush',deviceId:getPushDeviceId(),subscription:sub.toJSON?sub.toJSON():sub});
+  const fp=pushSubscriptionFingerprint(sub,familyMode?(familyActive||familyName):state.player);
   if(fp){try{localStorage.setItem(PUSH_SYNC_CACHE_KEY,JSON.stringify({fingerprint:fp,syncedAt:Date.now()}))}catch(_){}}
-  return true;
+  return !!r;
 }
 
 function isIOSPushDevice(){
@@ -6423,9 +6419,16 @@ async function renderPushUI(){
   }
   const sub=await currentPushSubscription();
   if(sub){
-    try{await syncPushSubscription(sub)}catch(e){console.warn('Sincronización push',e)}
-    txt.innerHTML='<span class="pushOk">✅ Avisos activados en este dispositivo.</span> Recibirás un aviso cuando se publiquen pistas.';
-    btn.disabled=true;btn.textContent='Avisos activados';
+    try{
+      // Confirmar en Cloudflare antes de mostrar el estado activado.
+      await syncPushSubscription(sub,{force:true});
+      txt.innerHTML='<span class="pushOk">✅ Avisos registrados en Cloudflare en este dispositivo.</span>';
+      btn.disabled=true;btn.textContent='Avisos activados';
+    }catch(e){
+      console.warn('Registro Push pendiente',e);
+      txt.innerHTML='<span class="pushWarn">⚠️ El navegador tiene permisos, pero Cloudflare no ha confirmado los avisos.</span> '+mappEsc(e.message||String(e));
+      btn.disabled=false;btn.textContent='↻ Reintentar registro';
+    }
   }else{
     txt.textContent='Activa los avisos para recibir una notificación cuando el club publique pistas.';
     btn.disabled=false;btn.textContent='🔔 Activar avisos';
@@ -8257,17 +8260,7 @@ async function loadPushDevices(){
   const tb=$('#pushDevicesTable');
   if(tb)tb.innerHTML='<tr><td colspan="4">⏳ Cargando dispositivos…</td></tr>';
   try{
-    const rr=await fetch(PUSH_URL+'/admin/devices',{
-      method:'POST',
-      headers:{
-        'Content-Type':'application/json',
-        'Authorization':'Bearer '+apiToken
-      },
-      body:'{}'
-    });
-    let r={};try{r=await rr.json()}catch(e){}
-    if(!rr.ok||r.ok===false)throw new Error(r.error||('HTTP '+rr.status));
-
+    const r=await apiRequest({action:'listPushDevices'});
     const groups=Array.isArray(r.users)?r.users:[];
     window.__pushDeviceGroups=groups;
     if(!groups.length){
@@ -8291,23 +8284,16 @@ async function loadPushDevices(){
     renderAdminFunctionalTools();
     updateAdminSummaries();
   }catch(e){
+    window.__pushDeviceGroups=null;
     if(tb)tb.innerHTML=`<tr><td colspan="4">⚠️ ${mappEsc(e.message)}</td></tr>`;
+    renderPins();
   }
 }
 async function removePushDevicesFor(player){
   if(!requireAdmin())return;
   if(!confirm(`¿Dar de baja TODOS los dispositivos de ${player}?\n\nEse jugador dejará de recibir avisos hasta que vuelva a activar las notificaciones.`))return;
   try{
-    const rr=await fetch(PUSH_URL+'/admin/remove-user',{
-      method:'POST',
-      headers:{
-        'Content-Type':'application/json',
-        'Authorization':'Bearer '+apiToken
-      },
-      body:JSON.stringify({userName:player})
-    });
-    let r={};try{r=await rr.json()}catch(e){}
-    if(!rr.ok||r.ok===false)throw new Error(r.error||('HTTP '+rr.status));
+    const r=await apiRequest({action:'removePushDevices',userName:player});
     alert(`✅ Dispositivos dados de baja: ${r.removed||0}.`);
     await loadPushDevices();
   }catch(e){
