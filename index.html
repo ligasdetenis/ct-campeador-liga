@@ -10855,20 +10855,33 @@ function ctPendingAllOwnMatches(player=state.player){
  });
  return [...found.values()];
 }
-/* Recordatorios de partidos expresamente aplazados y todavía sin resultado definitivo. */
+/* PRODUCCIÓN V1.7.4 · Asuntos pendientes: aplazamientos manuales y automáticos.
+   La misma regla de jornadas vencidas que Mi partido; sin alterar datos de la liga. */
 function ctPendingReadPostponed(player=state.player){
+ const today=madridNowParts().date;
+ const label=w=>weeks.find(x=>String(x.id)===String(w))?.label||String(w||'');
  return ctPendingAllOwnMatches(player).flatMap(m=>{
+  const result=resultFor(m.id);
+  // Un resultado comunicado, aunque esté por confirmar, NO es un partido aplazado.
+  if(result && (result.status==='confirmed'||result.type!=='not_played'))return [];
   const delayed=postponedInfo(m.id);
-  if(!delayed || resultFor(m.id)?.status==='confirmed')return [];
   const rec=fixtureRecord(m.id);
-  const original=delayed.originalWeek||rec?.week||'';
-  const target=delayed.targetWeek||'';
-  const label=w=>weeks.find(x=>String(x.id)===String(w))?.label||String(w||'');
-  const details=target?`Reprogramado a ${label(target)}`:'Pendiente de nueva fecha';
-  return [{playerName:player,id:'postponed:'+m.id,kind:'postponed',mid:String(m.id),
+  if(!rec)return [];
+  const original=delayed?.originalWeek||rec.week||'';
+  const target=delayed?.targetWeek||'';
+  const effective=target||original;
+  const week=weeks.find(x=>String(x.id)===String(effective));
+  const overdue=!!(week?.end && week.end<today);
+  // Detectar tanto el aplazamiento declarado como la jornada vencida sin jugar.
+  if(!delayed && !overdue)return [];
+  // No exponer encuentros de jornadas que todavía no han sido publicadas.
+  if(typeof journeyFixturesArePublic==='function' && !journeyFixturesArePublic(rec.week) && !(typeof isAdmin==='function'&&isAdmin()))return [];
+  const details=target ? (overdue ? `Reprogramado a ${label(target)} · Sigue pendiente` : `Reprogramado a ${label(target)}`)
+    : delayed ? 'Pendiente de nueva fecha' : 'Jornada finalizada · Sin disputar';
+  return [{playerName:player,id:'postponed:'+m.id+':'+ctPendingNorm(player),kind:'postponed',mid:String(m.id),
    title:'Partido aplazado pendiente',
-   desc:`${m.a} vs ${m.b} · ${rec?.category||''} ${rec?.gender||''} · Jornada original: ${label(original)} · ${details}`,
-   at:Date.parse(delayed.updatedAt||'')||0}];
+   desc:`${m.a} vs ${m.b} · ${rec.category||''} ${rec.gender||''} · Jornada original: ${label(original)} · ${details}`,
+   at:Date.parse(delayed?.updatedAt||'')||Date.parse(week?.end||'')||0}];
  });
 }
 function ctPendingReadResults(player=state.player){
@@ -10925,7 +10938,12 @@ function ctPendingClose(defer=false){
 }
 function ctPendingOpen(){
  if(!state.authenticated)return;
- ctPendingOpened=true;ctPendingRender();const {modal}=ctPendingElements();modal.classList.add('show');modal.setAttribute('aria-hidden','false');
+ ctPendingOpened=true;
+ ctPendingRender();
+ const {modal}=ctPendingElements();modal.classList.add('show');modal.setAttribute('aria-hidden','false');
+ // Recalcular al abrir: incluir partidos que hayan vencido desde la última consulta.
+ // Se refresca en segundo plano la bandeja, no la aplicación ni la base de datos.
+ if(!ctPendingLoading)void ctPendingScan().catch(e=>console.warn('Actualización de asuntos pendientes',e));
 }
 async function ctPendingGo(item){
  ctPendingClose();
