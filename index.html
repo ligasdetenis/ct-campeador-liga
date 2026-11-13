@@ -10836,6 +10836,22 @@ function ctPendingAllOwnMatches(player=state.player){
  });
  return [...found.values()];
 }
+/* Recordatorios de partidos expresamente aplazados y todavía sin resultado definitivo. */
+function ctPendingReadPostponed(player=state.player){
+ return ctPendingAllOwnMatches(player).flatMap(m=>{
+  const delayed=postponedInfo(m.id);
+  if(!delayed || resultFor(m.id)?.status==='confirmed')return [];
+  const rec=fixtureRecord(m.id);
+  const original=delayed.originalWeek||rec?.week||'';
+  const target=delayed.targetWeek||'';
+  const label=w=>weeks.find(x=>String(x.id)===String(w))?.label||String(w||'');
+  const details=target?`Reprogramado a ${label(target)}`:'Pendiente de nueva fecha';
+  return [{playerName:player,id:'postponed:'+m.id,kind:'postponed',mid:String(m.id),
+   title:'Partido aplazado pendiente',
+   desc:`${m.a} vs ${m.b} · ${rec?.category||''} ${rec?.gender||''} · Jornada original: ${label(original)} · ${details}`,
+   at:Date.parse(delayed.updatedAt||'')||0}];
+ });
+}
 function ctPendingReadResults(player=state.player){
  return ctPendingAllOwnMatches(player).flatMap(m=>{
    const r=resultFor(m.id);
@@ -10876,10 +10892,10 @@ function ctPendingRender(){
   const p=document.createElement('p');p.className='ctp-empty';p.textContent=ctPendingLoading?'Comprobando asuntos pendientes…':'¡Todo al día! No tienes acciones pendientes.';list.append(p);
  }else ctPendingItems.forEach(item=>{
   const row=document.createElement('article');row.className='ctp-item';
-  const symbol=document.createElement('span');symbol.className='ctp-icon';symbol.textContent=item.kind==='result'?'🏆':item.kind==='message'?'✉️':'📅';
+  const symbol=document.createElement('span');symbol.className='ctp-icon';symbol.textContent=item.kind==='result'?'🏆':item.kind==='message'?'✉️':item.kind==='postponed'?'⏳':'📅';
   const content=document.createElement('div');const title=document.createElement('strong');title.textContent=item.title;
   const desc=document.createElement('small');desc.textContent=item.desc;content.append(title,desc);if(familyMode&&item.playerName){const tag=document.createElement('span');tag.className='ctp-player';tag.textContent='🎾 '+item.playerName;content.prepend(tag)}
-  const button=document.createElement('button');button.type='button';button.className='ctp-action';button.textContent=item.kind==='message'?'Leer':item.kind==='result'?'Revisar':'Responder';button.addEventListener('click',()=>ctPendingGo(item));
+  const button=document.createElement('button');button.type='button';button.className='ctp-action';button.textContent=item.kind==='message'?'Leer':item.kind==='postponed'?'Ver partido':item.kind==='result'?'Revisar':'Responder';button.addEventListener('click',()=>ctPendingGo(item));
   row.append(symbol,content,button);list.append(row);
  });
  document.getElementById('ctPendingCount').textContent=ctPendingItems.length===1?'1 asunto pendiente':`${ctPendingItems.length} asuntos pendientes`;
@@ -10906,7 +10922,7 @@ async function ctPendingGo(item){
   const m=findFixtureById(item.mid);if(!m)return;
   routeContextFromMatch(item.mid);renderAll();mappShow('match');
   if(item.kind==='result')openResultModal(item.mid);
-  else await viewMatchProposal(item.mid);
+  else if(item.kind==='proposal')await viewMatchProposal(item.mid);
  }catch(e){alert('No se pudo abrir el asunto: '+(e?.message||e))}
 }
 async function ctPendingScan({showWelcome=false}={}){
@@ -10922,6 +10938,7 @@ async function ctPendingScan({showWelcome=false}={}){
    if(!player)continue;
    const matches=ctPendingAllOwnMatches(player);
    output.push(...ctPendingReadResults(player));
+   output.push(...ctPendingReadPostponed(player));
    output.push(...await ctPendingFetchProposals(matches,player));
   }
   if(familyMode){
