@@ -4315,6 +4315,29 @@ body.modern-admin #journeyNavigator .journeyJump{scroll-snap-align:none!importan
 .courtPublishInfoBar{margin:0 0 12px;font-weight:650;font-size:13px;opacity:.85}
 @media(max-width:620px){.courtPublishStatusCard{padding:15px;gap:10px;flex-wrap:wrap}.courtPublishStatusPill{margin-left:38px}}
 </style>
+<style id="ct-visual-match-picker-css">
+/* PRODUCCIÓN V1.7.5 · Selector visual de partido para reservar pista */
+#ct-match-pick{position:fixed;inset:0;z-index:12000;background:rgba(15,6,10,.68);backdrop-filter:blur(5px);display:flex;align-items:flex-end;justify-content:center;padding:12px 10px calc(12px + env(safe-area-inset-bottom));font-family:Inter,system-ui,sans-serif}
+#ct-match-pick *{box-sizing:border-box}
+#ct-match-pick .cmp-panel{width:min(100%,700px);max-height:min(88dvh,790px);display:flex;flex-direction:column;min-height:0;overflow:hidden;background:#f8f9fa;border-radius:23px 23px 18px 18px;color:#22242a;box-shadow:0 22px 65px #0004}
+#ct-match-pick .cmp-head{flex:0 0 auto;padding:20px 17px 14px;background:#fff;border-bottom:1px solid #e8e9ed;position:relative}
+#ct-match-pick .cmp-kicker{font-size:10px;color:#a00823;font-weight:950;letter-spacing:.1em;text-transform:uppercase}
+#ct-match-pick h2{font-size:23px;margin:6px 45px 7px 0;line-height:1.12;font-weight:950;letter-spacing:-.035em}
+#ct-match-pick .cmp-slot{font-size:12px;font-weight:750;color:#646a74;line-height:1.45}
+#ct-match-pick .cmp-x{position:absolute;right:14px;top:17px;border:1px solid #e3e4e8;background:#f6f6f8;color:#343941;width:40px;height:40px;border-radius:12px;font-size:24px;cursor:pointer}
+#ct-match-pick .cmp-list{padding:12px;overflow:auto;min-height:0;flex:1 1 auto;display:grid;gap:9px;align-content:start;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+#ct-match-pick .cmp-card{width:100%;border:1px solid #e1e4e8;border-radius:15px;background:#fff;padding:12px;text-align:left;color:#1d2229;display:grid;grid-template-columns:45px minmax(0,1fr) auto;align-items:center;gap:11px;cursor:pointer;box-shadow:0 2px 8px #00000009;min-width:0}
+#ct-match-pick .cmp-card:active,#ct-match-pick .cmp-card:hover{border-color:#bb1830;background:#fff8f9}
+#ct-match-pick .cmp-avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(130deg,#71000d,#cb1830);background-size:cover;background-position:center;display:grid;place-items:center;color:#fff;font-weight:950;font-size:13px;overflow:hidden}
+#ct-match-pick .cmp-content{min-width:0}
+#ct-match-pick .cmp-label{font-size:9px;color:#8a5660;font-weight:950;letter-spacing:.05em;text-transform:uppercase;margin-bottom:3px}
+#ct-match-pick .cmp-rival{font-size:14px;font-weight:950;line-height:1.25;overflow-wrap:anywhere}
+#ct-match-pick .cmp-meta{font-size:10px;color:#858a91;margin-top:5px;font-weight:700;line-height:1.3}
+#ct-match-pick .cmp-tag{display:inline-flex;margin-top:6px;border-radius:7px;padding:4px 7px;background:#fff3da;color:#8d620c;font-size:9px;font-weight:900}
+#ct-match-pick .cmp-next{color:#b90022;font-size:21px;font-weight:950}
+#ct-match-pick .cmp-foot{flex:0 0 auto;padding:12px 16px calc(13px + env(safe-area-inset-bottom));background:#fff;border-top:1px solid #e7e9ed;font-size:11px;color:#818790;text-align:center}
+@media(min-width:740px){#ct-match-pick{align-items:center}#ct-match-pick .cmp-panel{border-radius:23px}}
+</style>
 </head>
 <body>
 
@@ -6670,6 +6693,42 @@ function eligibleMatchesForFreeSlot(){
   }
   return [...unique.values()];
 }
+
+// PRODUCCIÓN V1.7.5 · Sustituye prompt() por un selector visual, sin alterar la reserva.
+function showVisualMatchPicker(slot,matches){
+  document.getElementById('ct-match-pick')?.remove();
+  const normalize=(v)=>String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('es').trim();
+  const player=String(state.player||'');
+  const cards=matches.map((m,i)=>{
+    const rival=normalize(m.a)===normalize(player)?m.b:m.a;
+    const photo=typeof mappPhoto==='function'?mappPhoto(rival):'';
+    const initials=typeof mappInitials==='function'?mappInitials(rival):String(rival||'?').trim().charAt(0);
+    const avatarStyle=photo?` style="background-image:url('${photo.replace(/'/g,'%27')}')"`:'';
+    const existing=bookingFor(m.id);
+    const subtitle=`${journeyDisplayName(m._officialWeek)||m._officialWeek} · ${state.category} · ${state.gender}`;
+    return `<button type="button" class="cmp-card" data-cmp-index="${i}">
+       <div class="cmp-avatar"${avatarStyle}>${photo?'':mappEsc(initials)}</div>
+       <div class="cmp-content"><div class="cmp-label">Tu enfrentamiento</div><div class="cmp-rival">${mappEsc(rival)}</div><div class="cmp-meta">${mappEsc(subtitle)}</div>${existing?'<span class="cmp-tag">↻ Cambiar reserva existente</span>':''}</div>
+       <span class="cmp-next" aria-hidden="true">›</span></button>`;
+  }).join('');
+  const overlay=document.createElement('div');overlay.id='ct-match-pick';
+  overlay.innerHTML=`<section class="cmp-panel" role="dialog" aria-modal="true" aria-label="Selecciona el partido para reservar">
+     <div class="cmp-head"><div class="cmp-kicker">🎾 Reserva de pista</div><h2>¿Qué partido vas a jugar?</h2>
+     <div class="cmp-slot">📅 ${mappEsc(dayDateES(slot.date))} · ${mappEsc(slot.time)} · ${mappEsc(slot.court)}</div>
+     <button type="button" class="cmp-x" aria-label="Cerrar">×</button></div>
+     <div class="cmp-list">${cards}</div>
+     <div class="cmp-foot">Selecciona el rival para continuar con la reserva</div></section>`;
+  const close=()=>overlay.remove();
+  overlay.querySelector('.cmp-x').onclick=close;
+  overlay.addEventListener('click',e=>{if(e.target===overlay)close()});
+  overlay.querySelectorAll('[data-cmp-index]').forEach(btn=>btn.onclick=()=>{
+    const match=matches[Number(btn.dataset.cmpIndex)];if(!match)return;
+    close();openReserve(match.id,slot.id);
+  });
+  document.body.appendChild(overlay);
+  overlay.querySelector('.cmp-x').focus({preventScroll:true});
+}
+
 function reserveFromOccupancy(slotId){
   if(!state.authenticated||!state.player){
     alert('Entra primero con tu PIN para poder reservar esta franja.');
@@ -6695,27 +6754,12 @@ function reserveFromOccupancy(slotId){
     return;
   }
 
-  let mid='';
   if(matches.length===1){
-    mid=matches[0].id;
-  }else{
-    const lines=matches.map((m,i)=>{
-      const current=bookingFor(m.id);
-      return `${i+1}. ${m.a} vs ${m.b} · ${journeyDisplayName(m._officialWeek)||m._officialWeek}${current?' · CAMBIAR RESERVA':''}`;
-    });
-    const ans=prompt(
-      `¿Qué partido quieres reservar en esta franja?\n\n${dayDateES(s.date)} · ${s.time} · ${s.court}\n\n${lines.join('\n')}\n\nEscribe el número:`,
-      '1'
-    );
-    if(ans===null)return;
-    const n=Number(ans);
-    if(!Number.isInteger(n)||n<1||n>matches.length){
-      alert('Selecciona un número válido.');
-      return;
-    }
-    mid=matches[n-1].id;
+    openReserve(matches[0].id,slotId);
+    return;
   }
-  openReserve(mid,slotId);
+  showVisualMatchPicker(s,matches);
+
 }
 
 function reservableSlotsFor(mid){
