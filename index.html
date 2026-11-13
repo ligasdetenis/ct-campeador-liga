@@ -8905,10 +8905,29 @@ function mappIcon(name){return MAPP_ICONS[name]||''}
 function mappInitials(name){const p=String(name||'?').trim().split(/\s+/);return (p[0]?.[0]||'')+(p.length>1?p[p.length-1][0]:'')}
 function mappPhotoKey(name){return 'ctcampeador_profile_photo_'+normalizeName(name)}
 function mappLocalPhoto(name){try{return localStorage.getItem(mappPhotoKey(name))||''}catch(_){return ''}}
+/* PRODUCCIÓN V1.7.3 · Identidad normalizada para fotos en Modo Familia.
+   Un partido puede almacenar otra grafía del nombre (tildes, espacios,
+   mayúsculas). Se consulta la misma ficha de perfil sin modificar datos. */
 function mappPhoto(name){
- const cloud=safeDataImageUrl(data.profiles?.[name]?.photoDataUrl);
- if(cloud)return cloud;
- return safeDataImageUrl(mappLocalPhoto(name));
+ const requested=normalizeName(name);
+ if(!requested)return '';
+ const profiles=data.profiles||{};
+ const direct=safeDataImageUrl(profiles[name]?.photoDataUrl);
+ if(direct)return direct;
+ // Buscar la ficha vinculada al jugador aunque el partido use otra grafía.
+ for(const [profileName,profile] of Object.entries(profiles)){
+   if(normalizeName(profileName)===requested || normalizeName(profile?.player)===requested || normalizeName(profile?.name)===requested){
+     const photo=safeDataImageUrl(profile?.photoDataUrl);
+     if(photo)return photo;
+   }
+ }
+ // La fotografía local puede pertenecer al jugador seleccionado en familia.
+ const local=safeDataImageUrl(mappLocalPhoto(name));
+ if(local)return local;
+ if(familyMode && normalizeName(state.player)===requested){
+   return safeDataImageUrl(mappLocalPhoto(state.player));
+ }
+ return '';
 }
 const mappPhotoSyncing=new Set();
 async function mappMaybeMigrateLegacyPhoto(name){
