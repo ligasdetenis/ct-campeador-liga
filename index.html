@@ -4537,12 +4537,12 @@ body.modern-admin #journeyNavigator .journeyJump{scroll-snap-align:none!importan
 <details class="adminBlock adminAccordion adminPrimary" data-admin-section="courtHistory" id="adminCourtHistoryPanel">
   <summary class="adminSummary"><span class="adminSummaryTitle">Histórico de pistas</span><span class="adminSummaryMeta" id="adminHistoryMeta">Consultar reservas finalizadas</span></summary>
   <div class="adminAccordionBody">
-    <p class="authNote">Histórico de pistas y pagos individuales por jugador. Los registros de pagos nuevos se conservan aunque se libere la pista.</p>
+    <p class="authNote">Control de pagos de pistas utilizadas. Las cancelaciones y reprogramaciones no generan cobro; sus registros pueden consultarse aparte.</p>
     <div class="ctHistPayMsg" id="ctHistPayMessage">El control de pagos se consulta en Cloudflare y solo está disponible para Administración.</div>
     <button type="button" class="ctHistPayReload" id="ctHistPayReload">↻ Actualizar histórico y pagos</button>
     <div class="adminHistoryFilters">
       <label>Mes <select id="adminHistoryMonth" aria-label="Mes del histórico"></select></label>
-      <label>Mostrar <select id="adminHistoryStatus"><option value="booked">Solo reservas (recomendado)</option><option value="all">Todas las franjas</option><option value="free">Sin reserva registrada</option></select></label><label>Pago <select id="ctHistPayFilter"><option value="all">Todos</option><option value="pending">Con pagos pendientes</option><option value="paid">Pagos completos</option></select></label>
+      <label>Mostrar <select id="adminHistoryStatus"><option value="booked">Cobros de pistas (recomendado)</option><option value="archive">Canceladas y reprogramadas · sin cargo</option><option value="all">Todas las reservas y franjas</option><option value="free">Sin reserva registrada</option></select></label><label>Pago <select id="ctHistPayFilter"><option value="all">Todos</option><option value="pending">Con pagos pendientes</option><option value="paid">Pagos completos</option></select></label>
     </div>
     <div id="adminHistoryList" class="adminHistoryList"></div>
   </div>
@@ -7805,6 +7805,14 @@ function ctHistoryAllRows(){
  }
  return records.sort((a,b)=>`${b.date} ${b.time} ${b.court}`.localeCompare(`${a.date} ${a.time} ${a.court}`));
 }
+function ctHistoryPaymentStatus(row){
+ const raw=String(row.payment?.status||'').toLowerCase();
+ // Sin registro remoto solo mostramos la franja informativa, nunca creamos un cobro.
+ if(!row.payment)return 'unverified';
+ if(raw==='cancelled'||raw==='replaced')return 'archive';
+ if(raw==='completed'||raw==='active')return 'billable';
+ return 'archive'; // Cualquier estado desconocido queda fuera de cobros por seguridad.
+}
 function renderAdminCourtHistory(){
  if(!isAdmin())return;
  const month=$('#adminHistoryMonth'),status=$('#adminHistoryStatus'),list=$('#adminHistoryList'),payFilter=$('#ctHistPayFilter');
@@ -7814,17 +7822,32 @@ function renderAdminCourtHistory(){
  const months=[...new Set(all.map(r=>r.date.slice(0,7)).filter(m=>/^\d{4}-\d{2}$/.test(m)))].sort().reverse();
  month.innerHTML='<option value="all">Todos los meses</option>'+months.map(m=>`<option value="${m}">${mappEsc(new Date(m+'-15T12:00:00').toLocaleDateString('es-ES',{month:'long',year:'numeric'}))}</option>`).join('');
  month.value=months.includes(previous)?previous:'all';
- const selected=all.filter(r=>(month.value==='all'||r.date.startsWith(month.value))&&(status.value==='all'||(status.value==='booked'?!!r.booking:!r.booking)) && (payFilter.value==='all'||(r.payment&&(payFilter.value==='paid'?(r.payment.paymentA==='paid'&&r.payment.paymentB==='paid'):(r.payment.paymentA!=='paid'||r.payment.paymentB!=='paid')))));
+ const billable=all.filter(r=>ctHistoryPaymentStatus(r)==='billable').length;
+ const excluded=all.filter(r=>ctHistoryPaymentStatus(r)==='archive').length;
+ const selected=all.filter(r=>{
+  const type=ctHistoryPaymentStatus(r);
+  const show=status.value==='booked'?type==='billable':status.value==='archive'?type==='archive':status.value==='free'?!r.booking:true;
+  if(!show||!(month.value==='all'||r.date.startsWith(month.value)))return false;
+  if(payFilter.value==='all')return true;
+  // Los filtros de pago nunca incluyen reservas anuladas o sin registro verificado.
+  return type==='billable'&&(payFilter.value==='paid'?(r.payment.paymentA==='paid'&&r.payment.paymentB==='paid'):(r.payment.paymentA!=='paid'||r.payment.paymentB!=='paid'));
+ });
  const groups=new Map();for(const r of selected){if(!groups.has(r.date))groups.set(r.date,[]);groups.get(r.date).push(r)}
  const paymentSelect=(r,side)=>{
-  const record=r.payment;if(!record||!record.bookingId)return '';
+  const record=r.payment;if(!record||!record.bookingId||ctHistoryPaymentStatus(r)!=='billable')return '';
   const player=side==='a'?r.booking?.a:r.booking?.b;
   if(!player)return '';
   const current=side==='a'?record.paymentA:record.paymentB;
   return `<div class="ctHistPayPlayer"><span>${mappEsc(player)}</span><select aria-label="Pago de ${mappEsc(player)}" data-ct-payment-id="${mappEsc(record.bookingId)}" data-ct-payment-side="${side}"><option value="pending" ${current!=='paid'?'selected':''}>🔴 Pendiente</option><option value="paid" ${current==='paid'?'selected':''}>🟢 Pagado</option></select></div>`;
  };
- list.innerHTML=selected.length?[...groups].map(([day,rows])=>`<div class="adminHistoryDay"><div class="adminHistoryDayTitle">${mappEsc(dayDateES(day))}</div>${rows.map(r=>`<div class="adminHistoryRow"><div style="min-width:0;flex:1"><div class="adminHistoryMain">${mappEsc(r.time||'Hora no indicada')} · ${mappEsc(r.court||'Pista no indicada')}</div><div class="adminHistoryPlayers">${r.booking?mappEsc(`${r.booking.a||'Jugador sin identificar'} vs ${r.booking.b||'Jugador sin identificar'}`):'Sin reserva registrada'} · ${mappEsc(r.week)}</div>${r.payment?`<div class="ctHistPayPair">${paymentSelect(r,'a')}${paymentSelect(r,'b')}</div>`:(r.booking?'<div class="ctHistPayMsg">Reserva anterior sin registro de pagos: no se puede marcar automáticamente.</div>':'')}</div><span class="adminHistoryTag ${r.booking?'occupied':''}">${r.booking?(r.payment?.paymentA==='paid'&&r.payment?.paymentB==='paid'?'PAGADA':'RESERVA'):'SIN RESERVA'}</span></div>`).join('')}</div>`).join(''):'<div class="adminHistoryEmpty">No hay franjas con estos filtros.</div>';
- const meta=$('#adminHistoryMeta');if(meta)meta.textContent=`${all.length} registros de histórico`;
+ const badge=r=>{
+  const type=ctHistoryPaymentStatus(r);
+  if(type==='archive')return `<span class="adminHistoryTag" style="background:#eef0f3;color:#58616d">${r.payment?.status==='replaced'?'REPROGRAMADA · SIN CARGO':'CANCELADA · SIN CARGO'}</span>`;
+  if(type==='billable')return `<span class="adminHistoryTag occupied">${r.payment?.paymentA==='paid'&&r.payment?.paymentB==='paid'?'PAGADA':r.payment?.status==='completed'?'DISPUTADA':'RESERVA'}</span>`;
+  return `<span class="adminHistoryTag">${r.booking?'SIN REGISTRO DE PAGO':'SIN RESERVA'}</span>`;
+ };
+ list.innerHTML=selected.length?[...groups].map(([day,rows])=>`<div class="adminHistoryDay"><div class="adminHistoryDayTitle">${mappEsc(dayDateES(day))}</div>${rows.map(r=>`<div class="adminHistoryRow"><div style="min-width:0;flex:1"><div class="adminHistoryMain">${mappEsc(r.time||'Hora no indicada')} · ${mappEsc(r.court||'Pista no indicada')}</div><div class="adminHistoryPlayers">${r.booking?mappEsc(`${r.booking.a||'Jugador sin identificar'} vs ${r.booking.b||'Jugador sin identificar'}`):'Sin reserva registrada'} · ${mappEsc(r.week)}</div>${ctHistoryPaymentStatus(r)==='billable'?`<div class="ctHistPayPair">${paymentSelect(r,'a')}${paymentSelect(r,'b')}</div>`:ctHistoryPaymentStatus(r)==='archive'?'<div class="ctHistPayMsg">Sin penalización y sin cobro. Se conserva únicamente como histórico.</div>':(r.booking?'<div class="ctHistPayMsg">Registro antiguo sin datos de pago. No se genera un cargo automático.</div>':'')}</div>${badge(r)}</div>`).join('')}</div>`).join(''):'<div class="adminHistoryEmpty">No hay registros con estos filtros.</div>';
+ const meta=$('#adminHistoryMeta');if(meta)meta.textContent=`${billable} reservas cobrables · ${excluded} sin cargo`;
  month.onchange=renderAdminCourtHistory;status.onchange=renderAdminCourtHistory;payFilter.onchange=renderAdminCourtHistory;
  list.querySelectorAll('[data-ct-payment-id]').forEach(sel=>sel.addEventListener('change',async()=>{
    if(!isAdmin()||!ctPaymentsV1Loaded)return;
