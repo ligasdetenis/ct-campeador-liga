@@ -4,7 +4,7 @@ compatibility_date = "2026-10-11"
 
 [vars]
 AUTORESULTS_ENABLED = "true"
-AUTORESULTS_NOT_BEFORE = "2026-11-12T00:00:00Z"
+AUTORESULTS_NOT_BEFORE = "2026-10-01T00:00:00Z"
 
 [[kv_namespaces]]
 binding = "DATA"
