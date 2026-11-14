@@ -2040,6 +2040,41 @@ body.modern-admin .courtsTemplatePanel p{margin:0;color:#697281;font-size:12px;l
 .ctAutoHeader{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.ctAutoEyebrow{font-size:9px;letter-spacing:.08em;font-weight:900;color:#8a0e28}.ctAutoHeader h3{font-size:15px;margin:5px 0 4px;color:#24262b;line-height:1.25}.ctAutoHeader p{margin:0;color:#707782;font-size:11px;line-height:1.4}.ctAutoBadge{white-space:nowrap;border-radius:99px;background:#f0f1f3;border:1px solid #e3e6e9;color:#626a73;font-weight:900;font-size:10px;padding:7px 10px}.ctAutoBadge.on{background:#e7f6ee;border-color:#bfe3cc;color:#197745}.ctAutoBadge.off{background:#fff1e7;border-color:#f1cfb9;color:#a3581f}.ctAutoBadge.error{background:#fff0f2;border-color:#edb9c1;color:#ae2134}
 .ctAutoStats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:15px}.ctAutoStats>div{display:grid;gap:7px;padding:12px;background:white;border:1px solid #e5e7ec;border-radius:12px}.ctAutoStats small{color:#747a85;font-size:10px;font-weight:800}.ctAutoStats strong{font-size:23px;line-height:1;font-weight:950;color:#24272d}.ctAutoBottom{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:13px}.ctAutoDetail{flex:1;min-width:0;font-size:11px;line-height:1.5;color:#626975}.ctAutoRefresh{flex:0 0 auto;border:0;border-radius:10px;padding:11px 12px;background:#790014;color:white;font-size:11px;font-weight:900;cursor:pointer}.ctAutoRefresh:disabled{opacity:.55}.ctAutoWarning{margin-top:11px;padding:10px 12px;border-radius:10px;background:#fff5df;color:#875900;font-size:11px;line-height:1.4;border:1px solid #f1dfb3}
 @media(max-width:460px){.ctAutoPanel{padding:13px}.ctAutoHeader{flex-wrap:wrap}.ctAutoBottom{align-items:stretch;flex-direction:column}.ctAutoRefresh{width:100%}.ctAutoStats>div{padding:9px}.ctAutoStats strong{font-size:21px}}
+
+/* V1.7.10 · Herramientas compactas DEBAJO de enfrentamientos */
+#ctAutoResultsPanel.ctAutoPanel{margin:15px 0 7px;padding:11px 13px;border-radius:12px;box-shadow:none;background:#fbfbfc}
+#ctAutoResultsPanel .ctAutoHeader{align-items:center;gap:8px}
+#ctAutoResultsPanel .ctAutoEyebrow{font-size:8px}
+#ctAutoResultsPanel .ctAutoHeader h3{font-size:12px;margin:2px 0 0}
+#ctAutoResultsPanel .ctAutoHeader p{display:none}
+#ctAutoResultsPanel .ctAutoBadge{padding:5px 8px;font-size:9px}
+#ctAutoResultsPanel .ctAutoStats{margin-top:8px;gap:6px}
+#ctAutoResultsPanel .ctAutoStats>div{padding:7px 9px;display:flex;align-items:center;justify-content:space-between;gap:7px;border-radius:9px}
+#ctAutoResultsPanel .ctAutoStats small{font-size:9px}
+#ctAutoResultsPanel .ctAutoStats strong{font-size:15px}
+#ctAutoResultsPanel .ctAutoBottom{margin-top:8px;gap:7px}
+#ctAutoResultsPanel .ctAutoDetail{font-size:9px;line-height:1.35}
+#ctAutoResultsPanel .ctAutoRefresh{padding:8px 10px;font-size:10px;border-radius:8px}
+#ctAutoResultsPanel .ctAutoWarning{padding:8px 9px;margin-top:8px;font-size:10px}
+.ctIsquadExport{margin:7px 0 12px;padding:10px 12px;border-radius:12px;gap:9px;background:#fffaf0}
+.ctIsquadExportIcon{flex-basis:32px;width:32px;height:32px;border-radius:9px;font-size:21px}
+.ctIsquadExportInfo strong{font-size:12px}
+.ctIsquadExportInfo p{font-size:10px;line-height:1.3;margin:2px 0}
+.ctIsquadExportStatus{font-size:9px;min-height:0}
+.ctIsquadExportBtn{min-height:36px;padding:8px 12px!important;border-radius:9px!important;font-size:11px!important}
+@media(max-width:570px){
+  #ctAutoResultsPanel .ctAutoHeader{flex-wrap:nowrap}
+  #ctAutoResultsPanel .ctAutoStats{grid-template-columns:repeat(3,minmax(0,1fr))}
+  #ctAutoResultsPanel .ctAutoStats>div{display:grid;gap:3px;text-align:center;padding:7px 3px}
+  #ctAutoResultsPanel .ctAutoStats strong{font-size:16px}
+  #ctAutoResultsPanel .ctAutoBottom{display:grid;grid-template-columns:1fr auto;align-items:center}
+  #ctAutoResultsPanel .ctAutoRefresh{width:auto}
+  .ctIsquadExport{grid-template-columns:32px minmax(0,1fr) auto;gap:8px;align-items:center}
+  .ctIsquadExportIcon{width:32px;height:32px;font-size:20px}
+  .ctIsquadExportBtn{grid-column:auto;width:auto;font-size:10px!important;padding:8px!important}
+  .ctIsquadExportInfo p{display:none}
+}
+@media(max-width:390px){.ctIsquadExport{grid-template-columns:28px minmax(0,1fr)}.ctIsquadExportBtn{grid-column:2;justify-self:start}}
 </style>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -4617,6 +4652,7 @@ body.modern-admin #journeyNavigator .journeyJump{scroll-snap-align:none!importan
       <div class="field"><label>Género</label><select id="adminMatchesGender"><option value="all">Todos</option><option>Masculino</option><option>Femenino</option></select></div>
       <div class="field week"><label>Semana</label><select id="adminMatchesWeek"><option value="all">Todas las semanas</option></select></div>
     </div>
+    <div id="adminMatchesList" class="adminMatchGroups"></div>
     <section class="ctAutoPanel" id="ctAutoResultsPanel" aria-labelledby="ctAutoTitle">
       <div class="ctAutoHeader"><div><div class="ctAutoEyebrow">CONTROL AUTOMÁTICO · CLOUDFLARE</div><h3 id="ctAutoTitle">Confirmación de resultados a las 24 horas</h3><p>Estado real del Worker de PRODUCCIÓN. La consulta no modifica partidos.</p></div><span id="ctAutoBadge" class="ctAutoBadge">Sin consultar</span></div>
       <div class="ctAutoStats">
@@ -4635,8 +4671,7 @@ body.modern-admin #journeyNavigator .journeyJump{scroll-snap-align:none!importan
         <div class="ctIsquadExportStatus" id="ctIsquadExportStatus" aria-live="polite"></div>
       </div>
       <button id="ctIsquadExportBtn" type="button" class="ctIsquadExportBtn">Generar PDF</button>
-    </section>
-    <div id="adminMatchesList" class="adminMatchGroups"></div></div>
+    </section></div>
 </details>
 
 <details class="adminBlock adminAccordion adminPrimary" data-admin-section="journey">
@@ -7043,13 +7078,13 @@ function ctIsquadExportHtml(rows){
   }).join('');
   return `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Resultados para iSquad · ${esc(tournament)}</title>
 <style>
-  @page{size:A4 landscape;margin:13mm 12mm 15mm}
+  @page{size:A4 portrait;margin:12mm 11mm 14mm}
   *{box-sizing:border-box}body{margin:0;background:#f1f2f4;color:#1b1c20;font:12px/1.45 Arial,Helvetica,sans-serif}
   .tools{position:sticky;top:0;background:#57000d;color:#fff;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;padding:13px max(16px,calc((100% - 1080px)/2));z-index:2}
   .tools b{font-size:13px}.tools small{display:block;color:#f1cdd2;margin-top:3px;font-size:11px}.buttons{display:flex;gap:8px}
   button{font:800 13px Arial;padding:11px 17px;border-radius:9px;border:1px solid #ddd;cursor:pointer;background:#fff;color:#57000d}
   button.primary{background:#efbe36;border-color:#efbe36;color:#2c2100}
-  main{width:min(1080px,calc(100% - 26px));margin:20px auto;background:#fff;padding:25px 26px;box-shadow:0 9px 30px #0002}
+  main{width:min(794px,calc(100% - 26px));margin:20px auto;background:#fff;padding:21px 19px;box-shadow:0 9px 30px #0002}
   .reportHead{border-bottom:3px solid #850019;display:flex;justify-content:space-between;gap:16px;padding-bottom:15px;align-items:end}
   h1{font-size:25px;line-height:1.15;margin:2px 0 4px;color:#69000e}h1 small{display:block;color:#7b8088;font-weight:600;font-size:13px;margin-top:6px}
   .eyebrow{color:#a06b00;letter-spacing:.09em;font-size:10px;font-weight:900;text-transform:uppercase}
@@ -7062,11 +7097,11 @@ function ctIsquadExportHtml(rows){
   tr{break-inside:avoid;page-break-inside:avoid}th,td{border-bottom:1px solid #e3e5e8;padding:7px 8px;text-align:left;vertical-align:top;overflow-wrap:anywhere}
   th{background:#f1f2f5;color:#585e67;font-size:10px;font-weight:800}
   tbody tr:nth-child(even){background:#fafafb}td{font-size:11px}
-  th:nth-child(1),td:nth-child(1){width:42px}th:nth-child(2),td:nth-child(2){width:135px}th:nth-child(5),td:nth-child(5){width:210px}
+  th:nth-child(1),td:nth-child(1){width:6%}th:nth-child(2),td:nth-child(2){width:13%}th:nth-child(3),td:nth-child(3){width:28%}th:nth-child(4),td:nth-child(4){width:28%}th:nth-child(5),td:nth-child(5){width:25%}
   td.num{font-weight:800;color:#858b92}td.player{font-weight:700}td.score{font-weight:900;color:#252932}
   .footer{border-top:1px solid #e6e7e9;color:#80858c;font-size:10px;padding-top:9px;margin-top:28px}
-  @media(max-width:650px){main{padding:15px 12px}.reportHead{align-items:start;flex-direction:column}.summary{text-align:left}.tools{padding:12px}.section{overflow-x:auto}table{min-width:720px}}
-  @media print{body{background:#fff;font-size:11px}.tools{display:none!important}main{width:100%;margin:0;padding:0;box-shadow:none}.section{break-inside:auto;page-break-inside:auto}thead{display:table-header-group}tr{break-inside:avoid}.reportHead{padding-bottom:11px}.notice{border:1px solid #e5e6e8;background:#fff}a{color:inherit;text-decoration:none}}
+  @media(max-width:650px){main{padding:15px 12px}.reportHead{align-items:start;flex-direction:column}.summary{text-align:left}.tools{padding:12px}.section{overflow-x:auto}table{min-width:0}}
+  @media print{body{background:#fff;font-size:10px}.tools{display:none!important}main{width:100%;margin:0;padding:0;box-shadow:none}.section{break-inside:auto;page-break-inside:auto;overflow:visible!important;margin:14px 0 18px}.sectionTitle h2{font-size:12px}thead{display:table-header-group}tr{break-inside:avoid}table{width:100%;min-width:0;table-layout:fixed}th,td{padding:5px 4px;overflow-wrap:anywhere;word-break:normal;font-size:9px}.reportHead{padding-bottom:9px}h1{font-size:19px}.notice{border:1px solid #e5e6e8;background:#fff;margin:9px 0 12px;font-size:9px}a{color:inherit;text-decoration:none}}
 </style></head><body>
 <div class="tools"><div><b>CT Campeador · informe iSquad</b><small>Para obtener el archivo, selecciona «Guardar como PDF» al imprimir.</small></div><div class="buttons"><button type="button" onclick="window.close()">Cerrar</button><button type="button" class="primary" onclick="window.print()">Guardar como PDF / Imprimir</button></div></div>
 <main><header class="reportHead"><div><div class="eyebrow">CT Campeador · Burgos</div><h1>${esc(tournament)}<small>Resultados publicados · Informe global para iSquad</small></h1></div><div class="summary"><strong>${rows.length} resultados confirmados</strong>${sections.size} categorías/grupos · Generado ${esc(today)}</div></header>
