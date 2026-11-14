@@ -2034,6 +2034,13 @@ body.modern-admin .courtsTemplatePanel p{margin:0;color:#697281;font-size:12px;l
 @media(max-width:430px){.ctInlineContext{grid-template-columns:1fr}.ctHistPayPlayer{align-items:flex-start}}
 </style>
 
+
+<style id="ct-autoresults-health-style">
+.ctAutoPanel{margin:13px 0 17px;padding:16px;border-radius:17px;border:1px solid #e2e5ea;background:linear-gradient(145deg,#fff,#f8f9fb);box-shadow:0 4px 14px #15202c0b;color:#252931}
+.ctAutoHeader{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.ctAutoEyebrow{font-size:9px;letter-spacing:.08em;font-weight:900;color:#8a0e28}.ctAutoHeader h3{font-size:15px;margin:5px 0 4px;color:#24262b;line-height:1.25}.ctAutoHeader p{margin:0;color:#707782;font-size:11px;line-height:1.4}.ctAutoBadge{white-space:nowrap;border-radius:99px;background:#f0f1f3;border:1px solid #e3e6e9;color:#626a73;font-weight:900;font-size:10px;padding:7px 10px}.ctAutoBadge.on{background:#e7f6ee;border-color:#bfe3cc;color:#197745}.ctAutoBadge.off{background:#fff1e7;border-color:#f1cfb9;color:#a3581f}.ctAutoBadge.error{background:#fff0f2;border-color:#edb9c1;color:#ae2134}
+.ctAutoStats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:15px}.ctAutoStats>div{display:grid;gap:7px;padding:12px;background:white;border:1px solid #e5e7ec;border-radius:12px}.ctAutoStats small{color:#747a85;font-size:10px;font-weight:800}.ctAutoStats strong{font-size:23px;line-height:1;font-weight:950;color:#24272d}.ctAutoBottom{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:13px}.ctAutoDetail{flex:1;min-width:0;font-size:11px;line-height:1.5;color:#626975}.ctAutoRefresh{flex:0 0 auto;border:0;border-radius:10px;padding:11px 12px;background:#790014;color:white;font-size:11px;font-weight:900;cursor:pointer}.ctAutoRefresh:disabled{opacity:.55}.ctAutoWarning{margin-top:11px;padding:10px 12px;border-radius:10px;background:#fff5df;color:#875900;font-size:11px;line-height:1.4;border:1px solid #f1dfb3}
+@media(max-width:460px){.ctAutoPanel{padding:13px}.ctAutoHeader{flex-wrap:wrap}.ctAutoBottom{align-items:stretch;flex-direction:column}.ctAutoRefresh{width:100%}.ctAutoStats>div{padding:9px}.ctAutoStats strong{font-size:21px}}
+</style>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -3257,6 +3264,7 @@ body.resultModalOpen{overflow:hidden}
   box-shadow:0 0 0 2px rgba(0,0,0,.04);
 }
 .pushStatusDot.on{background:#21a55b}
+.pushStatusDot.family{background:#21a55b;box-shadow:0 0 0 2px #d6f6e5,0 0 0 3px #168f51}
 .pushStatusDot.off{background:#df304a}
 .pushStatusDot.checking{background:#aeb3ba}
 .accessMobileName{
@@ -4338,6 +4346,16 @@ body.modern-admin #journeyNavigator .journeyJump{scroll-snap-align:none!importan
 #ct-match-pick .cmp-foot{flex:0 0 auto;padding:12px 16px calc(13px + env(safe-area-inset-bottom));background:#fff;border-top:1px solid #e7e9ed;font-size:11px;color:#818790;text-align:center}
 @media(min-width:740px){#ct-match-pick{align-items:center}#ct-match-pick .cmp-panel{border-radius:23px}}
 </style>
+
+<style id="ct-isquad-export-style">
+.ctIsquadExport{display:flex;align-items:center;gap:13px;padding:15px;margin:13px 0;border-radius:14px;background:linear-gradient(115deg,#fff8e9,#ffffff);border:1px solid #eedcba;color:#202126}
+.ctIsquadExportIcon{flex:0 0 44px;width:44px;height:44px;display:grid;place-items:center;background:#fff0d0;color:#8b0015;border-radius:12px;font-size:29px;font-weight:900}
+.ctIsquadExportInfo{flex:1;min-width:0}.ctIsquadExportInfo strong{display:block;font-size:14px;font-weight:950;line-height:1.25}.ctIsquadExportInfo p{font-size:11px;line-height:1.45;margin:5px 0;color:#69707a}
+.ctIsquadExportStatus{font-size:10px;min-height:14px;color:#8b0015;font-weight:800}
+.ctIsquadExportBtn{flex:0 0 auto;min-height:43px;background:#800012!important;color:#fff!important;padding:10px 14px!important;border:0!important;border-radius:11px!important;font-size:12px!important;font-weight:900!important;cursor:pointer}
+.ctIsquadExportBtn:disabled{opacity:.65;cursor:wait}
+@media(max-width:570px){.ctIsquadExport{display:grid;grid-template-columns:40px minmax(0,1fr);gap:10px}.ctIsquadExportIcon{width:40px;height:40px}.ctIsquadExportBtn{grid-column:1/-1;width:100%!important}}
+</style>
 </head>
 <body>
 
@@ -4599,6 +4617,25 @@ body.modern-admin #journeyNavigator .journeyJump{scroll-snap-align:none!importan
       <div class="field"><label>Género</label><select id="adminMatchesGender"><option value="all">Todos</option><option>Masculino</option><option>Femenino</option></select></div>
       <div class="field week"><label>Semana</label><select id="adminMatchesWeek"><option value="all">Todas las semanas</option></select></div>
     </div>
+    <section class="ctAutoPanel" id="ctAutoResultsPanel" aria-labelledby="ctAutoTitle">
+      <div class="ctAutoHeader"><div><div class="ctAutoEyebrow">CONTROL AUTOMÁTICO · CLOUDFLARE</div><h3 id="ctAutoTitle">Confirmación de resultados a las 24 horas</h3><p>Estado real del Worker de PRODUCCIÓN. La consulta no modifica partidos.</p></div><span id="ctAutoBadge" class="ctAutoBadge">Sin consultar</span></div>
+      <div class="ctAutoStats">
+        <div><small>Pendientes</small><strong id="ctAutoPending">—</strong></div>
+        <div><small>Más de 24 h</small><strong id="ctAutoOverdue">—</strong></div>
+        <div><small>Listos para confirmar</small><strong id="ctAutoEligible">—</strong></div>
+      </div>
+      <div class="ctAutoBottom"><div class="ctAutoDetail"><div id="ctAutoLastRun">Última ejecución: sin consultar</div><div id="ctAutoHint">Se necesitan los datos del Worker para comprobar el estado.</div></div><button type="button" class="ctAutoRefresh" id="ctAutoRefreshBtn">↻ Comprobar estado</button></div>
+      <div class="ctAutoWarning" id="ctAutoWarning" hidden></div>
+    </section>
+    <section class="ctIsquadExport" aria-labelledby="ctIsquadExportTitle">
+      <div class="ctIsquadExportIcon" aria-hidden="true">▤</div>
+      <div class="ctIsquadExportInfo">
+        <strong id="ctIsquadExportTitle">Informe de resultados para iSquad</strong>
+        <p>Un solo PDF con todos los resultados confirmados, agrupados por categoría, género y jornada. No depende de los filtros anteriores.</p>
+        <div class="ctIsquadExportStatus" id="ctIsquadExportStatus" aria-live="polite"></div>
+      </div>
+      <button id="ctIsquadExportBtn" type="button" class="ctIsquadExportBtn">Generar PDF</button>
+    </section>
     <div id="adminMatchesList" class="adminMatchGroups"></div></div>
 </details>
 
@@ -6965,6 +7002,114 @@ function adminSetMatchContext(m,{effective=false}={}){
 function adminMatchBookingText(bk){
   return bk?`${dayDateES(bk.date)} · ${bk.time} · ${bk.court}`:'Sin pista reservada';
 }
+
+/* CT Campeador · V1.7.8 · Exportación de resultados oficiales para iSquad
+   Usa la lista global de resultados confirmados, nunca los filtros visuales de Administración.
+   Solo genera una hoja imprimible; no guarda ni modifica resultados. */
+function ctIsquadExportHtml(rows){
+  const esc=mappEsc;
+  const tournament=String(data.tournamentName||'CT Campeador').trim();
+  const today=new Intl.DateTimeFormat('es-ES',{timeZone:'Europe/Madrid',day:'2-digit',month:'2-digit',year:'numeric'}).format(new Date());
+  const priority=(gender)=>gender==='Masculino'?0:gender==='Femenino'?1:2;
+  const normalized=[...rows].sort((a,b)=>{
+    let c=CATEGORIES.indexOf(a.category)-CATEGORIES.indexOf(b.category);
+    if(c)return c;
+    c=priority(a.gender)-priority(b.gender);if(c)return c;
+    c=weekNumber(a.week)-weekNumber(b.week);if(c)return c;
+    return String(a.a||'').localeCompare(String(b.a||''),'es');
+  });
+  const sections=new Map();
+  for(const row of normalized){
+    const key=String(row.category||'Sin categoría')+'|'+String(row.gender||'Sin género');
+    if(!sections.has(key))sections.set(key,[]);
+    sections.get(key).push(row);
+  }
+  let index=0;
+  const groups=[...sections.entries()].map(([key,items])=>{
+    const [category,gender]=key.split('|');
+    const trs=items.map(item=>{
+      index++;
+      const r=item.result||{};
+      const score=(r.sets||[]).map(x=>String(x.a??'')+'–'+String(x.b??'')).join(' / ');
+      const isPlayed=r.type==='normal'||r.type==='retirement';
+      const outcome=r.type==='wo'?'W.O. · '+(r.winner||'Ganador no indicado'):
+                    r.type==='not_played'?'No disputado':
+                    (isPlayed?(score||'Tanteo no disponible'):'—');
+      const extra=r.type==='retirement'?' (retirada)':'';
+      const officialWeek=resultRoundFor(item)||item.week||'—';
+      return '<tr><td class="num">'+index+'</td><td>'+esc(officialWeek)+'</td><td class="player">'+esc(item.a)+'</td><td class="player">'+esc(item.b)+'</td><td class="score">'+esc(outcome+extra)+'</td></tr>';
+    }).join('');
+    return '<section class="section"><div class="sectionTitle"><h2>'+esc(category)+' · '+esc(gender)+'</h2><span>'+items.length+' resultado'+(items.length===1?'':'s')+'</span></div><table><thead><tr><th>N.º</th><th>Jornada</th><th>Jugador A</th><th>Jugador B</th><th>Resultado (A–B)</th></tr></thead><tbody>'+trs+'</tbody></table></section>';
+  }).join('');
+  return `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Resultados para iSquad · ${esc(tournament)}</title>
+<style>
+  @page{size:A4 landscape;margin:13mm 12mm 15mm}
+  *{box-sizing:border-box}body{margin:0;background:#f1f2f4;color:#1b1c20;font:12px/1.45 Arial,Helvetica,sans-serif}
+  .tools{position:sticky;top:0;background:#57000d;color:#fff;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;padding:13px max(16px,calc((100% - 1080px)/2));z-index:2}
+  .tools b{font-size:13px}.tools small{display:block;color:#f1cdd2;margin-top:3px;font-size:11px}.buttons{display:flex;gap:8px}
+  button{font:800 13px Arial;padding:11px 17px;border-radius:9px;border:1px solid #ddd;cursor:pointer;background:#fff;color:#57000d}
+  button.primary{background:#efbe36;border-color:#efbe36;color:#2c2100}
+  main{width:min(1080px,calc(100% - 26px));margin:20px auto;background:#fff;padding:25px 26px;box-shadow:0 9px 30px #0002}
+  .reportHead{border-bottom:3px solid #850019;display:flex;justify-content:space-between;gap:16px;padding-bottom:15px;align-items:end}
+  h1{font-size:25px;line-height:1.15;margin:2px 0 4px;color:#69000e}h1 small{display:block;color:#7b8088;font-weight:600;font-size:13px;margin-top:6px}
+  .eyebrow{color:#a06b00;letter-spacing:.09em;font-size:10px;font-weight:900;text-transform:uppercase}
+  .summary{text-align:right;color:#60666f;font-size:11px;white-space:nowrap}.summary strong{display:block;color:#24262b;font-size:14px}
+  .notice{margin:13px 0 18px;color:#626873;font-size:11px;padding:9px 11px;background:#f6f7f8;border-radius:8px}
+  .section{margin:22px 0 28px;break-inside:avoid-page;page-break-inside:avoid}
+  .sectionTitle{display:flex;align-items:baseline;justify-content:space-between;gap:10px;border-bottom:1px solid #dfc6cb;padding-bottom:6px;margin-bottom:9px}
+  .sectionTitle h2{font-size:15px;color:#7c0015;margin:0}.sectionTitle span{font-size:10px;color:#767c83;font-weight:700}
+  table{width:100%;border-collapse:collapse;table-layout:fixed}thead{display:table-header-group}
+  tr{break-inside:avoid;page-break-inside:avoid}th,td{border-bottom:1px solid #e3e5e8;padding:7px 8px;text-align:left;vertical-align:top;overflow-wrap:anywhere}
+  th{background:#f1f2f5;color:#585e67;font-size:10px;font-weight:800}
+  tbody tr:nth-child(even){background:#fafafb}td{font-size:11px}
+  th:nth-child(1),td:nth-child(1){width:42px}th:nth-child(2),td:nth-child(2){width:135px}th:nth-child(5),td:nth-child(5){width:210px}
+  td.num{font-weight:800;color:#858b92}td.player{font-weight:700}td.score{font-weight:900;color:#252932}
+  .footer{border-top:1px solid #e6e7e9;color:#80858c;font-size:10px;padding-top:9px;margin-top:28px}
+  @media(max-width:650px){main{padding:15px 12px}.reportHead{align-items:start;flex-direction:column}.summary{text-align:left}.tools{padding:12px}.section{overflow-x:auto}table{min-width:720px}}
+  @media print{body{background:#fff;font-size:11px}.tools{display:none!important}main{width:100%;margin:0;padding:0;box-shadow:none}.section{break-inside:auto;page-break-inside:auto}thead{display:table-header-group}tr{break-inside:avoid}.reportHead{padding-bottom:11px}.notice{border:1px solid #e5e6e8;background:#fff}a{color:inherit;text-decoration:none}}
+</style></head><body>
+<div class="tools"><div><b>CT Campeador · informe iSquad</b><small>Para obtener el archivo, selecciona «Guardar como PDF» al imprimir.</small></div><div class="buttons"><button type="button" onclick="window.close()">Cerrar</button><button type="button" class="primary" onclick="window.print()">Guardar como PDF / Imprimir</button></div></div>
+<main><header class="reportHead"><div><div class="eyebrow">CT Campeador · Burgos</div><h1>${esc(tournament)}<small>Resultados publicados · Informe global para iSquad</small></h1></div><div class="summary"><strong>${rows.length} resultados confirmados</strong>${sections.size} categorías/grupos · Generado ${esc(today)}</div></header>
+<div class="notice">Solo se incluyen resultados <strong>confirmados y publicados</strong> en la liga. Los pendientes de confirmación no aparecen. Los tanteos se presentan en el orden de los jugadores A y B; W.O. y partidos no disputados se identifican expresamente.</div>
+${groups||'<p>No hay resultados confirmados.</p>'}
+<div class="footer">Informe generado desde Administración · CT Campeador. Verifica los datos antes de registrarlos en iSquad.</div></main></body></html>`;
+}
+async function ctIsquadExportOpen(){
+  if(!requireAdmin())return;
+  const button=document.getElementById('ctIsquadExportBtn');
+  const status=document.getElementById('ctIsquadExportStatus');
+  // Abrir de manera síncrona para evitar el bloqueo de ventanas emergentes en móviles.
+  const preview=window.open('','_blank');
+  if(!preview){if(status)status.textContent='El navegador ha bloqueado la ventana. Permite las ventanas emergentes para guardar el PDF.';return;}
+  preview.document.open();preview.document.write('<!doctype html><html lang="es"><meta charset="utf-8"><title>Preparando informe…</title><body style="font:16px Arial;padding:30px">Preparando resultados de CT Campeador…</body></html>');preview.document.close();
+  if(button)button.disabled=true;
+  if(status)status.textContent='Actualizando resultados confirmados…';
+  try{
+    if(navigator.onLine && apiToken){
+      // Intentamos actualizar desde Cloudflare para evitar exportar resultados de caché antiguos.
+      const updated=await refreshOnline({silent:true,force:true});
+      if(!updated)throw new Error('No se ha podido actualizar desde Cloudflare.');
+    }
+    const rows=confirmedResultsAll();
+    if(!rows.length){
+      preview.close();
+      if(status)status.textContent='No hay resultados confirmados para exportar.';
+      return;
+    }
+    preview.document.open();preview.document.write(ctIsquadExportHtml(rows));preview.document.close();
+    if(status)status.textContent=`✓ Informe preparado: ${rows.length} resultados oficiales. En la nueva pestaña, pulsa «Guardar como PDF / Imprimir».`;
+    preview.focus();
+  }catch(e){
+    console.error('Exportación iSquad:',e);
+    if(status)status.textContent='No se ha podido actualizar desde Cloudflare. No se ha generado el informe para evitar datos desactualizados.';
+    preview.close();
+  }finally{if(button)button.disabled=false;}
+}
+document.addEventListener('click',event=>{
+  const btn=event.target.closest?.('#ctIsquadExportBtn');
+  if(btn){event.preventDefault();ctIsquadExportOpen();}
+});
+
 function renderAdminMatches(){
   if(!isAdmin())return;
   const cat=$('#adminMatchesCategory'), gen=$('#adminMatchesGender'), wk=$('#adminMatchesWeek'), box=$('#adminMatchesList');
@@ -7723,9 +7868,19 @@ function pushStatusForUser(name){
   const key=normalizeName(name);
   const g=groups.find(x=>normalizeName(x?.userName||'')===key);
   const count=Number(g?.count||0);
-  return count>0
-    ? {state:'on',count,label:`Notificaciones activadas · ${count} dispositivo${count===1?'':'s'}`}
-    : {state:'off',count:0,label:'Notificaciones no activadas'};
+  if(count>0)return {state:'on',count,label:`Push personal activo · ${count} dispositivo${count===1?'':'s'}`};
+  // Los dispositivos de una cuenta familiar se registran como FAMILIA:<nombre>.
+  // Solo consideramos vinculaciones aprobadas, nunca solicitudes pendientes.
+  const familyAccounts=window.__ctPushFamilyLinks;
+  if(Array.isArray(familyAccounts)){
+    const linked=familyAccounts.filter(x=>normalizeName(x.playerName||'')===key && x.status==='approved');
+    const activeFamilies=linked.filter(x=>groups.some(g=>normalizeName(g.userName||'')===normalizeName('FAMILIA:'+x.familyName)&&Number(g.count||0)>0));
+    if(activeFamilies.length){
+      const total=activeFamilies.reduce((n,x)=>n+Number(groups.find(g=>normalizeName(g.userName||'')===normalizeName('FAMILIA:'+x.familyName))?.count||0),0);
+      return {state:'family',count:total,label:`Push mediante cuenta familiar · ${activeFamilies.map(x=>x.familyName).join(', ')} · ${total} dispositivo${total===1?'':'s'}. No es una suscripción personal.`};
+    }
+  }
+  return {state:'off',count:0,label:'No consta suscripción Push personal ni familiar activa'};
 }
 function pushStatusDotHtml(name){
   const st=pushStatusForUser(name);
@@ -8263,6 +8418,13 @@ async function loadPushDevices(){
     const r=await apiRequest({action:'listPushDevices'});
     const groups=Array.isArray(r.users)?r.users:[];
     window.__pushDeviceGroups=groups;
+    // Relacionar dispositivos inscritos con cuentas familiares autorizadas.
+    // Un fallo de consulta no convierte una vinculación desconocida en activa.
+    window.__ctPushFamilyLinks=null;
+    try{
+      const f=await apiRequest({action:'familyAdminList'});
+      window.__ctPushFamilyLinks=Array.isArray(f.requests)?f.requests:[];
+    }catch(e){console.warn('No se pudieron comprobar las vinculaciones familiares Push:',e)}
     if(!groups.length){
       if(tb)tb.innerHTML='<tr><td colspan="4">No hay dispositivos suscritos.</td></tr>';
       window.__pushDeviceCount=0;
@@ -11291,5 +11453,43 @@ window.addEventListener('scroll',()=>{const a=document.getElementById('adminView
   else window.addEventListener('load',installProfileRow,{once:true});
 })();
 
+</script>
+
+<script id="ct-autoresults-health-script">
+(function(){
+  let busy=false;
+  const el=id=>document.getElementById(id);
+  const dateEs=value=>{if(!value)return 'sin datos';const d=new Date(value);return Number.isFinite(d.getTime())?new Intl.DateTimeFormat('es-ES',{timeZone:'Europe/Madrid',dateStyle:'short',timeStyle:'medium'}).format(d):'fecha no disponible'};
+  async function check(){
+    if(busy)return;
+    const btn=el('ctAutoRefreshBtn'),badge=el('ctAutoBadge'),warning=el('ctAutoWarning');
+    if(!btn||!badge)return;
+    busy=true;btn.disabled=true;btn.textContent='Consultando…';badge.textContent='Comprobando';badge.className='ctAutoBadge';warning.hidden=true;
+    try{
+      if(typeof apiRequest!=='function')throw new Error('La conexión con la API no está disponible.');
+      const r=await apiRequest({action:'getAutoResultsStatus'});
+      badge.textContent=r.enabled&&r.thresholdConfigured?'● Activo':'● Inactivo';badge.className='ctAutoBadge '+(r.enabled&&r.thresholdConfigured?'on':'off');
+      el('ctAutoPending').textContent=Number(r.pending||0);
+      el('ctAutoOverdue').textContent=Number(r.overdue||0);
+      el('ctAutoEligible').textContent=Number(r.eligible||0);
+      const last=r.lastRun;
+      el('ctAutoLastRun').textContent='Última ejecución registrada: '+(last?.checkedAt?dateEs(last.checkedAt):'todavía sin registro');
+      el('ctAutoHint').textContent='Actualizado: '+dateEs(r.checkedAt)+' · Cron previsto: cada 5 minutos';
+      const notes=[];
+      if(!r.enabled)notes.push('AUTORESULTS_ENABLED no está activada en Cloudflare.');
+      if(!r.thresholdConfigured)notes.push('AUTORESULTS_NOT_BEFORE no contiene una fecha válida.');
+      if(last?.ok===false)notes.push('La última ejecución falló: '+String(last.error||'error no especificado'));
+      if(r.enabled&&r.thresholdConfigured&&!last)notes.push('Aún no hay ejecución registrada desde la instalación de esta versión del Worker.');
+      if(Number(r.overdue||0)>Number(r.eligible||0))notes.push('Algunos resultados vencidos están excluidos por fecha de activación, datos incompletos o enfrentamientos no encontrados.');
+      if(notes.length){warning.textContent=notes.join(' ');warning.hidden=false;}
+    }catch(err){
+      badge.textContent='● Sin conexión';badge.className='ctAutoBadge error';
+      warning.hidden=false;warning.textContent='No se pudo consultar el estado: '+String(err?.message||err)+' · Publica también el Worker actualizado y accede como administrador.';
+      el('ctAutoLastRun').textContent='Última ejecución: no disponible';
+    }finally{busy=false;btn.disabled=false;btn.textContent='↻ Comprobar estado';}
+  }
+  document.addEventListener('click',e=>{if(e.target.closest?.('#ctAutoRefreshBtn')){e.preventDefault();check();}});
+  document.addEventListener('toggle',e=>{if(e.target?.matches?.('details[data-admin-section="matchesAdmin"]')&&e.target.open)check();},true);
+})();
 </script>
 </body></html>
