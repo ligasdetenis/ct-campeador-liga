@@ -360,7 +360,24 @@ var BookingCoordinator = class extends DurableObject {
         }
       });
       const rows = this.sql.exec("SELECT booking_id,match_id,payload,status,payment_a,payment_b,payment_a_at,payment_b_at,payment_a_by,payment_b_by,updated_at FROM court_booking_history ORDER BY updated_at DESC LIMIT 3000").toArray();
-      return doJson({ ok: true, records: rows.map((row) => ({ bookingId: row.booking_id, matchId: row.match_id, reservation: JSON.parse(row.payload), status: row.status, paymentA: row.payment_a, paymentB: row.payment_b, paymentAAt: row.payment_a_at, paymentBAt: row.payment_b_at, paymentABy: row.payment_a_by, paymentBBy: row.payment_b_by, updatedAt: row.updated_at })) });
+      // Reconciliación informativa de registros antiguos: solo una cancelación
+      // producida junto a la confirmación del resultado cuenta como partido disputado.
+      // Nunca se altera el historial almacenado ni un pago previamente registrado.
+      let confirmedResults = {};
+      try {
+        const snapshot = this.sql.exec("SELECT payload FROM league_snapshot WHERE id=1").toArray()[0];
+        confirmedResults = snapshot ? (JSON.parse(snapshot.payload).results || {}) : {};
+      } catch (error) { console.error("Consulta histórica de resultados", error); }
+      return doJson({ ok: true, records: rows.map((row) => {
+        let status = row.status;
+        if (status === "cancelled") {
+          const result = confirmedResults[row.match_id];
+          const t = Date.parse(String(row.updated_at || ""));
+          const confirmation = Date.parse(String(result?.confirmedAt || ""));
+          if (result?.status === "confirmed" && Number.isFinite(t) && Number.isFinite(confirmation) && Math.abs(t - confirmation) <= 10 * 60 * 1000) status = "completed";
+        }
+        return { bookingId: row.booking_id, matchId: row.match_id, reservation: JSON.parse(row.payload), status, paymentA: row.payment_a, paymentB: row.payment_b, paymentAAt: row.payment_a_at, paymentBAt: row.payment_b_at, paymentABy: row.payment_a_by, updatedAt: row.updated_at };
+      }) });
     }
     if (action === "setCourtPayment") {
       const bookingId = String(body.bookingId || "").trim();
@@ -370,8 +387,17 @@ var BookingCoordinator = class extends DurableObject {
       if (!bookingId || !["a", "b"].includes(side) || !["pending", "paid"].includes(payment) || !adminName) return doJson({ ok: false, error: "Datos de pago no v\xE1lidos" }, 400);
       const col = side === "a" ? "a" : "b";
       const result = this.ctx.storage.transactionSync(() => {
-        const row = this.sql.exec("SELECT payload,payment_" + col + " AS current FROM court_booking_history WHERE booking_id=?", bookingId).toArray()[0];
+        const row = this.sql.exec("SELECT payload,status,match_id,updated_at,payment_" + col + " AS current FROM court_booking_history WHERE booking_id=?", bookingId).toArray()[0];
         if (!row) throw new Error("Reserva hist\xF3rica no encontrada");
+        if (row.status !== "active" && row.status !== "completed") {
+          // Compatibilidad con los resultados anteriores a esta mejora.
+          const snap = this.sql.exec("SELECT payload FROM league_snapshot WHERE id=1").toArray()[0];
+          const result = snap ? (JSON.parse(snap.payload).results || {})[row.match_id] : null;
+          const cancelledAt = Date.parse(String(row.updated_at || ""));
+          const confirmedAt = Date.parse(String(result?.confirmedAt || ""));
+          const legacyPlayed = row.status === "cancelled" && result?.status === "confirmed" && Number.isFinite(cancelledAt) && Number.isFinite(confirmedAt) && Math.abs(cancelledAt - confirmedAt) <= 10 * 60 * 1000;
+          if (!legacyPlayed) throw new Error("Reserva cancelada o sustituida: no se puede cobrar.");
+        }
         const booking = JSON.parse(row.payload);
         if (!booking[col]) throw new Error("Jugador sin identificar");
         const now = (/* @__PURE__ */ new Date()).toISOString();
@@ -553,7 +579,10 @@ var BookingCoordinator = class extends DurableObject {
         this.sql.exec("DELETE FROM reservations WHERE match_id = ?", matchId);
         if (active) {
           const now2 = (/* @__PURE__ */ new Date()).toISOString();
-          this.sql.exec("UPDATE court_booking_history SET status='cancelled',updated_at=? WHERE match_id=? AND status='active'", now2, matchId);
+          // La confirmación de un resultado libera la pista pero NO anula el cobro.
+          // Una cancelación voluntaria es gratuita; la reprogramación tampoco cobra.
+          const historyStatus = body.reason === "result_confirmed" ? "completed" : "cancelled";
+          this.sql.exec("UPDATE court_booking_history SET status=?,updated_at=? WHERE match_id=? AND status='active'", historyStatus, now2, matchId);
         }
         if (!active) return null;
         const row = this.sql.exec("SELECT payload FROM match_proposals WHERE match_id = ?", matchId).toArray()[0];
@@ -677,7 +706,7 @@ async function confirmExpiredResults(env) {
     try {
       const b = await bookingCall(env, { action: "get", matchId: id });
       if (b?.reservation) {
-        const c = await bookingCall(env, { action: "cancel", matchId: id });
+        const c = await bookingCall(env, { action: "cancel", matchId: id, reason: "result_confirmed" });
         if (!c?.ok) throw new Error(c.error || "No se pudo liberar la pista");
         await broadcastRealtime(env, { type: "reservationChanged", matchId: id, reservation: null });
       }
@@ -1343,7 +1372,7 @@ var index_default = {
         if (result.status === "confirmed") {
           const currentReservation = await bookingCall(env, { action: "get", matchId });
           if (currentReservation?.reservation) {
-            await bookingCall(env, { action: "cancel", matchId });
+            await bookingCall(env, { action: "cancel", matchId, reason: "result_confirmed" });
             await broadcastRealtime(env, { type: "reservationChanged", matchId, reservation: null });
           }
         }
@@ -1380,7 +1409,7 @@ var index_default = {
         if (op.alreadyConfirmed) return json({ ok: true, result }, 200, corsHeaders);
         const currentReservation = await bookingCall(env, { action: "get", matchId });
         if (currentReservation?.reservation) {
-          await bookingCall(env, { action: "cancel", matchId });
+          await bookingCall(env, { action: "cancel", matchId, reason: "result_confirmed" });
           await broadcastRealtime(env, { type: "reservationChanged", matchId, reservation: null });
         }
         await broadcastRealtime(env, { type: "resultChanged", matchId, result });
