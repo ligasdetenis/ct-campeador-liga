@@ -4496,6 +4496,37 @@ body.modern-admin .ctProV184 .courtsProCard :is(.courtsProCardTitle,.courtsProTi
 @media(max-width:900px){body.modern-admin .ctProV184 .ctControlMain{grid-template-columns:minmax(0,1fr)}body.modern-admin .ctProV184 .ctControlTools{grid-template-columns:repeat(2,minmax(0,1fr))}body.modern-admin .ctProV184 .ctToolsTitle{grid-column:1/-1}}
 @media(max-width:590px){body.modern-admin .courtsPro.ctProV184{padding:7px!important;border-radius:14px}body.modern-admin .ctProV184 .ctControlTop{padding:9px!important;top:0}body.modern-admin .ctProV184 .ctControlHeading h3{font-size:15px!important}body.modern-admin .ctProV184 .ctControlTop .ctInlineContext.one{margin:7px 0!important}body.modern-admin .ctProV184 #ctCourtsWeek{width:100%;max-width:none}body.modern-admin .ctProV184 .courtsProDays{gap:3px!important}body.modern-admin .ctProV184 .courtsProDay{min-height:42px!important;padding:5px 1px!important}body.modern-admin .ctProV184 .courtsProDay b{font-size:9px!important}body.modern-admin .ctProV184 .courtsProDay span{font-size:8px!important}body.modern-admin .ctProV184 .courtsProKpi{padding:7px 3px!important}body.modern-admin .ctProV184 .courtsProKpi strong{font-size:17px!important}body.modern-admin .ctProV184 .courtsProKpi span{font-size:8px!important}body.modern-admin .ctProV184 .ctControlBoard,body.modern-admin .ctProV184 .ctControlTools{padding:9px!important}body.modern-admin .ctProV184 .ctControlTools{grid-template-columns:1fr}body.modern-admin .ctProV184 .ctGridScroller th:first-child,body.modern-admin .ctProV184 .ctGridScroller td:first-child{min-width:87px;width:87px;max-width:87px}body.modern-admin .ctProV184 .ctGridScroller table{min-width:340px}body.modern-admin .ctProV184 .ctGridCell{min-height:52px}body.modern-admin .ctProV184 .ctControlActions .courtsProPublishActions{display:grid!important;grid-template-columns:1fr 1fr;gap:6px!important}body.modern-admin .ctProV184 .ctControlActions button{font-size:11px!important;min-width:0}}
 </style>
+<style id="ctProV185Fix">
+/* V1.8.5 · Pistas PRO: una sola superficie, cuadrante bajo y borrado por celda */
+body.modern-admin .courtsPro.ctProV184{padding:5px!important;background:transparent!important;border:0!important;box-shadow:none!important}
+body.modern-admin .ctProV184 .ctControlTop{box-shadow:none!important;border:0!important;border-bottom:1px solid #e3e7ec!important;border-radius:0!important;padding:8px 4px!important;margin-bottom:6px!important;background:#fff!important}
+body.modern-admin .ctProV184 .ctControlMain{gap:8px!important;grid-template-columns:minmax(0,1fr) 215px!important}
+body.modern-admin .ctProV184 .ctControlBoard,body.modern-admin .ctProV184 .ctControlTools{box-shadow:none!important;border:0!important;border-radius:0!important;padding:5px!important;background:#fff!important}
+body.modern-admin .ctProV184 .ctControlBoardHead{margin-bottom:5px!important;gap:5px!important}
+body.modern-admin .ctProV184 .ctControlBoard h4{font-size:14px!important}
+body.modern-admin .ctProV184 .ctGridScroller{max-height:330px!important;border-radius:6px!important;border:1px solid #e3eaf0!important}
+body.modern-admin .ctProV184 .ctGridScroller table{min-width:285px!important;table-layout:fixed!important;font-size:11px!important}
+body.modern-admin .ctProV184 .ctGridScroller th,body.modern-admin .ctProV184 .ctGridScroller td{padding:2px!important;border-color:#e8ecf0!important}
+body.modern-admin .ctProV184 .ctGridScroller th:first-child,body.modern-admin .ctProV184 .ctGridScroller td:first-child{min-width:75px!important;max-width:75px!important;width:75px!important;font-size:10px!important}
+body.modern-admin .ctProV184 .ctGridCompact{position:relative;display:flex;align-items:center;gap:2px;min-height:32px;padding:2px 3px;border-radius:5px;width:100%;box-sizing:border-box}
+body.modern-admin .ctProV184 .ctGridCompact.free{background:#e9f8f0;color:#14603a}
+body.modern-admin .ctProV184 .ctGridCompact.booked{background:#fff1d7;color:#75470c}
+body.modern-admin .ctProV184 .ctGridCompact.draft{background:#e8f0fc;color:#244e80}
+body.modern-admin .ctProV184 .ctGridCompact.removing{background:#fcecef;color:#a33e55}
+body.modern-admin .ctProV184 .ctGridCompact .ctGridOpen{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:1px;flex:1;min-width:0;background:transparent!important;border:0!important;box-shadow:none!important;color:inherit!important;padding:1px 3px!important;min-height:28px!important;text-align:left!important;cursor:pointer}
+body.modern-admin .ctProV184 .ctGridCompact strong{font-size:10px!important;line-height:1.1!important;font-weight:800!important;color:inherit!important}
+body.modern-admin .ctProV184 .ctGridCompact small{font-size:9px!important;line-height:1.1!important;color:inherit!important;opacity:.9;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+body.modern-admin .ctProV184 .ctGridRemove{flex:0 0 24px;align-self:center;display:grid;place-items:center;width:24px;height:27px;padding:0!important;background:#fff!important;border:1px solid #e5c8ce!important;color:#9d2341!important;font-size:18px!important;line-height:1!important;font-weight:800!important;border-radius:5px!important;cursor:pointer;touch-action:manipulation}
+body.modern-admin .ctProV184 .ctGridRemove:focus-visible{outline:3px solid #a72440;outline-offset:2px}
+body.modern-admin .ctProV184 .ctControlBoard .ctLegend{font-size:9px!important;gap:5px!important}
+body.modern-admin .ctProV184 .ctControlTools details{border:0!important;border-bottom:1px solid #e6ebf1!important;border-radius:0!important}
+body.modern-admin .ctProV184 .ctControlTools summary{background:transparent!important;padding:10px 6px!important}
+body.modern-admin .ctProV184 .ctControlActions{box-shadow:none!important;border-radius:8px!important}
+body.modern-admin .ctProV184 .ctControlTop .courtsProKpis{margin:4px 0!important;gap:4px!important}
+body.modern-admin .ctProV184 .ctControlTop .courtsProKpi{padding:5px 2px!important;border-radius:6px!important}
+@media(max-width:900px){body.modern-admin .ctProV184 .ctControlMain{grid-template-columns:minmax(0,1fr)!important}body.modern-admin .ctProV184 .ctControlTools{display:block!important}body.modern-admin .ctProV184 .ctToolsTitle{margin:5px!important}body.modern-admin .ctProV184 .ctControlTools details{display:block!important}}
+@media(max-width:590px){body.modern-admin .ctProV184 .ctGridScroller{max-height:280px!important}body.modern-admin .ctProV184 .ctGridScroller table{min-width:0!important}body.modern-admin .ctProV184 .ctGridScroller th:first-child,body.modern-admin .ctProV184 .ctGridScroller td:first-child{min-width:72px!important;max-width:72px!important;width:72px!important}body.modern-admin .ctProV184 .ctGridCompact{min-height:31px!important}body.modern-admin .ctProV184 .ctControlTop{position:relative!important}body.modern-admin .ctProV184 .ctControlBoard,body.modern-admin .ctProV184 .ctControlTools{padding:2px!important}body.modern-admin .ctProV184 .ctControlBoardHead{display:block!important}body.modern-admin .ctProV184 .ctLegend{margin:3px 0 5px!important}}
+</style>
 </head>
 <body>
 
@@ -11788,12 +11819,32 @@ window.addEventListener('scroll',()=>{const a=document.getElementById('adminView
      const label=booking?'Reservada':x._published&&!x._inDraft?'Pendiente de retirar':x._published?'Libre':'Borrador';
      const kind=booking?'booked':x._published&&!x._inDraft?'removing':x._published?'free':'draft';
      const names=booking?[booking.a,booking.b].filter(Boolean).join(' vs '):'';
-     html+='<td><button type="button" data-slot="'+escapeHtml(x.id)+'" class="ctGridCell '+kind+'" title="Abrir editor de esta pista"><strong>'+escapeHtml(label)+'</strong>'+(names?'<small>'+escapeHtml(names)+'</small>':'')+'</button></td>';
+     const canDelete=!!x._inDraft&&!booking;
+     html+='<td><div class="ctGridCompact '+kind+'"><button type="button" data-slot="'+escapeHtml(x.id)+'" class="ctGridOpen" title="Ver franja"><strong>'+escapeHtml(label)+'</strong>'+(names?'<small>'+escapeHtml(names)+'</small>':'')+'</button>'+(canDelete?'<button class="ctGridRemove" type="button" data-remove-grid="'+escapeHtml(x.id)+'" aria-label="Eliminar esta franja solo en '+escapeHtml(court)+' a las '+escapeHtml(time)+'" title="Eliminar solo esta franja">×</button>':'')+'</div></td>';
     }html+='</tr>';
    }
    grid.innerHTML=html+'</tbody></table>';
   }
-  grid.addEventListener('click',e=>{const b=e.target.closest('[data-slot]');if(!b)return;detail.open=true;const x=b.dataset.slot;requestAnimationFrame(()=>{const target=[...board.querySelectorAll('[data-delslot]')].find(el=>el.dataset.delslot===x);(target||detail).scrollIntoView({behavior:'smooth',block:'center'});});});
+  grid.addEventListener('click',e=>{
+   const remove=e.target.closest('[data-remove-grid]');
+   if(remove){
+    e.preventDefault();e.stopPropagation();
+    if(typeof requireAdmin==='function'&&!requireAdmin())return;
+    const id=remove.dataset.removeGrid;
+    const slot=typeof draftSlots!=='undefined'?draftSlots.find(s=>s.id===id):null;
+    if(!slot){alert('Esta franja ya no está en el borrador.');return}
+    if(typeof slotBooking==='function'&&slotBooking(id)){alert('No se puede eliminar una franja con reserva activa. Gestiona primero la reserva.');return}
+    const wasPublished=typeof slots==='function'&&slots().some(s=>s.id===id);
+    if(!confirm('¿Quitar solamente '+slot.court+' el '+slot.date+' de '+slot.time+'?\n\nLa otra pista y los demás horarios NO se modificarán.'+(wasPublished?'\n\nLa pista seguirá publicada hasta que pulses «Actualizar disponibilidad».':'')))return;
+    removeDraftSlot(id);
+    const notice=q('#publishActionStatus');if(notice)notice.textContent='Franja eliminada del borrador de '+slot.court+'. '+(wasPublished?'Publica los cambios para retirarla de las reservas visibles.':'Cambio pendiente de publicar.');
+    queue();return;
+   }
+   const b=e.target.closest('[data-slot]');if(!b)return;
+   detail.open=true;
+   const x=b.dataset.slot;
+   requestAnimationFrame(()=>{const target=[...board.querySelectorAll('[data-delslot]')].find(el=>el.dataset.delslot===x);(target||detail).scrollIntoView({behavior:'smooth',block:'center'});});
+  });
   let scheduled=false;
   function queue(){if(scheduled)return;scheduled=true;requestAnimationFrame(()=>{scheduled=false;draw()})}
   const observer=new MutationObserver(queue);observer.observe(board,{subtree:true,childList:true,characterData:true});observer.observe(days,{subtree:true,childList:true,attributes:true});
