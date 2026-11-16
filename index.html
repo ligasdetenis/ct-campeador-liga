@@ -4391,6 +4391,111 @@ body.modern-admin #journeyNavigator .journeyJump{scroll-snap-align:none!importan
 .ctIsquadExportBtn:disabled{opacity:.65;cursor:wait}
 @media(max-width:570px){.ctIsquadExport{display:grid;grid-template-columns:40px minmax(0,1fr);gap:10px}.ctIsquadExportIcon{width:40px;height:40px}.ctIsquadExportBtn{grid-column:1/-1;width:100%!important}}
 </style>
+<style>
+/* V1.8.2 · Diagnóstico Push integrado en el panel de Administración existente */
+.ctPushDeviceOverview{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;margin-top:12px}
+.ctPushStat{border:1px solid #d9dce1;border-radius:11px;padding:11px;display:flex;flex-direction:column;gap:4px;background:rgba(130,140,150,.05)}
+.ctPushStat b{font-size:23px;line-height:1}.ctPushStat span{font-size:11px;opacity:.75}
+.ctPushRefreshed{grid-column:1/-1;font-size:11px;opacity:.7}
+.ctPushHelpText{font-size:11px;line-height:1.5;opacity:.85;margin-top:9px}
+.ctPushFamilyTag{display:block;font-size:10px;color:#5b6371;margin-top:3px}
+.ctPushState{display:inline-block;border-radius:99px;padding:4px 7px;font-size:10px;white-space:nowrap}
+.ctPushState.recent{background:#e2f6e9;color:#14683b}
+.ctPushState.old{background:#fff0d4;color:#744f0e}
+.ctPushState.unknown{background:#e9edf1;color:#5f6873}
+.ctPushDeviceTableWrap{overflow-x:auto}.ctPushDeviceTableWrap table{min-width:560px}
+body.modern-admin .ctControlTop .courtPublishStatusSub{display:none}
+body.modern-admin .ctControlTop .courtPublishStatusCard{padding:7px 10px!important;min-height:unset!important}
+body.modern-admin .ctControlTop .courtPublishInfoBar{font-size:11px!important;padding:6px!important}
+body.modern-admin .ctControlTop .courtsProKpis{gap:6px}
+body.modern-admin .ctControlTop .courtsProKpi{padding:7px 5px!important}
+body.modern-admin .ctControlTop .courtsProKpi strong{font-size:20px!important}
+@media(max-width:640px){.ctPushDeviceOverview{grid-template-columns:repeat(2,minmax(0,1fr))}.ctPushStat{padding:8px}.ctPushStat b{font-size:20px}}
+</style>
+<style id="ctCourtsPro184">
+/* CT CAMPEADOR | CONTROL DE PISTAS V1.8.4 · UI PROFESIONAL
+   Todo el bloque fuerza un tema claro y alto contraste. */
+body.modern-admin .courtsPro.ctProV184{--ct-bg:#f5f7fb;--ct-white:#fff;--ct-ink:#18273b;--ct-muted:#66758a;--ct-border:#dce4ed;--ct-accent:#88162f;display:block!important;background:var(--ct-bg)!important;color:var(--ct-ink)!important;padding:12px!important;border:1px solid #dfe6ee;border-radius:20px;overflow:visible;isolation:isolate}
+body.modern-admin .ctProV184 *,body.modern-admin .ctProV184 *::before,body.modern-admin .ctProV184 *::after{box-sizing:border-box}
+body.modern-admin .ctProV184 .ctControlTop{position:sticky;top:0;z-index:11;background:#fff!important;color:#18273b!important;border:1px solid #e0e7ef!important;border-radius:16px;padding:12px!important;box-shadow:0 9px 24px rgba(25,43,68,.09);margin-bottom:13px}
+body.modern-admin .ctProV184 .ctControlHeading{display:flex;justify-content:space-between;align-items:center;gap:10px}
+body.modern-admin .ctProV184 .ctControlHeading h3{color:#192d43!important;font-size:18px!important;line-height:1.2;margin:0!important;letter-spacing:-.02em;font-weight:900}
+body.modern-admin .ctProV184 .ctControlHeading p{margin:3px 0 0!important;color:#6b7788!important;font-size:11px}
+body.modern-admin .ctProV184 .ctTodayBtn{border:1px solid #cad6e3!important;border-radius:10px!important;background:#f1f5fa!important;color:#24364a!important;font-size:12px!important;font-weight:900;padding:9px 11px!important;min-height:35px;flex-shrink:0}
+body.modern-admin .ctProV184 .ctControlTop .ctInlineContext.one{padding:0!important;margin:10px 0 7px!important;border:0!important;background:transparent!important;max-width:none!important}
+body.modern-admin .ctProV184 .ctControlTop .ctInlineContext.one label{display:flex!important;gap:7px!important;align-items:center!important;color:#5c6b7c!important;font-size:12px!important;font-weight:800!important;flex-wrap:wrap}
+body.modern-admin .ctProV184 #ctCourtsWeek{background:#fff!important;color:#192c41!important;border:1px solid #cdd9e5!important;border-radius:9px!important;min-height:38px;padding:7px 10px!important;font-size:13px!important;font-weight:800;flex:1;min-width:140px;max-width:460px}
+body.modern-admin .ctProV184 #ctControlDayLabel{color:#384b5f!important;font-size:12px!important;font-weight:800;margin:5px 0!important}
+body.modern-admin .ctProV184 #courtPublishStatusCard{display:flex!important;align-items:center!important;gap:8px!important;margin:7px 0!important;border:1px solid #d3e4da!important;background:#eaf6ee!important;border-radius:10px!important;padding:7px 10px!important;min-height:auto!important;box-shadow:none!important;color:#155b3b!important}
+body.modern-admin .ctProV184 #courtPublishStatusCard.is-closed{background:#fff2e9!important;border-color:#f0d3bd!important;color:#8a451b!important}
+body.modern-admin .ctProV184 #courtPublishStatusIcon{font-size:15px!important}
+body.modern-admin .ctProV184 #courtPublishStatusMain{font-size:11px!important;color:inherit!important;line-height:1.2!important}
+body.modern-admin .ctProV184 #courtPublishStatusSub{display:none!important}
+body.modern-admin .ctProV184 #courtPublishStatusPill{font-size:10px!important;background:#fff!important;color:inherit!important;border:1px solid currentColor!important;border-radius:20px!important;padding:4px 7px!important;margin-left:auto!important;white-space:nowrap}
+body.modern-admin .ctProV184 #courtPublishInfoBar{display:none!important}
+body.modern-admin .ctProV184 .courtsProKpis{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:7px!important;margin:9px 0!important}
+body.modern-admin .ctProV184 .courtsProKpi{min-width:0!important;padding:8px 6px!important;border-radius:10px!important;background:#f5f7fb!important;border:1px solid #e2e8f0!important;box-shadow:none!important;text-align:center}
+body.modern-admin .ctProV184 .courtsProKpi:before{display:none!important}
+body.modern-admin .ctProV184 .courtsProKpi strong{font-size:20px!important;color:#20364f!important;line-height:1!important}
+body.modern-admin .ctProV184 .courtsProKpi span{font-size:9px!important;margin:4px 0 0!important;color:#586b80!important;line-height:1.15!important;letter-spacing:0!important}
+body.modern-admin .ctProV184 .courtsProDays{display:grid!important;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px!important;overflow:visible!important;margin-top:7px!important;padding:0!important}
+body.modern-admin .ctProV184 .courtsProDay{flex:auto!important;min-width:0!important;min-height:49px!important;gap:3px!important;border:1px solid #dce5ee!important;background:#f6f8fb!important;color:#293c50!important;border-radius:9px!important;padding:5px 2px!important;box-shadow:none!important}
+body.modern-admin .ctProV184 .courtsProDay b{font-size:11px!important;color:inherit!important;line-height:1.1!important}
+body.modern-admin .ctProV184 .courtsProDay span{font-size:9px!important;color:#728196!important;line-height:1.1!important}
+body.modern-admin .ctProV184 .courtsProDay.active{background:#861830!important;color:#fff!important;border-color:#861830!important;box-shadow:0 2px 7px #86183030!important}
+body.modern-admin .ctProV184 .courtsProDay.active span{color:#f4dde3!important}
+body.modern-admin .ctProV184 .ctControlMain{display:grid;grid-template-columns:minmax(0,1fr) 248px;gap:12px;align-items:start}
+body.modern-admin .ctProV184 .ctControlBoard,body.modern-admin .ctProV184 .ctControlTools{background:#fff!important;color:#182d41!important;border:1px solid #dce5ee!important;border-radius:15px;padding:12px;min-width:0;box-shadow:0 4px 12px #1d385309}
+body.modern-admin .ctProV184 .ctControlBoardHead{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:9px;margin-bottom:11px}
+body.modern-admin .ctProV184 .ctControlBoard h4{font-size:15px!important;font-weight:900!important;color:#172d45!important;margin:0!important}
+body.modern-admin .ctProV184 .ctLegend{display:flex;flex-wrap:wrap;gap:7px 10px;align-items:center;color:#536579;font-weight:750;font-size:10px}
+body.modern-admin .ctProV184 .ctLegend i{display:inline-block;width:7px;height:7px;border-radius:99px;vertical-align:middle;margin-right:4px}
+body.modern-admin .ctProV184 .ctGridScroller{overflow:auto;max-height:520px;border:1px solid #e3e9f1;border-radius:10px;background:#fff;overscroll-behavior:contain}
+body.modern-admin .ctProV184 .ctGridScroller table{border-collapse:separate;border-spacing:0;width:100%;min-width:380px;font-size:12px;table-layout:fixed;background:#fff;color:#1b2e42}
+body.modern-admin .ctProV184 .ctGridScroller th,body.modern-admin .ctProV184 .ctGridScroller td{padding:6px 5px!important;border-right:1px solid #e4eaf2!important;border-bottom:1px solid #e4eaf2!important;text-align:center!important;vertical-align:middle!important;background:#fff;color:#1b2e42}
+body.modern-admin .ctProV184 .ctGridScroller th{position:sticky;top:0;z-index:3;background:#eef2f7!important;color:#293e55!important;font-weight:850!important}
+body.modern-admin .ctProV184 .ctGridScroller th:first-child,body.modern-admin .ctProV184 .ctGridScroller td:first-child{position:sticky;left:0;z-index:4;width:112px;min-width:112px;max-width:112px;background:#f3f6fa!important;color:#33485d!important;font-size:11px!important}
+body.modern-admin .ctProV184 .ctGridScroller th:first-child{z-index:5;background:#eaf0f6!important}
+body.modern-admin .ctProV184 .ctGridCell{display:flex;flex-direction:column;justify-content:center;align-items:center;border:1px solid transparent!important;border-radius:9px;min-height:57px;padding:7px 4px;gap:3px;line-height:1.15;word-break:break-word}
+body.modern-admin .ctProV184 .ctGridCell strong{font-size:11px!important;color:inherit!important}
+body.modern-admin .ctProV184 .ctGridCell small{font-size:10px!important;color:inherit!important;opacity:.88;line-height:1.15}
+body.modern-admin .ctProV184 .ctGridCell.free{background:#e4f6ed!important;color:#16613d!important;border-color:#c6e8d5!important}
+body.modern-admin .ctProV184 .ctGridCell.booked{background:#fff2d9!important;color:#7c4b0d!important;border-color:#f3dda9!important}
+body.modern-admin .ctProV184 .ctGridCell.draft{background:#eaf0fa!important;color:#31567f!important;border-color:#d4e0f0!important}
+body.modern-admin .ctProV184 .ctGridCell.removing{background:#ffeaed!important;color:#903145!important;border-color:#efcbd4!important}
+body.modern-admin .ctProV184 .ctGridCell.empty{background:#f3f5f7!important;color:#8491a1!important}
+body.modern-admin .ctProV184 .ctGridCell[data-slot]{cursor:pointer}
+body.modern-admin .ctProV184 .ctGridCell[data-slot]:focus-visible{outline:3px solid #861830;outline-offset:2px}
+body.modern-admin .ctProV184 .ctGridCaption{margin:8px 0 0!important;color:#738297!important;font-size:10px!important}
+body.modern-admin .ctProV184 .ctControlTools{display:grid;gap:9px}
+body.modern-admin .ctProV184 .ctToolsTitle{font-size:12px!important;letter-spacing:.04em;text-transform:uppercase;font-weight:900;color:#7c899a!important}
+body.modern-admin .ctProV184 .ctControlTools details,body.modern-admin .ctProV184 .ctControlDetails{background:#fff!important;border:1px solid #dfe7ef!important;color:#192e43!important;border-radius:11px!important;padding:0!important;overflow:hidden}
+body.modern-admin .ctProV184 .ctControlTools summary,body.modern-admin .ctProV184 .ctControlDetails summary{list-style:none;cursor:pointer;font-size:12px;font-weight:850;color:#243e56!important;background:#f5f7fa!important;padding:12px!important}
+body.modern-admin .ctProV184 .ctControlTools summary::-webkit-details-marker,body.modern-admin .ctProV184 .ctControlDetails summary::-webkit-details-marker{display:none}
+body.modern-admin .ctProV184 .ctControlTools summary:after,body.modern-admin .ctProV184 .ctControlDetails summary:after{content:'+';float:right;font-size:16px;font-weight:800;color:#77879a}
+body.modern-admin .ctProV184 .ctControlTools details[open]>summary:after,body.modern-admin .ctProV184 .ctControlDetails[open]>summary:after{content:'−'}
+body.modern-admin .ctProV184 .ctControlTools .courtsProActions,body.modern-admin .ctProV184 .ctControlTools .courtsProSecondary{display:grid!important;grid-template-columns:1fr!important;gap:7px!important;margin:8px!important}
+body.modern-admin .ctProV184 .ctControlTools button{width:100%;text-align:left;font-size:12px!important;min-height:36px!important;border-radius:9px!important;white-space:normal!important;color:#223b54!important;background:#f7f9fb!important;border:1px solid #d8e2ed!important;box-shadow:none!important;padding:8px 10px!important}
+body.modern-admin .ctProV184 .ctControlTools .btn.gold{background:#fff4dc!important;color:#7a4f14!important;border-color:#ebd2a2!important}
+body.modern-admin .ctProV184 .ctControlTools .btn.danger{background:#fbeaec!important;color:#9c243b!important;border-color:#eac8d0!important}
+body.modern-admin .ctProV184 .ctControlTools .courtsTemplatePanel,body.modern-admin .ctProV184 .ctControlTools .courtsProCustom{margin:8px!important;padding:8px!important;background:#fff!important;color:#344960!important;box-shadow:none!important;border:0!important}
+body.modern-admin .ctProV184 .ctControlTools label,body.modern-admin .ctProV184 .ctControlTools p,body.modern-admin .ctProV184 .ctControlTools .courtsProCustomSub{color:#566b7d!important;font-size:11px!important}
+body.modern-admin .ctProV184 .ctControlTools select,body.modern-admin .ctProV184 .ctControlTools input{width:100%;background:#fff!important;color:#1b3048!important;border:1px solid #cbd8e4!important;border-radius:9px!important;min-height:37px!important}
+body.modern-admin .ctProV184 .ctControlDetails{margin-top:12px!important}
+body.modern-admin .ctProV184 .ctControlDetails>#draftBoard{padding:10px!important;background:#f8fafc!important;color:#22364d!important}
+body.modern-admin .ctProV184 .ctControlActions{position:sticky;bottom:0;z-index:9;background:#fff!important;border:1px solid #dbe4ee;border-radius:12px;padding:9px!important;margin-top:12px;box-shadow:0 -5px 18px #12263a14}
+body.modern-admin .ctProV184 .ctControlActions .courtsProPublish{display:block!important;background:transparent!important;border:0!important;box-shadow:none!important;margin:0!important;padding:0!important}
+body.modern-admin .ctProV184 .ctControlActions .courtsProPublishTitle{font-size:12px!important;color:#233a52!important}
+body.modern-admin .ctProV184 .ctControlActions .courtsProPublishMeta{font-size:10px!important;color:#627386!important}
+body.modern-admin .ctProV184 .ctControlActions .courtsProPublishActions{display:flex!important;flex-wrap:wrap!important;gap:6px!important;margin-top:8px!important}
+body.modern-admin .ctProV184 .ctControlActions button{border-radius:9px!important;font-size:12px!important;font-weight:850!important;min-height:39px!important;padding:8px 10px!important;color:#243a53!important;background:#edf2f7!important;border:1px solid #d4dfe9!important}
+body.modern-admin .ctProV184 #publishSlots{background:#20714e!important;color:#fff!important;border-color:#20714e!important}
+body.modern-admin .ctProV184 #closeSlots{background:#fff0f1!important;color:#a12a40!important;border-color:#e9c3ca!important}
+body.modern-admin .ctProV184 :is(.courtsProCard,.courtsProEmpty){background:#fff!important;color:#1f334b!important}
+body.modern-admin .ctProV184 .courtsProCard :is(.courtsProCardTitle,.courtsProTime,.courtsProState){color:#20374f!important}
+@media(max-width:900px){body.modern-admin .ctProV184 .ctControlMain{grid-template-columns:minmax(0,1fr)}body.modern-admin .ctProV184 .ctControlTools{grid-template-columns:repeat(2,minmax(0,1fr))}body.modern-admin .ctProV184 .ctToolsTitle{grid-column:1/-1}}
+@media(max-width:590px){body.modern-admin .courtsPro.ctProV184{padding:7px!important;border-radius:14px}body.modern-admin .ctProV184 .ctControlTop{padding:9px!important;top:0}body.modern-admin .ctProV184 .ctControlHeading h3{font-size:15px!important}body.modern-admin .ctProV184 .ctControlTop .ctInlineContext.one{margin:7px 0!important}body.modern-admin .ctProV184 #ctCourtsWeek{width:100%;max-width:none}body.modern-admin .ctProV184 .courtsProDays{gap:3px!important}body.modern-admin .ctProV184 .courtsProDay{min-height:42px!important;padding:5px 1px!important}body.modern-admin .ctProV184 .courtsProDay b{font-size:9px!important}body.modern-admin .ctProV184 .courtsProDay span{font-size:8px!important}body.modern-admin .ctProV184 .courtsProKpi{padding:7px 3px!important}body.modern-admin .ctProV184 .courtsProKpi strong{font-size:17px!important}body.modern-admin .ctProV184 .courtsProKpi span{font-size:8px!important}body.modern-admin .ctProV184 .ctControlBoard,body.modern-admin .ctProV184 .ctControlTools{padding:9px!important}body.modern-admin .ctProV184 .ctControlTools{grid-template-columns:1fr}body.modern-admin .ctProV184 .ctGridScroller th:first-child,body.modern-admin .ctProV184 .ctGridScroller td:first-child{min-width:87px;width:87px;max-width:87px}body.modern-admin .ctProV184 .ctGridScroller table{min-width:340px}body.modern-admin .ctProV184 .ctGridCell{min-height:52px}body.modern-admin .ctProV184 .ctControlActions .courtsProPublishActions{display:grid!important;grid-template-columns:1fr 1fr;gap:6px!important}body.modern-admin .ctProV184 .ctControlActions button{font-size:11px!important;min-width:0}}
+</style>
 </head>
 <body>
 
@@ -4898,8 +5003,10 @@ Pablo Ruiz"></textarea>
     <div class="adminSubsection">
       <div class="adminSubsectionHead"><span>Dispositivos y avisos</span><span id="adminMeta_devices_sub">Abrir</span></div>
       <div class="adminSubsectionBody"><div class="tiny">Consulta qué jugadores tienen dispositivos suscritos a los avisos. Puedes dar de baja todos los dispositivos de un jugador si cambia de móvil, pierde el dispositivo o deja de querer recibir notificaciones.</div>
-<div class="quickActions"><button class="btn secondary" id="refreshPushDevices" type="button">Actualizar dispositivos</button></div>
-<div class="schedule" style="margin-top:10px"><table><thead><tr><th>Jugador</th><th>Dispositivos</th><th>Última alta</th><th>Acción</th></tr></thead><tbody id="pushDevicesTable"><tr><td colspan="4">Pulsa “Actualizar dispositivos”.</td></tr></tbody></table></div></div>
+<div class="quickActions"><button class="btn secondary" id="refreshPushDevices" type="button">↻ Actualizar dispositivos</button></div>
+<div id="ctPushDeviceOverview" class="ctPushDeviceOverview" role="status" aria-live="polite">Pulsa «Actualizar dispositivos» para consultar las suscripciones del servidor.</div>
+<div class="ctPushHelpText">Este diagnóstico muestra registros y su última actualización; <b>no puede garantizar que Android haya mostrado o entregado un aviso</b>. Una alta antigua no implica que el dispositivo esté desactivado.</div>
+<div class="schedule ctPushDeviceTableWrap" style="margin-top:10px"><table><thead><tr><th>Cuenta</th><th>Dispositivos</th><th>Último registro</th><th>Estado orientativo</th><th>Acción</th></tr></thead><tbody id="pushDevicesTable"><tr><td colspan="5">Pulsa “Actualizar dispositivos”.</td></tr></tbody></table></div></div>
     </div>
     
 
@@ -4913,8 +5020,6 @@ Pablo Ruiz"></textarea>
     </div>
     <div class="adminBackupActions">
       <button class="btn gold" id="downloadAdminBackup" type="button">💾 Descargar copia de seguridad</button>
-       <button class="btn green" type="button" id="importNewPdfResults20261115">🎾 Importar resultados de 5 PDF (seguro)</button>
-       <span class="tiny" id="importNewPdfStatus20261115">Primero compara y descarga un respaldo; nunca sustituye resultados existentes.</span>
       <button class="btn green" type="button" id="importOfficialResultsPdf">🎾 Importar 22 resultados oficiales (PDF)</button>
       <span class="tiny" id="importOfficialResultsStatus">Primero revisa los resultados. No se sobrescribirá ningún resultado guardado.</span>
       <span class="tiny" id="adminBackupStatus">La copia no incluye sesiones, secretos ni suscripciones Push.</span>
@@ -5120,7 +5225,7 @@ function safeDataImageUrl(value){
   const v=String(value||'').trim();
   return /^data:image\/(?:jpeg|jpg|png|webp|gif|avif);base64,[a-z0-9+/=]+$/i.test(v)?v:'';
 }
-const APP_BUILD="20261021-prod-live-independiente-v1";
+const APP_BUILD="20261116-ct-campeador-prod-v1.8.3-login-loop-fix";
 const DEFAULT_WEEKS=[
  {id:"W1",label:"Semana 1 · 17–25 octubre",start:"2026-10-17",end:"2026-10-25"},
  {id:"W2",label:"Semana 2 · 26 octubre–1 noviembre",start:"2026-10-26",end:"2026-11-01"},
@@ -6391,7 +6496,19 @@ async function checkInstalledAppVersion(){
     const remote = String(j?.build||'').trim();
     if(!remote || remote===APP_BUILD)return;
 
+    // Prevención de recargas infinitas: GitHub Pages puede publicar index.html
+    // antes que app-version.json, o conservar en caché la versión anterior.
+    // Si esta URL ya intentó cargar la versión anunciada, no repetir el salto.
     const u = new URL(location.href);
+    if(u.searchParams.get('v')===remote)return;
+    const pendingKey='ctc_version_redirect_v1';
+    try{
+      const previous=JSON.parse(sessionStorage.getItem(pendingKey)||'null');
+      // Solo un intento por versión remota durante esta sesión, incluso si
+      // Chrome elimina el parámetro de consulta al arrancar la PWA.
+      if(previous?.remote===remote && Date.now()-Number(previous.at||0)<3600000)return;
+      sessionStorage.setItem(pendingKey,JSON.stringify({remote,at:Date.now()}));
+    }catch(_){/* Sin acceso a storage: el guard de URL sigue funcionando. */}
     u.searchParams.set('v',remote);
     location.replace(u.toString());
   }catch(e){
@@ -6491,11 +6608,12 @@ async function renderPushUI(){
     btn.disabled=true;btn.textContent='Avisos bloqueados';
     return;
   }
-  const sub=await currentPushSubscription();
+  const recovered=Notification.permission==='granted'?await ctRecoverPushSilently():{ok:false};
+  const sub=recovered.ok?await currentPushSubscription():null;
   if(sub){
     try{
       // Confirmar en Cloudflare antes de mostrar el estado activado.
-      await syncPushSubscription(sub,{force:true});
+      // ctRecoverPushSilently() ya ha confirmado el registro para la identidad activa.
       txt.innerHTML='<span class="pushOk">✅ Avisos registrados en Cloudflare en este dispositivo.</span>';
       btn.disabled=true;btn.textContent='Avisos activados';
     }catch(e){
@@ -6550,6 +6668,8 @@ async function activateNativePush(){
     }
 
     await syncPushSubscription(sub,{force:true});
+    ctPushRecoveryLastGood=null;
+    ctPushRecoveryRetryAfter=0;
     await renderPushUI();updateInstallBanner();
   }catch(e){
     alert('No se han podido activar los avisos.\n\n'+(e.message||e));
@@ -7109,7 +7229,8 @@ function ctIsquadExportHtml(rows){
 <main><header class="reportHead"><div><div class="eyebrow">CT Campeador · Burgos</div><h1>${esc(tournament)}<small>Resultados publicados · Informe global para iSquad</small></h1></div><div class="summary"><strong>${rows.length} resultados confirmados</strong>${sections.size} categorías/grupos · Generado ${esc(today)}</div></header>
 <div class="notice">Solo se incluyen resultados <strong>confirmados y publicados</strong> en la liga. Los pendientes de confirmación no aparecen. Los tanteos se presentan en el orden de los jugadores A y B; W.O. y partidos no disputados se identifican expresamente.</div>
 ${groups||'<p>No hay resultados confirmados.</p>'}
-<div class="footer">Informe generado desde Administración · CT Campeador. Verifica los datos antes de registrarlos en iSquad.</div></main></body></html>`;
+<div class="footer">Informe generado desde Administración · CT Campeador. Verifica los datos antes de registrarlos en iSquad.</div></main>
+</body></html>`;
 }
 async function ctIsquadExportOpen(){
   if(!requireAdmin())return;
@@ -8472,44 +8593,50 @@ async function sendAdminMessage(){
 
 async function loadPushDevices(){
   if(!requireAdmin())return;
-  const tb=$('#pushDevicesTable');
-  if(tb)tb.innerHTML='<tr><td colspan="4">⏳ Cargando dispositivos…</td></tr>';
+  const tb=$('#pushDevicesTable'),overview=$('#ctPushDeviceOverview'),refresh=$('#refreshPushDevices');
+  if(tb)tb.innerHTML='<tr><td colspan="5">⏳ Consultando suscripciones…</td></tr>';
+  if(overview)overview.textContent='Consultando Cloudflare…';
+  if(refresh)refresh.disabled=true;
   try{
     const r=await apiRequest({action:'listPushDevices'});
     const groups=Array.isArray(r.users)?r.users:[];
     window.__pushDeviceGroups=groups;
-    // Relacionar dispositivos inscritos con cuentas familiares autorizadas.
-    // Un fallo de consulta no convierte una vinculación desconocida en activa.
+    // Se consulta la autorización familiar, sin usarla para atribuir entregas.
     window.__ctPushFamilyLinks=null;
     try{
       const f=await apiRequest({action:'familyAdminList'});
       window.__ctPushFamilyLinks=Array.isArray(f.requests)?f.requests:[];
-    }catch(e){console.warn('No se pudieron comprobar las vinculaciones familiares Push:',e)}
-    if(!groups.length){
-      if(tb)tb.innerHTML='<tr><td colspan="4">No hay dispositivos suscritos.</td></tr>';
-      window.__pushDeviceCount=0;
-      renderPins();
-      renderAdminFunctionalTools();
-      updateAdminSummaries();
-      return;
-    }
+    }catch(e){console.warn('No se pudieron consultar las vinculaciones familiares:',e)}
+    const now=Date.now(), stale=7*24*3600*1000;
+    let total=0, recent=0, older=0, unknown=0, families=0;
+    const ordered=groups.slice().sort((a,b)=>String(a.userName||'').localeCompare(String(b.userName||''),'es'));
     if(tb){
-      tb.innerHTML=groups.map(g=>{
-        const safe=mappEsc(g.userName||'');
-        const last=g.lastUpdated?new Date(g.lastUpdated).toLocaleString('es-ES'):'—';
-        return `<tr><td><b>${mappEsc(g.userName||'Sin identificar')}</b></td><td>${Number(g.count||0)}</td><td>${mappEsc(last)}</td><td>${g.userName?`<button class="btn danger" data-remove-devices="${safe}">🗑️ Dar de baja</button>`:'—'}</td></tr>`;
-      }).join('');
+      tb.innerHTML=ordered.length?ordered.map(g=>{
+        const name=String(g.userName||'Sin identificar');
+        const isFamily=name.toUpperCase().startsWith('FAMILIA:');
+        if(isFamily)families++;
+        const count=Math.max(0,Number(g.count||0));total+=count;
+        const stamp=g.lastUpdated?new Date(g.lastUpdated).getTime():NaN;
+        const valid=Number.isFinite(stamp)&&stamp>0&&stamp<=now+3600000;
+        const old=valid&&(now-stamp>stale);
+        if(!valid)unknown+=count;else if(old)older+=count;else recent+=count;
+        const label=!valid?'Sin fecha':old?'Sin sincronización reciente':'Registro reciente';
+        const css=!valid?'unknown':old?'old':'recent';
+        const last=valid?new Date(stamp).toLocaleString('es-ES'):'—';
+        return `<tr><td><b>${mappEsc(name)}</b>${isFamily?'<small class="ctPushFamilyTag">Cuenta familiar</small>':''}</td><td>${count}</td><td>${mappEsc(last)}</td><td><span class="ctPushState ${css}">${label}</span></td><td>${g.userName?`<button class="btn danger" data-remove-devices="${mappEsc(name)}">Dar de baja</button>`:'—'}</td></tr>`;
+      }).join(''):'<tr><td colspan="5">No hay dispositivos suscritos.</td></tr>';
       tb.querySelectorAll('[data-remove-devices]').forEach(b=>b.onclick=()=>removePushDevicesFor(b.dataset.removeDevices));
     }
-    window.__pushDeviceCount=Number(r.total||0);
-    renderPins();
-    renderAdminFunctionalTools();
-    updateAdminSummaries();
+    const serverTotal=Number(r.total);
+    window.__pushDeviceCount=Number.isFinite(serverTotal)?serverTotal:total;
+    if(overview)overview.innerHTML=`<div class="ctPushStat"><b>${window.__pushDeviceCount}</b><span>Suscripciones registradas</span></div><div class="ctPushStat"><b>${recent}</b><span>Registro reciente</span></div><div class="ctPushStat"><b>${older}</b><span>Más de 7 días</span></div><div class="ctPushStat"><b>${families}</b><span>Cuentas familiares</span></div><div class="ctPushRefreshed">Consulta: ${mappEsc(new Date().toLocaleString('es-ES'))}${unknown?` · ${unknown} sin fecha válida`:''}</div>`;
+    renderPins();renderAdminFunctionalTools();updateAdminSummaries();
   }catch(e){
     window.__pushDeviceGroups=null;
-    if(tb)tb.innerHTML=`<tr><td colspan="4">⚠️ ${mappEsc(e.message)}</td></tr>`;
+    if(tb)tb.innerHTML=`<tr><td colspan="5">⚠️ ${mappEsc(e.message)}</td></tr>`;
+    if(overview)overview.textContent='No se pudo consultar el estado del servidor.';
     renderPins();
-  }
+  }finally{if(refresh)refresh.disabled=false}
 }
 async function removePushDevicesFor(player){
   if(!requireAdmin())return;
@@ -10140,11 +10267,68 @@ function renderModernMatch(){
  });
  box.querySelectorAll('[data-match-result]').forEach(x=>x.onclick=()=>openResultModal(x.dataset.matchResult));
 }
-async function mappPushStatusText(){
- if(!('Notification' in window))return['No compatible',''];
- if(Notification.permission==='denied')return['Bloqueados',''];
- try{const sub=await currentPushSubscription();return sub?['Activados en este dispositivo','good']:['Toca para activar','']}catch(_){return['Configurar avisos','']}
+// Recuperación silenciosa: solo si el usuario YA concedió permiso al navegador.
+// Comparte promesa entre renders para evitar suscripciones simultáneas.
+let ctPushRecoveryPromise=null;
+let ctPushRecoveryRetryAfter=0;
+let ctPushRecoveryLastGood=null;
+async function ctRecoverPushSilently(){
+  if(!state.authenticated||!apiToken||!('Notification' in window)||Notification.permission!=='granted')
+    return {ok:false,reason:'permission'};
+  if(!('serviceWorker' in navigator)||!('PushManager' in window))return {ok:false,reason:'unsupported'};
+  const identity=(familyMode?'FAMILIA:'+(familyName||familyActive||''):state.player||'');
+  if(ctPushRecoveryPromise)return ctPushRecoveryPromise;
+  if(ctPushRecoveryLastGood?.identity===identity&&Date.now()-ctPushRecoveryLastGood.at<60000)
+    return {ok:true};
+  if(Date.now()<ctPushRecoveryRetryAfter)return {ok:false,reason:'retry'};
+  ctPushRecoveryPromise=(async()=>{
+    try{
+      const reg=await pushRegistration();
+      let sub=await reg.pushManager.getSubscription();
+      if(!sub){
+        const key=await getPushPublicKey();
+        sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:base64UrlToUint8Array(key)});
+      }
+      const confirmed=await syncPushSubscription(sub,{force:true});
+      if(!confirmed)throw new Error('Cloudflare no ha confirmado el registro');
+      ctPushRecoveryLastGood={identity,at:Date.now()};
+      ctPushRecoveryRetryAfter=0;
+      return {ok:true};
+    }catch(error){
+      console.warn('No se pudo recuperar automáticamente la suscripción Push:',error);
+      ctPushRecoveryRetryAfter=Date.now()+30000;
+      return {ok:false,reason:'error',error};
+    }
+  })();
+  try{return await ctPushRecoveryPromise}finally{ctPushRecoveryPromise=null}
 }
+// Recuperar al volver a abrir la PWA sin preguntar permisos ni obligar al usuario a tocar Avisos.
+// La API únicamente recibe el registro cuando hay sesión válida y permiso concedido.
+let ctPushResumeTimer=null;
+function ctPushRecoverOnResume(){
+  if(document.visibilityState==='hidden'||!state.authenticated||!apiToken)return;
+  if(!('Notification' in window)||Notification.permission!=='granted')return;
+  if(ctPushResumeTimer)clearTimeout(ctPushResumeTimer);
+  ctPushResumeTimer=setTimeout(async()=>{
+    ctPushResumeTimer=null;
+    const result=await ctRecoverPushSilently();
+    const profileRow=document.querySelector('#mappPushRow .mapp-menu-sub');
+    if(profileRow){
+      profileRow.textContent=result.ok?'Activados y sincronizados':'Sin sincronizar · Toca para reintentar';
+      profileRow.classList.toggle('good',!!result.ok);
+    }
+  },700);
+}
+document.addEventListener('visibilitychange',ctPushRecoverOnResume);
+window.addEventListener('pageshow',ctPushRecoverOnResume);
+async function mappPushStatusText(){
+ if(!('Notification' in window)||!('serviceWorker' in navigator)||!('PushManager' in window))return['No compatible',''];
+ if(Notification.permission==='denied')return['Bloqueados en ajustes del móvil',''];
+ if(Notification.permission!=='granted')return['Toca para activar',''];
+ const outcome=await ctRecoverPushSilently();
+ return outcome.ok?['Activados y sincronizados','good']:['Sin sincronizar · Toca para reintentar',''];
+}
+
 function mappInstallText(){
  if(isStandalonePWA())return['Instalada','good'];
  if(isIOSPushDevice())return['Añadir a pantalla de inicio',''];
@@ -10927,80 +11111,6 @@ $('#closeSlots').onclick=async()=>{
 };
 $('#refreshPushDevices').onclick=loadPushDevices;
 $('#downloadAdminBackup').onclick=downloadAdminBackup;
-// IMPORTACION SEGURA CINCO PDF · 15 NOV 2026 · SOLO ADMIN
-const PDF_RESULTS_20261115 = [{"matchId":"W1|Absoluto|Masculino|marcos-garcia-merino|rodrigo-temino-calle","sets":[{"a":5,"b":7},{"a":2,"b":6}],"a":"MARCOS GARCIA MERINO","b":"RODRIGO TEMIÑO CALLE","category":"INDIVIDUAL MASCULINO ABSOLUTA","week":"W1"},{"matchId":"W2|Absoluto|Masculino|rodrigo-temino-calle|sergio-martinez-diez","sets":[{"a":6,"b":1},{"a":6,"b":2}],"a":"RODRIGO TEMIÑO CALLE","b":"SERGIO MARTINEZ DIEZ","category":"INDIVIDUAL MASCULINO ABSOLUTA","week":"W2"},{"matchId":"W2|Absoluto|Masculino|manuel-mendez-arosa|carlos-navarro-santamaria","sets":[{"a":6,"b":2},{"a":6,"b":4}],"a":"MANUEL MENDEZ AROSA","b":"CARLOS NAVARRO SANTAMARIA","category":"INDIVIDUAL MASCULINO ABSOLUTA","week":"W2"},{"matchId":"W1|Alevín|Masculino|javier-fernandez-quintanilla|jaime-garcia-ladron-de-guevara","sets":[{"a":1,"b":6},{"a":1,"b":6}],"a":"JAVIER FERNANDEZ QUINTANILLA","b":"JAIME GARCIA LADRON DE GUEVARA","category":"INDIVIDUAL MASCULINO ALEVÍN SUB-12","week":"W1"},{"matchId":"W1|Alevín|Masculino|telmo-cid-galaron|manuel-alvarez-fernandez","sets":[{"a":1,"b":6},{"a":3,"b":6}],"a":"TELMO CID GALARON","b":"MANUEL ALVAREZ FERNANDEZ","category":"INDIVIDUAL MASCULINO ALEVÍN SUB-12","week":"W1"},{"matchId":"W2|Alevín|Masculino|manuel-alvarez-fernandez|javier-fernandez-quintanilla","sets":[{"a":6,"b":0},{"a":6,"b":0}],"a":"MANUEL ALVAREZ FERNANDEZ","b":"JAVIER FERNANDEZ QUINTANILLA","category":"INDIVIDUAL MASCULINO ALEVÍN SUB-12","week":"W2"},{"matchId":"W2|Alevín|Masculino|nicolas-ruiz-suarez|telmo-cid-galaron","sets":[{"a":6,"b":0},{"a":6,"b":0}],"a":"NICOLAS RUIZ SUAREZ","b":"TELMO CID GALARON","category":"INDIVIDUAL MASCULINO ALEVÍN SUB-12","week":"W2"},{"matchId":"W3|Alevín|Masculino|jaime-garcia-ladron-de-guevara|manuel-alvarez-fernandez","sets":[{"a":3,"b":6},{"a":6,"b":7}],"a":"JAIME GARCIA LADRON DE GUEVARA","b":"MANUEL ALVAREZ FERNANDEZ","category":"INDIVIDUAL MASCULINO ALEVÍN SUB-12","week":"W3"},{"matchId":"W3|Alevín|Masculino|javier-fernandez-quintanilla|nicolas-ruiz-suarez","sets":[{"a":0,"b":6},{"a":0,"b":6}],"a":"JAVIER FERNANDEZ QUINTANILLA","b":"NICOLAS RUIZ SUAREZ","category":"INDIVIDUAL MASCULINO ALEVÍN SUB-12","week":"W3"},{"matchId":"W1|Cadete|Masculino|javier-gutierrez-fernandez|guzman-gonzalez-portal","sets":[{"a":6,"b":0},{"a":6,"b":0}],"a":"JAVIER GUTIERREZ FERNANDEZ","b":"GUZMAN GONZALEZ PORTAL","category":"INDIVIDUAL MASCULINO CADETE SUB-16","week":"W1"},{"matchId":"W1|Cadete|Masculino|mario-fernandez-garcia|ruben-delgado-zalona","sets":[{"a":6,"b":4},{"a":7,"b":6}],"a":"MARIO FERNANDEZ GARCIA","b":"RUBEN DELGADO ZALOÑA","category":"INDIVIDUAL MASCULINO CADETE SUB-16","week":"W1"},{"matchId":"W1|Cadete|Masculino|ismael-sedano-pena|pedro-sancho-poalelunzh","sets":[{"a":4,"b":6},{"a":5,"b":7}],"a":"ISMAEL SEDANO PEÑA","b":"PEDRO SANCHO POALELUNZH","category":"INDIVIDUAL MASCULINO CADETE SUB-16","week":"W1"},{"matchId":"W1|Cadete|Masculino|gonzalo-diez-manso|adrian-ait-maksene-palacin","sets":[{"a":3,"b":6},{"a":3,"b":6}],"a":"GONZALO DIEZ MANSO","b":"ADRIAN AIT MAKSENE PALACIN","category":"INDIVIDUAL MASCULINO CADETE SUB-16","week":"W1"},{"matchId":"W1|Cadete|Masculino|sergio-delgado-zalona|rodrigo-rojo-palacin","sets":[{"a":6,"b":1},{"a":6,"b":2}],"a":"SERGIO DELGADO ZALOÑA","b":"RODRIGO ROJO PALACIN","category":"INDIVIDUAL MASCULINO CADETE SUB-16","week":"W1"},{"matchId":"W1|Cadete|Masculino|javier-grande-tabares|gonzalo-de-pablo-olano","sets":[{"a":3,"b":6},{"a":6,"b":4},{"a":10,"b":5}],"a":"JAVIER GRANDE TABARES","b":"GONZALO DE PABLO OLANO","category":"INDIVIDUAL MASCULINO CADETE SUB-16","week":"W1"},{"matchId":"W2|Cadete|Masculino|ruben-delgado-zalona|javier-gutierrez-fernandez","sets":[{"a":1,"b":6},{"a":3,"b":6}],"a":"RUBEN DELGADO ZALOÑA","b":"JAVIER GUTIERREZ FERNANDEZ","category":"INDIVIDUAL MASCULINO CADETE SUB-16","week":"W2"},{"matchId":"W2|Cadete|Masculino|pedro-sancho-poalelunzh|mario-fernandez-garcia","sets":[{"a":4,"b":6},{"a":1,"b":6}],"a":"PEDRO SANCHO POALELUNZH","b":"MARIO FERNANDEZ GARCIA","category":"INDIVIDUAL MASCULINO CADETE SUB-16","week":"W2"},{"matchId":"W2|Cadete|Masculino|adrian-ait-maksene-palacin|ismael-sedano-pena","sets":[{"a":6,"b":4},{"a":6,"b":7},{"a":8,"b":10}],"a":"ADRIAN AIT MAKSENE PALACIN","b":"ISMAEL SEDANO PEÑA","category":"INDIVIDUAL MASCULINO CADETE SUB-16","week":"W2"},{"matchId":"W2|Cadete|Masculino|gonzalo-de-pablo-olano|sergio-delgado-zalona","sets":[{"a":3,"b":6},{"a":2,"b":6}],"a":"GONZALO DE PABLO OLANO","b":"SERGIO DELGADO ZALOÑA","category":"INDIVIDUAL MASCULINO CADETE SUB-16","week":"W2"},{"matchId":"W3|Cadete|Masculino|guzman-gonzalez-portal|ruben-delgado-zalona","sets":[{"a":0,"b":6},{"a":0,"b":6}],"a":"GUZMAN GONZALEZ PORTAL","b":"RUBEN DELGADO ZALOÑA","category":"INDIVIDUAL MASCULINO CADETE SUB-16","week":"W3"},{"matchId":"W3|Cadete|Masculino|mario-fernandez-garcia|adrian-ait-maksene-palacin","sets":[{"a":6,"b":2},{"a":6,"b":1}],"a":"MARIO FERNANDEZ GARCIA","b":"ADRIAN AIT MAKSENE PALACIN","category":"INDIVIDUAL MASCULINO CADETE SUB-16","week":"W3"},{"matchId":"W3|Cadete|Masculino|ismael-sedano-pena|rodrigo-rojo-palacin","sets":[{"a":6,"b":1},{"a":6,"b":1}],"a":"ISMAEL SEDANO PEÑA","b":"RODRIGO ROJO PALACIN","category":"INDIVIDUAL MASCULINO CADETE SUB-16","week":"W3"},{"matchId":"W3|Cadete|Masculino|gonzalo-diez-manso|gonzalo-de-pablo-olano","sets":[{"a":5,"b":7},{"a":2,"b":6}],"a":"GONZALO DIEZ MANSO","b":"GONZALO DE PABLO OLANO","category":"INDIVIDUAL MASCULINO CADETE SUB-16","week":"W3"},{"matchId":"W3|Cadete|Masculino|javier-grande-tabares|sergio-delgado-zalona","sets":[{"a":6,"b":3},{"a":6,"b":3}],"a":"JAVIER GRANDE TABARES","b":"SERGIO DELGADO ZALOÑA","category":"INDIVIDUAL MASCULINO CADETE SUB-16","week":"W3"},{"matchId":"W1|Infantil|Femenino|marina-quintanilla-carcedo|vanesa-rivero-delgado","sets":[{"a":6,"b":2},{"a":6,"b":0}],"a":"MARINA QUINTANILLA CARCEDO","b":"VANESA RIVERO DELGADO","category":"INDIVIDUAL FEMENINO INFANTIL SUB-14","week":"W1"},{"matchId":"W1|Infantil|Femenino|carmen-gomez-vazquez|lucia-garcia-ladron-de-guevara","sets":[{"a":4,"b":6},{"a":4,"b":6}],"a":"CARMEN GOMEZ VAZQUEZ","b":"LUCIA GARCIA LADRON DE GUEVARA","category":"INDIVIDUAL FEMENINO INFANTIL SUB-14","week":"W1"},{"matchId":"W2|Infantil|Femenino|vanesa-rivero-delgado|carmen-gomez-vazquez","sets":[{"a":6,"b":3},{"a":6,"b":2}],"a":"VANESA RIVERO DELGADO","b":"CARMEN GOMEZ VAZQUEZ","category":"INDIVIDUAL FEMENINO INFANTIL SUB-14","week":"W2"},{"matchId":"W1|Infantil|Masculino|jaime-herrera-sanchez|jaime-garcia-ladron-de-guevara","sets":[{"a":6,"b":3},{"a":6,"b":2}],"a":"JAIME HERRERA SANCHEZ","b":"JAIME GARCIA LADRON DE GUEVARA","category":"INDIVIDUAL MASCULINO INFANTIL SUB-14","week":"W1"},{"matchId":"W1|Infantil|Masculino|jorge-grande-tabares|jorge-trifol-villoria","sets":[{"a":3,"b":6},{"a":6,"b":3},{"a":10,"b":5}],"a":"JORGE GRANDE TABARES","b":"JORGE TRIFOL VILLORIA","category":"INDIVIDUAL MASCULINO INFANTIL SUB-14","week":"W1"},{"matchId":"W1|Infantil|Masculino|ruben-delgado-zalona|odin-santamaria-lopez","sets":[{"a":6,"b":1},{"a":6,"b":4}],"a":"RUBEN DELGADO ZALOÑA","b":"ODIN SANTAMARIA LOPEZ","category":"INDIVIDUAL MASCULINO INFANTIL SUB-14","week":"W1"},{"matchId":"W1|Infantil|Masculino|jorge-prado-crespo|adrian-ait-maksene-palacin","sets":[{"a":0,"b":6},{"a":1,"b":6}],"a":"JORGE PRADO CRESPO","b":"ADRIAN AIT MAKSENE PALACIN","category":"INDIVIDUAL MASCULINO INFANTIL SUB-14","week":"W1"},{"matchId":"W1|Infantil|Masculino|pedro-sancho-poalelunzh|izan-ortiz-sanz","sets":[{"a":1,"b":6},{"a":6,"b":7}],"a":"PEDRO SANCHO POALELUNZH","b":"IZAN ORTIZ SANZ","category":"INDIVIDUAL MASCULINO INFANTIL SUB-14","week":"W1"},{"matchId":"W2|Infantil|Masculino|jaime-garcia-ladron-de-guevara|pedro-sancho-poalelunzh","sets":[{"a":0,"b":6},{"a":2,"b":6}],"a":"JAIME GARCIA LADRON DE GUEVARA","b":"PEDRO SANCHO POALELUNZH","category":"INDIVIDUAL MASCULINO INFANTIL SUB-14","week":"W2"},{"matchId":"W2|Infantil|Masculino|jorge-trifol-villoria|jaime-herrera-sanchez","sets":[{"a":2,"b":6},{"a":3,"b":6}],"a":"JORGE TRIFOL VILLORIA","b":"JAIME HERRERA SANCHEZ","category":"INDIVIDUAL MASCULINO INFANTIL SUB-14","week":"W2"},{"matchId":"W2|Infantil|Masculino|odin-santamaria-lopez|juan-valentin-saez-sagredo","sets":[{"a":6,"b":7},{"a":3,"b":6}],"a":"ODIN SANTAMARIA LOPEZ","b":"JUAN VALENTIN SAEZ SAGREDO","category":"INDIVIDUAL MASCULINO INFANTIL SUB-14","week":"W2"},{"matchId":"W2|Infantil|Masculino|adrian-ait-maksene-palacin|ruben-delgado-zalona","sets":[{"a":1,"b":6},{"a":6,"b":3},{"a":5,"b":10}],"a":"ADRIAN AIT MAKSENE PALACIN","b":"RUBEN DELGADO ZALOÑA","category":"INDIVIDUAL MASCULINO INFANTIL SUB-14","week":"W2"},{"matchId":"W2|Infantil|Masculino|izan-ortiz-sanz|jorge-prado-crespo","sets":[{"a":6,"b":0},{"a":6,"b":0}],"a":"IZAN ORTIZ SANZ","b":"JORGE PRADO CRESPO","category":"INDIVIDUAL MASCULINO INFANTIL SUB-14","week":"W2"},{"matchId":"W3|Infantil|Masculino|jaime-garcia-ladron-de-guevara|jorge-trifol-villoria","sets":[{"a":3,"b":6},{"a":6,"b":7}],"a":"JAIME GARCIA LADRON DE GUEVARA","b":"JORGE TRIFOL VILLORIA","category":"INDIVIDUAL MASCULINO INFANTIL SUB-14","week":"W3"},{"matchId":"W3|Infantil|Masculino|jaime-herrera-sanchez|gonzalo-diez-manso","sets":[{"a":6,"b":0},{"a":6,"b":2}],"a":"JAIME HERRERA SANCHEZ","b":"GONZALO DIEZ MANSO","category":"INDIVIDUAL MASCULINO INFANTIL SUB-14","week":"W3"},{"matchId":"W3|Infantil|Masculino|jorge-grande-tabares|odin-santamaria-lopez","sets":[{"a":2,"b":6},{"a":3,"b":6}],"a":"JORGE GRANDE TABARES","b":"ODIN SANTAMARIA LOPEZ","category":"INDIVIDUAL MASCULINO INFANTIL SUB-14","week":"W3"},{"matchId":"W3|Infantil|Masculino|juan-valentin-saez-sagredo|adrian-ait-maksene-palacin","sets":[{"a":5,"b":7},{"a":2,"b":6}],"a":"JUAN VALENTIN SAEZ SAGREDO","b":"ADRIAN AIT MAKSENE PALACIN","category":"INDIVIDUAL MASCULINO INFANTIL SUB-14","week":"W3"},{"matchId":"W3|Infantil|Masculino|pedro-sancho-poalelunzh|jorge-prado-crespo","sets":[{"a":6,"b":0},{"a":6,"b":1}],"a":"PEDRO SANCHO POALELUNZH","b":"JORGE PRADO CRESPO","category":"INDIVIDUAL MASCULINO INFANTIL SUB-14","week":"W3"}];
-async function importFivePdfResults20261115(){
- if(!requireAdmin())return;
- const btn=$('#importNewPdfResults20261115'), status=$('#importNewPdfStatus20261115');
- const old=btn.textContent;btn.disabled=true;
- const sleep=ms=>new Promise(r=>setTimeout(r,ms));
- try{
-  status.textContent='Consultando exclusivamente el estado actual de Cloudflare…';
-  const res=await apiRequest({action:'exportBackup'});
-  if(!res.backup?.contents?.state)throw new Error('No se pudo verificar el estado de PRODUCCIÓN. Sin modificaciones.');
-  const live=res.backup.contents.state;
-  const fixtureById=new Map(Object.values(live.fixtures||{}).flat().map(f=>[f.id,f]));
-  const absentFixture=[],pending=[],existing=[],different=[];
-  for(const r of PDF_RESULTS_20261115){
-   const f=fixtureById.get(r.matchId);
-   if(!f||f.a!==r.a||f.b!==r.b){absentFixture.push(r);continue;}
-   const previous=(live.results||{})[r.matchId];
-   if(previous===null||previous===undefined)pending.push(r);
-   else if(previous.status==='confirmed'&&JSON.stringify(previous.sets)===JSON.stringify(r.sets))existing.push(r);
-   else different.push(r);
-  }
-  if(absentFixture.length){
-   const msg=absentFixture.map(r=>r.category+' · '+r.a+' vs '+r.b+' · '+r.week).join('\n');
-   status.textContent='⛔ Existen enfrentamientos que no coinciden. CERO escrituras.';
-   alert('IMPORTACIÓN DETENIDA. No se ha escrito nada porque estos partidos no coinciden con PRODUCCIÓN:\n\n'+msg);return;
-  }
-  const summary=`En los cinco PDF: ${PDF_RESULTS_20261115.length} resultados FIN.\n`+
-   `Ya confirmados idénticos: ${existing.length}.\n`+
-   `Existentes distintos o sin confirmar (NO SE TOCAN): ${different.length}.\n`+
-   `Nuevos sin resultado: ${pending.length}.`;
-  status.textContent=`✅ ${pending.length} nuevos · ${existing.length} idénticos · ${different.length} protegidos`;
-  if(different.length){
-   const details=different.map(r=>r.category+' · '+r.a+' vs '+r.b+' ('+r.week+')').join('\n');
-   if(!confirm(summary+'\n\nATENCIÓN: hay registros diferentes o pendientes. NO SE MODIFICARÁN:\n'+details+'\n\n¿Continuar solo con los partidos completamente vacíos?'))return;
-  }else if(!confirm(summary+'\n\n¿Descargar una copia de seguridad ACTUAL antes de escribir?'))return;
-  // Respaldo de todo el estado actual, sin cambiarlo.
-  const blob=new Blob([JSON.stringify(res.backup,null,2)],{type:'application/json'});
-  const url=URL.createObjectURL(blob),link=document.createElement('a');
-  link.href=url;link.download='CT_CAMPEADOR_BACKUP_ANTES_IMPORTAR_5_PDF_2026-11-15.json';
-  document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
-  if(!pending.length){status.textContent='✅ Ningún resultado nuevo; ningún cambio realizado.';alert(summary+'\n\nNo se ha escrito nada.');return;}
-  if(!confirm('Verifica que tienes descargado el respaldo JSON.\n\nSe añadirán ÚNICAMENTE '+pending.length+' resultados vacíos, con comprobación individual antes de cada escritura.\nNingún resultado existente será actualizado o borrado.\n\n¿INICIAR IMPORTACIÓN?'))return;
-  let imported=0,skipped=0,stop='';
-  for(let i=0;i<pending.length;i++){
-   const r=pending[i];
-   if(i>0){for(let t=9;t>0;t--){status.textContent=`Importados ${imported}, omitidos ${skipped}; siguiente en ${t}s (${i+1}/${pending.length})`;await sleep(1000);}}
-   try{
-    const fresh=await apiRequest({action:'exportBackup'});
-    if(!fresh.backup?.contents?.state)throw new Error('No se pudo verificar el estado actual');
-    const state=fresh.backup.contents.state;
-    const actual=Object.values(state.fixtures||{}).flat().find(f=>f.id===r.matchId);
-    if(!actual||actual.a!==r.a||actual.b!==r.b){stop='El enfrentamiento cambió durante la importación: '+r.a+' vs '+r.b;break;}
-    if(Object.prototype.hasOwnProperty.call(state.results||{},r.matchId)){
-     skipped++;continue; // Nunca pisar, ni si el resultado nuevo es diferente.
-    }
-    const response=await apiRequest({action:'submitResult',matchId:r.matchId,result:{type:'normal',sets:r.sets,winner:''}});
-    if(response.result?.status!=='confirmed')throw new Error('La API no ha confirmado la escritura');
-    imported++;status.textContent=`✅ Nuevos confirmados: ${imported} / ${pending.length}`;
-   }catch(e){
-    let msg=String(e?.message||e);
-    stop=/429|too many requests|rate.limit/i.test(msg)?'Cloudflare ha limitado las solicitudes (429); detenido de forma segura.':('Error en '+r.a+' vs '+r.b+': '+msg);
-    break;
-   }
-  }
-  try{await refreshOnline({silent:true});}catch(e){}
-  status.textContent=`✅ Importados ${imported} · Omitidos ${skipped} · Ya existentes ${existing.length} · Protegidos ${different.length}`+(stop?' · DETENIDO':'');
-  alert(`Resumen de esta ejecución:\nNuevos importados: ${imported}\nOmitidos tras nueva comprobación: ${skipped}\nYa idénticos: ${existing.length}\nCon datos distintos, conservados: ${different.length}\n\n`+(stop?('IMPORTACIÓN DETENIDA: '+stop+'\n\nPuedes repetirla; volverá a verificar todo antes de escribir.'): 'Importación terminada sin sobrescribir ningún resultado existente.'));
- }catch(e){status.textContent='⛔ '+String(e?.message||e);alert('No se ha podido completar la comprobación: '+String(e?.message||e));}
- finally{btn.disabled=false;btn.textContent=old;}
-}
-$('#importNewPdfResults20261115').onclick=importFivePdfResults20261115;
-
-
 // IMPORTACIÓN OFICIAL · 07/11/2026 · Solo Admin · no modifica la API.
 const OFFICIAL_PDF_IMPORT_20261107 = [{"matchId":"W1|Absoluto|Masculino|marcos-garcia-merino|rodrigo-temino-calle","sets":[{"a":5,"b":7},{"a":2,"b":6}],"a":"MARCOS GARCIA MERINO","b":"RODRIGO TEMIÑO CALLE","category":"INDIVIDUAL MASCULINO ABSOLUTA","week":"W1"},{"matchId":"W2|Absoluto|Masculino|rodrigo-temino-calle|sergio-martinez-diez","sets":[{"a":6,"b":1},{"a":6,"b":2}],"a":"RODRIGO TEMIÑO CALLE","b":"SERGIO MARTINEZ DIEZ","category":"INDIVIDUAL MASCULINO ABSOLUTA","week":"W2"},{"matchId":"W1|Cadete|Masculino|javier-gutierrez-fernandez|guzman-gonzalez-portal","sets":[{"a":6,"b":0},{"a":6,"b":0}],"a":"JAVIER GUTIERREZ FERNANDEZ","b":"GUZMAN GONZALEZ PORTAL","category":"INDIVIDUAL MASCULINO CADETE SUB-16","week":"W1"},{"matchId":"W1|Cadete|Masculino|mario-fernandez-garcia|ruben-delgado-zalona","sets":[{"a":6,"b":4},{"a":7,"b":6}],"a":"MARIO FERNANDEZ GARCIA","b":"RUBEN DELGADO ZALOÑA","category":"INDIVIDUAL MASCULINO CADETE SUB-16","week":"W1"},{"matchId":"W1|Cadete|Masculino|gonzalo-diez-manso|adrian-ait-maksene-palacin","sets":[{"a":3,"b":6},{"a":3,"b":6}],"a":"GONZALO DIEZ MANSO","b":"ADRIAN AIT MAKSENE PALACIN","category":"INDIVIDUAL MASCULINO CADETE SUB-16","week":"W1"},{"matchId":"W1|Cadete|Masculino|sergio-delgado-zalona|rodrigo-rojo-palacin","sets":[{"a":6,"b":1},{"a":6,"b":2}],"a":"SERGIO DELGADO ZALOÑA","b":"RODRIGO ROJO PALACIN","category":"INDIVIDUAL MASCULINO CADETE SUB-16","week":"W1"},{"matchId":"W2|Cadete|Masculino|ruben-delgado-zalona|javier-gutierrez-fernandez","sets":[{"a":1,"b":6},{"a":3,"b":6}],"a":"RUBEN DELGADO ZALOÑA","b":"JAVIER GUTIERREZ FERNANDEZ","category":"INDIVIDUAL MASCULINO CADETE SUB-16","week":"W2"},{"matchId":"W2|Cadete|Masculino|adrian-ait-maksene-palacin|ismael-sedano-pena","sets":[{"a":6,"b":4},{"a":6,"b":7},{"a":8,"b":10}],"a":"ADRIAN AIT MAKSENE PALACIN","b":"ISMAEL SEDANO PEÑA","category":"INDIVIDUAL MASCULINO CADETE SUB-16","week":"W2"},{"matchId":"W2|Cadete|Masculino|gonzalo-de-pablo-olano|sergio-delgado-zalona","sets":[{"a":3,"b":6},{"a":2,"b":6}],"a":"GONZALO DE PABLO OLANO","b":"SERGIO DELGADO ZALOÑA","category":"INDIVIDUAL MASCULINO CADETE SUB-16","week":"W2"},{"matchId":"W1|Alevín|Masculino|javier-fernandez-quintanilla|jaime-garcia-ladron-de-guevara","sets":[{"a":1,"b":6},{"a":1,"b":6}],"a":"JAVIER FERNANDEZ QUINTANILLA","b":"JAIME GARCIA LADRON DE GUEVARA","category":"INDIVIDUAL MASCULINO ALEVÍN SUB-12","week":"W1"},{"matchId":"W1|Alevín|Masculino|telmo-cid-galaron|manuel-alvarez-fernandez","sets":[{"a":1,"b":6},{"a":3,"b":6}],"a":"TELMO CID GALARON","b":"MANUEL ALVAREZ FERNANDEZ","category":"INDIVIDUAL MASCULINO ALEVÍN SUB-12","week":"W1"},{"matchId":"W2|Alevín|Masculino|nicolas-ruiz-suarez|telmo-cid-galaron","sets":[{"a":6,"b":0},{"a":6,"b":0}],"a":"NICOLAS RUIZ SUAREZ","b":"TELMO CID GALARON","category":"INDIVIDUAL MASCULINO ALEVÍN SUB-12","week":"W2"},{"matchId":"W1|Infantil|Femenino|marina-quintanilla-carcedo|vanesa-rivero-delgado","sets":[{"a":6,"b":2},{"a":6,"b":0}],"a":"MARINA QUINTANILLA CARCEDO","b":"VANESA RIVERO DELGADO","category":"INDIVIDUAL FEMENINO INFANTIL SUB-14","week":"W1"},{"matchId":"W1|Infantil|Femenino|carmen-gomez-vazquez|lucia-garcia-ladron-de-guevara","sets":[{"a":4,"b":6},{"a":4,"b":6}],"a":"CARMEN GOMEZ VAZQUEZ","b":"LUCIA GARCIA LADRON DE GUEVARA","category":"INDIVIDUAL FEMENINO INFANTIL SUB-14","week":"W1"},{"matchId":"W1|Infantil|Masculino|jaime-herrera-sanchez|jaime-garcia-ladron-de-guevara","sets":[{"a":6,"b":3},{"a":6,"b":2}],"a":"JAIME HERRERA SANCHEZ","b":"JAIME GARCIA LADRON DE GUEVARA","category":"INDIVIDUAL MASCULINO INFANTIL SUB-14","week":"W1"},{"matchId":"W1|Infantil|Masculino|ruben-delgado-zalona|odin-santamaria-lopez","sets":[{"a":6,"b":1},{"a":6,"b":4}],"a":"RUBEN DELGADO ZALOÑA","b":"ODIN SANTAMARIA LOPEZ","category":"INDIVIDUAL MASCULINO INFANTIL SUB-14","week":"W1"},{"matchId":"W1|Infantil|Masculino|jorge-prado-crespo|adrian-ait-maksene-palacin","sets":[{"a":0,"b":6},{"a":1,"b":6}],"a":"JORGE PRADO CRESPO","b":"ADRIAN AIT MAKSENE PALACIN","category":"INDIVIDUAL MASCULINO INFANTIL SUB-14","week":"W1"},{"matchId":"W1|Infantil|Masculino|pedro-sancho-poalelunzh|izan-ortiz-sanz","sets":[{"a":1,"b":6},{"a":6,"b":7}],"a":"PEDRO SANCHO POALELUNZH","b":"IZAN ORTIZ SANZ","category":"INDIVIDUAL MASCULINO INFANTIL SUB-14","week":"W1"},{"matchId":"W2|Infantil|Masculino|jorge-trifol-villoria|jaime-herrera-sanchez","sets":[{"a":2,"b":6},{"a":3,"b":6}],"a":"JORGE TRIFOL VILLORIA","b":"JAIME HERRERA SANCHEZ","category":"INDIVIDUAL MASCULINO INFANTIL SUB-14","week":"W2"},{"matchId":"W2|Infantil|Masculino|odin-santamaria-lopez|juan-valentin-saez-sagredo","sets":[{"a":6,"b":7},{"a":3,"b":6}],"a":"ODIN SANTAMARIA LOPEZ","b":"JUAN VALENTIN SAEZ SAGREDO","category":"INDIVIDUAL MASCULINO INFANTIL SUB-14","week":"W2"},{"matchId":"W2|Infantil|Masculino|adrian-ait-maksene-palacin|ruben-delgado-zalona","sets":[{"a":1,"b":6},{"a":6,"b":3},{"a":5,"b":10}],"a":"ADRIAN AIT MAKSENE PALACIN","b":"RUBEN DELGADO ZALOÑA","category":"INDIVIDUAL MASCULINO INFANTIL SUB-14","week":"W2"},{"matchId":"W2|Infantil|Masculino|izan-ortiz-sanz|jorge-prado-crespo","sets":[{"a":6,"b":0},{"a":6,"b":0}],"a":"IZAN ORTIZ SANZ","b":"JORGE PRADO CRESPO","category":"INDIVIDUAL MASCULINO INFANTIL SUB-14","week":"W2"}];
 async function importOfficialPdfResults(){
@@ -11624,6 +11734,81 @@ window.addEventListener('scroll',()=>{const a=document.getElementById('adminView
   }
   document.addEventListener('click',e=>{if(e.target.closest?.('#ctAutoRefreshBtn')){e.preventDefault();check();}});
   document.addEventListener('toggle',e=>{if(e.target?.matches?.('details[data-admin-section="matchesAdmin"]')&&e.target.open)check();},true);
+})();
+</script>
+<script id="ctCourtsProLogic184">
+/* CT Campeador · Control de pistas V1.8.4. DOM only; existing admin handlers remain responsible for writes. */
+(function(){
+ function boot(){
+  const root=document.querySelector('[data-admin-section="courts"] .courtsPro');
+  if(!root||root.dataset.ctProV184)return;
+  const q=x=>root.querySelector(x);
+  const week=q('.ctInlineContext.one'),hero=q('.courtsProHero'),status=q('#courtPublishStatusCard'),info=q('#courtPublishInfoBar'),kpis=q('.courtsProKpis'),days=q('#courtsProDays'),template=q('.courtsTemplatePanel'),actions=q('.courtsProActions'),secondary=q('.courtsProSecondary'),custom=q('#courtsCustomPanel'),board=q('#draftBoard'),publish=q('.courtsProPublish');
+  if(!week||!days||!board||!publish)return;
+  root.dataset.ctProV184='true';root.classList.add('ctProV184');
+  const top=document.createElement('section');top.className='ctControlTop';
+  top.innerHTML='<div class="ctControlHeading"><div><h3>🎾 Control de pistas</h3><p>Organiza la jornada desde un solo lugar</p></div><button class="ctTodayBtn" id="ctToday184" type="button">↗ Hoy</button></div><div id="ctControlDayLabel" aria-live="polite">Selecciona un día</div>';
+  root.insertBefore(top,root.firstChild);
+  [week,status,info,kpis,days].forEach(x=>x&&top.appendChild(x));
+  if(hero)hero.remove();
+  const main=document.createElement('div');main.className='ctControlMain';
+  const left=document.createElement('section');left.className='ctControlBoard';
+  left.innerHTML='<div class="ctControlBoardHead"><h4>Reparto del día</h4><div class="ctLegend"><span><i style="background:#23855b"></i>Libre</span><span><i style="background:#d79b37"></i>Reservada</span><span><i style="background:#5d81b5"></i>Borrador</span></div></div><div class="ctGridScroller" id="ctGrid184" aria-live="polite">Preparando cuadrante…</div><p class="ctGridCaption">Pulsa una franja para abrir el editor detallado. Los cambios no se publican hasta que lo confirmes.</p>';
+  const right=document.createElement('aside');right.className='ctControlTools';right.innerHTML='<div class="ctToolsTitle">Herramientas de la jornada</div>';
+  function panel(title,open){const d=document.createElement('details');d.open=!!open;const sum=document.createElement('summary');sum.textContent=title;d.appendChild(sum);right.appendChild(d);return d}
+  const quick=panel('⚡ Acciones rápidas',true),presets=panel('📅 Plantillas de horarios',false),add=panel('➕ Bloque personalizado',false);
+  if(actions)quick.appendChild(actions);
+  if(template)presets.appendChild(template);
+  if(secondary)presets.appendChild(secondary);
+  if(custom)add.appendChild(custom);
+  main.append(left,right);top.after(main);
+  const detail=document.createElement('details');detail.className='ctControlDetails';detail.id='ctEditor184';detail.innerHTML='<summary>✏️ Editar franjas y pistas del día</summary>';detail.appendChild(board);main.after(detail);
+  const bar=document.createElement('section');bar.className='ctControlActions';bar.appendChild(publish);detail.after(bar);
+  const grid=q('#ctGrid184'),dayLabel=q('#ctControlDayLabel');
+  const escapeHtml=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  function draw(){
+   const selected=typeof adminCourtsDay!=='undefined'?adminCourtsDay:'';
+   const weekName=q('#ctCourtsWeek')?.selectedOptions?.[0]?.textContent||'Jornada';
+   dayLabel.textContent=weekName+'  ·  '+(selected?new Date(selected+'T12:00:00').toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long',year:'numeric'}):'Selecciona un día');
+   if(!selected){grid.textContent='Elige jornada y día para consultar el cuadrante.';return}
+   const saved=(typeof slots==='function'&&typeof isOpen==='function'&&isOpen()?slots():[]).filter(x=>x.date===selected);
+   const editing=(typeof draftSlots!=='undefined'?draftSlots:[]).filter(x=>x.date===selected);
+   const map=new Map();
+   for(const x of saved)map.set(x.id,{...x,_published:true,_inDraft:false});
+   for(const x of editing){const existing=map.get(x.id);map.set(x.id,{...x,_published:!!existing,_inDraft:true})}
+   const all=[...map.values()];
+   const courts=[...new Set(all.map(x=>x.court))].sort((a,b)=>String(a).localeCompare(String(b),'es',{numeric:true}));
+   const times=[...new Set(all.map(x=>x.time))].sort((a,b)=>String(a).localeCompare(String(b),'es',{numeric:true}));
+   if(!all.length){grid.innerHTML='<div style="padding:30px 14px;text-align:center;color:#62758a"><div style="font-size:25px;margin-bottom:6px">🗓️</div><strong>Sin franjas para este día</strong><p>Abre «Acciones rápidas» para añadir una pista o aplicar una plantilla.</p></div>';return}
+   let html='<table><thead><tr><th>Horario</th>'+courts.map(x=>'<th>'+escapeHtml(x)+'</th>').join('')+'</tr></thead><tbody>';
+   for(const time of times){html+='<tr><td>'+escapeHtml(time)+'</td>';
+    for(const court of courts){const x=all.find(a=>a.time===time&&a.court===court);
+     if(!x){html+='<td><div class="ctGridCell empty">—</div></td>';continue}
+     const booking=typeof slotBooking==='function'?slotBooking(x.id):null;
+     const label=booking?'Reservada':x._published&&!x._inDraft?'Pendiente de retirar':x._published?'Libre':'Borrador';
+     const kind=booking?'booked':x._published&&!x._inDraft?'removing':x._published?'free':'draft';
+     const names=booking?[booking.a,booking.b].filter(Boolean).join(' vs '):'';
+     html+='<td><button type="button" data-slot="'+escapeHtml(x.id)+'" class="ctGridCell '+kind+'" title="Abrir editor de esta pista"><strong>'+escapeHtml(label)+'</strong>'+(names?'<small>'+escapeHtml(names)+'</small>':'')+'</button></td>';
+    }html+='</tr>';
+   }
+   grid.innerHTML=html+'</tbody></table>';
+  }
+  grid.addEventListener('click',e=>{const b=e.target.closest('[data-slot]');if(!b)return;detail.open=true;const x=b.dataset.slot;requestAnimationFrame(()=>{const target=[...board.querySelectorAll('[data-delslot]')].find(el=>el.dataset.delslot===x);(target||detail).scrollIntoView({behavior:'smooth',block:'center'});});});
+  let scheduled=false;
+  function queue(){if(scheduled)return;scheduled=true;requestAnimationFrame(()=>{scheduled=false;draw()})}
+  const observer=new MutationObserver(queue);observer.observe(board,{subtree:true,childList:true,characterData:true});observer.observe(days,{subtree:true,childList:true,attributes:true});
+  q('#ctCourtsWeek')?.addEventListener('change',()=>setTimeout(queue,80));
+  q('#ctToday184')?.addEventListener('click',()=>{
+   const parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Madrid',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
+   const p=Object.fromEntries(parts.map(x=>[x.type,x.value]));const today=p.year+'-'+p.month+'-'+p.day;
+   const week=typeof weeks!=='undefined'?weeks.find(w=>today>=w.start&&today<=w.end):null;
+   if(!week){alert('Hoy no está dentro de las jornadas configuradas.');return}
+   const sel=q('#ctCourtsWeek');if(sel&&sel.value!==week.id){sel.value=week.id;sel.dispatchEvent(new Event('change',{bubbles:true}))}
+   setTimeout(()=>{const el=days.querySelector('[data-court-day="'+today+'"]');if(el){el.click();el.scrollIntoView({behavior:'smooth',block:'nearest',inline:'nearest'})}},100);
+  });
+  queue();
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 })();
 </script>
 </body></html>
