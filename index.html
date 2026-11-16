@@ -4527,6 +4527,34 @@ body.modern-admin .ctProV184 .ctControlTop .courtsProKpi{padding:5px 2px!importa
 @media(max-width:900px){body.modern-admin .ctProV184 .ctControlMain{grid-template-columns:minmax(0,1fr)!important}body.modern-admin .ctProV184 .ctControlTools{display:block!important}body.modern-admin .ctProV184 .ctToolsTitle{margin:5px!important}body.modern-admin .ctProV184 .ctControlTools details{display:block!important}}
 @media(max-width:590px){body.modern-admin .ctProV184 .ctGridScroller{max-height:280px!important}body.modern-admin .ctProV184 .ctGridScroller table{min-width:0!important}body.modern-admin .ctProV184 .ctGridScroller th:first-child,body.modern-admin .ctProV184 .ctGridScroller td:first-child{min-width:72px!important;max-width:72px!important;width:72px!important}body.modern-admin .ctProV184 .ctGridCompact{min-height:31px!important}body.modern-admin .ctProV184 .ctControlTop{position:relative!important}body.modern-admin .ctProV184 .ctControlBoard,body.modern-admin .ctProV184 .ctControlTools{padding:2px!important}body.modern-admin .ctProV184 .ctControlBoardHead{display:block!important}body.modern-admin .ctProV184 .ctLegend{margin:3px 0 5px!important}}
 </style>
+<style>
+
+/* V1.8.6 · Panel amplio, acciones horizontales y color por pista */
+body.modern-admin .ctProV184 .ctQuickStrip{background:#fff!important;color:#1d3349!important;padding:7px 0 9px!important;margin:7px 0 4px!important;border:0!important;box-shadow:none!important;max-width:100%!important}
+body.modern-admin .ctProV184 .ctQuickStrip>details{display:block!important;background:transparent!important;border:0!important;padding:0!important;margin:0!important;overflow:visible!important}
+body.modern-admin .ctProV184 .ctQuickStrip>details>summary{display:none!important}
+body.modern-admin .ctProV184 .ctQuickStrip .courtsProActions{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:7px!important;padding:0!important;margin:0!important;align-items:stretch!important}
+body.modern-admin .ctProV184 .ctQuickStrip .courtsProActions>*{min-width:0!important}
+body.modern-admin .ctProV184 .ctQuickStrip button{width:100%!important;height:100%!important;min-height:41px!important;font-size:12px!important;font-weight:750!important;padding:9px 10px!important;white-space:normal!important;text-align:center!important;line-height:1.2!important;border-radius:9px!important;background:#eef4fa!important;color:#193d60!important;border:1px solid #d4e3f1!important;box-shadow:none!important}
+body.modern-admin .ctProV184 .ctQuickStrip button.gold{background:#fff2d8!important;color:#795009!important;border-color:#eed4a1!important}
+body.modern-admin .ctProV184 .ctQuickStrip button.danger{background:#fff0f2!important;color:#8f2f47!important;border-color:#efccd3!important}
+body.modern-admin .ctProV184 .ctControlMain{display:block!important;width:100%!important;max-width:none!important}
+body.modern-admin .ctProV184 .ctControlBoard{width:100%!important;max-width:none!important;min-width:0!important;padding:4px 0!important;border:0!important;border-radius:0!important;background:#fff!important;box-shadow:none!important}
+body.modern-admin .ctProV184 .ctControlTools{width:100%!important;display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;padding:8px 0!important;margin:7px 0 0!important;border:0!important;border-radius:0!important;box-shadow:none!important;background:#fff!important}
+body.modern-admin .ctProV184 .ctControlTools .ctToolsTitle{display:none!important}
+body.modern-admin .ctProV184 .ctControlTools details{min-width:0!important;margin:0!important}
+body.modern-admin .ctProV184 #ctGrid184 th.ctCourtTone0{background:#d8eafa!important;color:#174f88!important;border-bottom:2px solid #3a8bcc!important}
+body.modern-admin .ctProV184 #ctGrid184 th.ctCourtTone1{background:#e3f3dd!important;color:#386a2b!important;border-bottom:2px solid #65a850!important}
+body.modern-admin .ctProV184 #ctGrid184 th.ctCourtTone2{background:#fff0dc!important;color:#81501b!important;border-bottom:2px solid #d8983d!important}
+body.modern-admin .ctProV184 #ctGrid184 th.ctCourtTone3{background:#efe4fc!important;color:#67449a!important;border-bottom:2px solid #a080cf!important}
+body.modern-admin .ctProV184 #ctGrid184 td.ctCourtTone0{background:#f0f7ff!important;box-shadow:inset 3px 0 #a8caea!important}
+body.modern-admin .ctProV184 #ctGrid184 td.ctCourtTone1{background:#f3faef!important;box-shadow:inset 3px 0 #bddfaf!important}
+body.modern-admin .ctProV184 #ctGrid184 td.ctCourtTone2{background:#fff8ef!important;box-shadow:inset 3px 0 #efd1a7!important}
+body.modern-admin .ctProV184 #ctGrid184 td.ctCourtTone3{background:#f9f4fe!important;box-shadow:inset 3px 0 #dcc9ef!important}
+body.modern-admin .ctProV184 #ctGrid184 .ctGridCompact{border:1px solid #0000000b!important}
+@media(max-width:590px){body.modern-admin .ctProV184 .ctQuickStrip .courtsProActions{gap:5px!important}body.modern-admin .ctProV184 .ctQuickStrip button{min-height:42px!important;font-size:11px!important;padding:7px 5px!important}body.modern-admin .ctProV184 .ctControlTools{gap:5px!important}body.modern-admin .ctProV184 #ctGrid184 th,body.modern-admin .ctProV184 #ctGrid184 td{padding:3px!important}}
+
+</style>
 </head>
 <body>
 
@@ -11792,7 +11820,9 @@ window.addEventListener('scroll',()=>{const a=document.getElementById('adminView
   if(template)presets.appendChild(template);
   if(secondary)presets.appendChild(secondary);
   if(custom)add.appendChild(custom);
-  main.append(left,right);top.after(main);
+  const quickStrip=document.createElement('section');quickStrip.className='ctQuickStrip';
+  quickStrip.appendChild(quick);
+  main.append(left,right);top.after(quickStrip);quickStrip.after(main);
   const detail=document.createElement('details');detail.className='ctControlDetails';detail.id='ctEditor184';detail.innerHTML='<summary>✏️ Editar franjas y pistas del día</summary>';detail.appendChild(board);main.after(detail);
   const bar=document.createElement('section');bar.className='ctControlActions';bar.appendChild(publish);detail.after(bar);
   const grid=q('#ctGrid184'),dayLabel=q('#ctControlDayLabel');
@@ -11810,17 +11840,17 @@ window.addEventListener('scroll',()=>{const a=document.getElementById('adminView
    const all=[...map.values()];
    const courts=[...new Set(all.map(x=>x.court))].sort((a,b)=>String(a).localeCompare(String(b),'es',{numeric:true}));
    const times=[...new Set(all.map(x=>x.time))].sort((a,b)=>String(a).localeCompare(String(b),'es',{numeric:true}));
-   if(!all.length){grid.innerHTML='<div style="padding:30px 14px;text-align:center;color:#62758a"><div style="font-size:25px;margin-bottom:6px">🗓️</div><strong>Sin franjas para este día</strong><p>Abre «Acciones rápidas» para añadir una pista o aplicar una plantilla.</p></div>';return}
-   let html='<table><thead><tr><th>Horario</th>'+courts.map(x=>'<th>'+escapeHtml(x)+'</th>').join('')+'</tr></thead><tbody>';
+   if(!all.length){grid.innerHTML='<div style="padding:30px 14px;text-align:center;color:#62758a"><div style="font-size:25px;margin-bottom:6px">🗓️</div><strong>Sin franjas para este día</strong><p>Utiliza las acciones situadas arriba para añadir una pista o aplicar una plantilla.</p></div>';return}
+   let html='<table><thead><tr><th>Horario</th>'+courts.map((x,i)=>'<th class="ctCourtTone'+(i%4)+'">'+escapeHtml(x)+'</th>').join('')+'</tr></thead><tbody>';
    for(const time of times){html+='<tr><td>'+escapeHtml(time)+'</td>';
     for(const court of courts){const x=all.find(a=>a.time===time&&a.court===court);
-     if(!x){html+='<td><div class="ctGridCell empty">—</div></td>';continue}
+     if(!x){html+='<td class="ctCourtTone'+(courts.indexOf(court)%4)+'"><div class="ctGridCell empty">—</div></td>';continue}
      const booking=typeof slotBooking==='function'?slotBooking(x.id):null;
      const label=booking?'Reservada':x._published&&!x._inDraft?'Pendiente de retirar':x._published?'Libre':'Borrador';
      const kind=booking?'booked':x._published&&!x._inDraft?'removing':x._published?'free':'draft';
      const names=booking?[booking.a,booking.b].filter(Boolean).join(' vs '):'';
      const canDelete=!!x._inDraft&&!booking;
-     html+='<td><div class="ctGridCompact '+kind+'"><button type="button" data-slot="'+escapeHtml(x.id)+'" class="ctGridOpen" title="Ver franja"><strong>'+escapeHtml(label)+'</strong>'+(names?'<small>'+escapeHtml(names)+'</small>':'')+'</button>'+(canDelete?'<button class="ctGridRemove" type="button" data-remove-grid="'+escapeHtml(x.id)+'" aria-label="Eliminar esta franja solo en '+escapeHtml(court)+' a las '+escapeHtml(time)+'" title="Eliminar solo esta franja">×</button>':'')+'</div></td>';
+     html+='<td class="ctCourtTone'+(courts.indexOf(court)%4)+'"><div class="ctGridCompact '+kind+'"><button type="button" data-slot="'+escapeHtml(x.id)+'" class="ctGridOpen" title="Ver franja"><strong>'+escapeHtml(label)+'</strong>'+(names?'<small>'+escapeHtml(names)+'</small>':'')+'</button>'+(canDelete?'<button class="ctGridRemove" type="button" data-remove-grid="'+escapeHtml(x.id)+'" aria-label="Eliminar esta franja solo en '+escapeHtml(court)+' a las '+escapeHtml(time)+'" title="Eliminar solo esta franja">×</button>':'')+'</div></td>';
     }html+='</tr>';
    }
    grid.innerHTML=html+'</tbody></table>';
