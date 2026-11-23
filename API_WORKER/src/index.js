@@ -9,6 +9,8 @@ var __defProp22 = Object.defineProperty;
 var __name22 = /* @__PURE__ */ __name2((target, value) => __defProp22(target, "name", { value, configurable: true }), "__name");
 var __defProp222 = Object.defineProperty;
 var __name222 = /* @__PURE__ */ __name22((target, value) => __defProp222(target, "name", { value, configurable: true }), "__name");
+var __defProp2222 = Object.defineProperty;
+var __name2222 = /* @__PURE__ */ __name222((target, value) => __defProp2222(target, "name", { value, configurable: true }), "__name");
 var STATE_KEY = "ct-campeador:state";
 var USERS_KEY = "ct-campeador:users";
 var PROFILES_KEY = "ct-campeador:profiles";
@@ -35,6 +37,9 @@ var BookingCoordinator = class extends DurableObject {
   }
   static {
     __name222(this, "BookingCoordinator");
+  }
+  static {
+    __name2222(this, "BookingCoordinator");
   }
   constructor(ctx, env) {
     super(ctx, env);
@@ -147,6 +152,10 @@ var BookingCoordinator = class extends DurableObject {
               const type = ["normal", "retirement", "wo", "not_played"].includes(incoming.type) ? incoming.type : "normal";
               const sets = sanitizeSets(incoming.sets || []);
               const winner = String(incoming.winner || "").trim();
+              if (type === "normal" || type === "retirement") {
+                const tbCheck = validateSetTieBreakDetails(sets);
+                if (!tbCheck.ok) return { ok: false, status: 400, error: tbCheck.error };
+              }
               if (type === "normal") {
                 const v = validateCompletedTennisResult(sets);
                 if (!v.ok) return { ok: false, status: 400, error: v.error };
@@ -722,6 +731,7 @@ async function confirmExpiredResults(env) {
 __name(confirmExpiredResults, "confirmExpiredResults");
 __name2(confirmExpiredResults, "confirmExpiredResults");
 __name22(confirmExpiredResults, "confirmExpiredResults");
+__name222(confirmExpiredResults, "confirmExpiredResults");
 var index_default = {
   async scheduled(event, env, ctx) {
     ctx.waitUntil((async () => {
@@ -746,17 +756,16 @@ var index_default = {
         };
         console.error("PROD autoresultados 24h", error);
       }
-      // KV gratuito: evitar una escritura en cada ejecución del cron.
-      // Los resultados y las reservas siguen actualizándose en tiempo real.
-      // El diagnóstico se persiste como máximo cada 6 horas en ejecuciones
-      // normales, y también ante un error nuevo o confirmaciones automáticas.
       try {
         const diagnosticKey = "ct-campeador:autoresults:last-run";
         const previousRaw = await env.DATA.get(diagnosticKey);
         let previous = null;
-        try { previous = previousRaw ? JSON.parse(previousRaw) : null; } catch (_) {}
+        try {
+          previous = previousRaw ? JSON.parse(previousRaw) : null;
+        } catch (_) {
+        }
         const previousAt = Date.parse(String(previous?.checkedAt || ""));
-        const isDue = !Number.isFinite(previousAt) || Date.now() - previousAt >= 6 * 60 * 60 * 1000;
+        const isDue = !Number.isFinite(previousAt) || Date.now() - previousAt >= 6 * 60 * 60 * 1e3;
         const newFailure = record.ok === false && (previous?.ok !== false || previous?.error !== record.error);
         const newRecovery = record.ok === true && previous?.ok === false;
         const hasConfirmations = Number(record.confirmed || 0) > 0;
@@ -805,7 +814,7 @@ var index_default = {
           worker: "online",
           kv,
           durableObject,
-          version: "2.6.11-push-registro-verificado",
+          version: "2.6.14-tiebreak-verificado",
           error
         }, kv === "online" && durableObject === "online" ? 200 : 500, corsHeaders);
       }
@@ -816,7 +825,7 @@ var index_default = {
       const action = String(body.action || "").trim();
       if (action === "ping") {
         const ping = await bookingCall(env, { action: "ping" });
-        return json({ ok: true, message: "CT Campeador conectado", durableObject: ping.durableObject, version: "2.6.11-push-registro-verificado" }, 200, corsHeaders);
+        return json({ ok: true, message: "CT Campeador conectado", durableObject: ping.durableObject, version: "2.6.14-tiebreak-verificado" }, 200, corsHeaders);
       }
       if (action === "familyProtocol") {
         return json({ ok: true, environment: "production", familyProtocol: "pin-only", build: "1.5.1", requiresPlayerName: false }, 200, corsHeaders);
@@ -1816,7 +1825,7 @@ var index_default = {
           format: "ct-campeador-backup",
           schemaVersion: 1,
           generatedAt: (/* @__PURE__ */ new Date()).toISOString(),
-          apiVersion: "2.6.11-push-registro-verificado",
+          apiVersion: "2.6.14-tiebreak-verificado",
           tournamentName: String(state?.tournamentName || "CT Campeador"),
           contents: {
             state,
@@ -2035,6 +2044,7 @@ __name(bookingCall, "bookingCall");
 __name2(bookingCall, "bookingCall");
 __name22(bookingCall, "bookingCall");
 __name222(bookingCall, "bookingCall");
+__name2222(bookingCall, "bookingCall");
 async function broadcastRealtime(env, event, options = {}) {
   try {
     await bookingCall(env, {
@@ -2050,6 +2060,7 @@ __name(broadcastRealtime, "broadcastRealtime");
 __name2(broadcastRealtime, "broadcastRealtime");
 __name22(broadcastRealtime, "broadcastRealtime");
 __name222(broadcastRealtime, "broadcastRealtime");
+__name2222(broadcastRealtime, "broadcastRealtime");
 var APP_BASE_URL = "https://ligasdetenis.github.io/ct-campeador-liga/";
 function spanishSlotTimeToUTC(dateValue, timeValue) {
   const date = String(dateValue || "").trim();
@@ -2068,7 +2079,7 @@ function spanishSlotTimeToUTC(dateValue, timeValue) {
     minute: "2-digit",
     hourCycle: "h23"
   });
-  const madridParts = /* @__PURE__ */ __name22((timestamp) => {
+  const madridParts = /* @__PURE__ */ __name222((timestamp) => {
     const fields = Object.fromEntries(formatter.formatToParts(new Date(timestamp)).map((p) => [p.type, p.value]));
     return Date.UTC(Number(fields.year), Number(fields.month) - 1, Number(fields.day), Number(fields.hour), Number(fields.minute));
   }, "madridParts");
@@ -2079,6 +2090,7 @@ function spanishSlotTimeToUTC(dateValue, timeValue) {
 __name(spanishSlotTimeToUTC, "spanishSlotTimeToUTC");
 __name2(spanishSlotTimeToUTC, "spanishSlotTimeToUTC");
 __name22(spanishSlotTimeToUTC, "spanishSlotTimeToUTC");
+__name222(spanishSlotTimeToUTC, "spanishSlotTimeToUTC");
 function makeAppDeepLink(params = {}) {
   const u = new URL(APP_BASE_URL);
   for (const [key, value] of Object.entries(params || {})) {
@@ -2091,6 +2103,7 @@ __name(makeAppDeepLink, "makeAppDeepLink");
 __name2(makeAppDeepLink, "makeAppDeepLink");
 __name22(makeAppDeepLink, "makeAppDeepLink");
 __name222(makeAppDeepLink, "makeAppDeepLink");
+__name2222(makeAppDeepLink, "makeAppDeepLink");
 async function sendTargetedPush(env, recipients, title, body, deepLink = {}) {
   if (!env.PUSH_SERVICE || !env.PUSH_SERVICE_TOKEN) return;
   const players = [...new Set((recipients || []).map((x) => String(x || "").trim()).filter(Boolean))];
@@ -2119,6 +2132,7 @@ __name(sendTargetedPush, "sendTargetedPush");
 __name2(sendTargetedPush, "sendTargetedPush");
 __name22(sendTargetedPush, "sendTargetedPush");
 __name222(sendTargetedPush, "sendTargetedPush");
+__name2222(sendTargetedPush, "sendTargetedPush");
 function standardSetIsValid(a, b) {
   if (!Number.isInteger(a) || !Number.isInteger(b) || a < 0 || b < 0 || a === b) return false;
   const w = Math.max(a, b), l = Math.min(a, b);
@@ -2128,6 +2142,7 @@ __name(standardSetIsValid, "standardSetIsValid");
 __name2(standardSetIsValid, "standardSetIsValid");
 __name22(standardSetIsValid, "standardSetIsValid");
 __name222(standardSetIsValid, "standardSetIsValid");
+__name2222(standardSetIsValid, "standardSetIsValid");
 function superTiebreakIsValid(a, b) {
   if (!Number.isInteger(a) || !Number.isInteger(b) || a < 0 || b < 0 || a === b) return false;
   return Math.max(a, b) >= 10 && Math.abs(a - b) >= 2;
@@ -2136,6 +2151,23 @@ __name(superTiebreakIsValid, "superTiebreakIsValid");
 __name2(superTiebreakIsValid, "superTiebreakIsValid");
 __name22(superTiebreakIsValid, "superTiebreakIsValid");
 __name222(superTiebreakIsValid, "superTiebreakIsValid");
+__name2222(superTiebreakIsValid, "superTiebreakIsValid");
+// Optional points of a standard 7-6 / 6-7 tie-break; do not alter set scores.
+function validateSetTieBreakDetails(sets) {
+  if (!Array.isArray(sets)) return { ok: false, error: "Sets no válidos" };
+  for (let i = 0; i < sets.length; i++) {
+    const set = sets[i];
+    if (!set || set.tb === void 0) continue;
+    const tb = set.tb;
+    if (i >= 2 || !((set.a === 7 && set.b === 6) || (set.a === 6 && set.b === 7))) {
+      return { ok: false, error: "Solo puede indicarse tie-break en un set 7-6 o 6-7 (sets 1 y 2)." };
+    }
+    if (!tb || !Number.isInteger(tb.a) || !Number.isInteger(tb.b) || tb.a < 0 || tb.b < 0 || tb.a > 99 || tb.b > 99 || Math.max(tb.a, tb.b) < 7 || Math.abs(tb.a - tb.b) !== 2 || (set.a > set.b) !== (tb.a > tb.b)) {
+      return { ok: false, error: "Tie-break incorrecto en el set " + (i + 1) + ": al menos 7 puntos, dos de diferencia y el mismo ganador del set." };
+    }
+  }
+  return { ok: true };
+}
 function validateCompletedTennisResult(sets) {
   if (!Array.isArray(sets) || sets.length !== 2 && sets.length !== 3) {
     return { ok: false, error: "Un partido completado debe tener 2 sets o 2 sets m\xE1s super tie-break." };
@@ -2166,6 +2198,7 @@ __name(validateCompletedTennisResult, "validateCompletedTennisResult");
 __name2(validateCompletedTennisResult, "validateCompletedTennisResult");
 __name22(validateCompletedTennisResult, "validateCompletedTennisResult");
 __name222(validateCompletedTennisResult, "validateCompletedTennisResult");
+__name2222(validateCompletedTennisResult, "validateCompletedTennisResult");
 async function listReservations(env) {
   const r = await bookingCall(env, { action: "list" });
   if (!r.ok) throw new Error(r.error || "No se pudieron leer las reservas");
@@ -2175,6 +2208,7 @@ __name(listReservations, "listReservations");
 __name2(listReservations, "listReservations");
 __name22(listReservations, "listReservations");
 __name222(listReservations, "listReservations");
+__name2222(listReservations, "listReservations");
 function liveMatchKey(matchId) {
   const input = String(matchId);
   let h1 = 2166136261, h2 = 2166136261;
@@ -2187,6 +2221,7 @@ function liveMatchKey(matchId) {
 __name(liveMatchKey, "liveMatchKey");
 __name2(liveMatchKey, "liveMatchKey");
 __name22(liveMatchKey, "liveMatchKey");
+__name222(liveMatchKey, "liveMatchKey");
 function findFixture(state, matchId) {
   for (const [key, arr] of Object.entries(state.fixtures || {})) {
     const fixture = (arr || []).find((m) => String(m.id) === matchId);
@@ -2200,6 +2235,7 @@ __name(findFixture, "findFixture");
 __name2(findFixture, "findFixture");
 __name22(findFixture, "findFixture");
 __name222(findFixture, "findFixture");
+__name2222(findFixture, "findFixture");
 function sanitizeSets(input) {
   if (!Array.isArray(input)) return [];
   const out = [];
@@ -2207,7 +2243,15 @@ function sanitizeSets(input) {
     if (!set || set.a === "" || set.b === "" || set.a === null || set.b === null || set.a === void 0 || set.b === void 0) continue;
     const a = Number(set.a), b = Number(set.b);
     if (!Number.isInteger(a) || !Number.isInteger(b) || a < 0 || b < 0 || a > 99 || b > 99 || a === b) continue;
-    out.push({ a, b });
+    const item = { a, b };
+    if (set.tb !== void 0) {
+      // Preserve optional tie-break points, including invalid values so that
+      // validateSetTieBreakDetails can reject them rather than discard them.
+      const tb = set.tb;
+      const readPoint = (value) => value === "" || value === null || value === void 0 ? NaN : Number(value);
+      item.tb = { a: readPoint(tb?.a), b: readPoint(tb?.b) };
+    }
+    out.push(item);
   }
   return out;
 }
@@ -2215,6 +2259,7 @@ __name(sanitizeSets, "sanitizeSets");
 __name2(sanitizeSets, "sanitizeSets");
 __name22(sanitizeSets, "sanitizeSets");
 __name222(sanitizeSets, "sanitizeSets");
+__name2222(sanitizeSets, "sanitizeSets");
 function doJson(data, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
@@ -2225,6 +2270,7 @@ __name(doJson, "doJson");
 __name2(doJson, "doJson");
 __name22(doJson, "doJson");
 __name222(doJson, "doJson");
+__name2222(doJson, "doJson");
 function json(data, status, headers) {
   return new Response(JSON.stringify(data), { status, headers });
 }
@@ -2232,6 +2278,7 @@ __name(json, "json");
 __name2(json, "json");
 __name22(json, "json");
 __name222(json, "json");
+__name2222(json, "json");
 function normalize(text) {
   return String(text || "").trim().toLocaleLowerCase("es");
 }
@@ -2239,6 +2286,7 @@ __name(normalize, "normalize");
 __name2(normalize, "normalize");
 __name22(normalize, "normalize");
 __name222(normalize, "normalize");
+__name2222(normalize, "normalize");
 async function familyPinHash(pin, salt) {
   const enc = new TextEncoder();
   const key = await crypto.subtle.importKey("raw", enc.encode(pin), "PBKDF2", false, ["deriveBits"]);
@@ -2248,6 +2296,7 @@ async function familyPinHash(pin, salt) {
 __name(familyPinHash, "familyPinHash");
 __name2(familyPinHash, "familyPinHash");
 __name22(familyPinHash, "familyPinHash");
+__name222(familyPinHash, "familyPinHash");
 function secureEqualString(a, b) {
   if (typeof a !== "string" || typeof b !== "string" || a.length !== b.length) return false;
   let diff = 0;
@@ -2257,6 +2306,7 @@ function secureEqualString(a, b) {
 __name(secureEqualString, "secureEqualString");
 __name2(secureEqualString, "secureEqualString");
 __name22(secureEqualString, "secureEqualString");
+__name222(secureEqualString, "secureEqualString");
 async function getState(env) {
   const r = await bookingCall(env, { action: "leagueRead" });
   if (!r.ok) throw new Error(r.error || "No se pudo leer la liga desde el coordinador");
@@ -2266,6 +2316,7 @@ __name(getState, "getState");
 __name2(getState, "getState");
 __name22(getState, "getState");
 __name222(getState, "getState");
+__name2222(getState, "getState");
 async function getAdminPrefs(env) {
   const raw = await env.DATA.get(ADMIN_PREFS_KEY);
   if (!raw) return {};
@@ -2279,12 +2330,14 @@ async function getAdminPrefs(env) {
 __name(getAdminPrefs, "getAdminPrefs");
 __name2(getAdminPrefs, "getAdminPrefs");
 __name22(getAdminPrefs, "getAdminPrefs");
+__name222(getAdminPrefs, "getAdminPrefs");
 async function putAdminPrefs(env, prefs) {
   await env.DATA.put(ADMIN_PREFS_KEY, JSON.stringify(prefs || {}));
 }
 __name(putAdminPrefs, "putAdminPrefs");
 __name2(putAdminPrefs, "putAdminPrefs");
 __name22(putAdminPrefs, "putAdminPrefs");
+__name222(putAdminPrefs, "putAdminPrefs");
 function cleanAdminOrder(value) {
   const allowed = /* @__PURE__ */ new Set([
     "tournamentIdentity",
@@ -2311,6 +2364,7 @@ function cleanAdminOrder(value) {
 __name(cleanAdminOrder, "cleanAdminOrder");
 __name2(cleanAdminOrder, "cleanAdminOrder");
 __name22(cleanAdminOrder, "cleanAdminOrder");
+__name222(cleanAdminOrder, "cleanAdminOrder");
 async function getProfiles(env) {
   const raw = await env.DATA.get(PROFILES_KEY);
   if (!raw) return {};
@@ -2325,6 +2379,7 @@ __name(getProfiles, "getProfiles");
 __name2(getProfiles, "getProfiles");
 __name22(getProfiles, "getProfiles");
 __name222(getProfiles, "getProfiles");
+__name2222(getProfiles, "getProfiles");
 async function getMessages(env) {
   const raw = await env.DATA.get(MESSAGES_KEY);
   if (raw) {
@@ -2360,6 +2415,7 @@ __name(getMessages, "getMessages");
 __name2(getMessages, "getMessages");
 __name22(getMessages, "getMessages");
 __name222(getMessages, "getMessages");
+__name2222(getMessages, "getMessages");
 async function putMessages(env, messages) {
   const clean = Array.isArray(messages) ? messages.slice(0, 500) : [];
   await env.DATA.put(MESSAGES_KEY, JSON.stringify(clean));
@@ -2368,6 +2424,7 @@ __name(putMessages, "putMessages");
 __name2(putMessages, "putMessages");
 __name22(putMessages, "putMessages");
 __name222(putMessages, "putMessages");
+__name2222(putMessages, "putMessages");
 function messageVisibleToUser(message, session) {
   if (session.role === "admin") return true;
   const me = normalize(session.name);
@@ -2378,6 +2435,7 @@ __name(messageVisibleToUser, "messageVisibleToUser");
 __name2(messageVisibleToUser, "messageVisibleToUser");
 __name22(messageVisibleToUser, "messageVisibleToUser");
 __name222(messageVisibleToUser, "messageVisibleToUser");
+__name2222(messageVisibleToUser, "messageVisibleToUser");
 function messageForSession(message, session) {
   const me = normalize(session.name);
   const readBy = Array.isArray(message?.readBy) ? message.readBy : [];
@@ -2397,6 +2455,7 @@ __name(messageForSession, "messageForSession");
 __name2(messageForSession, "messageForSession");
 __name22(messageForSession, "messageForSession");
 __name222(messageForSession, "messageForSession");
+__name2222(messageForSession, "messageForSession");
 async function getUsers(env) {
   const raw = await env.DATA.get(USERS_KEY);
   if (!raw) return [];
@@ -2410,6 +2469,7 @@ __name(getUsers, "getUsers");
 __name2(getUsers, "getUsers");
 __name22(getUsers, "getUsers");
 __name222(getUsers, "getUsers");
+__name2222(getUsers, "getUsers");
 function getToken(request, body) {
   const authorization = request.headers.get("Authorization") || "";
   if (authorization.startsWith("Bearer ")) return authorization.substring(7).trim();
@@ -2420,6 +2480,7 @@ __name(getToken, "getToken");
 __name2(getToken, "getToken");
 __name22(getToken, "getToken");
 __name222(getToken, "getToken");
+__name2222(getToken, "getToken");
 async function getSession(request, body, env) {
   const token = getToken(request, body);
   if (!token) return null;
@@ -2441,6 +2502,7 @@ __name(getSession, "getSession");
 __name2(getSession, "getSession");
 __name22(getSession, "getSession");
 __name222(getSession, "getSession");
+__name2222(getSession, "getSession");
 async function createSession(env, user) {
   const token = crypto.randomUUID();
   const session = { name: user.name, role: user.role || "player", createdAt: (/* @__PURE__ */ new Date()).toISOString(), securityVersion: SESSION_SECURITY_VERSION, ...user.familyId ? { familyId: user.familyId } : {} };
@@ -2459,6 +2521,7 @@ __name(createSession, "createSession");
 __name2(createSession, "createSession");
 __name22(createSession, "createSession");
 __name222(createSession, "createSession");
+__name2222(createSession, "createSession");
 async function deleteSession(env, token) {
   const raw = await env.DATA.get(`session:${token}`);
   let session = null;
@@ -2483,6 +2546,7 @@ __name(deleteSession, "deleteSession");
 __name2(deleteSession, "deleteSession");
 __name22(deleteSession, "deleteSession");
 __name222(deleteSession, "deleteSession");
+__name2222(deleteSession, "deleteSession");
 async function revokeUserSessions(env, name) {
   const key = `sessionsByUser:${encodeURIComponent(normalize(name))}`;
   let tokens = [];
@@ -2497,6 +2561,7 @@ __name(revokeUserSessions, "revokeUserSessions");
 __name2(revokeUserSessions, "revokeUserSessions");
 __name22(revokeUserSessions, "revokeUserSessions");
 __name222(revokeUserSessions, "revokeUserSessions");
+__name2222(revokeUserSessions, "revokeUserSessions");
 async function checkLoginGates(env, keys) {
   for (const key of keys) {
     const gate = await bookingCall(env, { action: "loginGate", key });
@@ -2508,6 +2573,7 @@ __name(checkLoginGates, "checkLoginGates");
 __name2(checkLoginGates, "checkLoginGates");
 __name22(checkLoginGates, "checkLoginGates");
 __name222(checkLoginGates, "checkLoginGates");
+__name2222(checkLoginGates, "checkLoginGates");
 async function registerLoginFailure(env, globalKey, specificKey) {
   await bookingCall(env, { action: "loginFailure", key: globalKey, maxFailures: LOGIN_MAX_FAILURES });
   await bookingCall(env, { action: "loginFailure", key: specificKey, maxFailures: LOGIN_USER_MAX_FAILURES });
@@ -2516,6 +2582,7 @@ __name(registerLoginFailure, "registerLoginFailure");
 __name2(registerLoginFailure, "registerLoginFailure");
 __name22(registerLoginFailure, "registerLoginFailure");
 __name222(registerLoginFailure, "registerLoginFailure");
+__name2222(registerLoginFailure, "registerLoginFailure");
 async function clearLoginGates(env, keys) {
   for (const key of keys) await bookingCall(env, { action: "loginSuccess", key });
 }
@@ -2523,6 +2590,7 @@ __name(clearLoginGates, "clearLoginGates");
 __name2(clearLoginGates, "clearLoginGates");
 __name22(clearLoginGates, "clearLoginGates");
 __name222(clearLoginGates, "clearLoginGates");
+__name2222(clearLoginGates, "clearLoginGates");
 function loginAttemptKey(request, discriminator) {
   return `${loginGuardKey(request)}|attempt:${normalize(discriminator).slice(0, 80)}`;
 }
@@ -2530,6 +2598,7 @@ __name(loginAttemptKey, "loginAttemptKey");
 __name2(loginAttemptKey, "loginAttemptKey");
 __name22(loginAttemptKey, "loginAttemptKey");
 __name222(loginAttemptKey, "loginAttemptKey");
+__name2222(loginAttemptKey, "loginAttemptKey");
 function loginGuardKey(request) {
   const ip = request.headers.get("CF-Connecting-IP") || request.headers.get("X-Forwarded-For") || "unknown";
   return `login:${String(ip).split(",")[0].trim()}`;
@@ -2538,6 +2607,7 @@ __name(loginGuardKey, "loginGuardKey");
 __name2(loginGuardKey, "loginGuardKey");
 __name22(loginGuardKey, "loginGuardKey");
 __name222(loginGuardKey, "loginGuardKey");
+__name2222(loginGuardKey, "loginGuardKey");
 function corsHeadersFor(request) {
   const origin = request.headers.get("Origin");
   const headers = {
@@ -2557,6 +2627,7 @@ __name(corsHeadersFor, "corsHeadersFor");
 __name2(corsHeadersFor, "corsHeadersFor");
 __name22(corsHeadersFor, "corsHeadersFor");
 __name222(corsHeadersFor, "corsHeadersFor");
+__name2222(corsHeadersFor, "corsHeadersFor");
 function isAllowedOrigin(request) {
   const origin = request.headers.get("Origin");
   return !origin || origin === "null" || ALLOWED_ORIGINS.has(origin);
@@ -2565,6 +2636,7 @@ __name(isAllowedOrigin, "isAllowedOrigin");
 __name2(isAllowedOrigin, "isAllowedOrigin");
 __name22(isAllowedOrigin, "isAllowedOrigin");
 __name222(isAllowedOrigin, "isAllowedOrigin");
+__name2222(isAllowedOrigin, "isAllowedOrigin");
 function stateForSession(state, reservations, profiles, session) {
   const base = { ...state, bookings: reservations, reservations, profiles };
   if (session.role === "admin") return base;
@@ -2601,6 +2673,7 @@ __name(stateForSession, "stateForSession");
 __name2(stateForSession, "stateForSession");
 __name22(stateForSession, "stateForSession");
 __name222(stateForSession, "stateForSession");
+__name2222(stateForSession, "stateForSession");
 async function requireUser(request, body, env) {
   const session = await getSession(request, body, env);
   if (!session) return { ok: false, status: 401, error: "Debes iniciar sesi\xF3n." };
@@ -2620,6 +2693,7 @@ __name(requireUser, "requireUser");
 __name2(requireUser, "requireUser");
 __name22(requireUser, "requireUser");
 __name222(requireUser, "requireUser");
+__name2222(requireUser, "requireUser");
 async function requireAdmin(request, body, env) {
   const session = await getSession(request, body, env);
   if (!session) return { ok: false, status: 401, error: "Debes iniciar sesi\xF3n." };
@@ -2630,6 +2704,7 @@ __name(requireAdmin, "requireAdmin");
 __name2(requireAdmin, "requireAdmin");
 __name22(requireAdmin, "requireAdmin");
 __name222(requireAdmin, "requireAdmin");
+__name2222(requireAdmin, "requireAdmin");
 export {
   BookingCoordinator,
   index_default as default
