@@ -6183,7 +6183,39 @@ function playerStillInAnyCategory(name){return categorizedPlayers().some(p=>norm
 function roleOf(person){return data.roles?.[person]||"jugador"}
 function isAdmin(){return !!state.authenticated&&roleOf(state.player)==="admin"}
 function requireAdmin(){if(isAdmin())return true;alert("Acceso restringido a administradores.");return false}
-function canPlayerReserve(m){return !!state.authenticated&&!!state.player&&(m.a===state.player||m.b===state.player)}
+// V1.8.8: los nombres se comparan como en el Worker (tildes, espacios y mayúsculas).
+// En familia solo actúa el jugador seleccionado Y autorizado, nunca la cuenta FAMILIA.
+function canPlayerReserve(m){
+ if(!state.authenticated||!state.player||!m)return false;
+ const player=normalizeName(familyMode?familyActive:state.player);
+ if(!player)return false;
+ if(familyMode&&!familyLinks.some(l=>l.status==='approved'&&normalizeName(l.playerName)===player))return false;
+ return normalizeName(m.a)===player||normalizeName(m.b)===player;
+}
+function ctFamilyBookingIdentity(mid){
+ if(!familyMode)return {};
+ const m=findFixtureById(mid);
+ const player=familyLinks.find(l=>l.status==='approved'&&normalizeName(l.playerName)===normalizeName(familyActive))?.playerName;
+ if(!player||!m||![m.a,m.b].some(n=>normalizeName(n)===normalizeName(player)))throw new Error('Selecciona en Mi familia al jugador vinculado que participa en este partido.');
+ return {familyPlayer:player};
+}
+function ctUsePostponedBookingWeek(mid){
+ const p=postponedInfo(mid), target=String(p?.targetWeek||'').trim();
+ if(!target||target===state.week)return;
+ if(!weeks.some(w=>w.id===target))return;
+ // Para partidos trasladados, usar el destino de la reprogramación si está publicado.
+ // El partido sigue vinculado a su jornada original en el Worker.
+ state.week=target;
+ renderWeeks();
+}
+function ctReservationNoSlotsInfo(mid){
+ const p=postponedInfo(mid),label=journeyDisplayName(state.week)||state.week;
+ if(!isOpen())return 'Las pistas de '+label+' todavía no están publicadas. Selecciona una jornada con disponibilidad publicada.';
+ const all=slots();
+ if(!all.length)return 'En '+label+' todavía no hay franjas publicadas. No se puede reservar hasta que Administración publique pistas.';
+ if(all.every(s=>slotHasFinished(s.date,s.time)))return 'Las franjas publicadas de '+label+' ya han pasado. Elige una jornada futura con pistas libres.';
+ return 'No quedan pistas libres en '+label+'. Prueba otra jornada con pistas publicadas o consulta con Administración.';
+}
 function validPin(player,pin){return /^(?:\d{4}|\d{6})$/.test(pin||"") && String(data.pins[player]||"")===String(pin)}
 function randomPin(exclude=new Set()){let pin='';do{pin=String(Math.floor(100000+Math.random()*900000))}while(exclude.has(pin));return pin}
 function ensurePins(){
@@ -6656,7 +6688,7 @@ function renderMatches(){const fs=viewFixtures(), box=$('#matches');const offici
  box.querySelectorAll('[data-confirm-result]').forEach(b=>b.onclick=()=>confirmResult(b.dataset.confirmResult));
  box.querySelectorAll('[data-delay-mid]').forEach(b=>b.onclick=()=>openDelayModal(b.dataset.delayMid));
 }
-async function cancelBooking(mid){const m=findFixtureById(mid);const bk=bookingFor(mid);if(!m||!bk)return;if(!canPlayerReserve(m)&&!isAdmin()){alert('Solo uno de los dos jugadores o un administrador puede cancelar la reserva.');return;}const ok=confirm(`¿Cancelar esta reserva?\n\n${m.a} vs ${m.b}\n${dayDateES(bk.date)} · ${bk.time} · ${bk.court}\n\nLa pista volverá a quedar libre.`);if(!ok)return;try{await apiRequest({action:'cancelReservation',matchId:mid});delete data.bookings[mid];localStorage.setItem(STORAGE_KEY,JSON.stringify(data));renderAll();alert('✅ Reserva cancelada. La pista vuelve a estar disponible.')}catch(e){alert(e.message);await refreshOnline({silent:true})}}
+async function cancelBooking(mid){const m=findFixtureById(mid);const bk=bookingFor(mid);if(!m||!bk)return;if(!canPlayerReserve(m)&&!isAdmin()){alert('Solo uno de los dos jugadores o un administrador puede cancelar la reserva.');return;}const ok=confirm(`¿Cancelar esta reserva?\n\n${m.a} vs ${m.b}\n${dayDateES(bk.date)} · ${bk.time} · ${bk.court}\n\nLa pista volverá a quedar libre.`);if(!ok)return;try{await apiRequest({action:'cancelReservation',matchId:mid,...ctFamilyBookingIdentity(mid)});delete data.bookings[mid];localStorage.setItem(STORAGE_KEY,JSON.stringify(data));renderAll();alert('✅ Reserva cancelada. La pista vuelve a estar disponible.')}catch(e){alert(e.message);await refreshOnline({silent:true})}}
 function openDelayModal(mid){if(!isAdmin())return;const rec=fixtureRecord(mid);if(!rec)return;state.delayMatchId=mid;const p=postponedInfo(mid);$('#delayMatch').textContent=`${rec.m.a} vs ${rec.m.b}`;$('#delayOrigin').textContent=`Jornada oficial: ${weeks.find(w=>w.id===rec.week)?.label||rec.week} · ${rec.category} ${rec.gender}`;const originIdx=weeks.findIndex(w=>w.id===rec.week);const options=['<option value="">Retrasado · todavía sin nueva semana</option>'];weeks.forEach((w,i)=>{if(i>originIdx)options.push(`<option value="${w.id}">${w.label}</option>`)});$('#delayTargetWeek').innerHTML=options.join('');$('#delayTargetWeek').value=p?.targetWeek||'';$('#restoreDelayBtn').classList.toggle('hidden',!p);$('#delayModal').classList.add('show')}
 async function saveDelay(){if(!isAdmin())return;const mid=state.delayMatchId,rec=fixtureRecord(mid);if(!rec)return;const target=$('#delayTargetWeek').value;data.postponed=data.postponed||{};data.postponed[mid]={originalWeek:rec.week,targetWeek:target||'',status:target?'reprogrammed':'delayed',updatedAt:new Date().toISOString(),updatedBy:state.player};localStorage.setItem(STORAGE_KEY,JSON.stringify(data));$('#delayModal').classList.remove('show');renderAll();try{await saveStateOnline();setOnline(true,'☁️ Guardado');alert(target?`✅ Partido reprogramado a ${weeks.find(w=>w.id===target)?.label||target}.`:'✅ Partido marcado como retrasado. Queda pendiente de asignar una nueva semana.')}catch(e){alert('El cambio se ha guardado localmente, pero no se pudo guardar online.\n\n'+e.message)}}
 async function restoreDelay(){if(!isAdmin())return;const mid=state.delayMatchId,rec=fixtureRecord(mid);if(!rec)return;if(!confirm(`¿Devolver ${rec.m.a} vs ${rec.m.b} a su jornada oficial?`))return;delete data.postponed[mid];localStorage.setItem(STORAGE_KEY,JSON.stringify(data));$('#delayModal').classList.remove('show');renderAll();try{await saveStateOnline();setOnline(true,'☁️ Guardado');alert('✅ Partido devuelto a su jornada oficial.')}catch(e){alert(e.message)}}
@@ -6900,6 +6932,7 @@ function fillReserveCourts(mid,preferredCourt=''){
 }
 function openReserve(mid,preferredSlotId=''){
  state.reserveMatchId=mid;const m=findFixtureById(mid);if(!m)return;
+ ctUsePostponedBookingWeek(mid);
  if(resultFor(mid)?.status==='confirmed'){alert("Este partido ya está finalizado y no puede reservar pista.");return;}
  if(!canPlayerReserve(m)&&!isAdmin()){alert("Solo uno de los dos jugadores de este enfrentamiento o un administrador puede reservarlo.");return;}if(!isReservableInCurrentWeek(mid)){alert("El partido está finalizado y no puede reservar pista.");return;}
  $('#modalMatch').textContent=`${m.a} vs ${m.b}`;
@@ -6910,6 +6943,7 @@ function openReserve(mid,preferredSlotId=''){
  $('#cancelReserveModal').classList.toggle('hidden',!current);
  if(current)$('#reserveCurrent').innerHTML=`<b>Reserva actual:</b> ${mappEsc(dayDateES(current.date))} · ${mappEsc(current.time)} · ${mappEsc(current.court)}`;
  $('#reserveNoSlots').classList.toggle('hidden',!!ss.length);
+ $('#reserveNoSlots').textContent=ctReservationNoSlotsInfo(mid);
  $('#reserveForm').classList.toggle('hidden',!ss.length);
  if(ss.length){
    const preferred=preferredSlotId?slots().find(x=>x.id===preferredSlotId):null;
@@ -6928,7 +6962,7 @@ async function proposeSelectedSlot(){
  const mid=state.reserveMatchId,sid=$('#reserveCourt').value;
  if(!mid||!sid)return alert('Selecciona una pista disponible.');
  const button=$('#proposeReserve');button.disabled=true;
- try{await apiRequest({action:'proposeMatchSlot',matchId:mid,slotId:sid,week:state.week});
+ try{await apiRequest({action:'proposeMatchSlot',matchId:mid,slotId:sid,week:state.week,...ctFamilyBookingIdentity(mid)});
    $('#reserveModal').classList.remove('show');alert('✅ Propuesta enviada. Tu rival recibirá un aviso. La pista todavía NO está reservada.');
    ctProposalCache.delete(mid);renderAll();ctLoadSmartProposal(mid,true);
  }catch(e){alert(e.message)}finally{button.disabled=false}
@@ -6975,7 +7009,7 @@ function proposalChoiceDialog(p,info,canRespond){
 }
 async function viewMatchProposal(mid){
  try{
-  const {proposal:p}=await apiRequest({action:'getMatchProposal',matchId:mid});
+  const {proposal:p}=await apiRequest({action:'getMatchProposal',matchId:mid,...ctFamilyBookingIdentity(mid)});
   if(!p){
     if(confirm('No hay propuestas todavía. ¿Quieres proponer una fecha?')){routeContextFromMatch(mid);renderAll();openReserve(mid)}
     return;
@@ -6991,12 +7025,12 @@ async function viewMatchProposal(mid){
     return;
   }
   if(choice==='accept'){
-   const result=await apiRequest({action:'respondMatchProposal',matchId:mid,response:'accept'});
+   const result=await apiRequest({action:'respondMatchProposal',matchId:mid,response:'accept',...ctFamilyBookingIdentity(mid)});
    if(result.reservation){data.bookings[mid]=result.reservation;localStorage.setItem(STORAGE_KEY,JSON.stringify(data));}
    alert('✅ Propuesta aceptada. Pista reservada.');
    ctProposalCache.delete(mid);await refreshOnline({silent:true,force:true});
   }else if(choice==='reject'){
-   await apiRequest({action:'respondMatchProposal',matchId:mid,response:'reject'});
+   await apiRequest({action:'respondMatchProposal',matchId:mid,response:'reject',...ctFamilyBookingIdentity(mid)});
    alert('Propuesta rechazada. Tu rival recibirá el aviso.');
    ctProposalCache.delete(mid);await refreshOnline({silent:true,force:true});
   }
@@ -7013,7 +7047,7 @@ async function book(mid,sid){
  reservationPending=true;btn.disabled=true;btn.textContent='⏳ Reservando…';
  try{
    const reservation={week:state.week,slotId:sid,a:m.a,b:m.b,day:s.day,date:s.date,time:s.time,court:s.court,category:state.category,gender:state.gender};
-   const j=await apiRequest({action:'reserve',matchId:mid,slotId:sid,week:state.week,reservation});
+   const j=await apiRequest({action:'reserve',matchId:mid,slotId:sid,week:state.week,reservation,...ctFamilyBookingIdentity(mid)});
    data.bookings[mid]={...reservation,...j.reservation};
    localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
    $('#reserveModal').classList.remove('show');
