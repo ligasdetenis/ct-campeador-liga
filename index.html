@@ -6812,8 +6812,8 @@ function ctReadTbForSet(index,set){
   if(!aa&&!bb)return set; // Legacy scores: tiebreak detail is optional
   if(!aa||!bb)throw new Error('Completa los dos puntos del tie-break del set '+index+'.');
   const a=Number(aa),b=Number(bb);
-  if(!Number.isInteger(a)||!Number.isInteger(b)||a<0||b<0||a>99||b>99||Math.max(a,b)<7||Math.abs(a-b)!==2||(set.a>set.b)!==(a>b))
-    throw new Error('Tie-break del set '+index+' no válido: mínimo 7 puntos, diferencia de 2 y mismo ganador que el set.');
+  if(!Number.isInteger(a)||!Number.isInteger(b)||a<0||b<0||a>99||b>99||!(Math.max(a,b)===7?Math.min(a,b)<=5:Math.max(a,b)>7&&Math.max(a,b)-Math.min(a,b)===2)||(set.a>set.b)!==(a>b))
+    throw new Error('Tie-break del set '+index+' no válido: ganador con 7 y rival de 0 a 5, o 8-6, 9-7, etc.; debe coincidir el ganador del set.');
   return {...set,tb:{a,b}};
 }
 function ctUpdateTbInputs(){
