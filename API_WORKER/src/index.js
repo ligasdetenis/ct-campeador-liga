@@ -2162,8 +2162,8 @@ function validateSetTieBreakDetails(sets) {
     if (i >= 2 || !((set.a === 7 && set.b === 6) || (set.a === 6 && set.b === 7))) {
       return { ok: false, error: "Solo puede indicarse tie-break en un set 7-6 o 6-7 (sets 1 y 2)." };
     }
-    if (!tb || !Number.isInteger(tb.a) || !Number.isInteger(tb.b) || tb.a < 0 || tb.b < 0 || tb.a > 99 || tb.b > 99 || Math.max(tb.a, tb.b) < 7 || Math.abs(tb.a - tb.b) !== 2 || (set.a > set.b) !== (tb.a > tb.b)) {
-      return { ok: false, error: "Tie-break incorrecto en el set " + (i + 1) + ": al menos 7 puntos, dos de diferencia y el mismo ganador del set." };
+    if (!tb || !Number.isInteger(tb.a) || !Number.isInteger(tb.b) || tb.a < 0 || tb.b < 0 || tb.a > 99 || tb.b > 99 || !(Math.max(tb.a, tb.b) === 7 ? Math.min(tb.a, tb.b) <= 5 : Math.max(tb.a, tb.b) > 7 && Math.max(tb.a, tb.b) - Math.min(tb.a, tb.b) === 2) || (set.a > set.b) !== (tb.a > tb.b)) {
+      return { ok: false, error: "Tie-break incorrecto en el set " + (i + 1) + ": 7-0 a 7-5, 8-6, 9-7, etc., con el mismo ganador del set." };
     }
   }
   return { ok: true };
