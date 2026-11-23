@@ -4422,6 +4422,82 @@ body.modern-admin #journeyNavigator .journeyJump{scroll-snap-align:none!importan
 @media(max-width:680px){.ctScoreSets{grid-template-columns:1fr;gap:12px}.ctScoreSets .ctSetBlock{border-bottom:1px solid rgba(128,145,162,.25);padding-bottom:12px}.ctScoreSets .scorePair{max-width:280px}.ctScoreSets .ctTbRow{max-width:100%}}
 .resultLine .ct-tb-score sup{font-size:.68em;vertical-align:super;font-weight:900;margin:0 1px}
 </style>
+<style id="ct-tiebreak-scroll-v191">
+/* V1.9.1: Modal de resultados accesible y tie-break debajo de cada set. */
+#resultModal .sheet{
+  display:block!important;
+  overflow-x:hidden!important;
+  overflow-y:auto!important;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+  max-height:min(94dvh,940px)!important;
+  height:auto!important;
+  scrollbar-gutter:stable;
+}
+#resultModal .sheetHead{
+  position:sticky!important;
+  top:0!important;
+  z-index:10!important;
+}
+#resultModal .sheetBody{
+  display:block!important;
+  overflow:visible!important;
+  height:auto!important;
+  max-height:none!important;
+  min-height:0!important;
+  padding:14px 16px 18px!important;
+  touch-action:auto!important;
+}
+#resultModal .resultActions{
+  position:static!important;
+  bottom:auto!important;
+  margin:12px 0 0!important;
+  padding:12px 0 6px!important;
+  z-index:auto!important;
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+}
+#resultModal .ctScoreSets{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr)!important;
+  gap:13px!important;
+}
+#resultModal .ctScoreSets .ctSetBlock{
+  width:100%!important;
+  min-width:0!important;
+  padding:0 0 12px!important;
+  border-bottom:1px solid #d9dfe6;
+}
+#resultModal .ctScoreSets .scorePair{
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:10px!important;
+  max-width:100%!important;
+}
+#resultModal .ctScoreSets .ctTbRow{
+  display:block;
+  margin:10px 0 0!important;
+  padding:12px!important;
+  max-width:none!important;
+  width:100%!important;
+}
+#resultModal .ctScoreSets .ctTbRow.hidden{display:none!important}
+#resultModal .ctScoreSets .ctTbPair{
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+}
+#resultModal .ctScoreSets .ctTbPair label{font-size:12px!important}
+#resultModal .ctScoreSets .ctTbPair input{min-height:46px!important;font-size:17px!important}
+@media(max-width:640px){
+  #resultModal{top:0!important;bottom:0!important;height:100dvh!important;max-height:100dvh!important;align-items:stretch!important}
+  #resultModal .sheet{height:100dvh!important;max-height:100dvh!important;min-height:0!important;border-radius:0!important}
+  #resultModal .sheetHead{padding:12px 15px!important}
+  #resultModal .sheetBody{padding:12px 15px calc(28px + env(safe-area-inset-bottom))!important}
+  #resultModal .resultActions{margin:14px 0 0!important;padding:12px 0 calc(12px + env(safe-area-inset-bottom))!important}
+  #resultModal .ctScoreSets .scorePair input{min-height:52px!important}
+}
+</style>
 </head>
 <body>
 
