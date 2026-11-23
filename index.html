@@ -4499,7 +4499,7 @@ body.modern-admin #journeyNavigator .journeyJump{scroll-snap-align:none!importan
 }
 </style>
 <style id="ct-professional-sup-v193">
-/* CT Campeador V1.9.4 — marcador profesional con puntos del tie-break en alto.
+/* CT Campeador V1.9.5 — marcador profesional con superíndice integrado dentro de la pastilla.
    Solo apariencia: no altera el guardado, las reservas, el Worker ni la lógica. */
 .mapp-result-line > .mapp-result-score-cell{
   position:relative!important; display:flex!important; align-items:center!important;
@@ -4511,21 +4511,21 @@ body.modern-admin #journeyNavigator .journeyJump{scroll-snap-align:none!importan
   display:block; line-height:1; font-size:inherit; font-weight:950;
 }
 .mapp-result-line > .mapp-result-score-cell.has-tb .ct-score-game{
-  transform:translateX(-3px);
+  transform:none!important;
 }
 .mapp-result-line > .mapp-result-score-cell sup.ct-score-sup{
-  position:absolute!important; top:-4px!important; right:-2px!important;
+  position:absolute!important; top:4px!important; right:5px!important;
   margin:0!important; padding:0!important;
-  font-size:9px!important; line-height:1!important; font-weight:900!important;
+  font-size:8px!important; line-height:1!important; font-weight:900!important;
   vertical-align:baseline!important; transform:none!important;
-  color:#4b5563!important;
+  color:#6b7280!important;
 }
-/* El número mayor es el marcador, el pequeño es una anotación discreta. */
+/* El número mayor se mantiene centrado; el pequeño queda integrado en la esquina superior derecha. */
 @media (min-width:600px){
- .mapp-result-line > .mapp-result-score-cell sup.ct-score-sup{font-size:10px!important;right:-2px!important}
+ .mapp-result-line > .mapp-result-score-cell sup.ct-score-sup{font-size:9px!important;top:4px!important;right:5px!important}
 }
 @media (max-width:420px){
- .mapp-result-line > .mapp-result-score-cell sup.ct-score-sup{font-size:9px!important;top:-3px!important;right:-2px!important}
+ .mapp-result-line > .mapp-result-score-cell sup.ct-score-sup{font-size:8px!important;top:4px!important;right:4px!important}
 }
 
 /* Ajuste de la tarjeta real: no existe contenedor .mapp-result-score-cells en esta vista. */
