@@ -4499,22 +4499,22 @@ body.modern-admin #journeyNavigator .journeyJump{scroll-snap-align:none!importan
 }
 </style>
 <style id="ct-professional-sup-v193">
-/* CT Campeador V1.9.3 — marcador profesional con puntos del tie-break en alto.
+/* CT Campeador V1.9.4 — marcador profesional con puntos del tie-break en alto.
    Solo apariencia: no altera el guardado, las reservas, el Worker ni la lógica. */
-.mapp-result-score-cells .mapp-result-score-cell{
+.mapp-result-line > .mapp-result-score-cell{
   position:relative!important; display:flex!important; align-items:center!important;
   justify-content:center!important; overflow:visible!important;
   font-variant-numeric:tabular-nums; line-height:1!important;
   isolation:isolate;
 }
-.mapp-result-score-cells .mapp-result-score-cell .ct-score-game{
+.mapp-result-line > .mapp-result-score-cell .ct-score-game{
   display:block; line-height:1; font-size:inherit; font-weight:950;
 }
-.mapp-result-score-cells .mapp-result-score-cell.has-tb .ct-score-game{
+.mapp-result-line > .mapp-result-score-cell.has-tb .ct-score-game{
   transform:translateX(-3px);
 }
-.mapp-result-score-cells .mapp-result-score-cell sup.ct-score-sup{
-  position:absolute!important; top:2px!important; right:1px!important;
+.mapp-result-line > .mapp-result-score-cell sup.ct-score-sup{
+  position:absolute!important; top:-4px!important; right:-2px!important;
   margin:0!important; padding:0!important;
   font-size:9px!important; line-height:1!important; font-weight:900!important;
   vertical-align:baseline!important; transform:none!important;
@@ -4522,11 +4522,16 @@ body.modern-admin #journeyNavigator .journeyJump{scroll-snap-align:none!importan
 }
 /* El número mayor es el marcador, el pequeño es una anotación discreta. */
 @media (min-width:600px){
- .mapp-result-score-cells .mapp-result-score-cell sup.ct-score-sup{font-size:10px!important;right:2px!important}
+ .mapp-result-line > .mapp-result-score-cell sup.ct-score-sup{font-size:10px!important;right:-2px!important}
 }
 @media (max-width:420px){
- .mapp-result-score-cells .mapp-result-score-cell sup.ct-score-sup{font-size:8px!important;top:2px!important;right:1px!important}
+ .mapp-result-line > .mapp-result-score-cell sup.ct-score-sup{font-size:9px!important;top:-3px!important;right:-2px!important}
 }
+
+/* Ajuste de la tarjeta real: no existe contenedor .mapp-result-score-cells en esta vista. */
+.mapp-result-line{overflow:visible!important;}
+.mapp-result-line > .mapp-result-score-cell.has-tb{overflow:visible!important;}
+.mapp-result-line > .mapp-result-score-cell.has-tb > sup.ct-score-sup{display:block!important;z-index:2!important;pointer-events:none;}
 </style>
 </head>
 <body>
