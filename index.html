@@ -4498,6 +4498,36 @@ body.modern-admin #journeyNavigator .journeyJump{scroll-snap-align:none!importan
   #resultModal .ctScoreSets .scorePair input{min-height:52px!important}
 }
 </style>
+<style id="ct-professional-sup-v193">
+/* CT Campeador V1.9.3 — marcador profesional con puntos del tie-break en alto.
+   Solo apariencia: no altera el guardado, las reservas, el Worker ni la lógica. */
+.mapp-result-score-cells .mapp-result-score-cell{
+  position:relative!important; display:flex!important; align-items:center!important;
+  justify-content:center!important; overflow:visible!important;
+  font-variant-numeric:tabular-nums; line-height:1!important;
+  isolation:isolate;
+}
+.mapp-result-score-cells .mapp-result-score-cell .ct-score-game{
+  display:block; line-height:1; font-size:inherit; font-weight:950;
+}
+.mapp-result-score-cells .mapp-result-score-cell.has-tb .ct-score-game{
+  transform:translateX(-3px);
+}
+.mapp-result-score-cells .mapp-result-score-cell sup.ct-score-sup{
+  position:absolute!important; top:2px!important; right:1px!important;
+  margin:0!important; padding:0!important;
+  font-size:9px!important; line-height:1!important; font-weight:900!important;
+  vertical-align:baseline!important; transform:none!important;
+  color:#4b5563!important;
+}
+/* El número mayor es el marcador, el pequeño es una anotación discreta. */
+@media (min-width:600px){
+ .mapp-result-score-cells .mapp-result-score-cell sup.ct-score-sup{font-size:10px!important;right:2px!important}
+}
+@media (max-width:420px){
+ .mapp-result-score-cells .mapp-result-score-cell sup.ct-score-sup{font-size:8px!important;top:2px!important;right:1px!important}
+}
+</style>
 </head>
 <body>
 
@@ -9525,7 +9555,7 @@ function resultScoreCells(item){
   return {a:['','',''],b:['','','']};
 }
 function renderScoreCells(values){
-  return values.map(v=>{const isObj=v&&typeof v==='object';const val=isObj?v.value:v;const tb=isObj?v.tb:null;return `<span class="mapp-result-score-cell ${val===''?'empty':''}">${val===''?'—':mappEsc(val)}${tb!==null&&tb!==undefined?`<sup>${mappEsc(tb)}</sup>`:''}</span>`}).join('');
+  return values.map(v=>{const isObj=v&&typeof v==='object';const val=isObj?v.value:v;const tb=isObj?v.tb:null;return `<span class="mapp-result-score-cell ${val===''?'empty':''} ${tb!==null&&tb!==undefined?'has-tb':''}" aria-label="${mappEsc(val)}${tb!==null&&tb!==undefined?' puntos del desempate '+mappEsc(tb):''}"><span class="ct-score-game">${val===''?'—':mappEsc(val)}</span>${tb!==null&&tb!==undefined?`<sup class="ct-score-sup">${mappEsc(tb)}</sup>`:''}</span>`}).join('');
 }
 
 function resultSpecialLabel(r){
