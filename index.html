@@ -4593,6 +4593,91 @@ body.modern-admin #journeyNavigator .journeyJump{scroll-snap-align:none!importan
 #resultModal .resultActions .btn{border-radius:13px!important}
 @media(max-width:420px){#resultModal .sheetBody{padding-left:12px!important;padding-right:12px!important}#resultModal .ctScoreSets .ctSetBlock{padding:12px!important}#resultModal .ctScorePlayer{font-size:10px!important;min-height:38px!important}#resultModal .ctScoreSets .scorePair input{min-height:52px!important;height:52px!important;font-size:24px!important}}
 </style>
+
+<style id="ct-result-score-premium-v199">
+/* V1.9.9: formulario auténtico, sin elementos decorativos innecesarios.
+   Un único contenedor desplazable; NUNCA un pie superpuesto a los inputs. */
+#resultModal.show{display:flex!important;align-items:center!important;justify-content:center!important;overscroll-behavior:contain!important}
+#resultModal .sheet{
+  display:block!important;box-sizing:border-box!important;
+  width:min(760px,100%)!important;
+  max-height:calc(100dvh - 24px)!important;height:auto!important;
+  overflow-x:hidden!important;overflow-y:auto!important;
+  overscroll-behavior:contain!important;-webkit-overflow-scrolling:touch!important;
+  scrollbar-gutter:auto!important;
+  border-radius:22px!important;background:#f8f9fb!important;
+  scroll-padding-top:100px!important;scroll-padding-bottom:72px!important;
+}
+#resultModal .sheetHead{position:sticky!important;top:0!important;z-index:15!important;padding:14px 18px 12px!important;background:#fff!important}
+#resultModal .sheetHead h3{max-width:calc(100% - 6px);font-size:clamp(16px,3.8vw,22px)!important;line-height:1.15!important}
+#resultModal .sheetBody{
+ display:block!important;flex:none!important;height:auto!important;max-height:none!important;
+ min-height:0!important;overflow:visible!important;
+ padding:15px 18px calc(38px + env(safe-area-inset-bottom))!important;
+ background:#f8f9fb!important;touch-action:pan-y!important;
+}
+#resultModal #resultModalCat{font-size:12px!important;margin-bottom:12px!important;color:#666b75!important}
+#resultModal .reserveField{margin-bottom:13px!important}
+#resultModal #resultType{min-height:49px!important;border-radius:12px!important;font-weight:800!important}
+#resultModal #scoreFields{display:block!important}
+#resultModal .ctScoreSets{display:grid!important;grid-template-columns:1fr!important;gap:14px!important}
+#resultModal .ctScoreSets .ctSetBlock{
+ position:relative!important;min-width:0!important;background:#fff!important;
+ border:1px solid #e1e4eb!important;border-radius:17px!important;
+ padding:38px 15px 14px!important;box-shadow:0 3px 15px rgba(34,39,54,.035)!important;
+}
+#resultModal .ctScoreSets .ctSetTitle{
+ position:absolute!important;left:0!important;top:0!important;
+ padding:7px 17px 8px!important;margin:0!important;
+ border-radius:15px 0 15px 0!important;background:#91051c!important;color:white!important;
+ font-size:12px!important;letter-spacing:.045em!important;font-weight:950!important;
+}
+#resultModal .ctResultPlayersLabels{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important;margin-bottom:7px!important}
+#resultModal .ctScorePlayer{font-size:clamp(11px,2.7vw,13px)!important;min-height:34px!important;line-height:1.18!important;align-items:center!important;overflow-wrap:anywhere!important}
+#resultModal .ctScoreSets .scorePair{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important;max-width:100%!important}
+#resultModal .ctScoreSets .scorePair input{
+ box-sizing:border-box!important;width:100%!important;min-width:0!important;
+ height:60px!important;min-height:60px!important;padding:8px!important;
+ border:1.5px solid #cbd1da!important;border-radius:13px!important;
+ background:#fff!important;color:#141824!important;font-size:28px!important;font-weight:950!important;
+ text-align:center!important;box-shadow:0 2px 6px #00000008!important;
+}
+#resultModal .ctScoreSets .scorePair input:focus,#resultModal .ctScoreSets .ctTbPair input:focus{outline:2px solid #a30b2b!important;outline-offset:1px!important;background:#fff!important}
+#resultModal .ctScoreSets .ctTbRow{
+ border:0!important;border-radius:11px!important;border-left:0!important;
+ margin:12px 0 0!important;padding:10px 12px!important;
+ background:#fcebef!important;color:#70213a!important;
+}
+#resultModal .ctScoreSets .ctTbRow.hidden{display:none!important}
+#resultModal .ctScoreSets .ctTbLabel{margin:0 0 8px!important;color:#781027!important;font-size:12px!important;font-weight:900!important}
+#resultModal .ctScoreSets .ctTbLabel::before{content:'TB';display:inline-block!important;background:#920720!important;color:#fff!important;border-radius:5px!important;padding:3px 5px!important;font-size:10px!important;margin-right:8px!important}
+#resultModal .ctScoreSets .ctTbLabel small{display:none!important}
+#resultModal .ctScoreSets .ctTbPair{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important}
+#resultModal .ctScoreSets .ctTbPair label{min-width:0!important;font-size:11px!important;color:#5a2635!important;line-height:1.25!important;overflow-wrap:anywhere!important;font-weight:750!important}
+#resultModal .ctScoreSets .ctTbPair input{display:block!important;width:100%!important;min-width:0!important;height:45px!important;min-height:45px!important;padding:6px!important;border:1px solid #cbd1da!important;border-radius:10px!important;background:#fff!important;color:#161922!important;font-size:20px!important;font-weight:900!important;text-align:center!important}
+#resultModal .ctScoreSets .ctSetBlock:last-child{background:#f0f2f5!important;box-shadow:none!important}
+#resultModal .ctScoreSets .ctSetBlock:last-child .ctSetTitle{background:#626b7a!important}
+#resultModal #resultValidation{margin:13px 0 8px!important;min-height:0!important;padding:10px 13px!important;border-radius:11px!important}
+#resultModal #resultValidation:empty{display:none!important}
+#resultModal .ctResultRules{font-size:11px!important;line-height:1.48!important;background:#fff8df!important;color:#66572e!important;border-color:#efdb98!important;padding:10px 12px!important;margin:0 0 12px!important}
+#resultModal .ctResultPolicy{margin:12px 0!important;padding:11px 13px!important;border:1px solid #e2e6ec!important;background:#fff!important;border-radius:12px!important;color:#505a68!important;font-size:12px!important}
+#resultModal .ctResultPolicy summary{cursor:pointer!important;font-weight:800!important}
+#resultModal .ctResultPolicy p{margin:8px 0 0!important;line-height:1.5!important}
+#resultModal .resultActions{position:static!important;display:grid!important;gap:9px!important;z-index:auto!important;margin:14px 0 0!important;padding:8px 0 0!important;background:none!important;border:0!important;box-shadow:none!important}
+#resultModal .resultActions .btn{min-height:54px!important;width:100%!important;margin:0!important;font-size:15px!important;border-radius:13px!important;box-shadow:none!important}
+#resultModal #saveResultBtn{background:#a20426!important;color:#fff!important;border:0!important}
+#resultModal #saveResultBtn:disabled{opacity:.55!important}
+@media(max-width:640px){
+ #resultModal{top:0!important;bottom:0!important;height:100dvh!important;max-height:100dvh!important;align-items:stretch!important;padding:0!important}
+ #resultModal .sheet{height:100dvh!important;max-height:100dvh!important;border-radius:0!important;margin:0!important;overflow-y:auto!important}
+ #resultModal .sheetHead{padding:12px 14px!important}
+ #resultModal .sheetBody{padding:13px 13px calc(48px + env(safe-area-inset-bottom))!important}
+ #resultModal .ctScoreSets .ctSetBlock{padding:37px 11px 12px!important}
+ #resultModal .ctScoreSets .scorePair input{height:56px!important;min-height:56px!important}
+ #resultModal .ctScoreSets .ctTbRow{padding:9px!important}
+}
+@media(max-width:360px){#resultModal .ctScorePlayer{font-size:10px!important}#resultModal .ctScoreSets .ctTbPair label{font-size:10px!important}}
+</style>
 </head>
 <body>
 
@@ -5279,8 +5364,6 @@ Pablo Ruiz"></textarea>
 <div class="tiny" id="resultModalCat"></div>
 <div class="reserveField"><label>Tipo de resultado</label><select id="resultType"><option value="normal">Partido completado</option><option value="retirement">Retirada</option><option value="wo">WO / No presentado</option><option value="not_played">Partido no disputado</option></select></div>
 <div id="scoreFields">
-<div class="resultHint" style="margin-bottom:7px"><b>Sets 1 y 2:</b> solo 6-0…6-4, 7-5 o 7-6. <b>Set 3:</b> super tie-break a 10 con diferencia de 2; solo se usa si cada jugador gana un set.</div>
-<div class="resultHint" id="resultValidation" style="margin-bottom:9px"></div>
 <div class="ctScoreSets">
   <section class="ctSetBlock"><div class="tiny ctSetTitle">SET 1</div><div class="ctResultPlayersLabels"><label for="rS1A" class="ctScorePlayer ctResultPlayerA">Jugador 1</label><label for="rS1B" class="ctScorePlayer ctResultPlayerB">Jugador 2</label></div><div class="scorePair"><input id="rS1A" aria-label="Juegos del jugador 1, set 1" inputmode="numeric" max="7" min="0" placeholder="—" type="number"/><input id="rS1B" aria-label="Juegos del jugador 2, set 1" inputmode="numeric" max="7" min="0" placeholder="—" type="number"/></div>
     <div class="ctTbRow hidden" id="ctTbRow1"><div class="ctTbLabel">Tie-break del set 1 <small>Introduce los puntos del desempate (opcional para resultados antiguos)</small></div><div class="ctTbPair"><label class="ctTbPlayerA">Jugador A<input id="ctTb1A" type="number" min="0" max="99" inputmode="numeric" placeholder="Puntos A"></label><label class="ctTbPlayerB">Jugador B<input id="ctTb1B" type="number" min="0" max="99" inputmode="numeric" placeholder="Puntos B"></label></div></div>
@@ -5290,10 +5373,12 @@ Pablo Ruiz"></textarea>
   </section>
   <section class="ctSetBlock"><div class="tiny ctSetTitle">SET 3 / SUPER TIE-BREAK</div><div class="ctResultPlayersLabels"><label for="rS3A" class="ctScorePlayer ctResultPlayerA">Jugador 1</label><label for="rS3B" class="ctScorePlayer ctResultPlayerB">Jugador 2</label></div><div class="scorePair"><input id="rS3A" aria-label="Puntos del jugador 1, set 3" inputmode="numeric" max="99" min="0" placeholder="—" type="number"/><input id="rS3B" aria-label="Puntos del jugador 2, set 3" inputmode="numeric" max="99" min="0" placeholder="—" type="number"/></div></section>
 </div>
+<div class="resultHint" id="resultValidation" role="status" aria-live="polite"></div>
+<div class="resultHint ctResultRules"><b>Sets 1 y 2:</b> 6–0 a 6–4, 7–5 o 7–6. <b>Set 3:</b> super tie-break a 10 si hay empate a sets.</div>
 </div>
 <div class="reserveField hidden" id="winnerField"><label>Ganador</label><select id="resultWinner"></select></div>
 <div class="reserveCurrent hidden" id="resultExisting"></div>
-<div class="resultHint resultBottomNote">Los jugadores pueden enviar el resultado. El rival puede <b>confirmarlo</b> o <b>editarlo</b>. Si lo edita, la nueva versión queda pendiente de confirmación del otro jugador. Un ADMIN puede introducir o corregir un resultado y queda confirmado directamente.</div><div class="resultActions">
+<details class="ctResultPolicy"><summary>¿Cómo se confirma el resultado?</summary><p>El rival puede confirmarlo o corregirlo. Un administrador puede introducir o corregir un resultado y dejarlo confirmado directamente.</p></details><div class="resultActions">
 <button class="btn gold" id="saveResultBtn">📤 Enviar resultado</button>
 <button class="btn green hidden" id="confirmResultBtn">✅ Confirmar resultado del rival</button>
 <button class="btn dangerBtn hidden" id="deleteResultBtn">🗑️ Borrar resultado (ADMIN)</button>
