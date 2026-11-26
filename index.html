@@ -4656,6 +4656,43 @@ body.modern-admin #journeyNavigator .journeyJump{scroll-snap-align:none!importan
 }
 @media(max-width:355px){#resultModal .ctScorePlayer{font-size:10px!important}#resultModal .ctScoreSets .ctTbLabel{font-size:10px!important}}
 </style>
+
+<style id="ct-super-tiebreak-compact-v1911">
+/* V1.9.11: compactación del 3.er set; conserva inputs y lógica del marcador. */
+#resultModal .ctScoreSets #ctSuperSetBlock{
+ display:block!important;position:relative!important;min-height:0!important;
+ margin:0!important;padding:0!important;border:0!important;
+ background:transparent!important;box-shadow:none!important;border-radius:12px!important;
+}
+#resultModal .ctScoreSets #ctSuperSetBlock::after{content:none!important;display:none!important}
+#resultModal .ctSuperSetToggleRow{
+ display:flex;align-items:center;justify-content:space-between;gap:12px;
+ background:#f0f0f2;border-radius:11px;padding:10px 12px;min-height:48px;
+}
+#resultModal .ctSuperSetText{
+ color:#3e4148;font-size:13px;font-weight:900;letter-spacing:0;text-transform:none;
+}
+#resultModal .ctSuperSetText span{font-weight:750;color:#5b606b}
+#resultModal .ctSuperSwitch{display:inline-flex!important;position:relative;cursor:pointer;flex:0 0 42px;width:42px;height:26px;align-items:center}
+#resultModal .ctSuperSwitch input{position:absolute;width:100%;height:100%;margin:0;opacity:0;cursor:pointer;z-index:1}
+#resultModal .ctSuperSwitchTrack{width:42px;height:26px;background:#d4d5d9;border-radius:99px;box-shadow:inset 0 1px 3px #0001;transition:background .16s;position:relative}
+#resultModal .ctSuperSwitchTrack:before{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:white;box-shadow:0 1px 4px #0002;transition:transform .16s}
+#resultModal .ctSuperSwitch input:checked + .ctSuperSwitchTrack{background:#a10629}
+#resultModal .ctSuperSwitch input:checked + .ctSuperSwitchTrack:before{transform:translateX(16px)}
+#resultModal .ctSuperSwitch input:disabled{cursor:not-allowed}
+#resultModal .ctSuperSwitch input:disabled + .ctSuperSwitchTrack{opacity:.68}
+#resultModal .ctSuperSwitch input:focus-visible + .ctSuperSwitchTrack{outline:2px solid #a10629;outline-offset:3px}
+#resultModal .ctSuperSetFields{margin-top:9px!important;padding:10px!important;background:#fff!important;border:1px solid #e3e5e9!important;border-radius:12px!important}
+#resultModal .ctSuperSetFields.hidden{display:none!important}
+#resultModal .ctSuperSetFields .ctResultPlayersLabels{margin-bottom:5px!important}
+#resultModal .ctSuperSetFields .scorePair input{height:52px!important;min-height:52px!important;background:#fff!important;font-size:24px!important}
+#resultModal .ctSuperSetNote{margin:8px 0 0!important;padding:9px 11px!important;border:1px solid #f1d58a;border-radius:10px;background:#fff7d9;color:#69551e;font-size:11px;font-weight:600;line-height:1.35}
+#resultModal .ctSuperSetNote.hidden{display:none!important}
+@media (max-width:420px){
+ #resultModal .ctSuperSetToggleRow{min-height:44px;padding:8px 10px}
+ #resultModal .ctSuperSetText{font-size:12px}
+}
+</style>
 </head>
 <body>
 
@@ -5349,7 +5386,20 @@ Pablo Ruiz"></textarea>
   <section class="ctSetBlock"><div class="tiny ctSetTitle">SET 2</div><div class="ctResultPlayersLabels"><label for="rS2A" class="ctScorePlayer ctResultPlayerA">Jugador 1</label><label for="rS2B" class="ctScorePlayer ctResultPlayerB">Jugador 2</label></div><div class="scorePair"><input id="rS2A" aria-label="Juegos del jugador 1, set 2" inputmode="numeric" max="7" min="0" placeholder="—" type="number"/><input id="rS2B" aria-label="Juegos del jugador 2, set 2" inputmode="numeric" max="7" min="0" placeholder="—" type="number"/></div>
     <div class="ctTbRow hidden" id="ctTbRow2"><div class="ctTbLabel">Tie-break del set 2 <small>Introduce los puntos del desempate (opcional para resultados antiguos)</small></div><div class="ctTbPair"><label class="ctTbPlayerA">Jugador A<input id="ctTb2A" aria-label="Puntos del tie-break del set 2, jugador 1" type="number" min="0" max="99" inputmode="numeric" placeholder="Puntos A"></label><label class="ctTbPlayerB">Jugador B<input id="ctTb2B" aria-label="Puntos del tie-break del set 2, jugador 2" type="number" min="0" max="99" inputmode="numeric" placeholder="Puntos B"></label></div></div>
   </section>
-  <section class="ctSetBlock"><div class="tiny ctSetTitle">SET 3 / SUPER TIE-BREAK</div><div class="ctResultPlayersLabels"><label for="rS3A" class="ctScorePlayer ctResultPlayerA">Jugador 1</label><label for="rS3B" class="ctScorePlayer ctResultPlayerB">Jugador 2</label></div><div class="scorePair"><input id="rS3A" aria-label="Puntos del jugador 1, set 3" inputmode="numeric" max="99" min="0" placeholder="—" type="number"/><input id="rS3B" aria-label="Puntos del jugador 2, set 3" inputmode="numeric" max="99" min="0" placeholder="—" type="number"/></div></section>
+  <section class="ctSetBlock ctSuperSetBlock" id="ctSuperSetBlock">
+    <div class="ctSuperSetToggleRow">
+      <span class="ctSuperSetText" id="ctSuperSetToggleLabel">SET 3 <span>(Super tie-break)</span></span>
+      <label class="ctSuperSwitch" title="Se activa cuando cada jugador gana un set">
+        <input id="ctSuperSetSwitch" type="checkbox" aria-labelledby="ctSuperSetToggleLabel" aria-controls="ctSuperSetFields" aria-expanded="false" />
+        <span class="ctSuperSwitchTrack" aria-hidden="true"></span>
+      </label>
+    </div>
+    <div id="ctSuperSetFields" class="ctSuperSetFields hidden">
+      <div class="ctResultPlayersLabels"><label for="rS3A" class="ctScorePlayer ctResultPlayerA">Jugador 1</label><label for="rS3B" class="ctScorePlayer ctResultPlayerB">Jugador 2</label></div>
+      <div class="scorePair"><input id="rS3A" aria-label="Puntos del jugador 1, set 3" inputmode="numeric" max="99" min="0" placeholder="—" type="number"/><input id="rS3B" aria-label="Puntos del jugador 2, set 3" inputmode="numeric" max="99" min="0" placeholder="—" type="number"/></div>
+    </div>
+    <div class="ctSuperSetNote hidden" id="ctSuperSetNote" role="note">ⓘ &nbsp;El super tie-break se juega a un mínimo de 10 puntos, con una diferencia de 2.</div>
+  </section>
 </div>
 <div class="resultHint" id="resultValidation" role="status" aria-live="polite"></div>
 <div class="resultHint ctResultRules"><b>Sets 1 y 2:</b> 6–0 a 6–4, 7–5 o 7–6. <b>Set 3:</b> super tie-break a 10 si hay empate a sets.</div>
@@ -7001,6 +7051,30 @@ function standardSetValid(a,b){
 function superTiebreakValid(a,b){
  return Number.isInteger(a)&&Number.isInteger(b)&&a>=0&&b>=0&&a!==b&&Math.max(a,b)>=10&&Math.abs(a-b)>=2;
 }
+/* Super tie-break: interruptor visual vinculado a la regla oficial (un set por jugador). */
+function ctUpdateSuperSetToggle(s1,s2){
+ const control=document.getElementById('ctSuperSetSwitch');
+ const fields=document.getElementById('ctSuperSetFields');
+ const note=document.getElementById('ctSuperSetNote');
+ const block=document.getElementById('ctSuperSetBlock');
+ if(!control||!fields||!note)return;
+ const type=document.getElementById('resultType')?.value;
+ const complete=!!(s1&&s2&&standardSetValid(s1.a,s1.b)&&standardSetValid(s2.a,s2.b));
+ const split=complete && ((s1.a>s1.b)!==(s2.a>s2.b));
+ const straight=complete&&!split;
+ const manual=control.dataset.manual==='true';
+ const active=type==='normal' && (split||(!straight&&manual));
+ control.checked=active;
+ control.disabled=type!=='normal'||straight;
+ control.setAttribute('aria-expanded',String(active));
+ fields.classList.toggle('hidden',!active);
+ note.classList.toggle('hidden',!active);
+ block?.classList.toggle('ctSuperOn',active);
+}
+function ctResetSuperSetToggle(){
+ const control=document.getElementById('ctSuperSetSwitch');
+ if(control)control.dataset.manual='false';
+}
 function validateNormalResultLive(){
  const type=$('#resultType')?.value;
  const hint=$('#resultValidation');
@@ -7008,6 +7082,7 @@ function validateNormalResultLive(){
  ctUpdateTbInputs();
 
  if(type!=='normal'){
+   ctUpdateSuperSetToggle(null,null);
    if(hint)hint.textContent='';
    if(saveBtn)saveBtn.disabled=false;
    return {ok:true,sets:[]};
@@ -7018,6 +7093,7 @@ function validateNormalResultLive(){
  try{s2=readSet('#rS2A','#rS2B')}catch(e){if(hint)hint.textContent=e.message;if(saveBtn)saveBtn.disabled=true;return {ok:false,error:e.message}}
 
  if(!s1||!s2){
+   ctUpdateSuperSetToggle(s1,s2);
    const msg='Completa los dos primeros sets.';
    if(hint)hint.textContent=msg;if(saveBtn)saveBtn.disabled=true;
    return {ok:false,error:msg};
@@ -7035,6 +7111,7 @@ function validateNormalResultLive(){
 
  try{s1=ctReadTbForSet(1,s1);s2=ctReadTbForSet(2,s2)}catch(e){if(hint)hint.textContent=e.message;if(saveBtn)saveBtn.disabled=true;return {ok:false,error:e.message}}
  const w1=s1.a>s1.b?'a':'b',w2=s2.a>s2.b?'a':'b';
+ ctUpdateSuperSetToggle(s1,s2);
  if(w1===w2){
    $('#rS3A').value='';$('#rS3B').value='';
    if(hint)hint.textContent='✅ Partido terminado en dos sets.';
@@ -7080,7 +7157,7 @@ function showResultModalUI(){
 function openResultModal(mid){state.resultMatchId=mid;const m=findFixtureById(mid);if(!m)return;if(!isAdmin()&&!canPlayerReserve(m)){alert('Solo los jugadores del partido o un administrador pueden gestionar el resultado.');return}const r=resultFor(mid);$('#resultModalMatch').textContent=`${m.a} vs ${m.b}`;
   document.querySelectorAll('#resultModal .ctResultPlayerA').forEach(el=>{el.textContent=m.a;el.title=m.a});
   document.querySelectorAll('#resultModal .ctResultPlayerB').forEach(el=>{el.textContent=m.b;el.title=m.b});
-  [1,2,3].forEach(i=>{const a=$('#rS'+i+'A'),b=$('#rS'+i+'B');if(a)a.setAttribute('aria-label',(i===3?'Puntos':'Juegos')+' de '+m.a+', set '+i);if(b)b.setAttribute('aria-label',(i===3?'Puntos':'Juegos')+' de '+m.b+', set '+i)});document.querySelectorAll('#resultModal .ctTbPlayerA').forEach(el=>{el.firstChild.textContent=m.a;});document.querySelectorAll('#resultModal .ctTbPlayerB').forEach(el=>{el.firstChild.textContent=m.b;});const rec=fixtureRecord(mid);$('#resultModalCat').textContent=rec?`${rec.category} · ${rec.gender} · ${weeks.find(w=>w.id===rec.week)?.label||rec.week}`:`${state.category} · ${state.gender}`;$('#resultWinner').innerHTML=`<option value="">Selecciona ganador</option><option value="${m.a.replace(/"/g,'&quot;')}">${m.a}</option><option value="${m.b.replace(/"/g,'&quot;')}">${m.b}</option>`;$('#resultType').value=r?.type||'normal';const sets=r?.sets||[];[['#rS1A','#rS1B'],['#rS2A','#rS2B'],['#rS3A','#rS3B']].forEach((ids,i)=>{$(ids[0]).value=sets[i]?.a??'';$(ids[1]).value=sets[i]?.b??''});[1,2].forEach(i=>{const tb=sets[i-1]?.tb;$('#ctTb'+i+'A').value=tb?.a??'';$('#ctTb'+i+'B').value=tb?.b??''});$('#resultWinner').value=r?.winner||'';$('#resultModalMode').textContent=r?'EDITAR RESULTADO':'SUBIR RESULTADO';$('#resultExisting').classList.toggle('hidden',!r);if(r)$('#resultExisting').innerHTML=`<b>Estado actual:</b> ${resultLabel(r)} · ${r.status==='confirmed'?'Confirmado':(r.revisedFrom?`Modificado por ${mappEsc(r.submittedBy)} · pendiente de ${mappEsc(r.revisedFrom)}`:'Pendiente de confirmar')}`;const canConfirm=!!r&&r.status==='pending'&&!isAdmin()&&r.submittedBy!==state.player&&canPlayerReserve(m);$('#confirmResultBtn').classList.toggle('hidden',!canConfirm);$('#saveResultBtn').classList.toggle('hidden',(!isAdmin()&&r?.status==='confirmed'));$('#saveResultBtn').textContent=isAdmin()?(r?'💾 Guardar corrección':'✅ Guardar resultado'):(canConfirm?'✏️ Editar y pedir nueva confirmación':(r?'📤 Actualizar resultado':'📤 Enviar resultado'));$('#deleteResultBtn').classList.toggle('hidden',!(isAdmin()&&r));syncResultType();showResultModalUI();validateNormalResultLive()}
+  [1,2,3].forEach(i=>{const a=$('#rS'+i+'A'),b=$('#rS'+i+'B');if(a)a.setAttribute('aria-label',(i===3?'Puntos':'Juegos')+' de '+m.a+', set '+i);if(b)b.setAttribute('aria-label',(i===3?'Puntos':'Juegos')+' de '+m.b+', set '+i)});document.querySelectorAll('#resultModal .ctTbPlayerA').forEach(el=>{el.firstChild.textContent=m.a;});document.querySelectorAll('#resultModal .ctTbPlayerB').forEach(el=>{el.firstChild.textContent=m.b;});const rec=fixtureRecord(mid);$('#resultModalCat').textContent=rec?`${rec.category} · ${rec.gender} · ${weeks.find(w=>w.id===rec.week)?.label||rec.week}`:`${state.category} · ${state.gender}`;$('#resultWinner').innerHTML=`<option value="">Selecciona ganador</option><option value="${m.a.replace(/"/g,'&quot;')}">${m.a}</option><option value="${m.b.replace(/"/g,'&quot;')}">${m.b}</option>`;$('#resultType').value=r?.type||'normal';const sets=r?.sets||[];[['#rS1A','#rS1B'],['#rS2A','#rS2B'],['#rS3A','#rS3B']].forEach((ids,i)=>{$(ids[0]).value=sets[i]?.a??'';$(ids[1]).value=sets[i]?.b??''});[1,2].forEach(i=>{const tb=sets[i-1]?.tb;$('#ctTb'+i+'A').value=tb?.a??'';$('#ctTb'+i+'B').value=tb?.b??''});$('#resultWinner').value=r?.winner||'';$('#resultModalMode').textContent=r?'EDITAR RESULTADO':'SUBIR RESULTADO';$('#resultExisting').classList.toggle('hidden',!r);if(r)$('#resultExisting').innerHTML=`<b>Estado actual:</b> ${resultLabel(r)} · ${r.status==='confirmed'?'Confirmado':(r.revisedFrom?`Modificado por ${mappEsc(r.submittedBy)} · pendiente de ${mappEsc(r.revisedFrom)}`:'Pendiente de confirmar')}`;const canConfirm=!!r&&r.status==='pending'&&!isAdmin()&&r.submittedBy!==state.player&&canPlayerReserve(m);$('#confirmResultBtn').classList.toggle('hidden',!canConfirm);$('#saveResultBtn').classList.toggle('hidden',(!isAdmin()&&r?.status==='confirmed'));$('#saveResultBtn').textContent=isAdmin()?(r?'💾 Guardar corrección':'✅ Guardar resultado'):(canConfirm?'✏️ Editar y pedir nueva confirmación':(r?'📤 Actualizar resultado':'📤 Enviar resultado'));$('#deleteResultBtn').classList.toggle('hidden',!(isAdmin()&&r));ctResetSuperSetToggle();syncResultType();showResultModalUI();validateNormalResultLive()}
 async function saveResult(){const mid=state.resultMatchId,m=findFixtureById(mid);if(!m)return;try{const type=$('#resultType').value;let sets=[];if(type==='normal'){const check=validateNormalResultLive();if(!check.ok)throw new Error(check.error||'Revisa el resultado.');sets=check.sets}else if(type!=='wo'&&type!=='not_played'){for(const [a,b] of [['#rS1A','#rS1B'],['#rS2A','#rS2B'],['#rS3A','#rS3B']]){const set=readSet(a,b);if(set)sets.push(sets.length<2?ctReadTbForSet(sets.length+1,set):set)}}const winner=(type==='wo'||type==='retirement')?$('#resultWinner').value:'';if((type==='wo'||type==='retirement')&&!winner)throw new Error('Selecciona el ganador.');const btn=$('#saveResultBtn'),old=btn.textContent;btn.disabled=true;btn.textContent='⏳ Guardando…';try{const j=await apiRequest({action:'submitResult',matchId:mid,result:{type,sets,winner}});const sentTb=sets.map((set,i)=>({index:i,tb:set.tb})).filter(entry=>entry.tb);for(const entry of sentTb){const stored=j.result?.sets?.[entry.index]?.tb;if(!stored||Number(stored.a)!==entry.tb.a||Number(stored.b)!==entry.tb.b){await refreshOnline({silent:true,force:true}).catch(()=>{});throw new Error('El servidor no ha conservado los puntos del tie-break del set '+(entry.index+1)+'. Comprueba que el Worker actualizado está desplegado. No se mostrará una confirmación falsa.');}}data.results[mid]=j.result;localStorage.setItem(STORAGE_KEY,JSON.stringify(data));closeResultModalUI();renderAll();alert(j.result.status==='confirmed'?'✅ Resultado guardado y confirmado.':(j.result.revisedFrom?'✏️ Resultado modificado. Ahora debe confirmarlo de nuevo tu rival.':'✅ Resultado enviado. Queda pendiente de confirmación del rival.'))}finally{btn.disabled=false;btn.textContent=old}}catch(e){alert(e.message)}}
 async function confirmResult(mid){const m=findFixtureById(mid),r=resultFor(mid);if(!m||!r)return;const ok=confirm(`¿Confirmas este resultado?\n\n${m.a} vs ${m.b}\n${resultLabel(r)}\n\nUna vez confirmado, solo un administrador podrá corregirlo.`);if(!ok)return;try{const j=await apiRequest({action:'confirmResult',matchId:mid});data.results[mid]=j.result;localStorage.setItem(STORAGE_KEY,JSON.stringify(data));renderAll();alert('✅ Resultado confirmado.')}catch(e){alert(e.message);await refreshOnline({silent:true})}}
 async function deleteResult(mid){if(!isAdmin())return;const m=findFixtureById(mid);if(!m)return;if(!confirm(`¿Borrar el resultado de ${m.a} vs ${m.b}?`))return;try{await apiRequest({action:'deleteResult',matchId:mid});delete data.results[mid];localStorage.setItem(STORAGE_KEY,JSON.stringify(data));closeResultModalUI();renderAll();alert('🗑️ Resultado borrado.')}catch(e){alert(e.message)}}
@@ -11992,6 +12069,25 @@ window.addEventListener('scroll',()=>{const a=document.getElementById('adminView
   }
   document.addEventListener('click',e=>{if(e.target.closest?.('#ctAutoRefreshBtn')){e.preventDefault();check();}});
   document.addEventListener('toggle',e=>{if(e.target?.matches?.('details[data-admin-section="matchesAdmin"]')&&e.target.open)check();},true);
+})();
+</script>
+
+<script id="ct-super-set-switch-bind-v1911">
+(function(){
+ function wire(){
+  const control=document.getElementById('ctSuperSetSwitch');
+  if(!control||control.dataset.wired==='1')return;
+  control.dataset.wired='1';
+  control.addEventListener('change',function(){
+    this.dataset.manual=this.checked?'true':'false';
+    if(!this.checked){
+      const a=document.getElementById('rS3A'),b=document.getElementById('rS3B');
+      if(a)a.value='';if(b)b.value='';
+    }
+    if(typeof validateNormalResultLive==='function')validateNormalResultLive();
+  });
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',wire,{once:true});else wire();
 })();
 </script>
 </body></html>
