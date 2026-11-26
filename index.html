@@ -7544,7 +7544,55 @@ function ctIsquadExportHtml(rows){
   .footer{border-top:1px solid #e6e7e9;color:#80858c;font-size:10px;padding-top:9px;margin-top:28px}
   @media(max-width:650px){main{padding:15px 12px}.reportHead{align-items:start;flex-direction:column}.summary{text-align:left}.tools{padding:12px}.section{overflow-x:auto}table{min-width:0}}
   @media print{body{background:#fff;font-size:10px}.tools{display:none!important}main{width:100%;margin:0;padding:0;box-shadow:none}.section{break-inside:auto;page-break-inside:auto;overflow:visible!important;margin:14px 0 18px}.sectionTitle h2{font-size:12px}thead{display:table-header-group}tr{break-inside:avoid}table{width:100%;min-width:0;table-layout:fixed}th,td{padding:5px 4px;overflow-wrap:anywhere;word-break:normal;font-size:9px}.reportHead{padding-bottom:9px}h1{font-size:19px}.notice{border:1px solid #e5e6e8;background:#fff;margin:9px 0 12px;font-size:9px}a{color:inherit;text-decoration:none}}
-</style></head><body>
+</style>
+<style id="ct-result-premium-compact-v1912">
+/* V1.9.12: ajuste exclusivamente visual del formulario de resultados.
+   Conserva IDs, lógica y un único contenedor desplazable; no afecta a otras pantallas. */
+#resultModal .sheetHead{padding:11px 15px 10px!important;gap:9px!important}
+#resultModal .sheetHead h3{font-size:clamp(16px,3.55vw,20px)!important;line-height:1.16!important;margin-top:3px!important}
+#resultModal .sheetHead .tiny{font-size:10px!important}
+#resultModal .sheetHead .close{width:42px!important;min-width:42px!important;height:42px!important}
+#resultModal .sheetBody{padding:11px 13px calc(38px + env(safe-area-inset-bottom))!important;scroll-padding-bottom:72px!important}
+#resultModal #resultModalCat{font-size:10px!important;margin-bottom:10px!important}
+#resultModal .reserveField{margin-bottom:10px!important}
+#resultModal .reserveField label{font-size:10px!important;margin-bottom:4px!important}
+#resultModal #resultType{min-height:44px!important;font-size:14px!important}
+#resultModal .ctScoreSets{gap:10px!important}
+#resultModal .ctScoreSets .ctSetBlock:not(#ctSuperSetBlock){padding:36px 12px 11px!important;border-radius:15px!important;box-shadow:0 2px 9px #151e2708!important}
+#resultModal .ctScoreSets .ctSetBlock:not(#ctSuperSetBlock) .ctSetTitle{padding:7px 17px 7px 12px!important;font-size:12px!important;border-radius:14px 0 13px 0!important}
+#resultModal .ctResultPlayersLabels{gap:10px!important;margin-bottom:5px!important}
+#resultModal .ctScorePlayer{font-size:clamp(11px,2.4vw,12px)!important;line-height:1.18!important;min-height:31px!important;font-weight:800!important;gap:5px!important}
+#resultModal .ctScorePlayer::before{height:20px!important;width:3px!important;min-width:3px!important}
+#resultModal .ctScoreSets .scorePair{gap:10px!important}
+#resultModal .ctScoreSets .scorePair input{height:49px!important;min-height:49px!important;font-size:25px!important;border-radius:10px!important;padding:4px 8px!important}
+#resultModal .ctScoreSets .ctTbRow{margin-top:9px!important;padding:7px 9px!important;gap:8px!important;border-radius:10px!important}
+#resultModal .ctScoreSets .ctTbLabel{font-size:11px!important;gap:5px!important}
+#resultModal .ctScoreSets .ctTbLabel::before{height:21px!important;padding:0 5px!important;font-size:10px!important}
+#resultModal .ctScoreSets .ctTbPair{gap:7px!important}
+#resultModal .ctScoreSets .ctTbPair input{height:42px!important;min-height:42px!important;font-size:19px!important;border-radius:8px!important;padding:3px!important}
+#resultModal .ctSuperSetToggleRow{min-height:43px!important;padding:7px 10px!important;border-radius:9px!important}
+#resultModal .ctSuperSetText{font-size:12px!important}
+#resultModal .ctSuperSetFields{margin-top:7px!important;padding:9px!important}
+#resultModal .ctSuperSetFields .scorePair input{height:49px!important;min-height:49px!important;font-size:24px!important}
+#resultModal .ctSuperSetNote{margin-top:7px!important;padding:8px 10px!important;font-size:11px!important}
+#resultModal #resultValidation{margin:10px 0 7px!important;padding:8px 10px!important;font-size:11px!important}
+#resultModal .ctResultRules{margin:9px 0!important;padding:8px 10px!important;font-size:11px!important}
+#resultModal .ctResultPolicy{margin:9px 0!important;padding:8px 10px!important;font-size:11px!important}
+#resultModal .resultActions{gap:8px!important;margin-top:11px!important}
+#resultModal .resultActions button{min-height:46px!important;font-size:13px!important;border-radius:11px!important}
+@media(max-width:640px){
+ #resultModal .sheetBody{padding:10px 11px calc(40px + env(safe-area-inset-bottom))!important}
+ #resultModal .ctScoreSets .ctSetBlock:not(#ctSuperSetBlock){padding:35px 10px 10px!important}
+ #resultModal .ctScoreSets .scorePair input{height:49px!important;min-height:49px!important;font-size:24px!important}
+ #resultModal .ctScoreSets .ctTbRow{grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr)!important;padding:7px 8px!important}
+}
+@media(max-width:360px){
+ #resultModal .ctScorePlayer{font-size:10.5px!important}
+ #resultModal .ctScoreSets .ctTbLabel{font-size:10px!important}
+ #resultModal .ctScoreSets .ctTbRow{gap:5px!important}
+}
+</style>
+</head><body>
 <div class="tools"><div><b>CT Campeador · informe iSquad</b><small>Para obtener el archivo, selecciona «Guardar como PDF» al imprimir.</small></div><div class="buttons"><button type="button" onclick="window.close()">Cerrar</button><button type="button" class="primary" onclick="window.print()">Guardar como PDF / Imprimir</button></div></div>
 <main><header class="reportHead"><div><div class="eyebrow">CT Campeador · Burgos</div><h1>${esc(tournament)}<small>Resultados publicados · Informe global para iSquad</small></h1></div><div class="summary"><strong>${rows.length} resultados confirmados</strong>${sections.size} categorías/grupos · Generado ${esc(today)}</div></header>
 <div class="notice">Solo se incluyen resultados <strong>confirmados y publicados</strong> en la liga. Los pendientes de confirmación no aparecen. Los tanteos se presentan en el orden de los jugadores A y B; W.O. y partidos no disputados se identifican expresamente.</div>
