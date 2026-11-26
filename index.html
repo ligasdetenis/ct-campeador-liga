@@ -5247,6 +5247,10 @@ Pablo Ruiz"></textarea>
     <div class="adminSubsection">
       <div class="adminSubsectionHead"><span>Dispositivos y avisos</span><span id="adminMeta_devices_sub">Abrir</span></div>
       <div class="adminSubsectionBody"><div class="tiny">Consulta qué jugadores tienen dispositivos suscritos a los avisos. Puedes dar de baja todos los dispositivos de un jugador si cambia de móvil, pierde el dispositivo o deja de querer recibir notificaciones.</div>
+<div class="ctCourtReleaseSettings" style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:12px 0;padding:12px 14px;border:1px solid #e8dde0;border-radius:12px;background:#fffafb">
+  <div style="flex:1;min-width:190px"><strong style="color:#651222">🔔 Avisar cuando se libere una pista</strong><div class="tiny" style="margin-top:4px">Envía un aviso a los dispositivos suscritos si una reserva se cancela y la franja sigue disponible. No avisa por resultados confirmados.</div><div class="tiny" id="ctReleaseAlertStatus" aria-live="polite">Consultando configuración…</div></div>
+  <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:700"><input type="checkbox" id="ctReleaseAlertEnabled" style="width:22px;height:22px;accent-color:#8b1029" disabled> Activado</label>
+</div>
 <div class="quickActions"><button class="btn secondary" id="refreshPushDevices" type="button">↻ Actualizar dispositivos</button></div>
 <div id="ctPushDeviceOverview" class="ctPushDeviceOverview" role="status" aria-live="polite">Pulsa «Actualizar dispositivos» para consultar las suscripciones del servidor.</div>
 <div class="ctPushHelpText">Este diagnóstico muestra registros y su última actualización; <b>no puede garantizar que Android haya mostrado o entregado un aviso</b>. Una alta antigua no implica que el dispositivo esté desactivado.</div>
@@ -8961,6 +8965,7 @@ async function sendAdminMessage(){
 
 async function loadPushDevices(){
   if(!requireAdmin())return;
+  if(typeof window.ctLoadCourtReleaseAlerts === 'function') window.ctLoadCourtReleaseAlerts().catch(()=>{});
   const tb=$('#pushDevicesTable'),overview=$('#ctPushDeviceOverview'),refresh=$('#refreshPushDevices');
   if(tb)tb.innerHTML='<tr><td colspan="5">⏳ Consultando suscripciones…</td></tr>';
   if(overview)overview.textContent='Consultando Cloudflare…';
@@ -11493,6 +11498,31 @@ $('#closeSlots').onclick=async()=>{
   }finally{btn.disabled=false;btn.textContent=old}
 };
 $('#refreshPushDevices').onclick=loadPushDevices;
+async function ctLoadCourtReleaseAlerts(){
+  const check=$('#ctReleaseAlertEnabled'), label=$('#ctReleaseAlertStatus');
+  if(!check||!isAdmin())return;
+  check.disabled=true;
+  try{
+    const result=await apiRequest({action:'getCourtReleaseAlertSettings'});
+    check.checked=!!result.enabled;
+    if(label)label.textContent='Avisos '+(result.enabled?'activados':'desactivados')+' para las suscripciones Push registradas.';
+  }catch(e){if(label)label.textContent='No se pudo leer la configuración: '+e.message;}
+  finally{check.disabled=false;}
+}
+const ctReleaseAlertInput=$('#ctReleaseAlertEnabled');
+if(ctReleaseAlertInput)ctReleaseAlertInput.addEventListener('change',async()=>{
+  const previous=!ctReleaseAlertInput.checked;
+  ctReleaseAlertInput.disabled=true;
+  try{
+    const out=await apiRequest({action:'setCourtReleaseAlertSettings',enabled:ctReleaseAlertInput.checked});
+    ctReleaseAlertInput.checked=!!out.enabled;
+    $('#ctReleaseAlertStatus').textContent=out.enabled?'Avisos de pistas liberadas activados.':'Avisos de pistas liberadas desactivados.';
+  }catch(e){ctReleaseAlertInput.checked=previous;alert('No se pudo cambiar el aviso: '+e.message);}
+  finally{ctReleaseAlertInput.disabled=false;}
+});
+window.ctLoadCourtReleaseAlerts=ctLoadCourtReleaseAlerts;
+ctLoadCourtReleaseAlerts();
+
 $('#downloadAdminBackup').onclick=downloadAdminBackup;
 // IMPORTACIÓN OFICIAL · 07/11/2026 · Solo Admin · no modifica la API.
 const OFFICIAL_PDF_IMPORT_20261107 = [{"matchId":"W1|Absoluto|Masculino|marcos-garcia-merino|rodrigo-temino-calle","sets":[{"a":5,"b":7},{"a":2,"b":6}],"a":"MARCOS GARCIA MERINO","b":"RODRIGO TEMIÑO CALLE","category":"INDIVIDUAL MASCULINO ABSOLUTA","week":"W1"},{"matchId":"W2|Absoluto|Masculino|rodrigo-temino-calle|sergio-martinez-diez","sets":[{"a":6,"b":1},{"a":6,"b":2}],"a":"RODRIGO TEMIÑO CALLE","b":"SERGIO MARTINEZ DIEZ","category":"INDIVIDUAL MASCULINO ABSOLUTA","week":"W2"},{"matchId":"W1|Cadete|Masculino|javier-gutierrez-fernandez|guzman-gonzalez-portal","sets":[{"a":6,"b":0},{"a":6,"b":0}],"a":"JAVIER GUTIERREZ FERNANDEZ","b":"GUZMAN GONZALEZ PORTAL","category":"INDIVIDUAL MASCULINO CADETE SUB-16","week":"W1"},{"matchId":"W1|Cadete|Masculino|mario-fernandez-garcia|ruben-delgado-zalona","sets":[{"a":6,"b":4},{"a":7,"b":6}],"a":"MARIO FERNANDEZ GARCIA","b":"RUBEN DELGADO ZALOÑA","category":"INDIVIDUAL MASCULINO CADETE SUB-16","week":"W1"},{"matchId":"W1|Cadete|Masculino|gonzalo-diez-manso|adrian-ait-maksene-palacin","sets":[{"a":3,"b":6},{"a":3,"b":6}],"a":"GONZALO DIEZ MANSO","b":"ADRIAN AIT MAKSENE PALACIN","category":"INDIVIDUAL MASCULINO CADETE SUB-16","week":"W1"},{"matchId":"W1|Cadete|Masculino|sergio-delgado-zalona|rodrigo-rojo-palacin","sets":[{"a":6,"b":1},{"a":6,"b":2}],"a":"SERGIO DELGADO ZALOÑA","b":"RODRIGO ROJO PALACIN","category":"INDIVIDUAL MASCULINO CADETE SUB-16","week":"W1"},{"matchId":"W2|Cadete|Masculino|ruben-delgado-zalona|javier-gutierrez-fernandez","sets":[{"a":1,"b":6},{"a":3,"b":6}],"a":"RUBEN DELGADO ZALOÑA","b":"JAVIER GUTIERREZ FERNANDEZ","category":"INDIVIDUAL MASCULINO CADETE SUB-16","week":"W2"},{"matchId":"W2|Cadete|Masculino|adrian-ait-maksene-palacin|ismael-sedano-pena","sets":[{"a":6,"b":4},{"a":6,"b":7},{"a":8,"b":10}],"a":"ADRIAN AIT MAKSENE PALACIN","b":"ISMAEL SEDANO PEÑA","category":"INDIVIDUAL MASCULINO CADETE SUB-16","week":"W2"},{"matchId":"W2|Cadete|Masculino|gonzalo-de-pablo-olano|sergio-delgado-zalona","sets":[{"a":3,"b":6},{"a":2,"b":6}],"a":"GONZALO DE PABLO OLANO","b":"SERGIO DELGADO ZALOÑA","category":"INDIVIDUAL MASCULINO CADETE SUB-16","week":"W2"},{"matchId":"W1|Alevín|Masculino|javier-fernandez-quintanilla|jaime-garcia-ladron-de-guevara","sets":[{"a":1,"b":6},{"a":1,"b":6}],"a":"JAVIER FERNANDEZ QUINTANILLA","b":"JAIME GARCIA LADRON DE GUEVARA","category":"INDIVIDUAL MASCULINO ALEVÍN SUB-12","week":"W1"},{"matchId":"W1|Alevín|Masculino|telmo-cid-galaron|manuel-alvarez-fernandez","sets":[{"a":1,"b":6},{"a":3,"b":6}],"a":"TELMO CID GALARON","b":"MANUEL ALVAREZ FERNANDEZ","category":"INDIVIDUAL MASCULINO ALEVÍN SUB-12","week":"W1"},{"matchId":"W2|Alevín|Masculino|nicolas-ruiz-suarez|telmo-cid-galaron","sets":[{"a":6,"b":0},{"a":6,"b":0}],"a":"NICOLAS RUIZ SUAREZ","b":"TELMO CID GALARON","category":"INDIVIDUAL MASCULINO ALEVÍN SUB-12","week":"W2"},{"matchId":"W1|Infantil|Femenino|marina-quintanilla-carcedo|vanesa-rivero-delgado","sets":[{"a":6,"b":2},{"a":6,"b":0}],"a":"MARINA QUINTANILLA CARCEDO","b":"VANESA RIVERO DELGADO","category":"INDIVIDUAL FEMENINO INFANTIL SUB-14","week":"W1"},{"matchId":"W1|Infantil|Femenino|carmen-gomez-vazquez|lucia-garcia-ladron-de-guevara","sets":[{"a":4,"b":6},{"a":4,"b":6}],"a":"CARMEN GOMEZ VAZQUEZ","b":"LUCIA GARCIA LADRON DE GUEVARA","category":"INDIVIDUAL FEMENINO INFANTIL SUB-14","week":"W1"},{"matchId":"W1|Infantil|Masculino|jaime-herrera-sanchez|jaime-garcia-ladron-de-guevara","sets":[{"a":6,"b":3},{"a":6,"b":2}],"a":"JAIME HERRERA SANCHEZ","b":"JAIME GARCIA LADRON DE GUEVARA","category":"INDIVIDUAL MASCULINO INFANTIL SUB-14","week":"W1"},{"matchId":"W1|Infantil|Masculino|ruben-delgado-zalona|odin-santamaria-lopez","sets":[{"a":6,"b":1},{"a":6,"b":4}],"a":"RUBEN DELGADO ZALOÑA","b":"ODIN SANTAMARIA LOPEZ","category":"INDIVIDUAL MASCULINO INFANTIL SUB-14","week":"W1"},{"matchId":"W1|Infantil|Masculino|jorge-prado-crespo|adrian-ait-maksene-palacin","sets":[{"a":0,"b":6},{"a":1,"b":6}],"a":"JORGE PRADO CRESPO","b":"ADRIAN AIT MAKSENE PALACIN","category":"INDIVIDUAL MASCULINO INFANTIL SUB-14","week":"W1"},{"matchId":"W1|Infantil|Masculino|pedro-sancho-poalelunzh|izan-ortiz-sanz","sets":[{"a":1,"b":6},{"a":6,"b":7}],"a":"PEDRO SANCHO POALELUNZH","b":"IZAN ORTIZ SANZ","category":"INDIVIDUAL MASCULINO INFANTIL SUB-14","week":"W1"},{"matchId":"W2|Infantil|Masculino|jorge-trifol-villoria|jaime-herrera-sanchez","sets":[{"a":2,"b":6},{"a":3,"b":6}],"a":"JORGE TRIFOL VILLORIA","b":"JAIME HERRERA SANCHEZ","category":"INDIVIDUAL MASCULINO INFANTIL SUB-14","week":"W2"},{"matchId":"W2|Infantil|Masculino|odin-santamaria-lopez|juan-valentin-saez-sagredo","sets":[{"a":6,"b":7},{"a":3,"b":6}],"a":"ODIN SANTAMARIA LOPEZ","b":"JUAN VALENTIN SAEZ SAGREDO","category":"INDIVIDUAL MASCULINO INFANTIL SUB-14","week":"W2"},{"matchId":"W2|Infantil|Masculino|adrian-ait-maksene-palacin|ruben-delgado-zalona","sets":[{"a":1,"b":6},{"a":6,"b":3},{"a":5,"b":10}],"a":"ADRIAN AIT MAKSENE PALACIN","b":"RUBEN DELGADO ZALOÑA","category":"INDIVIDUAL MASCULINO INFANTIL SUB-14","week":"W2"},{"matchId":"W2|Infantil|Masculino|izan-ortiz-sanz|jorge-prado-crespo","sets":[{"a":6,"b":0},{"a":6,"b":0}],"a":"IZAN ORTIZ SANZ","b":"JORGE PRADO CRESPO","category":"INDIVIDUAL MASCULINO INFANTIL SUB-14","week":"W2"}];
